@@ -1,12 +1,11 @@
+package model;
+
 import java.time.LocalDate;
 
 public class UnidadeCurricular {
     private String nome;
     private LocalDate anoCurricular;
     private Docente docente;
-
-    public UnidadeCurricular() {
-    }
 
     public UnidadeCurricular(String nome, LocalDate anoCurricular, Docente docente) {
         this.nome = nome;
