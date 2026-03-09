@@ -1,3 +1,5 @@
+package model;
+
 public class Departamento {
     private String nome;
     private String sigla;

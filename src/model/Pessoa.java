@@ -12,6 +12,7 @@ public abstract class Pessoa {
     private int nif;
     private LocalDate dataNascimento;
     private String morada;
+    private String palavraPasse;
 
 
     public Pessoa() {
@@ -22,9 +23,10 @@ public abstract class Pessoa {
         nif = 0;
         dataNascimento = null;
         morada = "";
+        palavraPasse = "";
     }
 
-    public Pessoa(String nome, String morada, int nif, LocalDate dataNascimento, String email, String sigla, int numeroMec) {
+    public Pessoa(String nome, String morada, int nif, LocalDate dataNascimento, String email, String sigla, int numeroMec, String palavraPasse) {
         this.nome = nome;
         this.morada = morada;
         this.nif = nif;
@@ -32,6 +34,7 @@ public abstract class Pessoa {
         this.email = email;
         this.sigla = sigla;
         this.numeroMec = numeroMec;
+        this.palavraPasse = palavraPasse;
     }
 
     public String getNome() {
@@ -88,6 +91,14 @@ public abstract class Pessoa {
 
     public void setMorada(String morada) {
         this.morada = morada;
+    }
+
+    public String getPalavraPasse() {
+        return palavraPasse;
+    }
+
+    public void setPalavraPasse(String palavraPasse) {
+        this.palavraPasse = palavraPasse;
     }
 
     @Override
