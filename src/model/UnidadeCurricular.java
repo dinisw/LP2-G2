@@ -4,10 +4,10 @@ import java.time.LocalDate;
 
 public class UnidadeCurricular {
     private String nome;
-    private LocalDate anoCurricular;
+    private int anoCurricular;
     private Docente docente;
 
-    public UnidadeCurricular(String nome, LocalDate anoCurricular, Docente docente) {
+    public UnidadeCurricular(String nome, int anoCurricular, Docente docente) {
         this.nome = nome;
         this.anoCurricular = anoCurricular;
         this.docente = docente;
@@ -21,11 +21,11 @@ public class UnidadeCurricular {
         this.nome = nome;
     }
 
-    public LocalDate getAnoCurricular() {
+    public int getAnoCurricular() {
         return anoCurricular;
     }
 
-    public void setAnoCurricular(LocalDate anoCurricular) {
+    public void setAnoCurricular(int anoCurricular) {
         this.anoCurricular = anoCurricular;
     }
 
