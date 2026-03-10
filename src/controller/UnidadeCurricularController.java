@@ -12,19 +12,7 @@ public class UnidadeCurricularController {
         this.view = view;
     }
 
-    public UnidadeCurricular getModel() {
-        return model;
-    }
+    public void criarUnidadeCurricular(){
 
-    public void setModel(UnidadeCurricular model) {
-        this.model = model;
-    }
-
-    public UnidadeCurricularView getView() {
-        return view;
-    }
-
-    public void setView(UnidadeCurricularView view) {
-        this.view = view;
     }
 }
