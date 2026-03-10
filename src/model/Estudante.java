@@ -60,7 +60,7 @@ public class Estudante extends Pessoa{
     public void adicionarAvaliacao(Avaliacao avaliacao) {
         this.listaAvaliacoes.add(avaliacao);
     }
-
+//tirar este metodo
     public boolean verificarProgessaoAno(int totalUCsInscritas) {
         if (listaAvaliacoes.isEmpty() || totalUCsInscritas == 0) {
             return false;
