@@ -7,6 +7,7 @@ import java.util.List;
 public class Estudante extends Pessoa{
 
     private String nomeCurso;
+    private int numeroMec;
     private int anoLetivo;
     private List<Avaliacao> listaAvaliacoes;
 
@@ -16,11 +17,24 @@ public class Estudante extends Pessoa{
 //        this.listaAvaliacoes = new ArrayList<>();
 //    }
 
-    public Estudante(String nome, String morada, int nif, LocalDate dataNascimento, String email, String sigla, int numeroMec, String palavraPasse, String nomeCurso) {
-        super(nome, morada, nif, dataNascimento, email, sigla, numeroMec, palavraPasse);
+    public Estudante(String nome, String morada, int nif, LocalDate dataNascimento, String email, int numeroMec, String palavraPasse, String nomeCurso) {
+        super(nome, morada, nif, dataNascimento, email, palavraPasse);
         this.nomeCurso = nomeCurso;
         this.anoLetivo = 1;
         this.listaAvaliacoes = new ArrayList<>();
+        this.numeroMec = numeroMec;
+    }
+
+    public int getNumeroMec() {
+        return numeroMec;
+    }
+
+    public void setNumeroMec(int numeroMec) {
+        this.numeroMec = numeroMec;
+    }
+
+    public void setListaAvaliacoes(List<Avaliacao> listaAvaliacoes) {
+        this.listaAvaliacoes = listaAvaliacoes;
     }
 
     public String getNomeCurso() {
