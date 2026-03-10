@@ -1,6 +1,5 @@
 package controller;
 
-
 import model.UnidadeCurricular;
 import view.UnidadeCurricularView;
 

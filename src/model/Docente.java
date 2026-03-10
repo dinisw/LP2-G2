@@ -17,7 +17,7 @@ public class Docente extends Pessoa{
     }
 
     public Docente(String nome, String morada, int nif, LocalDate dataNascimento, String email, String sigla, int numeroMec, List<Avaliacao> listaAvaliacao) {
-        super(nome, morada, nif, dataNascimento, email, sigla, numeroMec);
+        super(nome, morada, nif, dataNascimento, email, sigla, numeroMec, "");
         this.listaAvaliacao = listaAvaliacao;}
 
     public UnidadeCurricular getUnidadeCurricular() {

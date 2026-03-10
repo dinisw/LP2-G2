@@ -10,11 +10,11 @@ public class Estudante extends Pessoa{
     private int anoLetivo;
     private List<Avaliacao> listaAvaliacoes;
 
-    public Estudante() {
-        super();
-        this.anoLetivo = 1;
-        this.listaAvaliacoes = new ArrayList<>();
-    }
+//    public Estudante() {
+//        super();
+//        this.anoLetivo = 1;
+//        this.listaAvaliacoes = new ArrayList<>();
+//    }
 
     public Estudante(String nome, String morada, int nif, LocalDate dataNascimento, String email, String sigla, int numeroMec, String palavraPasse, String nomeCurso) {
         super(nome, morada, nif, dataNascimento, email, sigla, numeroMec, palavraPasse);
