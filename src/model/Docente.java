@@ -6,19 +6,31 @@ import java.util.List;
 
 public class Docente extends Pessoa{
     private UnidadeCurricular unidadeCurricular;
+    private String sigla;
     private List<Avaliacao> listaAvaliacao = new ArrayList<>();
 
     public Docente() {
     }
 
-    public Docente(List<Avaliacao> listaAvaliacao, UnidadeCurricular unidadeCurricular) {
+    public Docente(List<Avaliacao> listaAvaliacao, UnidadeCurricular unidadeCurricular, String sigla) {
         this.listaAvaliacao = listaAvaliacao;
         this.unidadeCurricular = unidadeCurricular;
+        this.sigla = sigla;
     }
 
-    public Docente(String nome, String morada, int nif, LocalDate dataNascimento, String email, String sigla, int numeroMec, List<Avaliacao> listaAvaliacao) {
-        super(nome, morada, nif, dataNascimento, email, sigla, numeroMec, "");
-        this.listaAvaliacao = listaAvaliacao;}
+    public Docente(String nome, String morada, int nif, LocalDate dataNascimento, String email, String sigla, List<Avaliacao> listaAvaliacao, UnidadeCurricular unidadeCurricular) {
+        super(nome, morada, nif, dataNascimento, email, "");
+        this.listaAvaliacao = listaAvaliacao;
+        this.sigla = sigla;
+        this.unidadeCurricular = unidadeCurricular;}
+
+    public String getSigla() {
+        return sigla;
+    }
+
+    public void setSigla(String sigla) {
+        this.sigla = sigla;
+    }
 
     public UnidadeCurricular getUnidadeCurricular() {
         return unidadeCurricular;
