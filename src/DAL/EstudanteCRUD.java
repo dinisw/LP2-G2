@@ -68,7 +68,31 @@ public class EstudanteCRUD {
                 return estudante;
             }
         }
-        return null; // Retorna null se o estudante não for encontrado
+        return null;
     }
 
+    //UPDATE
+    public boolean atualizarEstudante(Estudante estudante) {
+        if(estudante != null){
+            for (int i = 0; i < estudantes.size(); i++) {
+                if (estudantes.get(i).getNumeroMec() == estudante.getNumeroMec()) {
+                    estudantes.set(i, estudante);
+                    criarEstudante(estudante);
+                    return true;
+                }
+            }
+        }
+        return false;
+        }
+
+    //DELETE
+    public boolean eliminarEstudante(int numeroMec) {
+        for(int i = 0; i < estudantes.size(); i++){
+            if(estudantes.get(i).getNumeroMec() == numeroMec){
+                estudantes.remove(i);
+                return true;
+            }
+        }
+        return false;
+    }
 }
