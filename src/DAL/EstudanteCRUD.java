@@ -8,8 +8,20 @@ import java.util.List;
 public class EstudanteCRUD {
     private static final String CAMINHO_FICHEIRO = "estudantes.csv";
     private List<Estudante> estudantes;
+    private int numeroMecCounter;
+
+    public EstudanteCRUD() {
+        this.estudantes = new java.util.ArrayList<>();
+        this.numeroMecCounter = 10000;
+        carregarFicheiro();
+    }
 
     private void carregarFicheiro(){
+        File ficheiro = new File(CAMINHO_FICHEIRO);
+        if(!ficheiro.exists()){
+            System.out.println("Ficheiro de estudantes não encontrado. Tente novamente.");
+            return;
+        }
         try(BufferedReader reader = new BufferedReader(new FileReader(CAMINHO_FICHEIRO))){
             String linha;
             while((linha = reader.readLine()) != null){
@@ -33,7 +45,18 @@ public class EstudanteCRUD {
     }
 
     //CREATE
-    public boolean criarEstudante(Estudante estudante){
+    public void registarEstudante(Estudante estudante){
+        String numero = "Est" + numeroMecCounter++;
+        String email = numero.toLowerCase() + "@isep.ipp.pt";
+        String palavraPasse = "ISEP";
+        int anoLetivo = 1;
+
+        estudantes.add(estudante);
+        guardarFicheiro(estudante);
+    }
+
+
+    public boolean guardarFicheiro(Estudante estudante) {
         try (FileWriter writer = new FileWriter(CAMINHO_FICHEIRO, true);
         PrintWriter print = new PrintWriter(writer)) {
             String formato = String.format("%s,%s,%d,%s,%s,%s,%d,%s,%d,%s",
@@ -48,7 +71,6 @@ public class EstudanteCRUD {
                     estudante.getAnoLetivo(),
                     estudante.getListaAvaliacoes());
             print.println(formato);
-            estudantes.add(estudante);
             return true;
         } catch (IOException e) {
             System.out.println("Erro ao criar estudante: " + e.getMessage());
@@ -68,7 +90,40 @@ public class EstudanteCRUD {
                 return estudante;
             }
         }
-        return null; // Retorna null se o estudante não for encontrado
+        return null;
     }
 
+    //UPDATE
+    public boolean atualizarEstudante(Estudante estudante) {
+        if(estudante != null){
+            for (int i = 0; i < estudantes.size(); i++) {
+                if (estudantes.get(i).getNumeroMec() == estudante.getNumeroMec()) {
+                    estudantes.set(i, estudante);
+                    guardarFicheiro(estudante);
+                    return true;
+                }
+            }
+        }
+        return false;
+        }
+
+    //DELETE
+    public boolean eliminarEstudante(int numeroMec) {
+        for(int i = 0; i < estudantes.size(); i++){
+            if(estudantes.get(i).getNumeroMec() == numeroMec){
+                estudantes.remove(i);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public Estudante procurarNumeroMec(int numeroMecanografico) {
+        for (int i = 0; i < estudantes.size(); i++) {
+            if (estudantes.get(i).getNumeroMec() == numeroMecanografico) {
+                return estudantes.get(i);
+            }
+        }
+        return null;
+    }
 }
