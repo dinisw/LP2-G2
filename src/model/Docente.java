@@ -18,11 +18,12 @@ public class Docente extends Pessoa{
         this.sigla = sigla;
     }
 
-    public Docente(String nome, String morada, int nif, LocalDate dataNascimento, String email, String sigla, List<Avaliacao> listaAvaliacao, UnidadeCurricular unidadeCurricular) {
-        super(nome, morada, nif, dataNascimento, email, "");
-        this.listaAvaliacao = listaAvaliacao;
+    public Docente(String nome, String morada, int nif, LocalDate dataNascimento, String email, String palavraPasse, String sigla, List<Avaliacao> listaAvaliacao, UnidadeCurricular unidadeCurricular) {
+        super(nome, morada, nif, dataNascimento, email, palavraPasse);
+        this.listaAvaliacao = (listaAvaliacao != null) ? listaAvaliacao : new ArrayList<>();
         this.sigla = sigla;
-        this.unidadeCurricular = unidadeCurricular;}
+        this.unidadeCurricular = unidadeCurricular;
+    }
 
     public String getSigla() {
         return sigla;

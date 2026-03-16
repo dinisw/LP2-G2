@@ -1,55 +1,55 @@
 package view;
 
-import DAL.GestorCRUD;
-import model.Gestor;
+import DAL.DocenteCRUD;
+import model.Docente;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import static view.Menu.*;
 
-public class GestorView {
-    private final GestorCRUD gestorCRUD;
+public class DocenteView {
+    private final DocenteCRUD docenteCRUD;
     private final Scanner scanner;
     private final Menu menu;
 
-    public GestorView() {
-        this.gestorCRUD = new GestorCRUD();
+    public DocenteView() {
+        this.docenteCRUD = new DocenteCRUD();
         this.scanner = new Scanner(System.in);
         this.menu = new Menu();
     }
 
-    public void exibirMenuGestores() {
+    public void exibirMenuDocentes() {
         String opcao;
         ArrayList<String> opcoes = new ArrayList<>();
-        opcoes.add("1. Registar Gestor");
-        opcoes.add("2. Listar Gestores");
-        opcoes.add("3. Procurar Gestor (NIF)");
-        opcoes.add("4. Atualizar Gestor (NIF)");
-        opcoes.add("5. Eliminar Gestor (NIF)");
+        opcoes.add("1. Registar Docente");
+        opcoes.add("2. Listar Docentes");
+        opcoes.add("3. Procurar Docente (NIF)");
+        opcoes.add("4. Atualizar Docente (NIF)");
+        opcoes.add("5. Eliminar Docente (NIF)");
         opcoes.add("0. Voltar ao Menu Principal");
 
         do {
-            menu.exibirSubTitulo("GESTÃO DE GESTORES", opcoes);
+            menu.exibirSubTitulo("GESTÃO DE DOCENTES", opcoes);
             System.out.print("\n" + WHITE_BOLD + "Selecione uma opção: " + RESET);
             opcao = scanner.nextLine().trim();
 
             switch (opcao) {
                 case "1":
-                    registarGestor();
+                    registarDocente();
                     break;
                 case "2":
-                    listarGestores();
+                    listarDocentes();
                     break;
                 case "3":
-                    procurarGestor();
+                    procurarDocente();
                     break;
                 case "4":
                     System.out.println("\n" + YELLOW + "[EM MANUTENÇÃO] Esta funcionalidade ainda não está finalizada." + RESET);
                     menu.pressionarEnter(scanner);
                     break;
                 case "5":
-                    eliminarGestor();
+                    eliminarDocente();
                     break;
                 case "0":
                     return;
@@ -60,8 +60,8 @@ public class GestorView {
         } while (!opcao.equals("0"));
     }
 
-    private void registarGestor() {
-        System.out.println("\n--- REGISTO DE GESTOR ---");
+    private void registarDocente() {
+        System.out.println("\n--- REGISTO DE DOCENTE ---");
         System.out.print("Nome: ");
         String nome = scanner.nextLine();
         System.out.print("Morada: ");
@@ -74,50 +74,50 @@ public class GestorView {
         String email = scanner.nextLine();
         System.out.print("Palavra-passe: ");
         String pass = scanner.nextLine();
-        System.out.print("Cargo: ");
-        String cargo = scanner.nextLine();
+        System.out.print("Sigla: ");
+        String sigla = scanner.nextLine();
 
-        Gestor novo = new Gestor(nome, morada, nif, dataNascimento, email, pass, cargo);
-        if (gestorCRUD.registarGestor(novo)) {
-            System.out.println("Gestor registado com sucesso!");
+        Docente novo = new Docente(nome, morada, nif, dataNascimento, email, pass, sigla, null, null);
+        if (docenteCRUD.registarDocente(novo)) {
+            System.out.println("Docente registado com sucesso!");
         } else {
             System.out.println("Erro ao registar: NIF já existe ou dados inválidos.");
         }
         menu.pressionarEnter(scanner);
     }
 
-    private void listarGestores() {
-        System.out.println("\n--- LISTA DE GESTORES ---");
-        List<Gestor> gestores = gestorCRUD.getGestores();
-        if (gestores.isEmpty()) {
-            System.out.println("Nenhum gestor registado.");
+    private void listarDocentes() {
+        System.out.println("\n--- LISTA DE DOCENTES ---");
+        List<Docente> docentes = docenteCRUD.getDocentes();
+        if (docentes.isEmpty()) {
+            System.out.println("Nenhum docente registado.");
         } else {
-            for (Gestor g : gestores) {
-                System.out.println("NIF: " + g.getNif() + " | Nome: " + g.getNome() + " | Cargo: " + g.getCargo());
+            for (Docente d : docentes) {
+                System.out.println("NIF: " + d.getNif() + " | Nome: " + d.getNome() + " | Sigla: " + d.getSigla());
             }
         }
         menu.pressionarEnter(scanner);
     }
 
-    private void procurarGestor() {
-        System.out.print("\nDigite o NIF do gestor: ");
+    private void procurarDocente() {
+        System.out.print("\nDigite o NIF do docente: ");
         int nif = Integer.parseInt(scanner.nextLine());
-        Gestor g = gestorCRUD.procurarPorNif(nif);
-        if (g != null) {
-            System.out.println("Dados encontrados: " + g);
+        Docente d = docenteCRUD.procurarPorNif(nif);
+        if (d != null) {
+            System.out.println("Dados encontrados: " + d.getNome() + " - " + d.getEmail());
         } else {
-            System.out.println("Gestor não encontrado.");
+            System.out.println("Docente não encontrado.");
         }
         menu.pressionarEnter(scanner);
     }
 
-    private void eliminarGestor() {
-        System.out.print("\nDigite o NIF do gestor a eliminar: ");
+    private void eliminarDocente() {
+        System.out.print("\nDigite o NIF do docente a eliminar: ");
         int nif = Integer.parseInt(scanner.nextLine());
-        if (gestorCRUD.eliminarGestor(nif)) {
-            System.out.println("Gestor eliminado com sucesso!");
+        if (docenteCRUD.eliminarDocente(nif)) {
+            System.out.println("Docente eliminado com sucesso!");
         } else {
-            System.out.println("Erro ao eliminar: Gestor não encontrado.");
+            System.out.println("Erro ao eliminar: Docente não encontrado.");
         }
         menu.pressionarEnter(scanner);
     }
