@@ -1,5 +1,6 @@
 package controller;
 
+import BLL.EstudanteCalculo;
 import model.Avaliacao;
 import model.Estudante;
 import model.Curso;
@@ -10,6 +11,7 @@ import java.util.List;
 public class EstudanteController {
     private Estudante model;
     private EstudanteView view;
+    private EstudanteCalculo bll;
 
     public EstudanteController(Estudante model, EstudanteView view) {
         this.model = model;
@@ -35,7 +37,7 @@ public class EstudanteController {
         imprimirNotas(model.getListaAvaliacoes());
     }
     public void tentarPassarDeAno(int totalUCsInscritas) {
-        boolean passou = model.verificarProgessaoAno(totalUCsInscritas);
+        boolean passou = bll.verificarProgressao(totalUCsInscritas);
         if (passou) {
             mostrarMensagem("Sucesso: O estudante transitou para o " + model.getAnoLetivo() + "º ano letivo.");
         } else {

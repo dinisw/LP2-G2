@@ -49,8 +49,7 @@ public class EstudanteView {
                     menu.pressionarEnter(ler);
                     break;
                 case "2":
-                    System.out.println("\n" + YELLOW + "[EM MANUTENÇÃO] Esta funcionalidade ainda não está finalizada." + RESET);
-                    menu.pressionarEnter(ler);
+					consultarFichaEstudante(menu, ler);
                     break;
                 case "3":
                     System.out.println("\n" + YELLOW + "[EM MANUTENÇÃO] Esta funcionalidade ainda não está finalizada." + RESET);
@@ -166,4 +165,34 @@ public class EstudanteView {
         }while (!opcao.equals("0"));
     }
 
+    public static void consultarFichaEstudante(Menu menu, Scanner ler) {
+
+        System.out.println(CYAN_BOLD + bordaSuperior + RESET);
+        System.out.println(CYAN_BOLD + "║" + WHITE_BOLD + "            CONSULTAR FICHA DE ESTUDANTE            " + CYAN_BOLD + "║" + RESET);
+        System.out.println(CYAN_BOLD + bordaInferior + RESET);
+
+        System.out.print("\n" + WHITE_BOLD + "Insira o seu Número Mecanográfico: " + RESET);
+
+        try {
+            int numMec = Integer.parseInt(ler.nextLine().trim());
+
+            DAL.EstudanteCRUD crud = new DAL.EstudanteCRUD();
+            Estudante alunoEncontrado = crud.lerEstudante(numMec);
+
+            if (alunoEncontrado != null) {
+                EstudanteView ev = new EstudanteView();
+                EstudanteController controller = new EstudanteController(alunoEncontrado, ev);
+
+                System.out.println();
+
+                controller.exibirFichaEstudante();
+            } else {
+                System.out.println("\n" + RED + "Erro: Estudante com o número " + numMec + " não foi encontrado no sistema." + RESET);
+            }
+
+        } catch (NumberFormatException e) {
+            System.out.println("\n" + RED + "Erro: Formato de número inválido. Digite apenas algarismos." + RESET);
+        }
+        menu.pressionarEnter(ler);
+    }
 }
