@@ -25,7 +25,7 @@ public class EstudanteCRUD {
         try(BufferedReader reader = new BufferedReader(new FileReader(CAMINHO_FICHEIRO))){
             String linha;
             while((linha = reader.readLine()) != null){
-                String[] dados = linha.split(";");
+                String[] dados = linha.split(",");
                 if(dados.length == 10){
                     Estudante estudante = new Estudante(
                             dados[0], // nome
@@ -33,8 +33,8 @@ public class EstudanteCRUD {
                             Integer.parseInt(dados[2]), // nif
                             LocalDate.parse(dados[3]), // dataNascimento
                             dados[4], // email
-                            Integer.parseInt(dados[5]), // numeroMec
-                            dados[6], // palavraPasse
+                            Integer.parseInt(dados[6]), // numeroMec
+                            dados[5], // palavraPasse
                             dados[7]);
                     estudantes.add(estudante);
                 }

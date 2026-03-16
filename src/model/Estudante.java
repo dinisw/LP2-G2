@@ -11,12 +11,6 @@ public class Estudante extends Pessoa{
     private int anoLetivo;
     private List<Avaliacao> listaAvaliacoes;
 
-//    public Estudante() {
-//        super();
-//        this.anoLetivo = 1;
-//        this.listaAvaliacoes = new ArrayList<>();
-//    }
-
     public Estudante(String nome, String morada, int nif, LocalDate dataNascimento, String email, int numeroMec, String palavraPasse, String nomeCurso) {
         super(nome, morada, nif, dataNascimento, email, palavraPasse);
         this.nomeCurso = nomeCurso;
@@ -60,25 +54,5 @@ public class Estudante extends Pessoa{
     public void adicionarAvaliacao(Avaliacao avaliacao) {
         this.listaAvaliacoes.add(avaliacao);
     }
-//tirar este metodo
-    public boolean verificarProgessaoAno(int totalUCsInscritas) {
-        if (listaAvaliacoes.isEmpty() || totalUCsInscritas == 0) {
-            return false;
-        }
-        int notasPositivas = 0;
-        for (Avaliacao avaliacao : listaAvaliacoes) {
-            if (avaliacao.getNota() >= 9.5) {
-                notasPositivas++;
-            }
-        }
 
-        double percentagem = (double) notasPositivas / totalUCsInscritas;
-
-        if (percentagem >= 0.60) {
-            this.anoLetivo++;
-            return true;
-        }
-
-        return false;
-    }
 }

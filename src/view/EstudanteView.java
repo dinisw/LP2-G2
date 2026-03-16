@@ -28,7 +28,7 @@ public class EstudanteView {
         Scanner ler = new Scanner(System.in);
         Menu menu = new Menu();
         menu.exibirTitulo();
-        Estudante es = new Estudante("","",0, LocalDate.now(), "", "", 123, "","");
+        Estudante es = new Estudante("","",0, LocalDate.now(), "", 123, "123", "");
         EstudanteView ev = new EstudanteView();
         EstudanteController e = new EstudanteController(es, ev);
         String opcao = "";
@@ -50,7 +50,7 @@ public class EstudanteView {
                     inscreverEmCurso(menu, ler);
                     break;
                 case "2":
-    //                listarFilaEspera(ler);
+                    consultarFichaEstudante(menu, ler);
                     break;
                 case "0":
                     return;
@@ -74,4 +74,34 @@ public class EstudanteView {
         }while (!opcao.equals("0"));
     }
 
+    public static void consultarFichaEstudante(Menu menu, Scanner ler) {
+
+        System.out.println(CYAN_BOLD + bordaSuperior + RESET);
+        System.out.println(CYAN_BOLD + "║" + WHITE_BOLD + "            CONSULTAR FICHA DE ESTUDANTE            " + CYAN_BOLD + "║" + RESET);
+        System.out.println(CYAN_BOLD + bordaInferior + RESET);
+
+        System.out.print("\n" + WHITE_BOLD + "Insira o seu Número Mecanográfico: " + RESET);
+
+        try {
+            int numMec = Integer.parseInt(ler.nextLine().trim());
+
+            DAL.EstudanteCRUD crud = new DAL.EstudanteCRUD();
+            Estudante alunoEncontrado = crud.lerEstudante(numMec);
+
+            if (alunoEncontrado != null) {
+                EstudanteView ev = new EstudanteView();
+                EstudanteController controller = new EstudanteController(alunoEncontrado, ev);
+
+                System.out.println();
+
+                controller.exibirFichaEstudante();
+            } else {
+                System.out.println("\n" + RED + "Erro: Estudante com o número " + numMec + " não foi encontrado no sistema." + RESET);
+            }
+
+        } catch (NumberFormatException e) {
+            System.out.println("\n" + RED + "Erro: Formato de número inválido. Digite apenas algarismos." + RESET);
+        }
+        menu.pressionarEnter(ler);
+    }
 }
