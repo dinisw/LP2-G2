@@ -24,7 +24,7 @@ public class EstudanteCRUD {
         try(BufferedReader reader = new BufferedReader(new FileReader(CAMINHO_FICHEIRO))){
             String linha;
             while((linha = reader.readLine()) != null){
-                String[] dados = linha.split(",");
+                String[] dados = linha.split(";");
                 if(dados.length >= 8){
                     Estudante estudante = new Estudante(
                             dados[0], // nome
@@ -60,7 +60,7 @@ public class EstudanteCRUD {
     private void guardarTodosNoFicheiro() {
         try (PrintWriter print = new PrintWriter(new FileWriter(CAMINHO_FICHEIRO))) {
             for (Estudante estudante : estudantes) {
-                String linha = String.format("%s,%s,%d,%s,%s,%d,%s,%s",
+                String linha = String.format("%s;%s;%d;%s;%s;%d;%s;%s",
                         estudante.getNome(),
                         estudante.getMorada(),
                         estudante.getNif(),
