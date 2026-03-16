@@ -1,5 +1,6 @@
 package view;
 
+import Common.Utils;
 import DAL.GestorCRUD;
 import model.Gestor;
 import java.time.LocalDate;
@@ -11,12 +12,12 @@ import static view.Menu.*;
 public class GestorView {
     private final GestorCRUD gestorCRUD;
     private final Scanner scanner;
-    private final Menu menu;
+    private final Utils menu;
 
     public GestorView() {
         this.gestorCRUD = new GestorCRUD();
         this.scanner = new Scanner(System.in);
-        this.menu = new Menu();
+        this.menu = new Utils();
     }
 
     public void exibirMenuGestores() {
@@ -31,7 +32,7 @@ public class GestorView {
 
         do {
             menu.exibirSubTitulo("GESTÃO DE GESTORES", opcoes);
-            System.out.print("\n" + WHITE_BOLD + "Selecione uma opção: " + RESET);
+            System.out.print("\n" + Utils.GetWhiteBold() + "Selecione uma opção: " + Utils.GetReset());
             opcao = scanner.nextLine().trim();
 
             switch (opcao) {
@@ -45,7 +46,7 @@ public class GestorView {
                     procurarGestor();
                     break;
                 case "4":
-                    System.out.println("\n" + YELLOW + "[EM MANUTENÇÃO] Esta funcionalidade ainda não está finalizada." + RESET);
+                    System.out.println("\n" + Utils.GetYellow() + "[EM MANUTENÇÃO] Esta funcionalidade ainda não está finalizada." + Utils.GetReset());
                     menu.pressionarEnter(scanner);
                     break;
                 case "5":
