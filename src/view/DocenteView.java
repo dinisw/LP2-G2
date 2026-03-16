@@ -1,5 +1,6 @@
 package view;
 
+import Common.Utils;
 import DAL.DocenteCRUD;
 import model.Docente;
 import java.time.LocalDate;
@@ -11,12 +12,12 @@ import static view.Menu.*;
 public class DocenteView {
     private final DocenteCRUD docenteCRUD;
     private final Scanner scanner;
-    private final Menu menu;
+    private final Utils menu;
 
     public DocenteView() {
         this.docenteCRUD = new DocenteCRUD();
         this.scanner = new Scanner(System.in);
-        this.menu = new Menu();
+        this.menu = new Utils();
     }
 
     public void exibirMenuDocentes() {
@@ -31,7 +32,7 @@ public class DocenteView {
 
         do {
             menu.exibirSubTitulo("GESTÃO DE DOCENTES", opcoes);
-            System.out.print("\n" + WHITE_BOLD + "Selecione uma opção: " + RESET);
+            System.out.print("\n" + Utils.GetWhiteBold() + "Selecione uma opção: " + Utils.GetReset());
             opcao = scanner.nextLine().trim();
 
             switch (opcao) {
@@ -45,7 +46,7 @@ public class DocenteView {
                     procurarDocente();
                     break;
                 case "4":
-                    System.out.println("\n" + YELLOW + "[EM MANUTENÇÃO] Esta funcionalidade ainda não está finalizada." + RESET);
+                    System.out.println("\n" + Utils.GetYellow() + "[EM MANUTENÇÃO] Esta funcionalidade ainda não está finalizada." + Utils.GetReset());
                     menu.pressionarEnter(scanner);
                     break;
                 case "5":

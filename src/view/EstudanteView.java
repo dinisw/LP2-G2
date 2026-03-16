@@ -1,5 +1,6 @@
 package view;
 
+import Common.Utils;
 import model.Curso;
 import model.Estudante;
 import java.time.LocalDate;
@@ -25,8 +26,8 @@ public class EstudanteView {
 
     public static void Menu(){
         Scanner ler = new Scanner(System.in);
-        Menu menu = new Menu();
-        
+        Utils menu = new Utils();
+
         String opcao = "";
         ArrayList<String> opcoes = new ArrayList<>();
         opcoes.add("1. Inscrever em Curso");
@@ -38,7 +39,6 @@ public class EstudanteView {
         do {
             menu.exibirTitulo();
             menu.exibirSubTitulo("OPÇÕES ESTUDANTE", opcoes);
-            System.out.println(CYAN_BOLD + bordaInferior + RESET);
 
             System.out.print("\n" + WHITE_BOLD + "Selecione uma opção: " + RESET);
             opcao = ler.nextLine().trim();
@@ -66,7 +66,7 @@ public class EstudanteView {
             }
         } while (!opcao.equals("0"));
     }
-    private static void exibirMenuCRUD(Menu menu, Scanner ler) {
+    private static void exibirMenuCRUD(Utils menu, Scanner ler) {
         DAL.EstudanteCRUD crud = new DAL.EstudanteCRUD();
         String opcao = "";
         ArrayList<String> opcoes = new ArrayList<>();
@@ -151,7 +151,7 @@ public class EstudanteView {
         } while (!opcao.equals("0"));
     }
 
-    public static void inscreverEmCurso(Menu menu, Scanner ler) {
+    public static void inscreverEmCurso(Utils menu, Scanner ler) {
         Curso c = new Curso();
         String opcao = "";
 
@@ -165,7 +165,7 @@ public class EstudanteView {
         }while (!opcao.equals("0"));
     }
 
-    public static void consultarFichaEstudante(Menu menu, Scanner ler) {
+    public static void consultarFichaEstudante(Utils menu, Scanner ler) {
 
         System.out.println(CYAN_BOLD + bordaSuperior + RESET);
         System.out.println(CYAN_BOLD + "║" + WHITE_BOLD + "            CONSULTAR FICHA DE ESTUDANTE            " + CYAN_BOLD + "║" + RESET);
