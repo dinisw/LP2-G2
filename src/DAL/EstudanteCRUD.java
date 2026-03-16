@@ -19,14 +19,13 @@ public class EstudanteCRUD {
     private void carregarFicheiro(){
         File ficheiro = new File(CAMINHO_FICHEIRO);
         if(!ficheiro.exists()){
-            System.out.println("Ficheiro de estudantes não encontrado. Tente novamente.");
             return;
         }
         try(BufferedReader reader = new BufferedReader(new FileReader(CAMINHO_FICHEIRO))){
             String linha;
             while((linha = reader.readLine()) != null){
                 String[] dados = linha.split(";");
-                if(dados.length == 10){
+                if(dados.length >= 8){
                     Estudante estudante = new Estudante(
                             dados[0], // nome
                             dados[1], // morada
@@ -35,46 +34,45 @@ public class EstudanteCRUD {
                             dados[4], // email
                             Integer.parseInt(dados[5]), // numeroMec
                             dados[6], // palavraPasse
-                            dados[7]);
+                            dados[7]); // nomeCurso
                     estudantes.add(estudante);
+                    if(estudante.getNumeroMec() >= numeroMecCounter) {
+                        numeroMecCounter = estudante.getNumeroMec() + 1;
+                    }
                 }
             }
-        } catch (IOException e) {
+        } catch (IOException | NumberFormatException e) {
             System.out.println("Erro ao carregar estudantes: " + e.getMessage());
         }
     }
 
     //CREATE
-    public void registarEstudante(Estudante estudante){
-        String numero = "Est" + numeroMecCounter++;
-        String email = numero.toLowerCase() + "@isep.ipp.pt";
-        String palavraPasse = "ISEP";
-        int anoLetivo = 1;
-
-        estudantes.add(estudante);
-        guardarFicheiro(estudante);
+    public boolean registarEstudante(Estudante estudante){
+        if (estudante != null) {
+            estudantes.add(estudante);
+            guardarTodosNoFicheiro();
+            return true;
+        }
+        return false;
     }
 
 
-    public boolean guardarFicheiro(Estudante estudante) {
-        try (FileWriter writer = new FileWriter(CAMINHO_FICHEIRO, true);
-        PrintWriter print = new PrintWriter(writer)) {
-            String formato = String.format("%s,%s,%d,%s,%s,%s,%d,%s,%d,%s",
-                    estudante.getNome(),
-                    estudante.getMorada(),
-                    estudante.getNif(),
-                    estudante.getDataNascimento(),
-                    estudante.getEmail(),
-                    estudante.getPalavraPasse(),
-                    estudante.getNumeroMec(),
-                    estudante.getNomeCurso(),
-                    estudante.getAnoLetivo(),
-                    estudante.getListaAvaliacoes());
-            print.println(formato);
-            return true;
+    private void guardarTodosNoFicheiro() {
+        try (PrintWriter print = new PrintWriter(new FileWriter(CAMINHO_FICHEIRO))) {
+            for (Estudante estudante : estudantes) {
+                String linha = String.format("%s;%s;%d;%s;%s;%d;%s;%s",
+                        estudante.getNome(),
+                        estudante.getMorada(),
+                        estudante.getNif(),
+                        estudante.getDataNascimento(),
+                        estudante.getEmail(),
+                        estudante.getNumeroMec(),
+                        estudante.getPalavraPasse(),
+                        estudante.getNomeCurso());
+                print.println(linha);
+            }
         } catch (IOException e) {
-            System.out.println("Erro ao criar estudante: " + e.getMessage());
-            return false;
+            System.out.println("Erro ao guardar estudantes: " + e.getMessage());
         }
     }
 
@@ -99,7 +97,7 @@ public class EstudanteCRUD {
             for (int i = 0; i < estudantes.size(); i++) {
                 if (estudantes.get(i).getNumeroMec() == estudante.getNumeroMec()) {
                     estudantes.set(i, estudante);
-                    guardarFicheiro(estudante);
+                    guardarTodosNoFicheiro();
                     return true;
                 }
             }
@@ -112,6 +110,7 @@ public class EstudanteCRUD {
         for(int i = 0; i < estudantes.size(); i++){
             if(estudantes.get(i).getNumeroMec() == numeroMec){
                 estudantes.remove(i);
+                guardarTodosNoFicheiro();
                 return true;
             }
         }
