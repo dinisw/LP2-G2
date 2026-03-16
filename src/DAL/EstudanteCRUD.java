@@ -60,7 +60,7 @@ public class EstudanteCRUD {
     private void guardarTodosNoFicheiro() {
         try (PrintWriter print = new PrintWriter(new FileWriter(CAMINHO_FICHEIRO))) {
             for (Estudante estudante : estudantes) {
-                String linha = String.format("%s;%s;%d;%s;%s;%d;%s;%s",
+                String linha = String.format("%s,%s,%d,%s,%s,%d,%s,%s",
                         estudante.getNome(),
                         estudante.getMorada(),
                         estudante.getNif(),

@@ -50,7 +50,6 @@ public class EstudanteView {
                     break;
                 case "2":
 					consultarFichaEstudante(menu, ler);
-                    menu.pressionarEnter(ler);
                     break;
                 case "3":
                     System.out.println("\n" + YELLOW + "[EM MANUTENÇÃO] Esta funcionalidade ainda não está finalizada." + RESET);
