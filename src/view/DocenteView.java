@@ -46,8 +46,7 @@ public class DocenteView {
                     procurarDocente();
                     break;
                 case "4":
-                    System.out.println("\n" + Utils.GetYellow() + "[EM MANUTENÇÃO] Esta funcionalidade ainda não está finalizada." + Utils.GetReset());
-                    menu.pressionarEnter(scanner);
+                    atualizarDocente();
                     break;
                 case "5":
                     eliminarDocente();
@@ -119,6 +118,40 @@ public class DocenteView {
             System.out.println("Docente eliminado com sucesso!");
         } else {
             System.out.println("Erro ao eliminar: Docente não encontrado.");
+        }
+        menu.pressionarEnter(scanner);
+    }
+
+    private void atualizarDocente() {
+        System.out.print("\nDigite o NIF do docente a atualizar: ");
+        int nif = Integer.parseInt(scanner.nextLine());
+        Docente d = docenteCRUD.procurarPorNif(nif);
+
+        if (d != null) {
+            System.out.println("Dados atuais: " + d.getNome() + " - " + d.getEmail());
+            System.out.print("Novo Nome (Enter para manter): ");
+            String nome = scanner.nextLine();
+            if (!nome.isEmpty()) d.setNome(nome);
+
+            System.out.print("Nova Morada (Enter para manter): ");
+            String morada = scanner.nextLine();
+            if (!morada.isEmpty()) d.setMorada(morada);
+
+            System.out.print("Novo Email (Enter para manter): ");
+            String email = scanner.nextLine();
+            if (!email.isEmpty()) d.setEmail(email);
+
+            System.out.print("Nova Sigla (Enter para manter): ");
+            String sigla = scanner.nextLine();
+            if (!sigla.isEmpty()) d.setSigla(sigla);
+
+            if (docenteCRUD.atualizarDocente(d)) {
+                System.out.println("Docente atualizado com sucesso!");
+            } else {
+                System.out.println("Erro ao atualizar docente.");
+            }
+        } else {
+            System.out.println("Docente não encontrado.");
         }
         menu.pressionarEnter(scanner);
     }
