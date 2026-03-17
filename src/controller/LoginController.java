@@ -2,6 +2,7 @@ package controller;
 
 import DAL.DocenteCRUD;
 import DAL.EstudanteCRUD;
+import DAL.GestorCRUD;
 import model.Docente;
 import model.Estudante;
 import model.Gestor;
@@ -22,6 +23,12 @@ public class LoginController {
             if(docente.getEmail().equals(email) && docente.getPalavraPasse().equals(password)){
                 return docente;
             }
+        }
+
+        GestorCRUD gestorCRUD = new GestorCRUD();
+        Gestor gestor = gestorCRUD.procurarPorEmail(email);
+        if (gestor != null && gestor.getPalavraPasse().equals(password)) {
+            return gestor;
         }
 
         if(email.equals("admin@isep.ipp.pt") && password.equals("admin123")) {
