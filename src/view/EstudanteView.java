@@ -73,7 +73,8 @@ public class EstudanteView {
         opcoes.add("1. Registar Estudante");
         opcoes.add("2. Listar Estudantes");
         opcoes.add("3. Procurar Estudante (Número Mec)");
-        opcoes.add("4. Eliminar Estudante (Número Mec)");
+        opcoes.add("4. Atualizar Estudante (Número Mec)");
+        opcoes.add("5. Eliminar Estudante (Número Mec)");
         opcoes.add("0. Voltar");
 
         do {
@@ -133,6 +134,38 @@ public class EstudanteView {
                     menu.pressionarEnter(ler);
                     break;
                 case "4":
+                    System.out.print("\nDigite o Número Mecanográfico a atualizar: ");
+                    int amec = Integer.parseInt(ler.nextLine());
+                    model.Estudante eate = crud.lerEstudante(amec);
+                    if (eate != null) {
+                        System.out.println("Dados atuais: " + eate.getNome() + " - " + eate.getNomeCurso());
+                        System.out.print("Novo Nome (Enter para manter): ");
+                        String nomeAt = ler.nextLine();
+                        if (!nomeAt.isEmpty()) eate.setNome(nomeAt);
+
+                        System.out.print("Nova Morada (Enter para manter): ");
+                        String moradaAt = ler.nextLine();
+                        if (!moradaAt.isEmpty()) eate.setMorada(moradaAt);
+
+                        System.out.print("Novo Email (Enter para manter): ");
+                        String emailAt = ler.nextLine();
+                        if (!emailAt.isEmpty()) eate.setEmail(emailAt);
+
+                        System.out.print("Novo Curso (Enter para manter): ");
+                        String cursoAt = ler.nextLine();
+                        if (!cursoAt.isEmpty()) eate.setNomeCurso(cursoAt);
+
+                        if (crud.atualizarEstudante(eate)) {
+                            System.out.println(GREEN + "Estudante atualizado com sucesso!" + RESET);
+                        } else {
+                            System.out.println(RED + "Erro ao atualizar estudante." + RESET);
+                        }
+                    } else {
+                        System.out.println(RED + "Estudante não encontrado." + RESET);
+                    }
+                    menu.pressionarEnter(ler);
+                    break;
+                case "5":
                     System.out.print("\nDigite o Número Mecanográfico a eliminar: ");
                     int dmec = Integer.parseInt(ler.nextLine());
                     if (crud.eliminarEstudante(dmec)) {

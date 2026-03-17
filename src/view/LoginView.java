@@ -1,71 +1,88 @@
 package view;
 
 import Common.Utils;
+import controller.LoginController;
+import model.Docente;
+import model.Estudante;
+import model.Gestor;
+import model.Pessoa;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-import static view.Menu.*;
-
 public class LoginView {
-    // CRIAR O LOGIN E O REGISTRAR AQUI, QUANDO DEVOLVE SUCESSO VAI PARA AS OUTRAS VIEWS, SE DEVOLVER ERRO, PERMITE TENTAR DE NOVO
-    //region Design
     public static final String RESET = "\033[0m";
-    public static final String CYAN_BOLD = "\033[1;36m";
-    public static final String WHITE_BOLD = "\033[1;37m";
-    public static final String BLUE = "\033[0;34m";
-    public static final String GREEN = "\033[0;32m";
     public static final String RED = "\033[0;31m";
-    public static final String YELLOW = "\033[0;33m";
-    private static final int LARGURA = 84;
-    //endregion
 
     public static void Login(){
         Scanner ler = new Scanner(System.in);
-        Utils menu = new Utils();
-        var login = "1";//LoginCrontoller.Login(email, senha);
+        Utils utils = new Utils();
+        LoginController loginController = new LoginController();
+        boolean sair = false;
+
         do {
-            menu.exibirTitulo();
+            Utils.exibirTitulo();
 
-            System.out.println(Utils.GetCyanBold() +  "LOGIN" + Utils.GetReset());//melhorar visual
-            System.out.print("Email: ");
-            var email = ler.nextLine().trim();
-            System.out.print("Senha: ");
-            var senha = ler.nextLine().trim();
-
-            //Pegar da BD qual o tipo de utilizador
-            //var login = "1";//LoginCrontoller.Login(email, senha);
-            if(true){//Se devolver alguma coisa de sucesso do loginController
-                switch (login) {
-                    case "1":
-                        EstudanteView.Menu();
-                        break;
-                    case "2":
-                        //consultarFichaEstudante(menu, ler);
-                        break;
-                    case "3":
-                        //System.out.println("\n" + YELLOW + "[EM MANUTENÇÃO] Esta funcionalidade ainda não está finalizada." + RESET);
-                        //menu.pressionarEnter(ler);
-                        break;
-                    default:
-                        System.out.println("\n" + RED + "Opção inválida! Tente novamente." + RESET);
-                        menu.pressionarEnter(ler);
-                }
+            System.out.println(Utils.GetCyanBold() +  "LOGIN" + Utils.GetReset());
+            System.out.print("Email (digite '0' para sair): ");
+            String email = ler.nextLine().trim();
+            
+            if (email.equals("0")) {
+                sair = true;
+                continue;
             }
-        }while (!login.equals("0"));
+
+            System.out.print("Senha: ");
+            String senha = ler.nextLine().trim();
+
+            Pessoa pessoa = loginController.login(email, senha);
+
+            if(pessoa != null){
+                if (pessoa instanceof Estudante) {
+                    EstudanteView.Menu();
+                } else if (pessoa instanceof Docente) {
+                    DocenteView docenteView = new DocenteView();
+                    docenteView.exibirMenuDocentes();
+                } else if (pessoa instanceof Gestor) {
+                    GestorView gestorView = new GestorView();
+                    exibirMenuGestaoGlobal(utils, ler, gestorView, new DocenteView(), new EstudanteView());
+                }
+            } else {
+                System.out.println("\n" + RED + "Credenciais inválidas! Tente novamente." + RESET);
+                utils.pressionarEnter(ler);
+            }
+        } while (!sair);
     }
 
+    private static void exibirMenuGestaoGlobal(Utils menu, Scanner scanner, GestorView gestorView, DocenteView docenteView, EstudanteView estudanteView) {
+        String opcao;
+        ArrayList<String> opcoes = new ArrayList<>();
+        opcoes.add("1. Gerir Gestores");
+        opcoes.add("2. Gerir Docentes");
+        opcoes.add("3. Gerir Estudantes");
+        opcoes.add("0. Logout");
 
-    // Exemplo de uso da estrutura MVC
-//    Pessoa modelo = new Pessoa("Gonçalo", "Rua X", 123456789, LocalDate.of(2000, 1, 1), "goncalo@email.com", "G", 123) {};
-//    PessoaView vista = new PessoaView();
-//    PessoaController controlador = new PessoaController(modelo, vista);
-//
-//        controlador.atualizarView();
-//
-//    // Atualizar dados através do controlador
-//        controlador.setNome("Gonçalo Silva");
-//        controlador.atualizarView();
+        do {
+            menu.exibirSubTitulo("MENU DE GESTÃO ADMINISTRATIVA", opcoes);
+            System.out.print("\nSelecione uma opção: ");
+            opcao = scanner.nextLine().trim();
+
+            switch (opcao) {
+                case "1":
+                    gestorView.exibirMenuGestores();
+                    break;
+                case "2":
+                    docenteView.exibirMenuDocentes();
+                    break;
+                case "3":
+                    EstudanteView.Menu();
+                    break;
+                case "0":
+                    return;
+                default:
+                    System.out.println("Opção inválida!");
+                    menu.pressionarEnter(scanner);
+            }
+        } while (!opcao.equals("0"));
+    }
 }

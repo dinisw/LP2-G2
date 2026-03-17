@@ -46,8 +46,7 @@ public class GestorView {
                     procurarGestor();
                     break;
                 case "4":
-                    System.out.println("\n" + Utils.GetYellow() + "[EM MANUTENÇÃO] Esta funcionalidade ainda não está finalizada." + Utils.GetReset());
-                    menu.pressionarEnter(scanner);
+                    atualizarGestor();
                     break;
                 case "5":
                     eliminarGestor();
@@ -119,6 +118,40 @@ public class GestorView {
             System.out.println("Gestor eliminado com sucesso!");
         } else {
             System.out.println("Erro ao eliminar: Gestor não encontrado.");
+        }
+        menu.pressionarEnter(scanner);
+    }
+
+    private void atualizarGestor() {
+        System.out.print("\nDigite o NIF do gestor a atualizar: ");
+        int nif = Integer.parseInt(scanner.nextLine());
+        Gestor g = gestorCRUD.procurarPorNif(nif);
+
+        if (g != null) {
+            System.out.println("Dados atuais: " + g);
+            System.out.print("Novo Nome (Enter para manter): ");
+            String nome = scanner.nextLine();
+            if (!nome.isEmpty()) g.setNome(nome);
+
+            System.out.print("Nova Morada (Enter para manter): ");
+            String morada = scanner.nextLine();
+            if (!morada.isEmpty()) g.setMorada(morada);
+
+            System.out.print("Novo Email (Enter para manter): ");
+            String email = scanner.nextLine();
+            if (!email.isEmpty()) g.setEmail(email);
+
+            System.out.print("Novo Cargo (Enter para manter): ");
+            String cargo = scanner.nextLine();
+            if (!cargo.isEmpty()) g.setCargo(cargo);
+
+            if (gestorCRUD.atualizarGestor(g)) {
+                System.out.println("Gestor atualizado com sucesso!");
+            } else {
+                System.out.println("Erro ao atualizar gestor.");
+            }
+        } else {
+            System.out.println("Gestor não encontrado.");
         }
         menu.pressionarEnter(scanner);
     }
