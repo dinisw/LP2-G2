@@ -78,16 +78,21 @@ public class EstudanteView {
                     int nif = Integer.parseInt(ler.nextLine());
                     System.out.print("Data de Nascimento (AAAA-MM-DD): ");
                     LocalDate data = LocalDate.parse(ler.nextLine());
-                    System.out.print("Email: ");
-                    String email = ler.nextLine();
-                    System.out.print("Número Mecanográfico: ");
-                    int mec = Integer.parseInt(ler.nextLine());
-                    System.out.print("Palavra-passe: ");
-                    String pass = ler.nextLine();
                     System.out.print("Curso: ");
                     String curso = ler.nextLine();
+                    int mecAuto = crud.gerarNumeroMecanografico();
+                    String emailAuto = mecAuto + "@isep.ipp.pt";
+                    String passAuto = Common.Utils.gerarPalavraPasseAleatoria();
 
-                    model.Estudante novo = new model.Estudante(nome, morada, nif, data, email, mec, pass, curso);
+                    System.out.println("\n-- Credenciais Geradas Automaticamente --");
+                    System.out.println("Nº Mecanográfico: " + mecAuto);
+                    System.out.println("Email do Estudante: " + emailAuto);
+                    System.out.println("Palavra-passe: " + passAuto);
+                    System.out.println("-----------------------------------------");
+
+
+
+                    model.Estudante novo = new model.Estudante(nome, morada, nif, data, emailAuto, mecAuto, passAuto, curso);
                     if (crud.registarEstudante(novo)) {
                         System.out.println(GREEN + "Estudante registado com sucesso!" + RESET);
                     } else {

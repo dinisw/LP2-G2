@@ -119,6 +119,41 @@ public class EstudanteCRUD {
         return false;
     }
 
+    public int gerarNumeroMecanografico() {
+        int anoAtual = java.time.LocalDate.now().getYear() % 100; // mudar quando for criado opção para avançar o tempo manualmento
+        int prefixo = 100 + anoAtual;
+
+        int maxSequencia = 0;
+
+        for (Estudante estudante : estudantes) {
+            int mec = estudante.getNumeroMec();
+            int anoMec = (mec / 10000) % 100;
+
+            if (anoMec == anoAtual) {
+                int sequencia = mec % 10000;
+                if (sequencia > maxSequencia) {
+                    maxSequencia = sequencia;
+                }
+            }
+        }
+        int novaSequencia = maxSequencia + 1;
+
+        return (prefixo * 10000) + novaSequencia;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     public Estudante procurarNumeroMec(int numeroMecanografico) {
         for (int i = 0; i < estudantes.size(); i++) {
             if (estudantes.get(i).getNumeroMec() == numeroMecanografico) {
