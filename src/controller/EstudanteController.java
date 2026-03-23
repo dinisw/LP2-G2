@@ -73,8 +73,8 @@ public class EstudanteController {
 
 
     public void inscreverEmCurso(){
-        Curso c = new Curso();
-        c.pegarCursos();
+//        Curso c = new Curso();
+//        c.pegarCursos();
 
 
     }
