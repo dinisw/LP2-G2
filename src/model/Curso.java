@@ -8,11 +8,33 @@ public class Curso {
     private int duracao = 3;
     private Departamento departamento;
 
-    public ArrayList<String> pegarCursos(){
-        var a = new ArrayList<String>();
-        a.add("1. Matemática");
-        a.add("2. Portugues");
+    public Curso(String nome, int duracao, Departamento departamento) {
+        this.nome = nome;
+        this.duracao = duracao;
+        this.departamento = departamento;
+    }
 
-        return a;
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public int getDuracao() {
+        return duracao;
+    }
+
+    public void setDuracao(int duracao) {
+        this.duracao = duracao;
+    }
+
+    public Departamento getDepartamento() {
+        return departamento;
+    }
+
+    public void setDepartamento(Departamento departamento) {
+        this.departamento = departamento;
     }
 }

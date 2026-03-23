@@ -25,16 +25,17 @@ public class EstudanteCRUD {
             String linha;
             while((linha = reader.readLine()) != null){
                 String[] dados = linha.split(";");
-                if(dados.length >= 8){
+                if(dados.length >= 9){
                     Estudante estudante = new Estudante(
                             dados[0], // nome
                             dados[1], // morada
                             Integer.parseInt(dados[2]), // nif
                             LocalDate.parse(dados[3]), // dataNascimento
                             dados[4], // email
-                            Integer.parseInt(dados[6]), // numeroMec
-                            dados[5], // palavraPasse
-                            dados[7]);
+                            Integer.parseInt(dados[7]), // numeroMec
+                            dados[5], // hash
+                            dados[6], // salt
+                            dados[8]);
                     estudantes.add(estudante);
                     if(estudante.getNumeroMec() >= numeroMecCounter) {
                         numeroMecCounter = estudante.getNumeroMec() + 1;
@@ -60,14 +61,15 @@ public class EstudanteCRUD {
     private void guardarTodosNoFicheiro() {
         try (PrintWriter print = new PrintWriter(new FileWriter(CAMINHO_FICHEIRO))) {
             for (Estudante estudante : estudantes) {
-                String linha = String.format("%s;%s;%d;%s;%s;%d;%s;%s",
+                String linha = String.format("%s;%s;%d;%s;%s;%d;%s;%s;%s",
                         estudante.getNome(),
                         estudante.getMorada(),
                         estudante.getNif(),
                         estudante.getDataNascimento(),
                         estudante.getEmail(),
                         estudante.getNumeroMec(),
-                        estudante.getPalavraPasse(),
+                        estudante.getSalt(),
+                        estudante.getHash(),
                         estudante.getNomeCurso());
                 print.println(linha);
             }

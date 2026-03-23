@@ -1,7 +1,6 @@
 package view;
 
-import Common.Utils;
-import model.Curso;
+import Common.MenuUtils;
 import model.Estudante;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -9,25 +8,11 @@ import java.util.List;
 import java.util.Scanner;
 import controller.EstudanteController;
 
+import static Common.DesignUtils.*;
+
 public class EstudanteView {
-    //region Design
-    public static final String RESET = "\033[0m";
-    public static final String CYAN_BOLD = "\033[1;36m";
-    public static final String WHITE_BOLD = "\033[1;37m";
-    public static final String BLUE = "\033[0;34m";
-    public static final String GREEN = "\033[0;32m";
-    public static final String RED = "\033[0;31m";
-    public static final String YELLOW = "\033[0;33m";
-    private static final int LARGURA = 84;
-    public static final String bordaSuperior = "╔" + "═".repeat(LARGURA) + "╗";
-    public static final String bordaMeio = "╠" + "═".repeat(LARGURA) + "╣";
-    public static final String bordaInferior = "╚" + "═".repeat(LARGURA) + "╝";
-
-
     public static void Menu(){
         Scanner ler = new Scanner(System.in);
-        Utils menu = new Utils();
-
         String opcao = "";
         ArrayList<String> opcoes = new ArrayList<>();
         opcoes.add("1. Inscrever em Curso");
@@ -37,8 +22,8 @@ public class EstudanteView {
         opcoes.add("0. Voltar ao Menu Principal");
 
         do {
-            menu.exibirTitulo();
-            menu.exibirSubTitulo("OPÇÕES ESTUDANTE", opcoes);
+            MenuUtils.exibirTitulo();
+            MenuUtils.exibirSubTitulo("OPÇÕES ESTUDANTE", opcoes);
 
             System.out.print("\n" + WHITE_BOLD + "Selecione uma opção: " + RESET);
             opcao = ler.nextLine().trim();
@@ -46,27 +31,27 @@ public class EstudanteView {
             switch (opcao) {
                 case "1":
                     System.out.println("\n" + YELLOW + "[EM MANUTENÇÃO] Esta funcionalidade ainda não está finalizada." + RESET);
-                    menu.pressionarEnter(ler);
+                    MenuUtils.pressionarEnter(ler);
                     break;
                 case "2":
-					consultarFichaEstudante(menu, ler);
+					consultarFichaEstudante(ler);
                     break;
                 case "3":
                     System.out.println("\n" + YELLOW + "[EM MANUTENÇÃO] Esta funcionalidade ainda não está finalizada." + RESET);
-                    menu.pressionarEnter(ler);
+                    MenuUtils.pressionarEnter(ler);
                     break;
                 case "4":
-                    exibirMenuCRUD(menu, ler);
+                    exibirMenuCRUD(ler);
                     break;
                 case "0":
                     return;
                 default:
                     System.out.println("\n" + RED + "Opção inválida! Tente novamente." + RESET);
-                    menu.pressionarEnter(ler);
+                    MenuUtils.pressionarEnter(ler);
             }
         } while (!opcao.equals("0"));
     }
-    private static void exibirMenuCRUD(Utils menu, Scanner ler) {
+    private static void exibirMenuCRUD(Scanner ler) {
         DAL.EstudanteCRUD crud = new DAL.EstudanteCRUD();
         String opcao = "";
         ArrayList<String> opcoes = new ArrayList<>();
@@ -78,7 +63,7 @@ public class EstudanteView {
         opcoes.add("0. Voltar");
 
         do {
-            menu.exibirSubTitulo("CRUD - ESTUDANTES", opcoes);
+            MenuUtils.exibirSubTitulo("CRUD - ESTUDANTES", opcoes);
             System.out.print("\n" + WHITE_BOLD + "Selecione uma opção: " + RESET);
             opcao = ler.nextLine().trim();
 
@@ -108,7 +93,7 @@ public class EstudanteView {
                     } else {
                         System.out.println(RED + "Erro ao registar estudante." + RESET);
                     }
-                    menu.pressionarEnter(ler);
+                    MenuUtils.pressionarEnter(ler);
                     break;
                 case "2":
                     System.out.println("\n--- LISTA DE ESTUDANTES ---");
@@ -120,7 +105,7 @@ public class EstudanteView {
                             System.out.println("Mec: " + e.getNumeroMec() + " | Nome: " + e.getNome() + " | Curso: " + e.getNomeCurso());
                         }
                     }
-                    menu.pressionarEnter(ler);
+                    MenuUtils.pressionarEnter(ler);
                     break;
                 case "3":
                     System.out.print("\nDigite o Número Mecanográfico: ");
@@ -131,7 +116,7 @@ public class EstudanteView {
                     } else {
                         System.out.println(RED + "Estudante não encontrado." + RESET);
                     }
-                    menu.pressionarEnter(ler);
+                    MenuUtils.pressionarEnter(ler);
                     break;
                 case "4":
                     System.out.print("\nDigite o Número Mecanográfico a atualizar: ");
@@ -163,7 +148,7 @@ public class EstudanteView {
                     } else {
                         System.out.println(RED + "Estudante não encontrado." + RESET);
                     }
-                    menu.pressionarEnter(ler);
+                    MenuUtils.pressionarEnter(ler);
                     break;
                 case "5":
                     System.out.print("\nDigite o Número Mecanográfico a eliminar: ");
@@ -173,32 +158,32 @@ public class EstudanteView {
                     } else {
                         System.out.println(RED + "Erro ao eliminar: Estudante não encontrado." + RESET);
                     }
-                    menu.pressionarEnter(ler);
+                    MenuUtils.pressionarEnter(ler);
                     break;
                 case "0":
                     return;
                 default:
                     System.out.println(RED + "Opção inválida!" + RESET);
-                    menu.pressionarEnter(ler);
+                    MenuUtils.pressionarEnter(ler);
             }
         } while (!opcao.equals("0"));
     }
 
-    public static void inscreverEmCurso(Utils menu, Scanner ler) {
-        Curso c = new Curso();
+    public static void inscreverEmCurso(Scanner ler) {
+//        Curso c = new Curso();
         String opcao = "";
 
         do {
-            var opcoes = c.pegarCursos();
-            menu.exibirSubTitulo("CURSOS", opcoes);
-            System.out.println(CYAN_BOLD + bordaInferior + RESET);
-
-            System.out.print("\n" + WHITE_BOLD + "Selecione uma opção: " + RESET);
-            opcao = ler.nextLine().trim();
+//            var opcoes = c.pegarCursos();
+//            menu.exibirSubTitulo("CURSOS", opcoes);
+//            System.out.println(CYAN_BOLD + bordaInferior + RESET);
+//
+//            System.out.print("\n" + WHITE_BOLD + "Selecione uma opção: " + RESET);
+//            opcao = ler.nextLine().trim();
         }while (!opcao.equals("0"));
     }
 
-    public static void consultarFichaEstudante(Utils menu, Scanner ler) {
+    public static void consultarFichaEstudante(Scanner ler) {
 
         System.out.println(CYAN_BOLD + bordaSuperior + RESET);
         System.out.println(CYAN_BOLD + "║" + WHITE_BOLD + "            CONSULTAR FICHA DE ESTUDANTE            " + CYAN_BOLD + "║" + RESET);
@@ -226,6 +211,6 @@ public class EstudanteView {
         } catch (NumberFormatException e) {
             System.out.println("\n" + RED + "Erro: Formato de número inválido. Digite apenas algarismos." + RESET);
         }
-        menu.pressionarEnter(ler);
+        MenuUtils.pressionarEnter(ler);
     }
 }

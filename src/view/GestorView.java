@@ -1,23 +1,23 @@
 package view;
 
-import Common.Utils;
+import Common.DesignUtils;
+import Common.MenuUtils;
 import DAL.GestorCRUD;
 import model.Gestor;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import static view.Menu.*;
 
 public class GestorView {
     private final GestorCRUD gestorCRUD;
     private final Scanner scanner;
-    private final Utils menu;
+    private final MenuUtils menu;
 
     public GestorView() {
         this.gestorCRUD = new GestorCRUD();
         this.scanner = new Scanner(System.in);
-        this.menu = new Utils();
+        this.menu = new MenuUtils();
     }
 
     public void exibirMenuGestores() {
@@ -32,7 +32,7 @@ public class GestorView {
 
         do {
             menu.exibirSubTitulo("GESTÃO DE GESTORES", opcoes);
-            System.out.print("\n" + Utils.GetWhiteBold() + "Selecione uma opção: " + Utils.GetReset());
+            System.out.print("\n" + DesignUtils.GetWhiteBold() + "Selecione uma opção: " + DesignUtils.GetReset());
             opcao = scanner.nextLine().trim();
 
             switch (opcao) {

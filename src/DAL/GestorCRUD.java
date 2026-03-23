@@ -24,15 +24,16 @@ public class GestorCRUD {
             String linha;
             while ((linha = reader.readLine()) != null) {
                 String[] dados = linha.split(";");
-                if (dados.length == 7) {
+                if (dados.length == 8) {
                     Gestor gestor = new Gestor(
                             dados[0], // nome
                             dados[1], // morada
                             Integer.parseInt(dados[2]), // nif
                             LocalDate.parse(dados[3]), // dataNascimento
                             dados[4], // email
-                            dados[5], // palavraPasse
-                            dados[6]  // cargo
+                            dados[5], // hash
+                            dados[6], // salt
+                            dados[7]  // cargo
                     );
                     gestores.add(gestor);
                 }
@@ -45,13 +46,14 @@ public class GestorCRUD {
     private void guardarTodosNoFicheiro() {
         try (PrintWriter print = new PrintWriter(new FileWriter(CAMINHO_FICHEIRO))) {
             for (Gestor gestor : gestores) {
-                String linha = String.format("%s;%s;%d;%s;%s;%s;%s",
+                String linha = String.format("%s;%s;%d;%s;%s;%s;%s;%s",
                         gestor.getNome(),
                         gestor.getMorada(),
                         gestor.getNif(),
                         gestor.getDataNascimento(),
                         gestor.getEmail(),
-                        gestor.getPalavraPasse(),
+                        gestor.getHash(),
+                        gestor.getSalt(),
                         gestor.getCargo());
                 print.println(linha);
             }

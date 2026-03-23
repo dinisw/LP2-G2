@@ -1,6 +1,10 @@
 package view;
 
-import Common.Utils;
+import Common.BackendUtils;
+import Common.DesignUtils;
+import Common.MenuUtils;
+import Common.SenhaUtils;
+import DAL.EstudanteCRUD;
 import controller.LoginController;
 import model.Docente;
 import model.Estudante;
@@ -16,26 +20,47 @@ public class LoginView {
 
     public static void Login(){
         Scanner ler = new Scanner(System.in);
-        Utils utils = new Utils();
         LoginController loginController = new LoginController();
         boolean sair = false;
 
         do {
-            Utils.exibirTitulo();
-
-            System.out.println(Utils.GetCyanBold() +  "LOGIN" + Utils.GetReset());
-            System.out.print("Email (digite '0' para sair): ");
-            String email = ler.nextLine().trim();
-            
+            MenuUtils.exibirTitulo();
+            String email = "";
+            String senha = "";
+            boolean emailValido = false;
+            while (!emailValido) {
+                System.out.println(DesignUtils.GetCyanBold() + "LOGIN" + DesignUtils.GetReset());
+                System.out.print("Email (digite '0' para sair): ");
+                email = ler.nextLine().trim();
+                emailValido = BackendUtils.isEmailIsepValido(email);
+                if (!emailValido){
+                    System.out.print("Email inválido, tente novamente!!");
+                    MenuUtils.pressionarEnter(ler);
+                }
+            }
             if (email.equals("0")) {
                 sair = true;
                 continue;
             }
 
-            System.out.print("Senha: ");
-            String senha = ler.nextLine().trim();
+            boolean senhaValido = false;
 
-            Pessoa pessoa = loginController.login(email, senha);
+            while (!senhaValido) {
+                System.out.print("Senha: ");
+                char[] senhaArray = System.console().readPassword();
+                senha = new String(senhaArray);
+                java.util.Arrays.fill(senhaArray, ' ');
+                var est = new EstudanteCRUD();
+                int numMec = Integer.parseInt(email.split("@")[0]);
+                var estudante = est.procurarNumeroMec(numMec);
+                senhaValido = SenhaUtils.verificarSenha(senha, estudante.getSalt(), estudante.getHash());
+
+                if (!senhaValido){
+                    System.out.print("Senha incorreta, tente novamente!!");
+                    MenuUtils.pressionarEnter(ler);
+                }
+            }
+            Pessoa pessoa = loginController.login(email);
 
             if(pessoa != null){
                 if (pessoa instanceof Estudante) {
@@ -45,16 +70,16 @@ public class LoginView {
                     docenteView.exibirMenuDocentes();
                 } else if (pessoa instanceof Gestor) {
                     GestorView gestorView = new GestorView();
-                    exibirMenuGestaoGlobal(utils, ler, gestorView, new DocenteView(), new EstudanteView());
+                    exibirMenuGestaoGlobal(ler, gestorView, new DocenteView(), new EstudanteView());
                 }
             } else {
                 System.out.println("\n" + RED + "Credenciais inválidas! Tente novamente." + RESET);
-                utils.pressionarEnter(ler);
+                MenuUtils.pressionarEnter(ler);
             }
         } while (!sair);
     }
 
-    private static void exibirMenuGestaoGlobal(Utils menu, Scanner scanner, GestorView gestorView, DocenteView docenteView, EstudanteView estudanteView) {
+    private static void exibirMenuGestaoGlobal(Scanner scanner, GestorView gestorView, DocenteView docenteView, EstudanteView estudanteView) {
         String opcao;
         ArrayList<String> opcoes = new ArrayList<>();
         opcoes.add("1. Gerir Gestores");
@@ -63,7 +88,7 @@ public class LoginView {
         opcoes.add("0. Logout");
 
         do {
-            menu.exibirSubTitulo("MENU DE GESTÃO ADMINISTRATIVA", opcoes);
+            MenuUtils.exibirSubTitulo("MENU DE GESTÃO ADMINISTRATIVA", opcoes);
             System.out.print("\nSelecione uma opção: ");
             opcao = scanner.nextLine().trim();
 
@@ -75,13 +100,13 @@ public class LoginView {
                     docenteView.exibirMenuDocentes();
                     break;
                 case "3":
-                    EstudanteView.Menu();
+                    estudanteView.Menu();
                     break;
                 case "0":
                     return;
                 default:
                     System.out.println("Opção inválida!");
-                    menu.pressionarEnter(scanner);
+                    MenuUtils.pressionarEnter(scanner);
             }
         } while (!opcao.equals("0"));
     }
