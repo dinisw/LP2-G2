@@ -4,29 +4,11 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.regex.Pattern;
 
-public class Utils {
-    //region Design
-    public static final String RESET = "\033[0m";
-    public static final String CYAN_BOLD = "\033[1;36m";
-    public static final String WHITE_BOLD = "\033[1;37m";
-    public static final String BLUE = "\033[0;34m";
-    public static final String GREEN = "\033[0;32m";
-    public static final String RED = "\033[0;31m";
-    public static final String YELLOW = "\033[0;33m";
-    private static final int LARGURA = 84;
+import static Common.DesignUtils.*;
 
-    public static String GetReset(){return RESET;}
-    public static String GetCyanBold(){return CYAN_BOLD;}
-    public static String GetWhiteBold(){return WHITE_BOLD;}
-    public static String GetBlue(){return BLUE;}
-    public static String GetGreen(){return GREEN;}
-    public static String GetRed(){return RED;}
-    public static String GetYellow(){return YELLOW;}
-    public static int GetLargura(){return LARGURA;}
-
-
-    //endregion
+public class MenuUtils {
     //region MENU
     public static void exibirTitulo() {
         System.out.print("\033[H\033[2J");
@@ -83,4 +65,5 @@ public class Utils {
         ler.nextLine();
     }
     //endregion
+
 }

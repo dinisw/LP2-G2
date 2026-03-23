@@ -10,7 +10,8 @@ public abstract class Pessoa {
     private int nif;
     private LocalDate dataNascimento;
     private String morada;
-    private String palavraPasse;
+    private String hash;
+    private String salt;
 
 
     public Pessoa() {
@@ -19,16 +20,18 @@ public abstract class Pessoa {
         nif = 0;
         dataNascimento = null;
         morada = "";
-        palavraPasse = "";
+        hash = "";
+        salt = "";
     }
 
-    public Pessoa(String nome, String morada, int nif, LocalDate dataNascimento, String email, String palavraPasse) {
+    public Pessoa(String nome, String morada, int nif, LocalDate dataNascimento, String email, String hash, String salt) {
         this.nome = nome;
         this.morada = morada;
         this.nif = nif;
         this.dataNascimento = dataNascimento;
         this.email = email;
-        this.palavraPasse = palavraPasse;
+        this.hash = hash;
+        this.salt = salt;
     }
 
     public String getNome() {
@@ -71,12 +74,19 @@ public abstract class Pessoa {
         this.morada = morada;
     }
 
-    public String getPalavraPasse() {
-        return palavraPasse;
+    public String getHash() {        return hash;
     }
 
-    public void setPalavraPasse(String palavraPasse) {
-        this.palavraPasse = palavraPasse;
+    public void setHash(String hash) {
+        this.hash = hash;
+    }
+
+    public String getSalt() {
+        return salt;
+    }
+
+    public void setSalt(String salt) {
+        this.salt = salt;
     }
 
     @Override

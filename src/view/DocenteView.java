@@ -1,23 +1,23 @@
 package view;
 
-import Common.Utils;
+import Common.DesignUtils;
+import Common.MenuUtils;
 import DAL.DocenteCRUD;
 import model.Docente;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import static view.Menu.*;
 
 public class DocenteView {
     private final DocenteCRUD docenteCRUD;
     private final Scanner scanner;
-    private final Utils menu;
+    private final MenuUtils menu;
 
     public DocenteView() {
         this.docenteCRUD = new DocenteCRUD();
         this.scanner = new Scanner(System.in);
-        this.menu = new Utils();
+        this.menu = new MenuUtils();
     }
 
     public void exibirMenuDocentes() {
@@ -32,7 +32,7 @@ public class DocenteView {
 
         do {
             menu.exibirSubTitulo("GESTÃO DE DOCENTES", opcoes);
-            System.out.print("\n" + Utils.GetWhiteBold() + "Selecione uma opção: " + Utils.GetReset());
+            System.out.print("\n" + DesignUtils.GetWhiteBold() + "Selecione uma opção: " + DesignUtils.GetReset());
             opcao = scanner.nextLine().trim();
 
             switch (opcao) {
