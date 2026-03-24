@@ -2,6 +2,7 @@ package view;
 
 import Common.DesignUtils;
 import Common.MenuUtils;
+import Common.SenhaUtils;
 import DAL.GestorCRUD;
 import model.Gestor;
 import java.time.LocalDate;
@@ -73,11 +74,11 @@ public class GestorView {
         System.out.print("Email: ");
         String email = scanner.nextLine();
         System.out.print("Palavra-passe: ");
-        String pass = scanner.nextLine();
+        String pass = Common.SenhaUtils.gerarPalavraPasseAleatoria();
         System.out.print("Cargo: ");
         String cargo = scanner.nextLine();
-
-        Gestor novo = new Gestor(nome, morada, nif, dataNascimento, email, pass, cargo);
+        String salt = SenhaUtils.gerarSalt();
+        Gestor novo = new Gestor(nome,morada,nif,dataNascimento,email,pass, salt, cargo);
         if (gestorCRUD.registarGestor(novo)) {
             System.out.println("Gestor registado com sucesso!");
         } else {

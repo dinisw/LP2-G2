@@ -1,6 +1,7 @@
 package view;
 
 import Common.MenuUtils;
+import Common.SenhaUtils;
 import model.Estudante;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -82,7 +83,10 @@ public class EstudanteView {
                     String curso = ler.nextLine();
                     int mecAuto = crud.gerarNumeroMecanografico();
                     String emailAuto = mecAuto + "@isep.ipp.pt";
-                    String passAuto = Common.Utils.gerarPalavraPasseAleatoria();
+                    String salt = SenhaUtils.gerarSalt();
+                    String passAuto = Common.SenhaUtils.gerarPalavraPasseAleatoria();
+
+                    String senha = SenhaUtils.gerarHashComSalt(passAuto, salt);
 
                     System.out.println("\n-- Credenciais Geradas Automaticamente --");
                     System.out.println("Nº Mecanográfico: " + mecAuto);
@@ -92,7 +96,7 @@ public class EstudanteView {
 
 
 
-                    model.Estudante novo = new model.Estudante(nome, morada, nif, data, emailAuto, mecAuto, passAuto, curso);
+                    model.Estudante novo = new model.Estudante(nome, morada, nif, data, emailAuto, mecAuto, passAuto, salt, curso);
                     if (crud.registarEstudante(novo)) {
                         System.out.println(GREEN + "Estudante registado com sucesso!" + RESET);
                     } else {

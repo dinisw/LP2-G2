@@ -2,6 +2,7 @@ package view;
 
 import Common.DesignUtils;
 import Common.MenuUtils;
+import Common.SenhaUtils;
 import DAL.DocenteCRUD;
 import model.Docente;
 import java.time.LocalDate;
@@ -73,11 +74,12 @@ public class DocenteView {
         System.out.print("Email: ");
         String email = scanner.nextLine();
         System.out.print("Palavra-passe: ");
+        String salt = SenhaUtils.gerarSalt();
         String pass = scanner.nextLine();
         System.out.print("Sigla: ");
         String sigla = scanner.nextLine();
 
-        Docente novo = new Docente(nome, morada, nif, dataNascimento, email, pass, sigla, null, null);
+        Docente novo = new Docente(nome, morada, nif, dataNascimento, email, pass, salt, sigla,null, null);
         if (docenteCRUD.registarDocente(novo)) {
             System.out.println("Docente registado com sucesso!");
         } else {

@@ -24,15 +24,16 @@ public class DocenteCRUD {
             String linha;
             while ((linha = reader.readLine()) != null) {
                 String[] dados = linha.split(";");
-                if (dados.length >= 7) {
+                if (dados.length >= 9) {
                     Docente docente = new Docente(
                             dados[0], // nome
                             dados[1], // morada
                             Integer.parseInt(dados[2]), // nif
                             LocalDate.parse(dados[3]), // dataNascimento
                             dados[4], // email
-                            dados[5], // palavraPasse
-                            dados[6], // sigla
+                            dados[5], // hash
+                            dados[6], // salt
+                            dados[7], // sigla
                             null,     // listaAvaliacao (simplificado para CSV por agora)
                             null      // unidadeCurricular (simplificado para CSV por agora)
                     );
@@ -47,13 +48,14 @@ public class DocenteCRUD {
     private void guardarTodosNoFicheiro() {
         try (PrintWriter print = new PrintWriter(new FileWriter(CAMINHO_FICHEIRO))) {
             for (Docente docente : docentes) {
-                String linha = String.format("%s;%s;%d;%s;%s;%s;%s",
+                String linha = String.format("%s;%s;%d;%s;%s;%s;%s;%s",
                         docente.getNome(),
                         docente.getMorada(),
                         docente.getNif(),
                         docente.getDataNascimento(),
                         docente.getEmail(),
-                        docente.getPalavraPasse(),
+                        docente.getHash(),
+                        docente.getSalt(),
                         docente.getSigla());
                 print.println(linha);
             }
