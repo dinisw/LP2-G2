@@ -78,7 +78,6 @@ public class EstudanteCRUD {
         }
     }
 
-    //Retorna a lista de estudantes
     public List<Estudante> getEstudantes() {
             return estudantes;
     }
@@ -140,19 +139,6 @@ public class EstudanteCRUD {
 
         return (prefixo * 10000) + novaSequencia;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     public Estudante procurarNumeroMec(int numeroMecanografico) {
         for (int i = 0; i < estudantes.size(); i++) {
