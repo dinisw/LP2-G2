@@ -7,11 +7,13 @@ public class Curso {
     private String nome;
     private int duracao = 3;
     private Departamento departamento;
+    private List<UnidadeCurricular> uc;
 
     public Curso(String nome, int duracao, Departamento departamento) {
         this.nome = nome;
         this.duracao = duracao;
         this.departamento = departamento;
+        this.uc = new ArrayList<>();
     }
 
     public String getNome() {
@@ -36,5 +38,25 @@ public class Curso {
 
     public void setDepartamento(Departamento departamento) {
         this.departamento = departamento;
+    }
+
+    public boolean adicionarUnidadeCurricular(UnidadeCurricular novaUc) {
+        int contagemAno = 0;
+
+        // Conta quantas UCs já existem no mesmo ano da nova UC
+        for (UnidadeCurricular uc : uc) {
+            if (uc.getAnoCurricular() == novaUc.getAnoCurricular()) {
+                contagemAno++;
+            }
+        }
+
+        // Se ainda não chegou às 5, adiciona e devolve sucesso
+        if (contagemAno < 5) {
+            this.uc.add(novaUc);
+            return true;
+        }
+
+        // Se já tem 5, bloqueia a inserção
+        return false;
     }
 }
