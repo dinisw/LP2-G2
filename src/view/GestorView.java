@@ -74,11 +74,12 @@ public class GestorView {
         System.out.print("Email: ");
         String email = scanner.nextLine();
         System.out.print("Palavra-passe: ");
-        String pass = Common.SenhaUtils.gerarPalavraPasseAleatoria();
+        String passDigitada = scanner.nextLine();
+        String salt = SenhaUtils.gerarSalt();
+        String hash = SenhaUtils.gerarHashComSalt(passDigitada, salt);
         System.out.print("Cargo: ");
         String cargo = scanner.nextLine();
-        String salt = SenhaUtils.gerarSalt();
-        Gestor novo = new Gestor(nome,morada,nif,dataNascimento,email,pass, salt, cargo);
+        Gestor novo = new Gestor(nome, morada, nif, dataNascimento, email, hash, salt, cargo);
         if (gestorCRUD.registarGestor(novo)) {
             System.out.println("Gestor registado com sucesso!");
         } else {
