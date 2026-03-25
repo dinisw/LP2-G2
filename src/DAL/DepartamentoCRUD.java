@@ -27,7 +27,7 @@ public class DepartamentoCRUD {
                     departamentos.add(dep);
                 }
             }
-        } catch (IOException e) {
+        } catch (IOException | NumberFormatException e) {
             System.out.println("Erro ao carregar departamentos: " + e.getMessage());
         }
     }
@@ -35,16 +35,18 @@ public class DepartamentoCRUD {
     private void guardarTodosNoFicheiro() {
         try (PrintWriter print = new PrintWriter(new FileWriter(CAMINHO_FICHEIRO))) {
             for (Departamento dep : departamentos) {
-                print.println(dep.getNome() + ";" + dep.getSigla());
+                String linha = String.format("%s;%s",
+                        dep.getNome(),
+                        dep.getSigla());
+                print.println(linha);
             }
-        } catch (IOException e) {
+        } catch (IOException | NumberFormatException e) {
             System.out.println("Erro ao guardar departamentos: " + e.getMessage());
         }
     }
 
     // CREATE
     public boolean registarDepartamento(Departamento dep) {
-        // Só regista se não existir nenhum com a mesma sigla
         if (dep != null && procurarPorSigla(dep.getSigla()) == null) {
             departamentos.add(dep);
             guardarTodosNoFicheiro();
@@ -58,7 +60,6 @@ public class DepartamentoCRUD {
         return new ArrayList<>(departamentos);
     }
 
-    // MÉTODO MÁGICO: Procura um objeto Departamento pela sua sigla
     public Departamento procurarPorSigla(String sigla) {
         for (Departamento dep : departamentos) {
             if (dep.getSigla().equalsIgnoreCase(sigla)) {
@@ -68,7 +69,7 @@ public class DepartamentoCRUD {
         return null;
     }
 
-    // UPDATE
+    //UPDATE
     public boolean atualizarDepartamento(Departamento depAtualizado) {
         for (int i = 0; i < departamentos.size(); i++) {
             if (departamentos.get(i).getSigla().equalsIgnoreCase(depAtualizado.getSigla())) {

@@ -2,7 +2,7 @@ package view;
 
 import Common.DesignUtils;
 import Common.MenuUtils;
-import DAL.DepartamentoCRUD;
+import controller.DepartamentoController;
 import model.Departamento;
 
 import java.util.ArrayList;
@@ -10,11 +10,11 @@ import java.util.List;
 import java.util.Scanner;
 
 public class DepartamentoView {
-    private final DepartamentoCRUD departamentoCRUD;
+    private final DepartamentoController departamentoController;
     private final Scanner scanner;
 
     public DepartamentoView() {
-        this.departamentoCRUD = new DepartamentoCRUD();
+        this.departamentoController = new DepartamentoController();
         this.scanner = new Scanner(System.in);
     }
 
@@ -54,8 +54,7 @@ public class DepartamentoView {
         System.out.print("Sigla (ex: EI, MAT): ");
         String sigla = scanner.nextLine().trim().toUpperCase();
 
-        Departamento novo = new Departamento(nome, sigla);
-        if (departamentoCRUD.registarDepartamento(novo)) {
+        if (departamentoController.registarDepartamento(nome, sigla)) {
             System.out.println(DesignUtils.GetGreen() + "Departamento registado com sucesso!" + DesignUtils.GetReset());
         } else {
             System.out.println(DesignUtils.GetRed() + "Erro: Já existe um departamento com essa sigla." + DesignUtils.GetReset());
@@ -65,7 +64,7 @@ public class DepartamentoView {
 
     private void listarDepartamentos() {
         System.out.println("\n--- LISTA DE DEPARTAMENTOS ---");
-        List<Departamento> lista = departamentoCRUD.getDepartamentos();
+        List<Departamento> lista = departamentoController.listarDepartamentos();
         if (lista.isEmpty()) {
             System.out.println("Nenhum departamento registado.");
         } else {
@@ -77,9 +76,10 @@ public class DepartamentoView {
     }
 
     private void procurarDepartamento() {
+        listarDepartamentos();
         System.out.print("\nDigite a sigla do departamento: ");
         String sigla = scanner.nextLine().trim();
-        Departamento d = departamentoCRUD.procurarPorSigla(sigla);
+        Departamento d = departamentoController.procurarDepartamento(sigla);
         if (d != null) {
             System.out.println("Encontrado: " + d.getNome() + " (" + d.getSigla() + ")");
         } else {
@@ -89,9 +89,10 @@ public class DepartamentoView {
     }
 
     private void atualizarDepartamento() {
+        listarDepartamentos();
         System.out.print("\nDigite a sigla do departamento a atualizar: ");
         String sigla = scanner.nextLine().trim();
-        Departamento d = departamentoCRUD.procurarPorSigla(sigla);
+        Departamento d = departamentoController.procurarDepartamento(sigla);
 
         if (d != null) {
             System.out.println("Dados atuais: " + d.getNome());
@@ -99,7 +100,7 @@ public class DepartamentoView {
             String nome = scanner.nextLine().trim();
             if (!nome.isEmpty()) d.setNome(nome);
 
-            if (departamentoCRUD.atualizarDepartamento(d)) {
+            if (departamentoController.atualizarDepartamento(sigla, nome)) {
                 System.out.println(DesignUtils.GetGreen() + "Departamento atualizado com sucesso!" + DesignUtils.GetReset());
             }
         } else {
@@ -109,9 +110,10 @@ public class DepartamentoView {
     }
 
     private void eliminarDepartamento() {
+        listarDepartamentos();
         System.out.print("\nDigite a sigla do departamento a eliminar: ");
         String sigla = scanner.nextLine().trim();
-        if (departamentoCRUD.eliminarDepartamento(sigla)) {
+        if (departamentoController.eliminarDepartamento(sigla)) {
             System.out.println(DesignUtils.GetGreen() + "Departamento eliminado com sucesso!" + DesignUtils.GetReset());
         } else {
             System.out.println(DesignUtils.GetRed() + "Erro ao eliminar: Departamento não encontrado." + DesignUtils.GetReset());

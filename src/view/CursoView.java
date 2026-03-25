@@ -2,20 +2,18 @@ package view;
 
 import Common.DesignUtils;
 import Common.MenuUtils;
-import DAL.CursoCRUD;
+import controller.CursoController;
 import model.Curso;
-import model.Departamento;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
 public class CursoView {
-    private final CursoCRUD cursoCRUD;
+    private final CursoController cursoController;
     private final Scanner scanner;
 
     public CursoView() {
-        this.cursoCRUD = new CursoCRUD();
+        this.cursoController = new CursoController();
         this.scanner = new Scanner(System.in);
     }
 
@@ -52,47 +50,44 @@ public class CursoView {
         System.out.println("\n--- REGISTO DE CURSO ---");
         System.out.print("Nome do Curso: ");
         String nome = scanner.nextLine().trim();
-        System.out.print("Sigla do Departamento Associado: ");
+        System.out.print("Sigla do Departamento Associado (ex: EI): ");
         String siglaDep = scanner.nextLine().trim();
 
-        // O CursoCRUD agora precisa do nome, duração (3) e o objeto Departamento (que ele próprio vai procurar)
-        DAL.DepartamentoCRUD depCRUD = new DAL.DepartamentoCRUD();
-        Departamento dep = depCRUD.procurarPorSigla(siglaDep);
+        int resultado = cursoController.registarCurso(nome, siglaDep);
 
-        if (dep != null) {
-            Curso novo = new Curso(nome, 3, dep);
-            if (cursoCRUD.registarCurso(novo)) {
-                System.out.println(DesignUtils.GetGreen() + "Curso registado com sucesso!" + DesignUtils.GetReset());
-            } else {
-                System.out.println(DesignUtils.GetRed() + "Erro: Já existe um curso com esse nome." + DesignUtils.GetReset());
-            }
+        if (resultado == 1) {
+            System.out.println(DesignUtils.GetGreen() + "Curso registado com sucesso!" + DesignUtils.GetReset());
+        } else if (resultado == -1) {
+            System.out.println(DesignUtils.GetRed() + "Erro: O Departamento com a sigla '" + siglaDep + "' não existe! Registe-o primeiro." + DesignUtils.GetReset());
         } else {
-            System.out.println(DesignUtils.GetRed() + "Erro: Departamento com a sigla '" + siglaDep + "' não existe! Registe o departamento primeiro." + DesignUtils.GetReset());
+            System.out.println(DesignUtils.GetRed() + "Erro: Já existe um curso com esse nome no sistema." + DesignUtils.GetReset());
         }
+
         MenuUtils.pressionarEnter(scanner);
     }
 
     private void listarCursos() {
         System.out.println("\n--- LISTA DE CURSOS ---");
-        List<Curso> lista = cursoCRUD.getCursos();
+        List<Curso> lista = cursoController.listarCursos();
         if (lista.isEmpty()) {
             System.out.println("Nenhum curso registado.");
         } else {
             for (Curso c : lista) {
-                String nomeDep = (c.getDepartamento() != null) ? c.getDepartamento().getNome() : "Sem departamento";
-                System.out.println("Curso: " + c.getNome() + " | Duração: " + c.getDuracao() + " anos | Dep: " + nomeDep);
+                // Usamos o toString() limpo que criámos no modelo Curso
+                System.out.println(c.toString());
             }
         }
         MenuUtils.pressionarEnter(scanner);
     }
 
     private void procurarCurso() {
-        System.out.print("\nDigite o nome do curso: ");
+        listarCursos();
+        System.out.print("\nDigite o nome do curso a procurar: ");
         String nome = scanner.nextLine().trim();
-        Curso c = cursoCRUD.procurarPorNome(nome);
+
+        Curso c = cursoController.procurarCurso(nome);
         if (c != null) {
-            String nomeDep = (c.getDepartamento() != null) ? c.getDepartamento().getNome() : "Sem departamento";
-            System.out.println("Curso: " + c.getNome() + " | Duração: " + c.getDuracao() + " anos | Dep: " + nomeDep);
+            System.out.println("Encontrado: " + c.toString());
         } else {
             System.out.println(DesignUtils.GetRed() + "Curso não encontrado." + DesignUtils.GetReset());
         }
@@ -100,19 +95,21 @@ public class CursoView {
     }
 
     private void atualizarCurso() {
+        listarCursos();
         System.out.print("\nDigite o nome do curso a atualizar: ");
-        String nome = scanner.nextLine().trim();
-        Curso c = cursoCRUD.procurarPorNome(nome);
+        String nomeAtual = scanner.nextLine().trim();
+
+        Curso c = cursoController.procurarCurso(nomeAtual);
 
         if (c != null) {
+            System.out.println("Dados atuais: " + c.getNome());
             System.out.print("Novo Nome (Enter para manter): ");
             String novoNome = scanner.nextLine().trim();
-            if (novoNome.isEmpty()) novoNome = c.getNome();
 
-            Curso cursoAtualizado = new Curso(novoNome, c.getDuracao(), c.getDepartamento());
-
-            if (cursoCRUD.atualizarCurso(nome, cursoAtualizado)) {
+            if (cursoController.atualizarCurso(nomeAtual, novoNome)) {
                 System.out.println(DesignUtils.GetGreen() + "Curso atualizado com sucesso!" + DesignUtils.GetReset());
+            } else {
+                System.out.println(DesignUtils.GetRed() + "Nenhuma alteração efetuada (ou curso tem alunos alocados)." + DesignUtils.GetReset());
             }
         } else {
             System.out.println(DesignUtils.GetRed() + "Curso não encontrado." + DesignUtils.GetReset());
@@ -121,10 +118,14 @@ public class CursoView {
     }
 
     private void eliminarCurso() {
+        listarCursos();
         System.out.print("\nDigite o nome do curso a eliminar: ");
         String nome = scanner.nextLine().trim();
-        if (cursoCRUD.eliminarCurso(nome)) {
+
+        if (cursoController.eliminarCurso(nome)) {
             System.out.println(DesignUtils.GetGreen() + "Curso eliminado com sucesso!" + DesignUtils.GetReset());
+        } else {
+            System.out.println(DesignUtils.GetRed() + "Erro ao eliminar: Curso não encontrado ou tem alunos alocados." + DesignUtils.GetReset());
         }
         MenuUtils.pressionarEnter(scanner);
     }

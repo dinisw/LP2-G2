@@ -30,14 +30,6 @@ public class LoginController {
         if (gestor != null){
             return gestor;
         }
-
-//        if(email.equals("admin@isep.ipp.pt") && password.equals("admin123")) {
-//            Gestor admin = new Gestor();
-//            admin.setNome("Admin");
-//            admin.setEmail("admin@isep.ipp.pt");
-//            return admin;
-//        }
-
         return null;
     }
 }
