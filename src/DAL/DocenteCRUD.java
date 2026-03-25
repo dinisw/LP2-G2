@@ -24,7 +24,7 @@ public class DocenteCRUD {
             String linha;
             while ((linha = reader.readLine()) != null) {
                 String[] dados = linha.split(";");
-                if (dados.length >= 9) {
+                if (dados.length >= 8) {
                     Docente docente = new Docente(
                             dados[0], // nome
                             dados[1], // morada

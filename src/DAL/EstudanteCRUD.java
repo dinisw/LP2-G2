@@ -26,6 +26,9 @@ public class EstudanteCRUD {
             while((linha = reader.readLine()) != null){
                 String[] dados = linha.split(";");
                 if(dados.length >= 9){
+                    String salt = dados[5];
+                    String hash = dados[6];
+
                     Estudante estudante = new Estudante(
                             dados[0], // nome
                             dados[1], // morada
@@ -33,8 +36,8 @@ public class EstudanteCRUD {
                             LocalDate.parse(dados[3]), // dataNascimento
                             dados[4], // email
                             Integer.parseInt(dados[7]), // numeroMec
-                            dados[5], // hash
-                            dados[6], // salt
+                            hash, // hash
+                            salt, // salt
                             dados[8]);
                     estudantes.add(estudante);
                     if(estudante.getNumeroMec() >= numeroMecCounter) {
@@ -68,8 +71,8 @@ public class EstudanteCRUD {
                         estudante.getDataNascimento(),
                         estudante.getEmail(),
                         estudante.getNumeroMec(),
-                        estudante.getSalt(),
                         estudante.getHash(),
+                        estudante.getSalt(),
                         estudante.getNomeCurso());
                 print.println(linha);
             }

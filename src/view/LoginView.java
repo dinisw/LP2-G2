@@ -43,36 +43,45 @@ public class LoginView {
                 continue;
             }
 
-            boolean senhaValido = false;
+            boolean senhaValida = false;
+            Pessoa pessoa = null;
 
-            while (!senhaValido) {
+            while (!senhaValida) {
                 System.out.print("Senha: ");
-                char[] senhaArray = System.console().readPassword();
-                senha = new String(senhaArray);
-                java.util.Arrays.fill(senhaArray, ' ');
-                var est = new EstudanteCRUD();
-                int numMec = Integer.parseInt(email.split("@")[0]);
-                var estudante = est.procurarNumeroMec(numMec);
-                senhaValido = SenhaUtils.verificarSenha(senha, estudante.getSalt(), estudante.getHash());
+                java.io.Console console = System.console();
+                if (console != null) {
+                    char[] senhaArray = console.readPassword();
+                    senha = new String(senhaArray);
+                    java.util.Arrays.fill(senhaArray, ' ');
+                } else {
+                    // Fallback para quando não há consola real (ex: dentro do IDE)
+                    senha = ler.nextLine();
+                }
 
-                if (!senhaValido) {
+                pessoa = loginController.login(email);
+
+                if (pessoa != null) {
+                    senhaValida = SenhaUtils.verificarSenha(senha, pessoa.getSalt(), pessoa.getHash());
+                } else {
+                    // Se a pessoa for null, significa que o email não existe em nenhum CRUD
+                    break;
+                }
+
+                if (!senhaValida) {
                     System.out.print("Senha incorreta, tente novamente!!");
                     MenuUtils.pressionarEnter(ler);
                 }
             }
-            Pessoa pessoa = loginController.login(email);
 
-            if (pessoa != null) {
+            if (pessoa != null && senhaValida) {
                 if (pessoa instanceof Estudante) {
                     EstudanteView.Menu();
                 } else if (pessoa instanceof Docente) {
                     DocenteView docenteView = new DocenteView();
-                    docenteView.exibirMenuDocentes();
+                    docenteView.exibirMenuPessoalDocente((Docente) pessoa);
                 } else if (pessoa instanceof Gestor) {
                     GestorView gestorView = new GestorView();
-                    CursoView cursoView = new CursoView();
-                    DepartamentoView departamentoView = new DepartamentoView();
-                    exibirMenuGestaoGlobal(ler, gestorView, new DocenteView(), new EstudanteView(), new CursoView(), new DepartamentoView());
+                    exibirMenuGestaoGlobal(ler, gestorView, new DocenteView(), new EstudanteView(), new CursoView(), new DepartamentoView(), new controller.UnidadeCurricularController());
                 }
             } else {
                 System.out.println("\n" + RED + "Credenciais inválidas! Tente novamente." + RESET);
@@ -81,7 +90,7 @@ public class LoginView {
         } while (!sair);
     }
 
-    private static void exibirMenuGestaoGlobal(Scanner scanner, GestorView gestorView, DocenteView docenteView, EstudanteView estudanteView, CursoView cursoView, DepartamentoView departamentoView) {
+    private static void exibirMenuGestaoGlobal(Scanner scanner, GestorView gestorView, DocenteView docenteView, EstudanteView estudanteView, CursoView cursoView, DepartamentoView departamentoView, controller.UnidadeCurricularController ucController) {
         String opcao;
         ArrayList<String> opcoes = new ArrayList<>();
         opcoes.add("1. Gerir Gestores");
@@ -89,6 +98,7 @@ public class LoginView {
         opcoes.add("3. Gerir Estudantes");
         opcoes.add("4. Gerir Cursos");
         opcoes.add("5. Gerir Departamentos");
+        opcoes.add("6. Gerir Unidades Curriculares");
         opcoes.add("0. Logout");
 
         do {
@@ -111,6 +121,9 @@ public class LoginView {
                     break;
                 case "5":
                     departamentoView.exibirMenuDepartamentos();
+                    break;
+                case "6":
+                    ucController.exibirMenuGestaoUCs();
                     break;
                 case "0":
                     return;

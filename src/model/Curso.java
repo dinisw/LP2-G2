@@ -40,6 +40,10 @@ public class Curso {
         this.departamento = departamento;
     }
 
+    public List<UnidadeCurricular> getUc() {
+        return new ArrayList<>(uc);
+    }
+
     public boolean adicionarUnidadeCurricular(UnidadeCurricular novaUc) {
         int contagemAno = 0;
 
