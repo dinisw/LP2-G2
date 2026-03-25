@@ -3,6 +3,7 @@ package DAL;
 import model.Departamento;
 import model.Curso;
 import model.Estudante;
+import model.UnidadeCurricular;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +23,7 @@ public class CursoCRUD {
 
         // Instanciamos o CRUD dos departamentos para fazer a "tradução" da sigla
         DepartamentoCRUD depCRUD = new DepartamentoCRUD();
+        UnidadeCurricularCRUD ucCRUD = new UnidadeCurricularCRUD();
 
         try (BufferedReader reader = new BufferedReader(new FileReader(CAMINHO_FICHEIRO))) {
             String linha;
@@ -36,6 +38,18 @@ public class CursoCRUD {
                     Departamento dep = depCRUD.procurarPorSigla(siglaDep);
 
                     Curso curso = new Curso(nomeCurso, duracao, dep);
+
+                    // Carregar UCs associadas se houver dados extras no CSV
+                    // Requisito: "uma mesma unidade curricular seja registada/associada a vários cursos diferentes"
+                    // Vamos assumir que as UCs de um curso podem ser listadas após os dados básicos no CSV
+                    if (dados.length > 3) {
+                        for (int i = 3; i < dados.length; i++) {
+                            UnidadeCurricular uc = ucCRUD.procurarPorNome(dados[i]);
+                            if (uc != null) {
+                                curso.adicionarUnidadeCurricular(uc);
+                            }
+                        }
+                    }
                     cursos.add(curso);
                 }
             }
@@ -49,7 +63,14 @@ public class CursoCRUD {
             for (Curso curso : cursos) {
                 // Ao guardar, extraímos apenas a sigla para o ficheiro de texto
                 String sigla = (curso.getDepartamento() != null) ? curso.getDepartamento().getSigla() : "SEM_DEP";
-                print.println(curso.getNome() + ";" + curso.getDuracao() + ";" + sigla);
+                StringBuilder sb = new StringBuilder();
+                sb.append(curso.getNome()).append(";").append(curso.getDuracao()).append(";").append(sigla);
+                
+                for (model.UnidadeCurricular uc : curso.getUc()) {
+                    sb.append(";").append(uc.getNome());
+                }
+                
+                print.println(sb.toString());
             }
         } catch (IOException e) {
             System.out.println("Erro ao guardar cursos: " + e.getMessage());

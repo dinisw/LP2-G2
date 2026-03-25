@@ -28,7 +28,8 @@ public class DocenteView {
         opcoes.add("2. Listar Docentes");
         opcoes.add("3. Procurar Docente (NIF)");
         opcoes.add("4. Atualizar Docente (NIF)");
-        opcoes.add("5. Eliminar Docente (NIF)");
+        opcoes.add("5. Alterar Password (NIF)");
+        opcoes.add("6. Eliminar Docente (NIF)");
         opcoes.add("0. Voltar ao Menu Principal");
 
         do {
@@ -50,6 +51,9 @@ public class DocenteView {
                     atualizarDocente();
                     break;
                 case "5":
+                    alterarPasswordDocente();
+                    break;
+                case "6":
                     eliminarDocente();
                     break;
                 case "0":
@@ -74,12 +78,13 @@ public class DocenteView {
         System.out.print("Email: ");
         String email = scanner.nextLine();
         System.out.print("Palavra-passe: ");
+        String passDigitada = scanner.nextLine();
         String salt = SenhaUtils.gerarSalt();
-        String pass = scanner.nextLine();
+        String pass = SenhaUtils.gerarHashComSalt(passDigitada, salt);
         System.out.print("Sigla: ");
         String sigla = scanner.nextLine();
 
-        Docente novo = new Docente(nome, morada, nif, dataNascimento, email, pass, salt, sigla,null, null);
+        Docente novo = new Docente(nome, morada, nif, dataNascimento, email, pass, salt, sigla, null, null);
         if (docenteCRUD.registarDocente(novo)) {
             System.out.println("Docente registado com sucesso!");
         } else {
@@ -124,6 +129,44 @@ public class DocenteView {
         menu.pressionarEnter(scanner);
     }
 
+    private void alterarPasswordDocente() {
+        System.out.print("\nDigite o NIF do docente para alterar a password: ");
+        int nif;
+        try {
+            nif = Integer.parseInt(scanner.nextLine());
+        } catch (NumberFormatException e) {
+            System.out.println("NIF inválido! Deve ser um número.");
+            menu.pressionarEnter(scanner);
+            return;
+        }
+        
+        Docente d = docenteCRUD.procurarPorNif(nif);
+
+        if (d != null) {
+            System.out.println("Docente encontrado: " + d.getNome());
+            System.out.print("Nova Palavra-passe: ");
+            String passDigitada = scanner.nextLine();
+            
+            if (!passDigitada.isEmpty()) {
+                String salt = SenhaUtils.gerarSalt();
+                String pass = SenhaUtils.gerarHashComSalt(passDigitada, salt);
+                d.setSalt(salt);
+                d.setHash(pass);
+                
+                if (docenteCRUD.atualizarDocente(d)) {
+                    System.out.println("Password alterada com sucesso!");
+                } else {
+                    System.out.println("Erro ao guardar alteração da password.");
+                }
+            } else {
+                System.out.println("Operação cancelada: Password não pode ser vazia.");
+            }
+        } else {
+            System.out.println("Docente não encontrado.");
+        }
+        menu.pressionarEnter(scanner);
+    }
+
     private void atualizarDocente() {
         System.out.print("\nDigite o NIF do docente a atualizar: ");
         int nif = Integer.parseInt(scanner.nextLine());
@@ -154,6 +197,53 @@ public class DocenteView {
             }
         } else {
             System.out.println("Docente não encontrado.");
+        }
+        menu.pressionarEnter(scanner);
+    }
+    public void exibirMenuPessoalDocente(Docente docente) {
+        String opcao;
+        ArrayList<String> opcoes = new ArrayList<>();
+        opcoes.add("1. Ver minhas Unidades Curriculares");
+        opcoes.add("2. Alterar minha Password");
+        opcoes.add("0. Logout");
+
+        do {
+            menu.exibirSubTitulo("MENU DOCENTE: " + docente.getNome(), opcoes);
+            System.out.print("\n" + DesignUtils.GetWhiteBold() + "Selecione uma opção: " + DesignUtils.GetReset());
+            opcao = scanner.nextLine().trim();
+
+            switch (opcao) {
+                case "1":
+                    new controller.UnidadeCurricularController().listarUCsPorDocente(docente.getSigla());
+                    menu.pressionarEnter(scanner);
+                    break;
+                case "2":
+                    alterarPasswordPropria(docente);
+                    break;
+                case "0":
+                    return;
+                default:
+                    System.out.println("Opção inválida!");
+                    menu.pressionarEnter(scanner);
+            }
+        } while (!opcao.equals("0"));
+    }
+
+    private void alterarPasswordPropria(Docente d) {
+        System.out.print("Nova Palavra-passe: ");
+        String passDigitada = scanner.nextLine();
+
+        if (!passDigitada.isEmpty()) {
+            String salt = SenhaUtils.gerarSalt();
+            String pass = SenhaUtils.gerarHashComSalt(passDigitada, salt);
+            d.setSalt(salt);
+            d.setHash(pass);
+
+            if (docenteCRUD.atualizarDocente(d)) {
+                System.out.println("Password alterada com sucesso!");
+            } else {
+                System.out.println("Erro ao guardar alteração da password.");
+            }
         }
         menu.pressionarEnter(scanner);
     }
