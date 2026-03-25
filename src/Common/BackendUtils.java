@@ -11,4 +11,16 @@ public class BackendUtils {
         return PATTERN_ISEP.matcher(email).matches();
     }
     //endregion
+
+    //region Validador de Senha
+    private static final String REGEX_SENHA = "^(?=.*[A-Z])(?=.*[0-9])(?=.*[^a-zA-Z0-9]).{8,}$";
+    private static final Pattern PATTERN_SENHA = Pattern.compile(REGEX_SENHA);
+
+    public static boolean isSenhaValida(String senha) {
+        if (senha == null) {
+            return false;
+        }
+        return PATTERN_SENHA.matcher(senha).matches();
+    }
+    //endregion
 }
