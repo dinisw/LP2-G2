@@ -88,7 +88,7 @@ public class GestorCRUD {
 
     public Gestor procurarPorEmail(String email) {
         for (Gestor gestor : gestores) {
-            if (gestor.getEmail().equalsIgnoreCase(email)) {
+            if (gestor.getEmail().equals(email)) {
                 return gestor;
             }
         }

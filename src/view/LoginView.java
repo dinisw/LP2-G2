@@ -18,7 +18,7 @@ public class LoginView {
     public static final String RESET = "\033[0m";
     public static final String RED = "\033[0;31m";
 
-    public static void Login(){
+    public static void Login() {
         Scanner ler = new Scanner(System.in);
         LoginController loginController = new LoginController();
         boolean sair = false;
@@ -33,7 +33,7 @@ public class LoginView {
                 System.out.print("Email (digite '0' para sair): ");
                 email = ler.nextLine().trim();
                 emailValido = BackendUtils.isEmailIsepValido(email);
-                if (!emailValido){
+                if (!emailValido) {
                     System.out.print("Email inválido, tente novamente!!");
                     MenuUtils.pressionarEnter(ler);
                 }
@@ -55,14 +55,14 @@ public class LoginView {
                 var estudante = est.procurarNumeroMec(numMec);
                 senhaValido = SenhaUtils.verificarSenha(senha, estudante.getSalt(), estudante.getHash());
 
-                if (!senhaValido){
+                if (!senhaValido) {
                     System.out.print("Senha incorreta, tente novamente!!");
                     MenuUtils.pressionarEnter(ler);
                 }
             }
             Pessoa pessoa = loginController.login(email);
 
-            if(pessoa != null){
+            if (pessoa != null) {
                 if (pessoa instanceof Estudante) {
                     EstudanteView.Menu();
                 } else if (pessoa instanceof Docente) {
@@ -70,7 +70,9 @@ public class LoginView {
                     docenteView.exibirMenuDocentes();
                 } else if (pessoa instanceof Gestor) {
                     GestorView gestorView = new GestorView();
-                    exibirMenuGestaoGlobal(ler, gestorView, new DocenteView(), new EstudanteView());
+                    CursoView cursoView = new CursoView();
+                    DepartamentoView departamentoView = new DepartamentoView();
+                    exibirMenuGestaoGlobal(ler, gestorView, new DocenteView(), new EstudanteView(), new CursoView(), new DepartamentoView());
                 }
             } else {
                 System.out.println("\n" + RED + "Credenciais inválidas! Tente novamente." + RESET);
@@ -79,12 +81,14 @@ public class LoginView {
         } while (!sair);
     }
 
-    private static void exibirMenuGestaoGlobal(Scanner scanner, GestorView gestorView, DocenteView docenteView, EstudanteView estudanteView) {
+    private static void exibirMenuGestaoGlobal(Scanner scanner, GestorView gestorView, DocenteView docenteView, EstudanteView estudanteView, CursoView cursoView, DepartamentoView departamentoView) {
         String opcao;
         ArrayList<String> opcoes = new ArrayList<>();
         opcoes.add("1. Gerir Gestores");
         opcoes.add("2. Gerir Docentes");
         opcoes.add("3. Gerir Estudantes");
+        opcoes.add("4. Gerir Cursos");
+        opcoes.add("5. Gerir Departamentos");
         opcoes.add("0. Logout");
 
         do {
@@ -101,6 +105,12 @@ public class LoginView {
                     break;
                 case "3":
                     estudanteView.Menu();
+                    break;
+                case "4":
+                    cursoView.exibirMenuCursos();
+                    break;
+                case "5":
+                    departamentoView.exibirMenuDepartamentos();
                     break;
                 case "0":
                     return;
