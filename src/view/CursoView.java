@@ -4,6 +4,7 @@ import Common.DesignUtils;
 import Common.MenuUtils;
 import DAL.CursoCRUD;
 import model.Curso;
+import model.Departamento;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,7 +57,7 @@ public class CursoView {
 
         // O CursoCRUD agora precisa do nome, duração (3) e o objeto Departamento (que ele próprio vai procurar)
         DAL.DepartamentoCRUD depCRUD = new DAL.DepartamentoCRUD();
-        model.Departamento dep = depCRUD.procurarPorSigla(siglaDep);
+        Departamento dep = depCRUD.procurarPorSigla(siglaDep);
 
         if (dep != null) {
             Curso novo = new Curso(nome, 3, dep);
