@@ -3,6 +3,7 @@ package view;
 import Common.DesignUtils;
 import Common.MenuUtils;
 import controller.CursoController;
+import controller.DepartamentoController;
 import model.Curso;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,10 +11,12 @@ import java.util.Scanner;
 
 public class CursoView {
     private final CursoController cursoController;
+    private final DepartamentoController departamentoController;
     private final Scanner scanner;
 
     public CursoView() {
         this.cursoController = new CursoController();
+        this.departamentoController = new DepartamentoController();
         this.scanner = new Scanner(System.in);
     }
 
@@ -50,8 +53,9 @@ public class CursoView {
         System.out.println("\n--- REGISTO DE CURSO ---");
         System.out.print("Nome do Curso: ");
         String nome = scanner.nextLine().trim();
+        departamentoController.listarDepartamentos();
         System.out.print("Sigla do Departamento Associado (ex: EI): ");
-        String siglaDep = scanner.nextLine().trim();
+        String siglaDep = scanner.nextLine().trim().toUpperCase();
 
         int resultado = cursoController.registarCurso(nome, siglaDep);
 

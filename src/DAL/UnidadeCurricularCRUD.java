@@ -34,8 +34,6 @@ public class UnidadeCurricularCRUD {
                     UnidadeCurricular uc = new UnidadeCurricular(nome, ano, docente);
                     ucs.add(uc);
 
-                    // Re-associar UC aos cursos (isso deve ser feito no carregamento dos cursos ou numa fase posterior)
-                    // Mas para o CRUD de UC, apenas mantemos a lista de UCs existentes.
                 }
             }
         } catch (IOException | NumberFormatException e) {
@@ -46,8 +44,10 @@ public class UnidadeCurricularCRUD {
     public void guardarTodosNoFicheiro() {
         try (PrintWriter print = new PrintWriter(new FileWriter(CAMINHO_FICHEIRO))) {
             for (UnidadeCurricular uc : ucs) {
-                String siglaDocente = (uc.getDocente() != null) ? uc.getDocente().getSigla() : "SEM_DOCENTE";
-                print.println(uc.getNome() + ";" + uc.getAnoCurricular() + ";" + siglaDocente);
+                StringBuilder sb = new StringBuilder();
+                String siglaDocente = safe(uc.getDocente());
+                sb.append(safe(uc.getNome())).append(";").append(uc.getAnoCurricular()).append(";").append(siglaDocente);
+                print.println(sb.toString());
             }
         } catch (IOException e) {
             System.out.println("Erro ao guardar UCs: " + e.getMessage());
@@ -56,15 +56,10 @@ public class UnidadeCurricularCRUD {
 
     public boolean registarUC(UnidadeCurricular uc) {
         if (uc != null) {
-            // Garantir que apenas um docente é responsável por uma determinada UC (nesta lista global)
-            // Se a UC já existe (pelo nome), não registamos de novo.
             if (procurarPorNome(uc.getNome()) != null) {
                 return false; 
             }
             
-            // Validar se o docente já é responsável por outra UC (opcional, dependendo da interpretação de "apenas um docente é responsável por UMA determinada UC")
-            // A frase "apenas um docente é responsável por uma determinada unidade curricular" significa que a UC 'Matemática' só pode ter UM docente.
-            // E não necessariamente que o docente só possa ter uma UC.
             
             ucs.add(uc);
             guardarTodosNoFicheiro();
@@ -84,5 +79,9 @@ public class UnidadeCurricularCRUD {
             }
         }
         return null;
+    }
+    
+    private String safe(Object o){
+        return (o == null) ? "SEM REGISTO" : o.toString();
     }
 }

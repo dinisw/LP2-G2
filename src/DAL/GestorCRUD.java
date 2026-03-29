@@ -26,14 +26,14 @@ public class GestorCRUD {
                 String[] dados = linha.split(";");
                 if (dados.length == 8) {
                     Gestor gestor = new Gestor(
-                            dados[0], // nome
-                            dados[1], // morada
-                            Integer.parseInt(dados[2]), // nif
-                            LocalDate.parse(dados[3]), // dataNascimento
-                            dados[4], // email
-                            dados[5], // hash
-                            dados[6], // salt
-                            dados[7]  // cargo
+                            dados[0],
+                            dados[1],
+                            Integer.parseInt(dados[2]),
+                            LocalDate.parse(dados[3]),
+                            dados[4],
+                            dados[5],
+                            dados[6],
+                            dados[7]
                     );
                     gestores.add(gestor);
                 }
@@ -46,18 +46,18 @@ public class GestorCRUD {
     private void guardarTodosNoFicheiro() {
         try (PrintWriter print = new PrintWriter(new FileWriter(CAMINHO_FICHEIRO))) {
             for (Gestor gestor : gestores) {
-                String linha = String.format("%s;%s;%d;%s;%s;%s;%s;%s",
-                        gestor.getNome(),
-                        gestor.getMorada(),
-                        gestor.getNif(),
-                        gestor.getDataNascimento(),
-                        gestor.getEmail(),
-                        gestor.getHash(),
-                        gestor.getSalt(),
-                        gestor.getCargo());
+                String linha = String.format("%s;%s;%s;%s;%s;%s;%s;%s",
+                        safe(gestor.getNome()),
+                        safe(gestor.getMorada()),
+                        safe(gestor.getNif()),
+                        safe(gestor.getDataNascimento()),
+                        safe(gestor.getEmail()),
+                        safe(gestor.getHash()),
+                        safe(gestor.getSalt()),
+                        safe(gestor.getCargo()));
                 print.println(linha);
             }
-        } catch (IOException e) {
+        } catch (IOException | NumberFormatException e) {
             System.out.println("Erro ao guardar gestores: " + e.getMessage());
         }
     }
@@ -117,5 +117,9 @@ public class GestorCRUD {
             }
         }
         return false;
+    }
+
+    private String safe(Object o){
+        return (o == null) ? "SEM REGISTO" : o.toString();
     }
 }

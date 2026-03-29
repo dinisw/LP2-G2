@@ -64,16 +64,16 @@ public class EstudanteCRUD {
     private void guardarTodosNoFicheiro() {
         try (PrintWriter print = new PrintWriter(new FileWriter(CAMINHO_FICHEIRO))) {
             for (Estudante estudante : estudantes) {
-                String linha = String.format("%s;%s;%d;%s;%s;%d;%s;%s;%s",
-                        estudante.getNome(),
-                        estudante.getMorada(),
-                        estudante.getNif(),
-                        estudante.getDataNascimento(),
-                        estudante.getEmail(),
-                        estudante.getNumeroMec(),
-                        estudante.getHash(),
-                        estudante.getSalt(),
-                        estudante.getNomeCurso());
+                String linha = String.format("%s;%s;%s;%s;%s;%s;%s;%s;%s",
+                        safe(estudante.getNome()),
+                        safe(estudante.getMorada()),
+                        safe(estudante.getNif()),
+                        safe(estudante.getDataNascimento()),
+                        safe(estudante.getEmail()),
+                        safe(estudante.getNumeroMec()),
+                        safe(estudante.getHash()),
+                        safe(estudante.getSalt()),
+                        safe(estudante.getNomeCurso()));
                 print.println(linha);
             }
         } catch (IOException e) {
@@ -150,5 +150,9 @@ public class EstudanteCRUD {
             }
         }
         return null;
+    }
+
+    private String safe(Object o){
+        return (o == null) ? "SEM REGISTO" : o.toString();
     }
 }
