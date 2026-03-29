@@ -28,11 +28,18 @@ public class UnidadeCurricularView {
 
     public int solicitarAno() {
         System.out.print("Introduza o ano curricular (ex: 1, 2, 3): ");
-        try {
-            return Integer.parseInt(scanner.nextLine());
-        } catch (NumberFormatException e) {
-            return -1;
+        int ano = 0;
+        boolean anoValido = false;
+        while (!anoValido) {
+            try {
+                ano = Integer.parseInt(scanner.nextLine());
+                anoValido = true;
+            } catch (NumberFormatException e) {
+                System.out.println("Aviso: Ano curricular deve ser um número inteiro válido. Tente novamente.");
+                System.out.print("Introduza o ano curricular (ex: 1, 2, 3): ");
+            }
         }
+        return ano;
     }
 
     public String solicitarSiglaDocente() {

@@ -76,9 +76,29 @@ public class EstudanteView {
                     System.out.print("Morada: ");
                     String morada = ler.nextLine();
                     System.out.print("NIF: ");
-                    int nif = Integer.parseInt(ler.nextLine());
+                    int nif = 0;
+                    boolean nifValido = false;
+                    while (!nifValido) {
+                        try {
+                            nif = Integer.parseInt(ler.nextLine());
+                            nifValido = true;
+                        } catch (NumberFormatException e) {
+                            System.out.println("Aviso: NIF deve ser um número inteiro válido. Tente novamente.");
+                            System.out.print("NIF: ");
+                        }
+                    }
                     System.out.print("Data de Nascimento (AAAA-MM-DD): ");
-                    LocalDate data = LocalDate.parse(ler.nextLine());
+                    LocalDate data = null;
+                    boolean dataValida = false;
+                    while (!dataValida) {
+                        try {
+                            data = LocalDate.parse(ler.nextLine());
+                            dataValida = true;
+                        } catch (Exception e) {
+                            System.out.println("Aviso: Data deve estar no formato AAAA-MM-DD. Tente novamente.");
+                            System.out.print("Data de Nascimento (AAAA-MM-DD): ");
+                        }
+                    }
                     System.out.print("Curso: ");
                     String curso = ler.nextLine();
                     int mecAuto = crud.gerarNumeroMecanografico();
@@ -118,7 +138,17 @@ public class EstudanteView {
                     break;
                 case "3":
                     System.out.print("\nDigite o Número Mecanográfico: ");
-                    int nmec = Integer.parseInt(ler.nextLine());
+                    int nmec = 0;
+                    boolean nmecValido = false;
+                    while (!nmecValido) {
+                        try {
+                            nmec = Integer.parseInt(ler.nextLine());
+                            nmecValido = true;
+                        } catch (NumberFormatException e) {
+                            System.out.println("Aviso: Número Mecanográfico deve ser um número inteiro válido. Tente novamente.");
+                            System.out.print("Digite o Número Mecanográfico: ");
+                        }
+                    }
                     model.Estudante est = crud.lerEstudante(nmec);
                     if (est != null) {
                         System.out.println("Dados: " + est.getNome() + " - " + est.getNomeCurso());

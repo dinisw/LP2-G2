@@ -44,7 +44,7 @@ public class DepartamentoView {
                     System.out.println(DesignUtils.GetRed() + "Opção inválida!" + DesignUtils.GetReset());
                     MenuUtils.pressionarEnter(scanner);
             }
-        } while (!opcao.equals("0"));
+        } while (true);
     }
 
     private void registarDepartamento() {
@@ -76,6 +76,7 @@ public class DepartamentoView {
     }
 
     private void procurarDepartamento() {
+        System.out.println("\n--- PROCURAR DEPARTAMENTO ---");
         listarDepartamentos();
         System.out.print("\nDigite a sigla do departamento: ");
         String sigla = scanner.nextLine().trim();
@@ -113,8 +114,13 @@ public class DepartamentoView {
         listarDepartamentos();
         System.out.print("\nDigite a sigla do departamento a eliminar: ");
         String sigla = scanner.nextLine().trim();
-        if (departamentoController.eliminarDepartamento(sigla)) {
-            System.out.println(DesignUtils.GetGreen() + "Departamento eliminado com sucesso!" + DesignUtils.GetReset());
+        Departamento d = departamentoController.procurarDepartamento(sigla);
+        if (d != null) {
+            if (departamentoController.eliminarDepartamento(sigla)) {
+                System.out.println(DesignUtils.GetGreen() + "Departamento eliminado com sucesso!" + DesignUtils.GetReset());
+            } else {
+                System.out.println(DesignUtils.GetRed() + "Erro ao eliminar: Departamento tem cursos associados." + DesignUtils.GetReset());
+            }
         } else {
             System.out.println(DesignUtils.GetRed() + "Erro ao eliminar: Departamento não encontrado." + DesignUtils.GetReset());
         }

@@ -33,15 +33,9 @@ public class CursoCRUD {
                     String nomeCurso = dados[0];
                     int duracao = Integer.parseInt(dados[1]);
                     String siglaDep = dados[2];
-
-                    // TRUQUE: Transformar a sigla num Objeto real
                     Departamento dep = depCRUD.procurarPorSigla(siglaDep);
 
                     Curso curso = new Curso(nomeCurso, duracao, dep);
-
-                    // Carregar UCs associadas se houver dados extras no CSV
-                    // Requisito: "uma mesma unidade curricular seja registada/associada a vários cursos diferentes"
-                    // Vamos assumir que as UCs de um curso podem ser listadas após os dados básicos no CSV
                     if (dados.length > 3) {
                         for (int i = 3; i < dados.length; i++) {
                             UnidadeCurricular uc = ucCRUD.procurarPorNome(dados[i]);
@@ -61,13 +55,12 @@ public class CursoCRUD {
     private void guardarTodosNoFicheiro() {
         try (PrintWriter print = new PrintWriter(new FileWriter(CAMINHO_FICHEIRO))) {
             for (Curso curso : cursos) {
-                // Ao guardar, extraímos apenas a sigla para o ficheiro de texto
                 String sigla = (curso.getDepartamento() != null) ? curso.getDepartamento().getSigla() : "SEM_DEP";
                 StringBuilder sb = new StringBuilder();
-                sb.append(curso.getNome()).append(";").append(curso.getDuracao()).append(";").append(sigla);
+                sb.append(safe(curso.getNome())).append(";").append(curso.getDuracao()).append(";").append(sigla);
                 
-                for (model.UnidadeCurricular uc : curso.getUc()) {
-                    sb.append(";").append(uc.getNome());
+                for (UnidadeCurricular uc : curso.getUc()) {
+                    sb.append(";").append(safe(uc.getNome()));
                 }
                 
                 print.println(sb.toString());
@@ -99,7 +92,6 @@ public class CursoCRUD {
         return null;
     }
 
-    // REGRA DE NEGÓCIO: Verifica se há alunos neste curso
     private boolean temPessoasAlocadas(String nomeCurso) {
         EstudanteCRUD estudanteCRUD = new EstudanteCRUD();
         for (Estudante est : estudanteCRUD.getEstudantes()) {
@@ -136,6 +128,20 @@ public class CursoCRUD {
             if (cursos.get(i).getNome().equalsIgnoreCase(nome)) {
                 cursos.remove(i);
                 guardarTodosNoFicheiro();
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    private String safe(Object o) {
+        return (o == null) ? "SEM REGISTO" : o.toString();
+    }
+
+    // Verifica se existe algum curso associado a um departamento (pela sigla)
+    public boolean existeCursoComDepartamento(String siglaDepartamento) {
+        for (Curso curso : cursos) {
+            if (curso.getDepartamento() != null && curso.getDepartamento().getSigla().equalsIgnoreCase(siglaDepartamento)) {
                 return true;
             }
         }
