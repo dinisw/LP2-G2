@@ -8,16 +8,9 @@ import java.util.List;
 
 public class GestorController {
     private final GestorCRUD gestorCRUD;
-    private final GestorView gestorView;
 
     public GestorController() {
         this.gestorCRUD = new GestorCRUD();
-        this.gestorView = new GestorView();
-    }
-
-    // Método principal que invoca o menu da view
-    public void exibirMenuGestores() {
-        gestorView.exibirMenuGestores();
     }
 
     // CREATE - Registar gestor

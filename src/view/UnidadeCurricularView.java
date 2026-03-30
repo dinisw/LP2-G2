@@ -83,21 +83,12 @@ public class UnidadeCurricularView {
         System.out.print("Sigla do Docente Responsável (ou prima Enter para nenhum): ");
         String siglaDocente = scanner.nextLine().trim().toUpperCase();
 
-        Docente docente = null;
-        if (!siglaDocente.isEmpty()) {
-            docente = docenteCRUD.procurarPorSigla(siglaDocente);
-            if (docente == null) {
-                System.out.println(DesignUtils.GetRed() + "Erro: Docente com sigla '" + siglaDocente + "' não encontrado!" + DesignUtils.GetReset());
-                MenuUtils.pressionarEnter(scanner);
-                return;
-            }
-        }
-
-        UnidadeCurricular novaUC = new UnidadeCurricular(nome, ano, docente);
-
-        if (ucCRUD.registarUC(novaUC)) {
+        if (ucController.registarUC(nome, ano, siglaDocente)) {
             System.out.println(DesignUtils.GetGreen() + "UC registada com sucesso!" + DesignUtils.GetReset());
-            imprimirDadosUnidadeCurricular(novaUC);
+            UnidadeCurricular novaUC = ucController.procurarUC(nome);
+            if (novaUC != null) {
+                imprimirDadosUnidadeCurricular(novaUC);
+            }
         } else {
             System.out.println(DesignUtils.GetRed() + "Erro: UC com esse nome já existe ou dados inválidos." + DesignUtils.GetReset());
         }
@@ -107,7 +98,7 @@ public class UnidadeCurricularView {
 
     private void listarUnidadesCurriculares() {
         System.out.println("\n--- LISTA DE UNIDADES CURRICULARES ---");
-        List<UnidadeCurricular> ucs = ucCRUD.getUcs();
+        List<UnidadeCurricular> ucs = ucController.listarTodasUCs();
 
         if (ucs.isEmpty()) {
             System.out.println(DesignUtils.GetYellow() + "Nenhuma UC registada até ao momento!" + DesignUtils.GetReset());
@@ -134,7 +125,7 @@ public class UnidadeCurricularView {
             return;
         }
 
-        UnidadeCurricular uc = ucCRUD.procurarPorNome(nome);
+        UnidadeCurricular uc = ucController.procurarUC(nome);
 
         if (uc != null) {
             System.out.println(DesignUtils.GetGreen() + "\nUC Encontrada:" + DesignUtils.GetReset());
@@ -157,7 +148,7 @@ public class UnidadeCurricularView {
             return;
         }
 
-        UnidadeCurricular ucExistente = ucCRUD.procurarPorNome(nomeAtual);
+        UnidadeCurricular ucExistente = ucController.procurarUC(nomeAtual);
 
         if (ucExistente == null) {
             System.out.println(DesignUtils.GetRed() + "UC não encontrada." + DesignUtils.GetReset());
@@ -170,43 +161,35 @@ public class UnidadeCurricularView {
         System.out.print("Novo nome (Enter para manter): ");
         String novoNome = scanner.nextLine().trim();
         if (novoNome.isEmpty()) {
-            novoNome = ucExistente.getNome();
+            novoNome = null; // controller will handle
         }
 
         System.out.print("Novo ano curricular (Enter para manter): ");
-        int novoAno = ucExistente.getAnoCurricular();
+        int novoAno = 0; // 0 means keep original
         String anoInput = scanner.nextLine().trim();
         if (!anoInput.isEmpty()) {
             try {
                 novoAno = Integer.parseInt(anoInput);
                 if (novoAno < 1 || novoAno > 3) {
                     System.out.println(DesignUtils.GetYellow() + "Aviso: Ano deve ser 1, 2 ou 3. Mantendo o original." + DesignUtils.GetReset());
-                    novoAno = ucExistente.getAnoCurricular();
+                    novoAno = 0;
                 }
             } catch (NumberFormatException e) {
                 System.out.println(DesignUtils.GetYellow() + "Aviso: Ano inválido. Mantendo o original." + DesignUtils.GetReset());
-                novoAno = ucExistente.getAnoCurricular();
+                novoAno = 0;
             }
         }
 
         listarDocentesDisponiveis();
         System.out.print("Sigla do novo Docente (Enter para manter): ");
-        String novaSignaDocente = scanner.nextLine().trim().toUpperCase();
+        String novaSiglaDocente = scanner.nextLine().trim().toUpperCase();
 
-        Docente novoDocente = ucExistente.getDocente();
-        if (!novaSignaDocente.isEmpty()) {
-            novoDocente = docenteCRUD.procurarPorSigla(novaSignaDocente);
-            if (novoDocente == null) {
-                System.out.println(DesignUtils.GetRed() + "Erro: Docente não encontrado. Mantendo o original." + DesignUtils.GetReset());
-                novoDocente = ucExistente.getDocente();
-            }
-        }
-
-        UnidadeCurricular ucAtualizada = new UnidadeCurricular(novoNome, novoAno, novoDocente);
-
-        if (ucCRUD.atualizarUC(nomeAtual, ucAtualizada)) {
+        if (ucController.atualizarUC(nomeAtual, novoNome, novoAno, novaSiglaDocente)) {
             System.out.println(DesignUtils.GetGreen() + "UC atualizada com sucesso!" + DesignUtils.GetReset());
-            imprimirDadosUnidadeCurricular(ucAtualizada);
+            UnidadeCurricular ucAtualizada = ucController.procurarUC(novoNome != null ? novoNome : nomeAtual);
+            if (ucAtualizada != null) {
+                imprimirDadosUnidadeCurricular(ucAtualizada);
+            }
         } else {
             System.out.println(DesignUtils.GetRed() + "Erro: Não é permitida alteração. UC tem docente alocado e estudantes inscritos." + DesignUtils.GetReset());
         }
@@ -225,7 +208,7 @@ public class UnidadeCurricularView {
             return;
         }
 
-        UnidadeCurricular uc = ucCRUD.procurarPorNome(nome);
+        UnidadeCurricular uc = ucController.procurarUC(nome);
 
         if (uc == null) {
             System.out.println(DesignUtils.GetRed() + "UC não encontrada." + DesignUtils.GetReset());
@@ -237,7 +220,7 @@ public class UnidadeCurricularView {
         String confirmacao = scanner.nextLine().trim().toUpperCase();
 
         if (confirmacao.equals("S")) {
-            if (ucCRUD.eliminarUC(nome)) {
+            if (ucController.eliminarUC(nome)) {
                 System.out.println(DesignUtils.GetGreen() + "UC eliminada com sucesso!" + DesignUtils.GetReset());
             } else {
                 System.out.println(DesignUtils.GetRed() + "Erro: Não é permitida eliminação. UC tem docente alocado e estudantes inscritos." + DesignUtils.GetReset());
@@ -251,7 +234,7 @@ public class UnidadeCurricularView {
 
     private void listarDocentesDisponiveis() {
         System.out.println("\n--- Docentes Disponíveis ---");
-        List<Docente> docentes = docenteCRUD.getDocentes();
+        List<Docente> docentes = docenteController.listarDocentes();
         if (docentes.isEmpty()) {
             System.out.println("Nenhum docente registado.");
         } else {
