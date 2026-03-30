@@ -76,56 +76,12 @@ public class LoginView {
                     docenteView.exibirMenuPessoalDocente((Docente) pessoa);
                 } else if (pessoa instanceof Gestor) {
                     GestorView gestorView = new GestorView();
-                    gestorView.exibirMenuGestores((Gestor) pessoa);
+                    gestorView.exibirMenuGestao((Gestor) pessoa);
                 }
             } else {
                 System.out.println("\n" + RED + "Credenciais inválidas! Tente novamente." + RESET);
                 MenuUtils.pressionarEnter(ler);
             }
         } while (!sair);
-    }
-
-    private static void exibirMenuGestaoGlobal(Scanner scanner, GestorView gestorView, DocenteView docenteView, EstudanteView estudanteView, CursoView cursoView, DepartamentoView departamentoView, UnidadeCurricularView unidadeCurricularView) {
-        String opcao;
-        ArrayList<String> opcoes = new ArrayList<>();
-        opcoes.add("1. Gerir Gestores");
-        opcoes.add("2. Gerir Docentes");
-        opcoes.add("3. Gerir Estudantes");
-        opcoes.add("4. Gerir Cursos");
-        opcoes.add("5. Gerir Departamentos");
-        opcoes.add("6. Gerir Unidades Curriculares");
-        opcoes.add("0. Logout");
-
-        do {
-            MenuUtils.exibirSubTitulo("MENU DE GESTÃO ADMINISTRATIVA", opcoes);
-            System.out.print("\nSelecione uma opção: ");
-            opcao = scanner.nextLine().trim();
-
-            switch (opcao) {
-                case "1":
-                    gestorView.exibirMenuGestores();
-                    break;
-                case "2":
-                    docenteView.exibirMenuDocentes();
-                    break;
-                case "3":
-                    estudanteView.exibirMenu();
-                    break;
-                case "4":
-                    cursoView.exibirMenuCursos();
-                    break;
-                case "5":
-                    departamentoView.exibirMenuDepartamentos();
-                    break;
-                case "6":
-                    unidadeCurricularView.exibirMenuUnidadesCurriculares();
-                    break;
-                case "0":
-                    return;
-                default:
-                    System.out.println("Opção inválida!");
-                    MenuUtils.pressionarEnter(scanner);
-            }
-        } while (true);
     }
 }
