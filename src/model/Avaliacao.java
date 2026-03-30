@@ -2,7 +2,7 @@ package model;
 
 public class Avaliacao {
     private String momento;
-    private double nota;
+    private Double nota;
     private UnidadeCurricular unidadeCurricular;
     private Estudante estudante;
 
@@ -24,7 +24,7 @@ public class Avaliacao {
         this.momento = momento;
     }
 
-    public double getNota() {
+    public Double getNota() {
         return nota;
     }
 
