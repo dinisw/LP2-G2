@@ -34,10 +34,10 @@ public class EstudanteView {
                     MenuUtils.pressionarEnter(ler);
                     break;
                 case "2":
-					consultarFichaEstudante(ler);
+					consultarFichaEstudante(estudante, ler);
                     break;
                 case "3":
-                    consultarNotasEstudante(ler);
+                    consultarNotasEstudante(estudante, ler);
                     break;
                 case "0":
                     return;
@@ -62,42 +62,21 @@ public class EstudanteView {
         }while (!opcao.equals("0"));
     }
 
-    public static void consultarFichaEstudante(Scanner ler) {
+    public static void consultarFichaEstudante(Estudante estudante, Scanner ler) {
 
         System.out.println(CYAN_BOLD + bordaSuperior + RESET);
         System.out.println(CYAN_BOLD + "║" + WHITE_BOLD + "            CONSULTAR FICHA DE ESTUDANTE            " + CYAN_BOLD + "║" + RESET);
         System.out.println(CYAN_BOLD + bordaInferior + RESET);
 
-        System.out.print("\n" + WHITE_BOLD + "Insira o seu Número Mecanográfico: " + RESET);
-
-        try {
-            int numMec = Integer.parseInt(ler.nextLine().trim());
-
-            DAL.EstudanteCRUD crud = new DAL.EstudanteCRUD();
-            Estudante alunoEncontrado = crud.lerEstudante(numMec);
-
-            if (alunoEncontrado != null) {
-                EstudanteView ev = new EstudanteView();
-                EstudanteController controller = new EstudanteController(alunoEncontrado, ev);
-
-                System.out.println();
-
-                controller.exibirFichaEstudante();
-            } else {
-                System.out.println("\n" + RED + "Erro: Estudante com o número " + numMec + " não foi encontrado no sistema." + RESET);
-            }
-
-        } catch (NumberFormatException e) {
-            System.out.println("\n" + RED + "Erro: Formato de número inválido. Digite apenas algarismos." + RESET);
-        }
+        EstudanteView ev = new EstudanteView();
+        EstudanteController controller = new EstudanteController(estudante, ev);
+        System.out.println(controller.exibirFichaEstudante());
         MenuUtils.pressionarEnter(ler);
     }
-    public static void consultarNotasEstudante(Scanner ler) {
-        System.out.print("\n" + WHITE_BOLD + "Para segurança, confirme o seu Nº Mecanográfico: " + RESET);
-        int numMec = Integer.parseInt(ler.nextLine().trim());
 
+    public static void consultarNotasEstudante(Estudante estudante, Scanner ler) {
         DAL.AvaliacaoCRUD avaliacaoCRUD = new DAL.AvaliacaoCRUD();
-        List<model.Avaliacao> minhasNotas = avaliacaoCRUD.listarPorEstudante(numMec);
+        List<model.Avaliacao> minhasNotas = avaliacaoCRUD.listarPorEstudante(estudante.getNumeroMec());
 
         System.out.println("\033[H\033[2J");
         System.out.println(CYAN_BOLD + bordaSuperior + RESET);
