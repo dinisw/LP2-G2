@@ -12,7 +12,7 @@ import controller.EstudanteController;
 import static Common.DesignUtils.*;
 
 public class EstudanteView {
-    public static void Menu(){
+    public static void exibirMenu(Estudante estudante){
         Scanner ler = new Scanner(System.in);
         String opcao = "";
         ArrayList<String> opcoes = new ArrayList<>();
