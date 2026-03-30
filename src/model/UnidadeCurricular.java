@@ -41,4 +41,14 @@ public class UnidadeCurricular {
     public int getEcts() {
         return ects;
     }
+
+    @Override
+    public String toString() {
+        return "UnidadeCurricular{" +
+                "nome='" + nome + '\'' +
+                ", anoCurricular=" + anoCurricular +
+                ", docente=" + docente +
+                ", ects=" + ects +
+                '}';
+    }
 }

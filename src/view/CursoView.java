@@ -72,12 +72,11 @@ public class CursoView {
 
     private void listarCursos() {
         System.out.println("\n--- LISTA DE CURSOS ---");
-        List<Curso> lista = cursoController.listarCursos();
-        if (lista.isEmpty()) {
-            System.out.println("Nenhum curso registado.");
+        List<Curso> cursos = cursoController.listarCursos();
+        if (cursos.isEmpty()) {
+            System.out.println("Nenhum curso registao ate ao momento!");
         } else {
-            for (Curso c : lista) {
-                // Usamos o toString() limpo que criámos no modelo Curso
+            for (Curso c : cursos) {
                 System.out.println(c.toString());
             }
         }

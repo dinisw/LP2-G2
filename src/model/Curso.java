@@ -63,4 +63,14 @@ public class Curso {
         // Se já tem 5, bloqueia a inserção
         return false;
     }
+
+    @Override
+    public String toString() {
+        return "Curso [" +
+                "nome='" + nome + '\'' +
+                ", duracao=" + duracao +
+                ", departamento=" + departamento +
+                ", uc=" + getUc() +
+                '}';
+    }
 }
