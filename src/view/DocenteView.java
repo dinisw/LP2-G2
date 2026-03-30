@@ -4,7 +4,10 @@ import Common.DesignUtils;
 import Common.MenuUtils;
 import Common.SenhaUtils;
 import DAL.DocenteCRUD;
+import DAL.UnidadeCurricularCRUD;
 import model.Docente;
+
+import javax.xml.stream.events.Comment;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -276,6 +279,9 @@ public class DocenteView {
                 case "2":
                     alterarPasswordPropria(docente);
                     break;
+                case "3":
+                    lancarNotaDocente();
+                    break;
                 case "0":
                     return;
                 default:
@@ -303,4 +309,70 @@ public class DocenteView {
         }
         MenuUtils.pressionarEnter(scanner);
     }
+
+    private void lancarNotaDocente() {
+        System.out.println("\n--- LANÇAR NOTA ---");
+        System.out.print("Nº Mecanográfico do Estudante: ");
+        int numMec = Integer.parseInt(scanner.nextLine().trim());
+
+        DAL.EstudanteCRUD estudanteCRUD = new DAL.EstudanteCRUD();
+        model.Estudante estudante = estudanteCRUD.lerEstudante(numMec);
+
+        if (estudante == null) {
+            System.out.println("Erro: Estudante não encontrado!");
+            Common.MenuUtils.pressionarEnter(scanner);
+            return;
+        }
+        System.out.print("Nome da Unidade Curricular:  ");
+        String nomeUC = scanner.nextLine().trim();
+        DAL.UnidadeCurricularCRUD unidadeCurricularCRUD = new DAL.UnidadeCurricularCRUD();
+        model.UnidadeCurricular unidadeCurricular = unidadeCurricularCRUD.procurarPorNome(nomeUC);
+
+        if (unidadeCurricular == null) {
+            System.out.println("Erro: UC não encontrada!");
+            Common.MenuUtils.pressionarEnter(scanner);
+            return;
+        }
+        System.out.print("Época de Avaliação (ex. Frequência, Exame): ");
+        String momento = scanner.nextLine().trim();
+
+        System.out.println("Nota (Deixe em branco e dê Enter se for 'Aguardar Lançamento'): ");
+        String notaInput = scanner.nextLine().trim();
+
+        Double nota = null;
+        if (!notaInput.isEmpty()) {
+            nota = Double.parseDouble(notaInput.replace(",","."));
+        }
+
+        model.Avaliacao novaAvaliacao = new model.Avaliacao(momento, nota, unidadeCurricular, estudante);
+        DAL.AvaliacaoCRUD avaliacaoCRUD = new DAL.AvaliacaoCRUD();
+
+        if (avaliacaoCRUD.registarAvaliacao(novaAvaliacao)) {
+            System.out.println(Common.DesignUtils.GetGreen() + "Avaliação registada com sucesso!" + Common.DesignUtils.GetReset());
+        } else {
+            System.out.println(Common.DesignUtils.GetRed() + "Erro ao registar avaliação." + Common.DesignUtils.GetReset());
+        }
+        Common.MenuUtils.pressionarEnter(scanner);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }

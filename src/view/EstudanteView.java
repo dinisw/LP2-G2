@@ -38,8 +38,7 @@ public class EstudanteView {
 					consultarFichaEstudante(ler);
                     break;
                 case "3":
-                    System.out.println("\n" + YELLOW + "[EM MANUTENÇÃO] Esta funcionalidade ainda não está finalizada." + RESET);
-                    MenuUtils.pressionarEnter(ler);
+                    consultarNotasEstudante(ler);
                     break;
                 case "4":
                     exibirMenuCRUD(ler);
@@ -251,5 +250,57 @@ public class EstudanteView {
             System.out.println("\n" + RED + "Erro: Formato de número inválido. Digite apenas algarismos." + RESET);
         }
         MenuUtils.pressionarEnter(ler);
+    }
+    public static void consultarNotasEstudante(Scanner ler) {
+        System.out.print("\n" + WHITE_BOLD + "Para segurança, confirme o seu Nº Mecanográfico: " + RESET);
+        int numMec = Integer.parseInt(ler.nextLine().trim());
+
+        DAL.AvaliacaoCRUD avaliacaoCRUD = new DAL.AvaliacaoCRUD();
+        List<model.Avaliacao> minhasNotas = avaliacaoCRUD.listarPorEstudante(numMec);
+
+        System.out.println("\033[H\033[2J");
+        System.out.println(CYAN_BOLD + bordaSuperior + RESET);
+        System.out.println(CYAN_BOLD + "║" + WHITE_BOLD + "                 PAUTA DE AVALIAÇÕES                  " + CYAN_BOLD + "║" + RESET);
+        System.out.println(CYAN_BOLD + bordaMeio + RESET);
+        System.out.printf(CYAN_BOLD + "║" + RESET + " %-20s | %-15s | %-10s | %-20s " + CYAN_BOLD + "║\n" + RESET, "Disciplina", "Época", "Nota", "Estado");
+        System.out.println(CYAN_BOLD + bordaMeio + RESET);
+
+        if (minhasNotas.isEmpty()) {
+            System.out.println(CYAN_BOLD + "║" + YELLOW + " Ainda não existem notas registadas no seu perfil.  " + CYAN_BOLD + "║" + RESET);
+        } else {
+            double soma = 0;
+            int count = 0;
+
+            for (model.Avaliacao avaliacao : minhasNotas) {
+                String notaStr;
+                String estado;
+
+                if (avaliacao.getNota() == null) {
+                    notaStr = "-";
+                    estado = YELLOW + "A Aguardar" + RESET;
+                } else {
+                    notaStr = String.format("%.2f", avaliacao.getNota());
+                    soma += avaliacao.getNota();
+                    count++;
+
+                    if (avaliacao.getNota() >= 9.5) {
+                        estado = GREEN + "Aprovado" + RESET;
+                    } else {
+                        estado = RED + "Reprovado" + RESET;
+                    }
+                }
+
+                System.out.printf(CYAN_BOLD + "║" + RESET + " %-20s | %-15s | %-10s | %-29s " + CYAN_BOLD + "║\n" + RESET,
+                        avaliacao.getUnidadeCurricular().getNome(), avaliacao.getMomento(), notaStr, estado);
+            }
+
+            System.out.println(CYAN_BOLD + bordaMeio + RESET);
+            if (count > 0) {
+                double media = soma / count;
+                System.out.printf(CYAN_BOLD + "║" + WHITE_BOLD + " MÉDIA ATUAL DO CURSO: %-46.2f" + CYAN_BOLD + "║\n" + RESET, media);
+            }
+        }
+        System.out.println(CYAN_BOLD + bordaInferior + RESET);
+        Common.MenuUtils.pressionarEnter(ler);
     }
 }
