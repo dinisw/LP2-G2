@@ -13,12 +13,10 @@ import java.util.Scanner;
 public class GestorView {
     private final GestorCRUD gestorCRUD;
     private final Scanner scanner;
-    private final MenuUtils menu;
 
     public GestorView() {
         this.gestorCRUD = new GestorCRUD();
         this.scanner = new Scanner(System.in);
-        this.menu = new MenuUtils();
     }
 
     public void exibirMenuGestores() {
@@ -32,7 +30,7 @@ public class GestorView {
         opcoes.add("0. Voltar ao Menu Principal");
 
         do {
-            menu.exibirSubTitulo("GESTÃO DE GESTORES", opcoes);
+            MenuUtils.exibirSubTitulo("GESTÃO DE GESTORES", opcoes);
             System.out.print("\n" + DesignUtils.GetWhiteBold() + "Selecione uma opção: " + DesignUtils.GetReset());
             opcao = scanner.nextLine().trim();
 
@@ -56,9 +54,9 @@ public class GestorView {
                     return;
                 default:
                     System.out.println("Opção inválida!");
-                    menu.pressionarEnter(scanner);
+                    MenuUtils.pressionarEnter(scanner);
             }
-        } while (!opcao.equals("0"));
+        } while (true);
     }
 
     private void registarGestor() {
@@ -68,9 +66,29 @@ public class GestorView {
         System.out.print("Morada: ");
         String morada = scanner.nextLine();
         System.out.print("NIF: ");
-        int nif = Integer.parseInt(scanner.nextLine());
+        int nif = 0;
+        boolean nifValido = false;
+        while (!nifValido) {
+            try {
+                nif = Integer.parseInt(scanner.nextLine());
+                nifValido = true;
+            } catch (NumberFormatException e) {
+                System.out.println("Aviso: NIF deve ser um número inteiro válido. Tente novamente.");
+                System.out.print("NIF: ");
+            }
+        }
         System.out.print("Data de Nascimento (AAAA-MM-DD): ");
-        LocalDate dataNascimento = LocalDate.parse(scanner.nextLine());
+        LocalDate dataNascimento = null;
+        boolean dataValida = false;
+        while (!dataValida) {
+            try {
+                dataNascimento = LocalDate.parse(scanner.nextLine());
+                dataValida = true;
+            } catch (Exception e) {
+                System.out.println("Aviso: Data deve estar no formato AAAA-MM-DD. Tente novamente.");
+                System.out.print("Data de Nascimento (AAAA-MM-DD): ");
+            }
+        }
         System.out.print("Email: ");
         String email = scanner.nextLine();
         System.out.print("Palavra-passe: ");
@@ -85,7 +103,7 @@ public class GestorView {
         } else {
             System.out.println("Erro ao registar: NIF já existe ou dados inválidos.");
         }
-        menu.pressionarEnter(scanner);
+        MenuUtils.pressionarEnter(scanner);
     }
 
     private void listarGestores() {
@@ -98,35 +116,65 @@ public class GestorView {
                 System.out.println("NIF: " + g.getNif() + " | Nome: " + g.getNome() + " | Cargo: " + g.getCargo());
             }
         }
-        menu.pressionarEnter(scanner);
+        MenuUtils.pressionarEnter(scanner);
     }
 
     private void procurarGestor() {
         System.out.print("\nDigite o NIF do gestor: ");
-        int nif = Integer.parseInt(scanner.nextLine());
+        int nif = 0;
+        boolean nifValido = false;
+        while (!nifValido) {
+            try {
+                nif = Integer.parseInt(scanner.nextLine());
+                nifValido = true;
+            } catch (NumberFormatException e) {
+                System.out.println("Aviso: NIF deve ser um número inteiro válido. Tente novamente.");
+                System.out.print("Digite o NIF do gestor: ");
+            }
+        }
         Gestor g = gestorCRUD.procurarPorNif(nif);
         if (g != null) {
             System.out.println("Dados encontrados: " + g);
         } else {
             System.out.println("Gestor não encontrado.");
         }
-        menu.pressionarEnter(scanner);
+        MenuUtils.pressionarEnter(scanner);
     }
 
     private void eliminarGestor() {
         System.out.print("\nDigite o NIF do gestor a eliminar: ");
-        int nif = Integer.parseInt(scanner.nextLine());
+        int nif = 0;
+        boolean nifValido = false;
+        while (!nifValido) {
+            try {
+                nif = Integer.parseInt(scanner.nextLine());
+                nifValido = true;
+            } catch (NumberFormatException e) {
+                System.out.println("Aviso: NIF deve ser um número inteiro válido. Tente novamente.");
+                System.out.print("Digite o NIF do gestor a eliminar: ");
+            }
+        }
         if (gestorCRUD.eliminarGestor(nif)) {
             System.out.println("Gestor eliminado com sucesso!");
         } else {
             System.out.println("Erro ao eliminar: Gestor não encontrado.");
         }
-        menu.pressionarEnter(scanner);
+        MenuUtils.pressionarEnter(scanner);
     }
 
     private void atualizarGestor() {
         System.out.print("\nDigite o NIF do gestor a atualizar: ");
-        int nif = Integer.parseInt(scanner.nextLine());
+        int nif = 0;
+        boolean nifValido = false;
+        while (!nifValido) {
+            try {
+                nif = Integer.parseInt(scanner.nextLine());
+                nifValido = true;
+            } catch (NumberFormatException e) {
+                System.out.println("Aviso: NIF deve ser um número inteiro válido. Tente novamente.");
+                System.out.print("Digite o NIF do gestor a atualizar: ");
+            }
+        }
         Gestor g = gestorCRUD.procurarPorNif(nif);
 
         if (g != null) {
@@ -155,6 +203,6 @@ public class GestorView {
         } else {
             System.out.println("Gestor não encontrado.");
         }
-        menu.pressionarEnter(scanner);
+        MenuUtils.pressionarEnter(scanner);
     }
 }

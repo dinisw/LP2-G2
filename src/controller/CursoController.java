@@ -2,6 +2,7 @@ package controller;
 
 import DAL.CursoCRUD;
 import DAL.DepartamentoCRUD;
+import DAL.GestorCRUD;
 import model.Curso;
 import model.Departamento;
 import java.util.List;

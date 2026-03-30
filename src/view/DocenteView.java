@@ -4,7 +4,10 @@ import Common.DesignUtils;
 import Common.MenuUtils;
 import Common.SenhaUtils;
 import DAL.DocenteCRUD;
+import DAL.UnidadeCurricularCRUD;
 import model.Docente;
+
+import javax.xml.stream.events.Comment;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,12 +16,10 @@ import java.util.Scanner;
 public class DocenteView {
     private final DocenteCRUD docenteCRUD;
     private final Scanner scanner;
-    private final MenuUtils menu;
 
     public DocenteView() {
         this.docenteCRUD = new DocenteCRUD();
         this.scanner = new Scanner(System.in);
-        this.menu = new MenuUtils();
     }
 
     public void exibirMenuDocentes() {
@@ -33,7 +34,7 @@ public class DocenteView {
         opcoes.add("0. Voltar ao Menu Principal");
 
         do {
-            menu.exibirSubTitulo("GESTÃO DE DOCENTES", opcoes);
+            MenuUtils.exibirSubTitulo("GESTÃO DE DOCENTES", opcoes);
             System.out.print("\n" + DesignUtils.GetWhiteBold() + "Selecione uma opção: " + DesignUtils.GetReset());
             opcao = scanner.nextLine().trim();
 
@@ -60,9 +61,9 @@ public class DocenteView {
                     return;
                 default:
                     System.out.println("Opção inválida!");
-                    menu.pressionarEnter(scanner);
+                    MenuUtils.pressionarEnter(scanner);
             }
-        } while (!opcao.equals("0"));
+        } while (true);
     }
 
     private void registarDocente() {
@@ -72,17 +73,42 @@ public class DocenteView {
         System.out.print("Morada: ");
         String morada = scanner.nextLine();
         System.out.print("NIF: ");
-        int nif = Integer.parseInt(scanner.nextLine());
+        int nif = 0;
+        boolean nifValido = false;
+        while (!nifValido) {
+            try {
+                nif = Integer.parseInt(scanner.nextLine());
+                nifValido = true;
+            } catch (NumberFormatException e) {
+                System.out.println("Aviso: NIF deve ser um número inteiro válido. Tente novamente.");
+                System.out.print("NIF: ");
+            }
+        }
         System.out.print("Data de Nascimento (AAAA-MM-DD): ");
-        LocalDate dataNascimento = LocalDate.parse(scanner.nextLine());
-        System.out.print("Email: ");
-        String email = scanner.nextLine();
-        System.out.print("Palavra-passe: ");
-        String passDigitada = scanner.nextLine();
+        LocalDate dataNascimento = null;
+        boolean dataValida = false;
+        while (!dataValida) {
+            try {
+                dataNascimento = LocalDate.parse(scanner.nextLine());
+                dataValida = true;
+            } catch (Exception e) {
+                System.out.println("Aviso: Data deve estar no formato AAAA-MM-DD. Tente novamente.");
+                System.out.print("Data de Nascimento (AAAA-MM-DD): ");
+            }
+        }
         String salt = SenhaUtils.gerarSalt();
-        String pass = SenhaUtils.gerarHashComSalt(passDigitada, salt);
-        System.out.print("Sigla: ");
-        String sigla = scanner.nextLine();
+        String passAuto = Common.SenhaUtils.gerarPalavraPasseAleatoria();
+
+        String pass = SenhaUtils.gerarHashComSalt(passAuto, salt);
+
+        String sigla = nome.length() >= 3 ? nome.substring(0, 3).toLowerCase() : nome.toUpperCase();
+        String email = sigla + "@isep.ipp.pt";
+        
+        System.out.println("\n-- Dados Gerados Automaticamente --");
+        System.out.println("Sigla: " + sigla);
+        System.out.println("Email: " + email);
+        System.out.println("Palavra Passe: " + pass);
+        System.out.println("------------------------------------");
 
         Docente novo = new Docente(nome, morada, nif, dataNascimento, email, pass, salt, sigla, null, null);
         if (docenteCRUD.registarDocente(novo)) {
@@ -90,7 +116,7 @@ public class DocenteView {
         } else {
             System.out.println("Erro ao registar: NIF já existe ou dados inválidos.");
         }
-        menu.pressionarEnter(scanner);
+        MenuUtils.pressionarEnter(scanner);
     }
 
     private void listarDocentes() {
@@ -103,41 +129,64 @@ public class DocenteView {
                 System.out.println("NIF: " + d.getNif() + " | Nome: " + d.getNome() + " | Sigla: " + d.getSigla());
             }
         }
-        menu.pressionarEnter(scanner);
+        MenuUtils.pressionarEnter(scanner);
     }
 
     private void procurarDocente() {
         System.out.print("\nDigite o NIF do docente: ");
-        int nif = Integer.parseInt(scanner.nextLine());
+        int nif = 0;
+        boolean nifValido = false;
+        while (!nifValido) {
+            try {
+                nif = Integer.parseInt(scanner.nextLine());
+                nifValido = true;
+            } catch (NumberFormatException e) {
+                System.out.println("Aviso: NIF deve ser um número inteiro válido. Tente novamente.");
+                System.out.print("Digite o NIF do docente: ");
+            }
+        }
         Docente d = docenteCRUD.procurarPorNif(nif);
         if (d != null) {
             System.out.println("Dados encontrados: " + d.getNome() + " - " + d.getEmail());
         } else {
             System.out.println("Docente não encontrado.");
         }
-        menu.pressionarEnter(scanner);
+        MenuUtils.pressionarEnter(scanner);
     }
 
     private void eliminarDocente() {
         System.out.print("\nDigite o NIF do docente a eliminar: ");
-        int nif = Integer.parseInt(scanner.nextLine());
+        int nif = 0;
+        boolean nifValido = false;
+        while (!nifValido) {
+            try {
+                nif = Integer.parseInt(scanner.nextLine());
+                nifValido = true;
+            } catch (NumberFormatException e) {
+                System.out.println("Aviso: NIF deve ser um número inteiro válido. Tente novamente.");
+                System.out.print("Digite o NIF do docente a eliminar: ");
+            }
+        }
         if (docenteCRUD.eliminarDocente(nif)) {
             System.out.println("Docente eliminado com sucesso!");
         } else {
             System.out.println("Erro ao eliminar: Docente não encontrado.");
         }
-        menu.pressionarEnter(scanner);
+        MenuUtils.pressionarEnter(scanner);
     }
 
     private void alterarPasswordDocente() {
         System.out.print("\nDigite o NIF do docente para alterar a password: ");
-        int nif;
-        try {
-            nif = Integer.parseInt(scanner.nextLine());
-        } catch (NumberFormatException e) {
-            System.out.println("NIF inválido! Deve ser um número.");
-            menu.pressionarEnter(scanner);
-            return;
+        int nif = 0;
+        boolean nifValido = false;
+        while (!nifValido) {
+            try {
+                nif = Integer.parseInt(scanner.nextLine());
+                nifValido = true;
+            } catch (NumberFormatException e) {
+                System.out.println("Aviso: NIF deve ser um número inteiro válido. Tente novamente.");
+                System.out.print("Digite o NIF do docente para alterar a password: ");
+            }
         }
         
         Docente d = docenteCRUD.procurarPorNif(nif);
@@ -164,12 +213,22 @@ public class DocenteView {
         } else {
             System.out.println("Docente não encontrado.");
         }
-        menu.pressionarEnter(scanner);
+        MenuUtils.pressionarEnter(scanner);
     }
 
     private void atualizarDocente() {
         System.out.print("\nDigite o NIF do docente a atualizar: ");
-        int nif = Integer.parseInt(scanner.nextLine());
+        int nif = 0;
+        boolean nifValido = false;
+        while (!nifValido) {
+            try {
+                nif = Integer.parseInt(scanner.nextLine());
+                nifValido = true;
+            } catch (NumberFormatException e) {
+                System.out.println("Aviso: NIF deve ser um número inteiro válido. Tente novamente.");
+                System.out.print("Digite o NIF do docente a atualizar: ");
+            }
+        }
         Docente d = docenteCRUD.procurarPorNif(nif);
 
         if (d != null) {
@@ -198,7 +257,7 @@ public class DocenteView {
         } else {
             System.out.println("Docente não encontrado.");
         }
-        menu.pressionarEnter(scanner);
+        MenuUtils.pressionarEnter(scanner);
     }
     public void exibirMenuPessoalDocente(Docente docente) {
         String opcao;
@@ -208,25 +267,28 @@ public class DocenteView {
         opcoes.add("0. Logout");
 
         do {
-            menu.exibirSubTitulo("MENU DOCENTE: " + docente.getNome(), opcoes);
+            MenuUtils.exibirSubTitulo("MENU DOCENTE: " + docente.getNome(), opcoes);
             System.out.print("\n" + DesignUtils.GetWhiteBold() + "Selecione uma opção: " + DesignUtils.GetReset());
             opcao = scanner.nextLine().trim();
 
             switch (opcao) {
                 case "1":
                     new controller.UnidadeCurricularController().listarUCsPorDocente(docente.getSigla());
-                    menu.pressionarEnter(scanner);
+                    MenuUtils.pressionarEnter(scanner);
                     break;
                 case "2":
                     alterarPasswordPropria(docente);
+                    break;
+                case "3":
+                    lancarNotaDocente();
                     break;
                 case "0":
                     return;
                 default:
                     System.out.println("Opção inválida!");
-                    menu.pressionarEnter(scanner);
+                    MenuUtils.pressionarEnter(scanner);
             }
-        } while (!opcao.equals("0"));
+        } while (true);
     }
 
     private void alterarPasswordPropria(Docente d) {
@@ -245,6 +307,72 @@ public class DocenteView {
                 System.out.println("Erro ao guardar alteração da password.");
             }
         }
-        menu.pressionarEnter(scanner);
+        MenuUtils.pressionarEnter(scanner);
     }
+
+    private void lancarNotaDocente() {
+        System.out.println("\n--- LANÇAR NOTA ---");
+        System.out.print("Nº Mecanográfico do Estudante: ");
+        int numMec = Integer.parseInt(scanner.nextLine().trim());
+
+        DAL.EstudanteCRUD estudanteCRUD = new DAL.EstudanteCRUD();
+        model.Estudante estudante = estudanteCRUD.lerEstudante(numMec);
+
+        if (estudante == null) {
+            System.out.println("Erro: Estudante não encontrado!");
+            Common.MenuUtils.pressionarEnter(scanner);
+            return;
+        }
+        System.out.print("Nome da Unidade Curricular:  ");
+        String nomeUC = scanner.nextLine().trim();
+        DAL.UnidadeCurricularCRUD unidadeCurricularCRUD = new DAL.UnidadeCurricularCRUD();
+        model.UnidadeCurricular unidadeCurricular = unidadeCurricularCRUD.procurarPorNome(nomeUC);
+
+        if (unidadeCurricular == null) {
+            System.out.println("Erro: UC não encontrada!");
+            Common.MenuUtils.pressionarEnter(scanner);
+            return;
+        }
+        System.out.print("Época de Avaliação (ex. Frequência, Exame): ");
+        String momento = scanner.nextLine().trim();
+
+        System.out.println("Nota (Deixe em branco e dê Enter se for 'Aguardar Lançamento'): ");
+        String notaInput = scanner.nextLine().trim();
+
+        Double nota = null;
+        if (!notaInput.isEmpty()) {
+            nota = Double.parseDouble(notaInput.replace(",","."));
+        }
+
+        model.Avaliacao novaAvaliacao = new model.Avaliacao(momento, nota, unidadeCurricular, estudante);
+        DAL.AvaliacaoCRUD avaliacaoCRUD = new DAL.AvaliacaoCRUD();
+
+        if (avaliacaoCRUD.registarAvaliacao(novaAvaliacao)) {
+            System.out.println(Common.DesignUtils.GetGreen() + "Avaliação registada com sucesso!" + Common.DesignUtils.GetReset());
+        } else {
+            System.out.println(Common.DesignUtils.GetRed() + "Erro ao registar avaliação." + Common.DesignUtils.GetReset());
+        }
+        Common.MenuUtils.pressionarEnter(scanner);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }

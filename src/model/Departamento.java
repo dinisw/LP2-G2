@@ -9,6 +9,11 @@ public class Departamento {
         this.sigla = sigla;
     }
 
+    public Departamento() {
+        this.nome = "";
+        this.sigla = "";
+    }
+
     public String getNome() {
         return nome;
     }

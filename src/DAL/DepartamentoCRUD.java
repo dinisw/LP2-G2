@@ -36,8 +36,8 @@ public class DepartamentoCRUD {
         try (PrintWriter print = new PrintWriter(new FileWriter(CAMINHO_FICHEIRO))) {
             for (Departamento dep : departamentos) {
                 String linha = String.format("%s;%s",
-                        dep.getNome(),
-                        dep.getSigla());
+                        safe(dep.getNome()),
+                        safe(dep.getSigla()));
                 print.println(linha);
             }
         } catch (IOException | NumberFormatException e) {
@@ -91,5 +91,9 @@ public class DepartamentoCRUD {
             }
         }
         return false;
+    }
+
+    private String safe(Object o) {
+        return (o == null) ? "SEM REGISTO" : o.toString();
     }
 }

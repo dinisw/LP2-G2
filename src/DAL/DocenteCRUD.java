@@ -48,15 +48,15 @@ public class DocenteCRUD {
     private void guardarTodosNoFicheiro() {
         try (PrintWriter print = new PrintWriter(new FileWriter(CAMINHO_FICHEIRO))) {
             for (Docente docente : docentes) {
-                String linha = String.format("%s;%s;%d;%s;%s;%s;%s;%s",
-                        docente.getNome(),
-                        docente.getMorada(),
-                        docente.getNif(),
-                        docente.getDataNascimento(),
-                        docente.getEmail(),
-                        docente.getHash(),
-                        docente.getSalt(),
-                        docente.getSigla());
+                String linha = String.format("%s;%s;%s;%s;%s;%s;%s;%s",
+                        safe(docente.getNome()),
+                        safe(docente.getMorada()),
+                        safe(docente.getNif()),
+                        safe(docente.getDataNascimento()),
+                        safe(docente.getEmail()),
+                        safe(docente.getHash()),
+                        safe(docente.getSalt()),
+                        safe(docente.getSigla()));
                 print.println(linha);
             }
         } catch (IOException e) {
@@ -119,5 +119,9 @@ public class DocenteCRUD {
             }
         }
         return false;
+    }
+
+    private String safe(Object o){
+        return (o == null) ? "SEM REGISTO" : o.toString();
     }
 }

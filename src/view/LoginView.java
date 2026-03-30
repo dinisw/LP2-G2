@@ -32,14 +32,17 @@ public class LoginView {
                 System.out.println(DesignUtils.GetCyanBold() + "LOGIN" + DesignUtils.GetReset());
                 System.out.print("Email (digite '0' para sair): ");
                 email = ler.nextLine().trim();
+                if (email.equals("0")) {
+                    sair = true;
+                    break;
+                }
                 emailValido = BackendUtils.isEmailIsepValido(email);
                 if (!emailValido) {
                     System.out.print("Email inválido, tente novamente!!");
                     MenuUtils.pressionarEnter(ler);
                 }
             }
-            if (email.equals("0")) {
-                sair = true;
+            if (sair) {
                 continue;
             }
 
@@ -68,6 +71,10 @@ public class LoginView {
                 }
 
                 if (!senhaValida) {
+                    if(senha.equals("0")) {
+                        emailValido = false;
+                        break;
+                    }
                     System.out.print("Senha incorreta, tente novamente!!");
                     MenuUtils.pressionarEnter(ler);
                 }
@@ -131,6 +138,6 @@ public class LoginView {
                     System.out.println("Opção inválida!");
                     MenuUtils.pressionarEnter(scanner);
             }
-        } while (!opcao.equals("0"));
+        } while (true);
     }
 }

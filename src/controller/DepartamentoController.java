@@ -1,14 +1,17 @@
 package controller;
 
 import DAL.DepartamentoCRUD;
+import DAL.CursoCRUD;
 import model.Departamento;
 import java.util.List;
 
 public class DepartamentoController {
     private DepartamentoCRUD crud;
-
+    private CursoCRUD cursoCRUD;
+    
     public DepartamentoController() {
         this.crud = new DepartamentoCRUD();
+        this.cursoCRUD = new CursoCRUD();
     }
 
     // Regista e devolve true (sucesso) ou false (erro) para a View
@@ -29,20 +32,27 @@ public class DepartamentoController {
 
     // Pega nos novos dados e manda o CRUD atualizar
     public boolean atualizarDepartamento(String siglaAntiga, String novoNome) {
+        if (cursoCRUD.existeCursoComDepartamento(siglaAntiga)) {
+            System.out.println("Erro: O departamento tem cursos associados e não pode ser alterado!");
+            return false;
+        }
+
         Departamento dep = crud.procurarPorSigla(siglaAntiga);
 
         if (dep != null) {
-            // Atualiza apenas se o nome não for vazio
             if (novoNome != null && !novoNome.isEmpty()) {
                 dep.setNome(novoNome);
             }
             return crud.atualizarDepartamento(dep);
         }
-        return false; // Retorna falso se não encontrou o departamento
+        return false;
     }
 
     // Manda eliminar
     public boolean eliminarDepartamento(String sigla) {
+        if (cursoCRUD.existeCursoComDepartamento(sigla)) {
+            return false;
+        }
         return crud.eliminarDepartamento(sigla);
     }
 }
