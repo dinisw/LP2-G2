@@ -4,7 +4,6 @@ import Common.BackendUtils;
 import Common.DesignUtils;
 import Common.MenuUtils;
 import Common.SenhaUtils;
-import DAL.EstudanteCRUD;
 import controller.LoginController;
 import model.Docente;
 import model.Estudante;
@@ -30,7 +29,8 @@ public class LoginView {
             boolean emailValido = false;
             while (!emailValido) {
                 System.out.println(DesignUtils.GetCyanBold() + "LOGIN" + DesignUtils.GetReset());
-                System.out.print("Email (digite '0' para sair): ");
+                System.out.println("digite '0' para sair");
+                System.out.print("\nEmail: ");
                 email = ler.nextLine().trim();
                 if (email.equals("0")) {
                     sair = true;
@@ -51,30 +51,17 @@ public class LoginView {
 
             while (!senhaValida) {
                 System.out.print("Senha: ");
-                java.io.Console console = System.console();
-                if (console != null) {
-                    char[] senhaArray = console.readPassword();
-                    senha = new String(senhaArray);
-                    java.util.Arrays.fill(senhaArray, ' ');
-                } else {
-                    // Fallback para quando não há consola real (ex: dentro do IDE)
-                    senha = ler.nextLine();
-                }
-
+                senha = ler.nextLine();
                 pessoa = loginController.login(email);
 
                 if (pessoa != null) {
                     senhaValida = SenhaUtils.verificarSenha(senha, pessoa.getSalt(), pessoa.getHash());
                 } else {
-                    // Se a pessoa for null, significa que o email não existe em nenhum CRUD
+                    System.out.print("Utilizador não encontrado. Tente novamente...");
                     break;
                 }
 
                 if (!senhaValida) {
-                    if(senha.equals("0")) {
-                        emailValido = false;
-                        break;
-                    }
                     System.out.print("Senha incorreta, tente novamente!!");
                     MenuUtils.pressionarEnter(ler);
                 }
@@ -82,13 +69,14 @@ public class LoginView {
 
             if (pessoa != null && senhaValida) {
                 if (pessoa instanceof Estudante) {
-                    EstudanteView.Menu();
+                    EstudanteView estudanteView = new EstudanteView();
+                    estudanteView.exibirMenu((Estudante) pessoa);
                 } else if (pessoa instanceof Docente) {
                     DocenteView docenteView = new DocenteView();
                     docenteView.exibirMenuPessoalDocente((Docente) pessoa);
                 } else if (pessoa instanceof Gestor) {
                     GestorView gestorView = new GestorView();
-                    exibirMenuGestaoGlobal(ler, gestorView, new DocenteView(), new EstudanteView(), new CursoView(), new DepartamentoView(), new UnidadeCurricularView());
+                    gestorView.exibirMenuGestores((Gestor) pessoa);
                 }
             } else {
                 System.out.println("\n" + RED + "Credenciais inválidas! Tente novamente." + RESET);
@@ -121,7 +109,7 @@ public class LoginView {
                     docenteView.exibirMenuDocentes();
                     break;
                 case "3":
-                    estudanteView.Menu();
+                    estudanteView.exibirMenu();
                     break;
                 case "4":
                     cursoView.exibirMenuCursos();
