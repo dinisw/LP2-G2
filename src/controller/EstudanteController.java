@@ -18,11 +18,11 @@ public class EstudanteController {
         this.view = view;
     }
 
-    public void exibirFichaEstudante() {
+    public String exibirFichaEstudante() {
         String dataNascimentoStr = (model.getDataNascimento() != null) ? model.getDataNascimento().toString() : "Não definida";
         String cursoStr = (model.getNomeCurso() != null && !model.getNomeCurso().isEmpty()) ? model.getNomeCurso() : "Sem curso";
 
-        imprimirFichaEstudante(
+        var fichaDeEstudante = imprimirFichaEstudante(
                 model.getNome(),
                 model.getNumeroMec(),
                 model.getEmail(),
@@ -32,6 +32,7 @@ public class EstudanteController {
                 cursoStr,
                 model.getAnoLetivo()
         );
+        return fichaDeEstudante;
     }
     public void exibirNotas() {
         imprimirNotas(model.getListaAvaliacoes());
@@ -44,16 +45,18 @@ public class EstudanteController {
             mostrarMensagem("Falhou: O estudante falhou em cumprir os 60% de aproveitamento e manter-se-á no " + model.getAnoLetivo() + "º ano.");
         }
     }
-    public void imprimirFichaEstudante (String nome, int numMec, String email, int nif, String dataNascimento, String morada, String curso, int anoLetivo) {
-        System.out.println("FICHA DE ESTUDANTE");
-        System.out.println("Nome: " + nome);
-        System.out.println("Nº Mecanográfico: " + numMec);
-        System.out.println("Email: " + email);
-        System.out.println("NIF: " + nif);
-        System.out.println("Data Nascimento: " + dataNascimento);
-        System.out.println("Morada: " + morada);
-        System.out.println("Curso (Inscrição): " + curso);
-        System.out.println("Ano Letivo Atual: " + anoLetivo + "º Ano");
+    public String imprimirFichaEstudante (String nome, int numMec, String email, int nif, String dataNascimento, String morada, String curso, int anoLetivo) {
+        return """
+        FICHA DE ESTUDANTE
+        Nome: %s
+        Nº Mecanográfico: %s
+        Email: %s
+        NIF: %d
+        Data Nascimento: %s
+        Morada: %s
+        Curso (Inscrição): %s
+        Ano Letivo Atual: %dº Ano
+        """.formatted(nome, numMec, email, nif, dataNascimento, morada, curso, anoLetivo);
     }
 
     public void imprimirNotas (List<Avaliacao> notas) {
