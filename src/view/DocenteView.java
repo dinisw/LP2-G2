@@ -23,12 +23,11 @@ public class DocenteView {
     public void exibirMenuDocentes() {
         String opcao;
         ArrayList<String> opcoes = new ArrayList<>();
-        opcoes.add("1. Registar Docente");
-        opcoes.add("2. Listar Docentes");
-        opcoes.add("3. Procurar Docente (NIF)");
-        opcoes.add("4. Atualizar Docente (NIF)");
-        opcoes.add("5. Alterar Password (NIF)");
-        opcoes.add("6. Eliminar Docente (NIF)");
+        opcoes.add("1. Listar Docentes");
+        opcoes.add("2. Procurar Docente (NIF)");
+        opcoes.add("3. Atualizar Docente (NIF)");
+        opcoes.add("4. Alterar Password (NIF)");
+        opcoes.add("5. Eliminar Docente (NIF)");
         opcoes.add("0. Voltar ao Menu Principal");
 
         do {
@@ -38,21 +37,18 @@ public class DocenteView {
 
             switch (opcao) {
                 case "1":
-                    registarDocente();
-                    break;
-                case "2":
                     listarDocentes();
                     break;
-                case "3":
+                case "2":
                     procurarDocente();
                     break;
-                case "4":
+                case "3":
                     atualizarDocente();
                     break;
-                case "5":
+                case "4":
                     alterarPasswordDocente();
                     break;
-                case "6":
+                case "5":
                     eliminarDocente();
                     break;
                 case "0":
@@ -62,60 +58,6 @@ public class DocenteView {
                     MenuUtils.pressionarEnter(scanner);
             }
         } while (true);
-    }
-
-    private void registarDocente() {
-        System.out.println("\n--- REGISTO DE DOCENTE ---");
-        System.out.print("Nome: ");
-        String nome = scanner.nextLine();
-        System.out.print("Morada: ");
-        String morada = scanner.nextLine();
-        System.out.print("NIF: ");
-        int nif = 0;
-        boolean nifValido = false;
-        while (!nifValido) {
-            try {
-                nif = Integer.parseInt(scanner.nextLine());
-                nifValido = true;
-            } catch (NumberFormatException e) {
-                System.out.println("Aviso: NIF deve ser um número inteiro válido. Tente novamente.");
-                System.out.print("NIF: ");
-            }
-        }
-        System.out.print("Data de Nascimento (AAAA-MM-DD): ");
-        LocalDate dataNascimento = null;
-        boolean dataValida = false;
-        while (!dataValida) {
-            try {
-                dataNascimento = LocalDate.parse(scanner.nextLine());
-                dataValida = true;
-            } catch (Exception e) {
-                System.out.println("Aviso: Data deve estar no formato AAAA-MM-DD. Tente novamente.");
-                System.out.print("Data de Nascimento (AAAA-MM-DD): ");
-            }
-        }
-
-
-        String salt = SenhaUtils.gerarSalt();
-        String passAuto = Common.SenhaUtils.gerarPalavraPasseAleatoria();
-
-        String pass = SenhaUtils.gerarHashComSalt(passAuto, salt);
-
-        String sigla = nome.length() >= 3 ? nome.substring(0, 3).toLowerCase() : nome.toUpperCase();
-        String email = sigla + "@isep.ipp.pt";
-        
-        System.out.println("\n-- Dados Gerados Automaticamente --");
-        System.out.println("Sigla: " + sigla);
-        System.out.println("Email: " + email);
-        System.out.println("Palavra Passe: " + pass);
-        System.out.println("------------------------------------");
-
-        if (docenteController.registarDocente(nome, morada, nif, dataNascimento, email, pass, salt, sigla)) {
-            System.out.println("Docente registado com sucesso!");
-        } else {
-            System.out.println("Erro ao registar: NIF já existe ou dados inválidos.");
-        }
-        MenuUtils.pressionarEnter(scanner);
     }
 
     private void listarDocentes() {

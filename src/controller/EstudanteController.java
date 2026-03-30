@@ -1,9 +1,10 @@
 package controller;
 
 import BLL.EstudanteCalculo;
+import DAL.EstudanteCRUD;
+import Common.SenhaUtils;
 import model.Avaliacao;
 import model.Estudante;
-import model.Curso;
 import view.EstudanteView;
 
 import java.util.List;
@@ -18,7 +19,11 @@ public class EstudanteController {
         this.view = view;
     }
 
-    public String exibirFichaEstudante() {
+    public EstudanteController() {
+        // Constructor for CRUD operations
+    }
+
+    public void exibirFichaEstudante() {
         String dataNascimentoStr = (model.getDataNascimento() != null) ? model.getDataNascimento().toString() : "Não definida";
         String cursoStr = (model.getNomeCurso() != null && !model.getNomeCurso().isEmpty()) ? model.getNomeCurso() : "Sem curso";
 
@@ -80,5 +85,46 @@ public class EstudanteController {
 //        c.pegarCursos();
 
 
+    }
+
+    // CRUD methods
+    private EstudanteCRUD estudanteCRUD = new EstudanteCRUD();
+
+    public boolean registarEstudante(String nome, String morada, int nif, java.time.LocalDate dataNascimento, String curso) {
+        int numeroMec = estudanteCRUD.gerarNumeroMecanografico();
+        String email = numeroMec + "@isep.ipp.pt";
+        String salt = SenhaUtils.gerarSalt();
+        String passAuto = SenhaUtils.gerarPalavraPasseAleatoria();
+        String hash = SenhaUtils.gerarHashComSalt(passAuto, salt);
+        Estudante estudante = new Estudante(nome, morada, nif, dataNascimento, email, numeroMec, hash, salt, curso);
+        return estudanteCRUD.registarEstudante(estudante);
+    }
+
+    public List<Estudante> listarEstudantes() {
+        return estudanteCRUD.getEstudantes();
+    }
+
+    public Estudante procurarEstudantePorNumeroMec(int numeroMec) {
+        return estudanteCRUD.lerEstudante(numeroMec);
+    }
+
+    public boolean atualizarEstudante(int numeroMec, String nome, String morada, String email, String curso) {
+        Estudante estudante = estudanteCRUD.lerEstudante(numeroMec);
+        if (estudante != null) {
+            if (nome != null) estudante.setNome(nome);
+            if (morada != null) estudante.setMorada(morada);
+            if (email != null) estudante.setEmail(email);
+            if (curso != null) estudante.setNomeCurso(curso);
+            return estudanteCRUD.atualizarEstudante(estudante);
+        }
+        return false;
+    }
+
+    public boolean eliminarEstudante(int numeroMec) {
+        return estudanteCRUD.eliminarEstudante(numeroMec);
+    }
+
+    public int gerarNumeroMecanografico() {
+        return estudanteCRUD.gerarNumeroMecanografico();
     }
 }

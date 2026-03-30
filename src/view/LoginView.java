@@ -76,7 +76,7 @@ public class LoginView {
                     docenteView.exibirMenuPessoalDocente((Docente) pessoa);
                 } else if (pessoa instanceof Gestor) {
                     GestorView gestorView = new GestorView();
-                    gestorView.exibirMenuGestao((Gestor) pessoa);
+                    gestorView.exibirMenuGestao();
                 }
             } else {
                 System.out.println("\n" + RED + "Credenciais inválidas! Tente novamente." + RESET);
