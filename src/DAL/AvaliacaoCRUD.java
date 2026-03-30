@@ -80,4 +80,15 @@ public class AvaliacaoCRUD {
         }
         return notaEstudante;
     }
+
+    public List<Avaliacao> listarPorUnidadeCurricular(String nomeUC) {
+        List<Avaliacao> avaliacoesUC = new ArrayList<>();
+        for (Avaliacao avaliacao : avaliacoes) {
+            if (avaliacao.getUnidadeCurricular() != null && 
+                avaliacao.getUnidadeCurricular().getNome().equalsIgnoreCase(nomeUC)) {
+                avaliacoesUC.add(avaliacao);
+            }
+        }
+        return avaliacoesUC;
+    }
 }

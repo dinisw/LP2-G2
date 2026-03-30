@@ -85,7 +85,7 @@ public class LoginView {
         } while (!sair);
     }
 
-    private static void exibirMenuGestaoGlobal(Scanner scanner, GestorView gestorView, DocenteView docenteView, EstudanteView estudanteView, CursoView cursoView, DepartamentoView departamentoView, controller.UnidadeCurricularController ucController) {
+    private static void exibirMenuGestaoGlobal(Scanner scanner, GestorView gestorView, DocenteView docenteView, EstudanteView estudanteView, CursoView cursoView, DepartamentoView departamentoView, UnidadeCurricularView unidadeCurricularView) {
         String opcao;
         ArrayList<String> opcoes = new ArrayList<>();
         opcoes.add("1. Gerir Gestores");
@@ -118,7 +118,7 @@ public class LoginView {
                     departamentoView.exibirMenuDepartamentos();
                     break;
                 case "6":
-                    ucController.exibirMenuGestaoUCs();
+                    unidadeCurricularView.exibirMenuUnidadesCurriculares();
                     break;
                 case "0":
                     return;

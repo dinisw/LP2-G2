@@ -9,8 +9,6 @@ public class Docente extends Pessoa{
     private String sigla;
     private List<Avaliacao> listaAvaliacao = new ArrayList<>();
 
-    public Docente() {
-    }
 
     public Docente(List<Avaliacao> listaAvaliacao, UnidadeCurricular unidadeCurricular, String sigla) {
         this.listaAvaliacao = listaAvaliacao;
