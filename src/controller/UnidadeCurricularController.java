@@ -1,136 +1,134 @@
 package controller;
 
-import DAL.CursoCRUD;
-import DAL.DocenteCRUD;
 import DAL.UnidadeCurricularCRUD;
-import model.Curso;
+import DAL.DocenteCRUD;
 import model.Docente;
 import model.UnidadeCurricular;
 import view.UnidadeCurricularView;
-
 import java.util.List;
-import java.util.Scanner;
 
 public class UnidadeCurricularController {
-    private UnidadeCurricularCRUD ucCRUD;
-    private UnidadeCurricularView view;
-    private DocenteCRUD docenteCRUD;
-    private CursoCRUD cursoCRUD;
+    private final UnidadeCurricularCRUD ucCRUD;
+    private final UnidadeCurricularView view;
+    private final DocenteCRUD docenteCRUD;
 
     public UnidadeCurricularController() {
         this.ucCRUD = new UnidadeCurricularCRUD();
         this.view = new UnidadeCurricularView();
         this.docenteCRUD = new DocenteCRUD();
-        this.cursoCRUD = new CursoCRUD();
     }
 
-    public void registarNovaUC() {
-        String nome = view.solicitarNome();
+    // Método para exibir o menu completo
+    public void exibirMenuUnidadesCurriculares() {
+        view.exibirMenuUnidadesCurriculares();
+    }
+
+    // Método para registar uma UC (pode ser usado por outros controladores se necessário)
+    public boolean registarUC(String nome, int ano, String siglaDocente) {
+        if (nome == null || nome.isEmpty()) {
+            System.out.println("Erro: Nome da UC não pode estar vazio.");
+            return false;
+        }
+
         if (ucCRUD.procurarPorNome(nome) != null) {
-            view.mostrarMensagem("Erro: Já existe uma UC com esse nome!");
-            return;
+            System.out.println("Erro: Já existe uma UC com esse nome!");
+            return false;
         }
 
-        int ano = view.solicitarAno();
-        if (ano <= 0) {
-            view.mostrarMensagem("Erro: Ano curricular inválido!");
-            return;
+        if (ano < 1 || ano > 3) {
+            System.out.println("Erro: Ano curricular deve ser 1, 2 ou 3.");
+            return false;
         }
 
-        // Listar e selecionar docente
-        List<Docente> docentes = docenteCRUD.getDocentes();
-        if (docentes.isEmpty()) {
-            view.mostrarMensagem("Erro: Não existem docentes registados no sistema.");
-            return;
-        }
-        view.listarDocentesDisponiveis(docentes);
-        
-        String siglaDocente = view.solicitarSiglaDocente();
-        Docente docente = docenteCRUD.procurarPorSigla(siglaDocente);
-        
-        if (docente == null) {
-            view.mostrarMensagem("Erro: Docente não encontrado!");
-            return;
+        Docente docente = null;
+        if (siglaDocente != null && !siglaDocente.isEmpty()) {
+            docente = docenteCRUD.procurarPorSigla(siglaDocente);
+            if (docente == null) {
+                System.out.println("Erro: Docente com sigla '" + siglaDocente + "' não encontrado!");
+                return false;
+            }
         }
 
-        // Criar a UC
         UnidadeCurricular novaUC = new UnidadeCurricular(nome, ano, docente);
-        
-        // Tentar registar no DAL (unicidade de docente responsável por ESTA UC é garantida pelo modelo de 1 para 1 no objeto)
         if (ucCRUD.registarUC(novaUC)) {
-            view.mostrarMensagem("UC registada com sucesso!");
-            
-            // Associar a cursos
-            boolean continuarAssociando = true;
-            while (continuarAssociando) {
-                String nomeCurso = view.solicitarNomeCurso();
-                if (nomeCurso.isEmpty()) {
-                    continuarAssociando = false;
-                } else {
-                    Curso curso = cursoCRUD.procurarPorNome(nomeCurso);
-                    if (curso != null) {
-                        if (curso.adicionarUnidadeCurricular(novaUC)) {
-                            // Salvar alteração no curso
-                            cursoCRUD.atualizarCurso(curso.getNome(), curso);
-                            view.mostrarMensagem("UC associada ao curso " + curso.getNome() + " com sucesso!");
-                        } else {
-                            view.mostrarMensagem("Bloqueado: O curso " + curso.getNome() + " já atingiu o limite de 5 UCs para o ano " + ano + ".");
-                        }
-                    } else {
-                        view.mostrarMensagem("Erro: Curso não encontrado!");
-                    }
-                }
-            }
-            
-            // Mostrar resumo
-            view.imprimirDadosUnidadeCurricular(novaUC);
+            System.out.println("UC registada com sucesso!");
+            return true;
         } else {
-            view.mostrarMensagem("Erro ao registar a UC no sistema.");
-        }
-    }
-    
-    public void listarTodasUCs() {
-        List<UnidadeCurricular> ucs = ucCRUD.getUcs();
-        if (ucs.isEmpty()) {
-            view.mostrarMensagem("Não há UCs registadas.");
-        } else {
-            for (UnidadeCurricular uc : ucs) {
-                view.imprimirDadosUnidadeCurricular(uc);
-            }
+            System.out.println("Erro ao registar a UC no sistema.");
+            return false;
         }
     }
 
-    public void listarUCsPorDocente(String siglaDocente) {
-        List<UnidadeCurricular> ucs = ucCRUD.getUcs();
-        boolean encontrou = false;
-        for (UnidadeCurricular uc : ucs) {
-            if (uc.getDocente() != null && uc.getDocente().getSigla().equalsIgnoreCase(siglaDocente)) {
-                view.imprimirDadosUnidadeCurricular(uc);
-                encontrou = true;
-            }
-        }
-        if (!encontrou) {
-            view.mostrarMensagem("Não é responsável por nenhuma Unidade Curricular.");
-        }
+    // Método para listar todas as UCs
+    public List<UnidadeCurricular> listarTodasUCs() {
+        return ucCRUD.getUcs();
     }
 
-    public void exibirMenuGestaoUCs() {
-        Scanner scanner = new Scanner(System.in);
-        String opcao;
-        do {
-            System.out.println("\n--- GESTÃO DE UNIDADES CURRICULARES ---");
-            System.out.println("1. Registar Nova UC");
-            System.out.println("2. Listar Todas as UCs");
-            System.out.println("0. Voltar");
-            System.out.print("Selecione uma opção: ");
-            opcao = scanner.nextLine().trim();
+    // Método para procurar UC por nome
+    public UnidadeCurricular procurarUC(String nome) {
+        if (nome == null || nome.isEmpty()) {
+            return null;
+        }
+        return ucCRUD.procurarPorNome(nome);
+    }
 
-            switch (opcao) {
-                case "1": registarNovaUC(); break;
-                case "2": listarTodasUCs(); break;
-                case "0": break;
-                default: System.out.println("Opção inválida!");
+    // Método para atualizar UC
+    public boolean atualizarUC(String nomeAtual, String novoNome, int novoAno, String novaSiglaDocente) {
+        if (nomeAtual == null || nomeAtual.isEmpty()) {
+            System.out.println("Erro: Nome atual não pode estar vazio.");
+            return false;
+        }
+
+        UnidadeCurricular ucExistente = ucCRUD.procurarPorNome(nomeAtual);
+        if (ucExistente == null) {
+            System.out.println("Erro: UC não encontrada.");
+            return false;
+        }
+
+        String novoNomeReal = (novoNome == null || novoNome.isEmpty()) ? nomeAtual : novoNome;
+        int novoAnoReal = (novoAno <= 0) ? ucExistente.getAnoCurricular() : novoAno;
+
+        Docente novoDocente = ucExistente.getDocente();
+        if (novaSiglaDocente != null && !novaSiglaDocente.isEmpty()) {
+            novoDocente = docenteCRUD.procurarPorSigla(novaSiglaDocente);
+            if (novoDocente == null) {
+                System.out.println("Erro: Docente não encontrado.");
+                return false;
             }
-        } while (!opcao.equals("0"));
+        }
+
+        UnidadeCurricular ucAtualizada = new UnidadeCurricular(novoNomeReal, novoAnoReal, novoDocente);
+        return ucCRUD.atualizarUC(nomeAtual, ucAtualizada);
+    }
+
+    // Método para eliminar UC
+    public boolean eliminarUC(String nome) {
+        if (nome == null || nome.isEmpty()) {
+            System.out.println("Erro: Nome não pode estar vazio.");
+            return false;
+        }
+
+        if (ucCRUD.procurarPorNome(nome) == null) {
+            System.out.println("Erro: UC não encontrada.");
+            return false;
+        }
+
+        return ucCRUD.eliminarUC(nome);
+    }
+
+    // Método para listar UCs de um docente
+    public List<UnidadeCurricular> listarUCsPorDocente(String siglaDocente) {
+        if (siglaDocente == null || siglaDocente.isEmpty()) {
+            return null;
+        }
+        return ucCRUD.procurarPorDocente(siglaDocente);
+    }
+
+    // Método para listar UCs por ano curricular
+    public List<UnidadeCurricular> listarUCsPorAno(int ano) {
+        if (ano < 1 || ano > 3) {
+            return null;
+        }
+        return ucCRUD.procurarPorAno(ano);
     }
 }

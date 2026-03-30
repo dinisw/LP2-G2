@@ -3,7 +3,7 @@ package view;
 import Common.DesignUtils;
 import Common.MenuUtils;
 import Common.SenhaUtils;
-import DAL.GestorCRUD;
+import controller.GestorController;
 import model.Gestor;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -11,11 +11,11 @@ import java.util.List;
 import java.util.Scanner;
 
 public class GestorView {
-    private final GestorCRUD gestorCRUD;
+    private final GestorController gestorController;
     private final Scanner scanner;
 
     public GestorView() {
-        this.gestorCRUD = new GestorCRUD();
+        this.gestorController = new GestorController();
         this.scanner = new Scanner(System.in);
     }
 
@@ -97,8 +97,8 @@ public class GestorView {
         String hash = SenhaUtils.gerarHashComSalt(passDigitada, salt);
         System.out.print("Cargo: ");
         String cargo = scanner.nextLine();
-        Gestor novo = new Gestor(nome, morada, nif, dataNascimento, email, hash, salt, cargo);
-        if (gestorCRUD.registarGestor(novo)) {
+        
+        if (gestorController.registarGestor(nome, morada, nif, dataNascimento, email, hash, salt, cargo)) {
             System.out.println("Gestor registado com sucesso!");
         } else {
             System.out.println("Erro ao registar: NIF já existe ou dados inválidos.");
@@ -108,7 +108,7 @@ public class GestorView {
 
     private void listarGestores() {
         System.out.println("\n--- LISTA DE GESTORES ---");
-        List<Gestor> gestores = gestorCRUD.getGestores();
+        List<Gestor> gestores = gestorController.listarGestores();
         if (gestores.isEmpty()) {
             System.out.println("Nenhum gestor registado.");
         } else {
@@ -132,7 +132,7 @@ public class GestorView {
                 System.out.print("Digite o NIF do gestor: ");
             }
         }
-        Gestor g = gestorCRUD.procurarPorNif(nif);
+        Gestor g = gestorController.procurarGestorPorNif(nif);
         if (g != null) {
             System.out.println("Dados encontrados: " + g);
         } else {
@@ -154,7 +154,7 @@ public class GestorView {
                 System.out.print("Digite o NIF do gestor a eliminar: ");
             }
         }
-        if (gestorCRUD.eliminarGestor(nif)) {
+        if (gestorController.eliminarGestor(nif)) {
             System.out.println("Gestor eliminado com sucesso!");
         } else {
             System.out.println("Erro ao eliminar: Gestor não encontrado.");
@@ -175,7 +175,7 @@ public class GestorView {
                 System.out.print("Digite o NIF do gestor a atualizar: ");
             }
         }
-        Gestor g = gestorCRUD.procurarPorNif(nif);
+        Gestor g = gestorController.procurarGestorPorNif(nif);
 
         if (g != null) {
             System.out.println("Dados atuais: " + g);
@@ -195,7 +195,7 @@ public class GestorView {
             String cargo = scanner.nextLine();
             if (!cargo.isEmpty()) g.setCargo(cargo);
 
-            if (gestorCRUD.atualizarGestor(g)) {
+            if (gestorController.atualizarGestor(nif, nome.isEmpty() ? null : nome, morada.isEmpty() ? null : morada, null, email.isEmpty() ? null : email, cargo.isEmpty() ? null : cargo)) {
                 System.out.println("Gestor atualizado com sucesso!");
             } else {
                 System.out.println("Erro ao atualizar gestor.");

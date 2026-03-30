@@ -3,22 +3,20 @@ package view;
 import Common.DesignUtils;
 import Common.MenuUtils;
 import Common.SenhaUtils;
-import DAL.DocenteCRUD;
-import DAL.UnidadeCurricularCRUD;
+import controller.DocenteController;
 import model.Docente;
 
-import javax.xml.stream.events.Comment;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
 public class DocenteView {
-    private final DocenteCRUD docenteCRUD;
+    private final DocenteController docenteController;
     private final Scanner scanner;
 
     public DocenteView() {
-        this.docenteCRUD = new DocenteCRUD();
+        this.docenteController = new DocenteController();
         this.scanner = new Scanner(System.in);
     }
 
@@ -96,6 +94,8 @@ public class DocenteView {
                 System.out.print("Data de Nascimento (AAAA-MM-DD): ");
             }
         }
+
+
         String salt = SenhaUtils.gerarSalt();
         String passAuto = Common.SenhaUtils.gerarPalavraPasseAleatoria();
 
@@ -110,8 +110,7 @@ public class DocenteView {
         System.out.println("Palavra Passe: " + pass);
         System.out.println("------------------------------------");
 
-        Docente novo = new Docente(nome, morada, nif, dataNascimento, email, pass, salt, sigla, null, null);
-        if (docenteCRUD.registarDocente(novo)) {
+        if (docenteController.registarDocente(nome, morada, nif, dataNascimento, email, pass, salt, sigla)) {
             System.out.println("Docente registado com sucesso!");
         } else {
             System.out.println("Erro ao registar: NIF já existe ou dados inválidos.");
@@ -121,7 +120,7 @@ public class DocenteView {
 
     private void listarDocentes() {
         System.out.println("\n--- LISTA DE DOCENTES ---");
-        List<Docente> docentes = docenteCRUD.getDocentes();
+        List<Docente> docentes = docenteController.listarDocentes();
         if (docentes.isEmpty()) {
             System.out.println("Nenhum docente registado.");
         } else {
@@ -145,7 +144,7 @@ public class DocenteView {
                 System.out.print("Digite o NIF do docente: ");
             }
         }
-        Docente d = docenteCRUD.procurarPorNif(nif);
+        Docente d = docenteController.procurarDocentePorNif(nif);
         if (d != null) {
             System.out.println("Dados encontrados: " + d.getNome() + " - " + d.getEmail());
         } else {
@@ -167,7 +166,7 @@ public class DocenteView {
                 System.out.print("Digite o NIF do docente a eliminar: ");
             }
         }
-        if (docenteCRUD.eliminarDocente(nif)) {
+        if (docenteController.eliminarDocente(nif)) {
             System.out.println("Docente eliminado com sucesso!");
         } else {
             System.out.println("Erro ao eliminar: Docente não encontrado.");
@@ -189,7 +188,7 @@ public class DocenteView {
             }
         }
         
-        Docente d = docenteCRUD.procurarPorNif(nif);
+        Docente d = docenteController.procurarDocentePorNif(nif);
 
         if (d != null) {
             System.out.println("Docente encontrado: " + d.getNome());
@@ -199,10 +198,8 @@ public class DocenteView {
             if (!passDigitada.isEmpty()) {
                 String salt = SenhaUtils.gerarSalt();
                 String pass = SenhaUtils.gerarHashComSalt(passDigitada, salt);
-                d.setSalt(salt);
-                d.setHash(pass);
                 
-                if (docenteCRUD.atualizarDocente(d)) {
+                if (docenteController.alterarPassword(nif, pass, salt)) {
                     System.out.println("Password alterada com sucesso!");
                 } else {
                     System.out.println("Erro ao guardar alteração da password.");
@@ -229,7 +226,7 @@ public class DocenteView {
                 System.out.print("Digite o NIF do docente a atualizar: ");
             }
         }
-        Docente d = docenteCRUD.procurarPorNif(nif);
+        Docente d = docenteController.procurarDocentePorNif(nif);
 
         if (d != null) {
             System.out.println("Dados atuais: " + d.getNome() + " - " + d.getEmail());
@@ -249,7 +246,7 @@ public class DocenteView {
             String sigla = scanner.nextLine();
             if (!sigla.isEmpty()) d.setSigla(sigla);
 
-            if (docenteCRUD.atualizarDocente(d)) {
+            if (docenteController.atualizarDocente(nif, nome.isEmpty() ? null : nome, morada.isEmpty() ? null : morada, null, email.isEmpty() ? null : email)) {
                 System.out.println("Docente atualizado com sucesso!");
             } else {
                 System.out.println("Erro ao atualizar docente.");
@@ -298,10 +295,8 @@ public class DocenteView {
         if (!passDigitada.isEmpty()) {
             String salt = SenhaUtils.gerarSalt();
             String pass = SenhaUtils.gerarHashComSalt(passDigitada, salt);
-            d.setSalt(salt);
-            d.setHash(pass);
-
-            if (docenteCRUD.atualizarDocente(d)) {
+            
+            if (docenteController.alterarPassword(d.getNif(), pass, salt)) {
                 System.out.println("Password alterada com sucesso!");
             } else {
                 System.out.println("Erro ao guardar alteração da password.");

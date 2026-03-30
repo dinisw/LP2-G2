@@ -29,4 +29,13 @@ public class Departamento {
     public void setSigla(String sigla) {
         this.sigla = sigla;
     }
+
+    @Override
+    public String toString() {
+        return "Departamento{" +
+                "nome='" + nome + '\'' +
+                ", sigla='" + sigla + '\'' +
+                '}';
+    }
 }
+
