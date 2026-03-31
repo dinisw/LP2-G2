@@ -13,6 +13,7 @@ import static Common.DesignUtils.*;
 
 public class EstudanteView {
     public static void exibirMenu(Estudante estudante){
+        MenuUtils.limparTela();
         Scanner ler = new Scanner(System.in);
         String opcao = "";
         ArrayList<String> opcoes = new ArrayList<>();

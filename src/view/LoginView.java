@@ -9,7 +9,12 @@ import model.Docente;
 import model.Estudante;
 import model.Gestor;
 import model.Pessoa;
+import org.jline.reader.LineReader;
+import org.jline.reader.LineReaderBuilder;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -48,23 +53,30 @@ public class LoginView {
 
             boolean senhaValida = false;
             Pessoa pessoa = null;
+            try{
+                Terminal terminal = TerminalBuilder.terminal();
+                LineReader reader = LineReaderBuilder.builder()
+                        .terminal(terminal)
+                        .build();
+                while (!senhaValida) {
+                    senha = reader.readLine("Senha: ", '*');
+                    pessoa = loginController.login(email);
 
-            while (!senhaValida) {
-                System.out.print("Senha: ");
-                senha = ler.nextLine();
-                pessoa = loginController.login(email);
+                    if (pessoa != null) {
+                        senhaValida = SenhaUtils.verificarSenha(senha, pessoa.getSalt(), pessoa.getHash());
+                    } else {
+                        System.out.print("Utilizador não encontrado. Tente novamente...");
+                        break;
+                    }
 
-                if (pessoa != null) {
-                    senhaValida = SenhaUtils.verificarSenha(senha, pessoa.getSalt(), pessoa.getHash());
-                } else {
-                    System.out.print("Utilizador não encontrado. Tente novamente...");
-                    break;
+                    if (!senhaValida) {
+                        System.out.print("Senha incorreta, tente novamente!!");
+                        MenuUtils.pressionarEnter(ler);
+                    }
                 }
-
-                if (!senhaValida) {
-                    System.out.print("Senha incorreta, tente novamente!!");
-                    MenuUtils.pressionarEnter(ler);
-                }
+            } catch (IOException e) {
+                System.out.println("Erro ao acessar o console do sistema.");
+                e.printStackTrace();
             }
 
             if (pessoa != null && senhaValida) {
