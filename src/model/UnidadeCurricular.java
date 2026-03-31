@@ -6,6 +6,7 @@ public class UnidadeCurricular {
     private String nome;
     private int anoCurricular;
     private Docente docente;
+    private final int ects = 6; // Valor fixo conforme requisito
 
     public UnidadeCurricular(String nome, int anoCurricular, Docente docente) {
         this.nome = nome;
@@ -35,5 +36,19 @@ public class UnidadeCurricular {
 
     public void setDocente(Docente docente) {
         this.docente = docente;
+    }
+
+    public int getEcts() {
+        return ects;
+    }
+
+    @Override
+    public String toString() {
+        return "UnidadeCurricular{" +
+                "nome='" + nome + '\'' +
+                ", anoCurricular=" + anoCurricular +
+                ", docente=" + docente +
+                ", ects=" + ects +
+                '}';
     }
 }

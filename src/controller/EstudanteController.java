@@ -1,9 +1,10 @@
 package controller;
 
 import BLL.EstudanteCalculo;
+import DAL.EstudanteCRUD;
+import Common.SenhaUtils;
 import model.Avaliacao;
 import model.Estudante;
-import model.Curso;
 import view.EstudanteView;
 
 import java.util.List;
@@ -18,11 +19,15 @@ public class EstudanteController {
         this.view = view;
     }
 
-    public void exibirFichaEstudante() {
+    public EstudanteController() {
+        // Constructor for CRUD operations
+    }
+
+    public String exibirFichaEstudante() {
         String dataNascimentoStr = (model.getDataNascimento() != null) ? model.getDataNascimento().toString() : "Não definida";
         String cursoStr = (model.getNomeCurso() != null && !model.getNomeCurso().isEmpty()) ? model.getNomeCurso() : "Sem curso";
 
-        imprimirFichaEstudante(
+        var fichaDeEstudante = imprimirFichaEstudante(
                 model.getNome(),
                 model.getNumeroMec(),
                 model.getEmail(),
@@ -32,6 +37,7 @@ public class EstudanteController {
                 cursoStr,
                 model.getAnoLetivo()
         );
+        return fichaDeEstudante;
     }
     public void exibirNotas() {
         imprimirNotas(model.getListaAvaliacoes());
@@ -44,16 +50,18 @@ public class EstudanteController {
             mostrarMensagem("Falhou: O estudante falhou em cumprir os 60% de aproveitamento e manter-se-á no " + model.getAnoLetivo() + "º ano.");
         }
     }
-    public void imprimirFichaEstudante (String nome, int numMec, String email, int nif, String dataNascimento, String morada, String curso, int anoLetivo) {
-        System.out.println("FICHA DE ESTUDANTE");
-        System.out.println("Nome: " + nome);
-        System.out.println("Nº Mecanográfico: " + numMec);
-        System.out.println("Email: " + email);
-        System.out.println("NIF: " + nif);
-        System.out.println("Data Nascimento: " + dataNascimento);
-        System.out.println("Morada: " + morada);
-        System.out.println("Curso (Inscrição): " + curso);
-        System.out.println("Ano Letivo Atual: " + anoLetivo + "º Ano");
+    public String imprimirFichaEstudante (String nome, int numMec, String email, int nif, String dataNascimento, String morada, String curso, int anoLetivo) {
+        return """
+        FICHA DE ESTUDANTE
+        Nome: %s
+        Nº Mecanográfico: %s
+        Email: %s
+        NIF: %d
+        Data Nascimento: %s
+        Morada: %s
+        Curso (Inscrição): %s
+        Ano Letivo Atual: %dº Ano
+        """.formatted(nome, numMec, email, nif, dataNascimento, morada, curso, anoLetivo);
     }
 
     public void imprimirNotas (List<Avaliacao> notas) {
@@ -73,9 +81,47 @@ public class EstudanteController {
 
 
     public void inscreverEmCurso(){
-        Curso c = new Curso();
-        c.pegarCursos();
+//        Curso c = new Curso();
+//        c.pegarCursos();
 
 
+    }
+
+    // CRUD methods
+    private EstudanteCRUD estudanteCRUD = new EstudanteCRUD();
+
+    public boolean registarEstudante(String nome, String morada, int nif, java.time.LocalDate dataNascimento, String curso,String hash, String salt) {
+        int numeroMec = estudanteCRUD.gerarNumeroMecanografico();
+        String email = numeroMec + "@isep.ipp.pt";
+        Estudante estudante = new Estudante(nome, morada, nif, dataNascimento, email, numeroMec, hash, salt, curso);
+        return estudanteCRUD.registarEstudante(estudante);
+    }
+
+    public List<Estudante> listarEstudantes() {
+        return estudanteCRUD.getEstudantes();
+    }
+
+    public Estudante procurarEstudantePorNumeroMec(int numeroMec) {
+        return estudanteCRUD.lerEstudante(numeroMec);
+    }
+
+    public boolean atualizarEstudante(int numeroMec, String nome, String morada, String email, String curso) {
+        Estudante estudante = estudanteCRUD.lerEstudante(numeroMec);
+        if (estudante != null) {
+            if (nome != null) estudante.setNome(nome);
+            if (morada != null) estudante.setMorada(morada);
+            if (email != null) estudante.setEmail(email);
+            if (curso != null) estudante.setNomeCurso(curso);
+            return estudanteCRUD.atualizarEstudante(estudante);
+        }
+        return false;
+    }
+
+    public boolean eliminarEstudante(int numeroMec) {
+        return estudanteCRUD.eliminarEstudante(numeroMec);
+    }
+
+    public int gerarNumeroMecanografico() {
+        return estudanteCRUD.gerarNumeroMecanografico();
     }
 }

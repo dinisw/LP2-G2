@@ -1,6 +1,9 @@
 package view;
 
-import Common.Utils;
+import Common.BackendUtils;
+import Common.DesignUtils;
+import Common.MenuUtils;
+import Common.SenhaUtils;
 import controller.LoginController;
 import model.Docente;
 import model.Estudante;
@@ -14,75 +17,70 @@ public class LoginView {
     public static final String RESET = "\033[0m";
     public static final String RED = "\033[0;31m";
 
-    public static void Login(){
+    public static void Login() {
         Scanner ler = new Scanner(System.in);
-        Utils utils = new Utils();
         LoginController loginController = new LoginController();
         boolean sair = false;
 
         do {
-            Utils.exibirTitulo();
-
-            System.out.println(Utils.GetCyanBold() +  "LOGIN" + Utils.GetReset());
-            System.out.print("Email (digite '0' para sair): ");
-            String email = ler.nextLine().trim();
-            
-            if (email.equals("0")) {
-                sair = true;
+            MenuUtils.exibirTitulo();
+            String email = "";
+            String senha = "";
+            boolean emailValido = false;
+            while (!emailValido) {
+                System.out.println(DesignUtils.GetCyanBold() + "LOGIN" + DesignUtils.GetReset());
+                System.out.println("digite '0' para sair");
+                System.out.print("\nEmail: ");
+                email = ler.nextLine().trim();
+                if (email.equals("0")) {
+                    sair = true;
+                    break;
+                }
+                emailValido = BackendUtils.isEmailIsepValido(email);
+                if (!emailValido) {
+                    System.out.print("Email inválido, tente novamente!!");
+                    MenuUtils.pressionarEnter(ler);
+                }
+            }
+            if (sair) {
                 continue;
             }
 
-            System.out.print("Senha: ");
-            String senha = ler.nextLine().trim();
+            boolean senhaValida = false;
+            Pessoa pessoa = null;
 
-            Pessoa pessoa = loginController.login(email, senha);
+            while (!senhaValida) {
+                System.out.print("Senha: ");
+                senha = ler.nextLine();
+                pessoa = loginController.login(email);
 
-            if(pessoa != null){
+                if (pessoa != null) {
+                    senhaValida = SenhaUtils.verificarSenha(senha, pessoa.getSalt(), pessoa.getHash());
+                } else {
+                    System.out.print("Utilizador não encontrado. Tente novamente...");
+                    break;
+                }
+
+                if (!senhaValida) {
+                    System.out.print("Senha incorreta, tente novamente!!");
+                    MenuUtils.pressionarEnter(ler);
+                }
+            }
+
+            if (pessoa != null && senhaValida) {
                 if (pessoa instanceof Estudante) {
-                    EstudanteView.Menu();
+                    EstudanteView.exibirMenu((Estudante) pessoa);
                 } else if (pessoa instanceof Docente) {
                     DocenteView docenteView = new DocenteView();
-                    docenteView.exibirMenuDocentes();
+                    docenteView.exibirMenuPessoalDocente((Docente) pessoa);
                 } else if (pessoa instanceof Gestor) {
                     GestorView gestorView = new GestorView();
-                    exibirMenuGestaoGlobal(utils, ler, gestorView, new DocenteView(), new EstudanteView());
+                    gestorView.exibirMenuGestao();
                 }
             } else {
                 System.out.println("\n" + RED + "Credenciais inválidas! Tente novamente." + RESET);
-                utils.pressionarEnter(ler);
+                MenuUtils.pressionarEnter(ler);
             }
         } while (!sair);
-    }
-
-    private static void exibirMenuGestaoGlobal(Utils menu, Scanner scanner, GestorView gestorView, DocenteView docenteView, EstudanteView estudanteView) {
-        String opcao;
-        ArrayList<String> opcoes = new ArrayList<>();
-        opcoes.add("1. Gerir Gestores");
-        opcoes.add("2. Gerir Docentes");
-        opcoes.add("3. Gerir Estudantes");
-        opcoes.add("0. Logout");
-
-        do {
-            menu.exibirSubTitulo("MENU DE GESTÃO ADMINISTRATIVA", opcoes);
-            System.out.print("\nSelecione uma opção: ");
-            opcao = scanner.nextLine().trim();
-
-            switch (opcao) {
-                case "1":
-                    gestorView.exibirMenuGestores();
-                    break;
-                case "2":
-                    docenteView.exibirMenuDocentes();
-                    break;
-                case "3":
-                    EstudanteView.Menu();
-                    break;
-                case "0":
-                    return;
-                default:
-                    System.out.println("Opção inválida!");
-                    menu.pressionarEnter(scanner);
-            }
-        } while (!opcao.equals("0"));
     }
 }

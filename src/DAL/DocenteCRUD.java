@@ -1,17 +1,21 @@
 package DAL;
 
 import model.Docente;
+import model.UnidadeCurricular;
 import java.io.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class DocenteCRUD {
     private static final String CAMINHO_FICHEIRO = "docentes.csv";
     private List<Docente> docentes;
+    private UnidadeCurricularCRUD ucCRUD;
 
     public DocenteCRUD() {
         this.docentes = new ArrayList<>();
+        this.ucCRUD = new UnidadeCurricularCRUD();
         carregarFicheiro();
     }
 
@@ -24,17 +28,43 @@ public class DocenteCRUD {
             String linha;
             while ((linha = reader.readLine()) != null) {
                 String[] dados = linha.split(";");
-                if (dados.length >= 7) {
+                if (dados.length >= 9) {
+                    // New format with UC names
                     Docente docente = new Docente(
                             dados[0], // nome
                             dados[1], // morada
                             Integer.parseInt(dados[2]), // nif
                             LocalDate.parse(dados[3]), // dataNascimento
                             dados[4], // email
-                            dados[5], // palavraPasse
-                            dados[6], // sigla
-                            null,     // listaAvaliacao (simplificado para CSV por agora)
-                            null      // unidadeCurricular (simplificado para CSV por agora)
+                            dados[5], // hash
+                            dados[6], // salt
+                            dados[7], // sigla
+                            new ArrayList<>(), // listaAvaliacao
+                            new ArrayList<>()  // unidadesCurriculares
+                    );
+                    String ucNames = dados[8];
+                    if (!ucNames.isEmpty()) {
+                        for (String nome : ucNames.split(";")) {
+                            UnidadeCurricular uc = ucCRUD.procurarPorNome(nome.trim());
+                            if (uc != null) {
+                                docente.adicionarUnidadeCurricular(uc);
+                            }
+                        }
+                    }
+                    docentes.add(docente);
+                } else if (dados.length >= 8) {
+                    // Old format without UC names
+                    Docente docente = new Docente(
+                            dados[0], // nome
+                            dados[1], // morada
+                            Integer.parseInt(dados[2]), // nif
+                            LocalDate.parse(dados[3]), // dataNascimento
+                            dados[4], // email
+                            dados[5], // hash
+                            dados[6], // salt
+                            dados[7], // sigla
+                            new ArrayList<>(), // listaAvaliacao
+                            new ArrayList<>()  // unidadesCurriculares
                     );
                     docentes.add(docente);
                 }
@@ -47,14 +77,19 @@ public class DocenteCRUD {
     private void guardarTodosNoFicheiro() {
         try (PrintWriter print = new PrintWriter(new FileWriter(CAMINHO_FICHEIRO))) {
             for (Docente docente : docentes) {
-                String linha = String.format("%s;%s;%d;%s;%s;%s;%s",
-                        docente.getNome(),
-                        docente.getMorada(),
-                        docente.getNif(),
-                        docente.getDataNascimento(),
-                        docente.getEmail(),
-                        docente.getPalavraPasse(),
-                        docente.getSigla());
+                String ucNames = docente.getUnidadesCurriculares().stream()
+                        .map(UnidadeCurricular::getNome)
+                        .collect(Collectors.joining(";"));
+                String linha = String.format("%s;%s;%s;%s;%s;%s;%s;%s;%s",
+                        safe(docente.getNome()),
+                        safe(docente.getMorada()),
+                        safe(docente.getNif()),
+                        safe(docente.getDataNascimento()),
+                        safe(docente.getEmail()),
+                        safe(docente.getHash()),
+                        safe(docente.getSalt()),
+                        safe(docente.getSigla()),
+                        safe(ucNames));
                 print.println(linha);
             }
         } catch (IOException e) {
@@ -117,5 +152,9 @@ public class DocenteCRUD {
             }
         }
         return false;
+    }
+
+    private String safe(Object o){
+        return (o == null) ? "SEM REGISTO" : o.toString();
     }
 }

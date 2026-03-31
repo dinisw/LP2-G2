@@ -7,12 +7,70 @@ public class Curso {
     private String nome;
     private int duracao = 3;
     private Departamento departamento;
+    private List<UnidadeCurricular> uc;
 
-    public ArrayList<String> pegarCursos(){
-        var a = new ArrayList<String>();
-        a.add("1. Matemática");
-        a.add("2. Portugues");
+    public Curso(String nome, int duracao, Departamento departamento) {
+        this.nome = nome;
+        this.duracao = duracao;
+        this.departamento = departamento;
+        this.uc = new ArrayList<>();
+    }
 
-        return a;
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public int getDuracao() {
+        return duracao;
+    }
+
+    public void setDuracao(int duracao) {
+        this.duracao = duracao;
+    }
+
+    public Departamento getDepartamento() {
+        return departamento;
+    }
+
+    public void setDepartamento(Departamento departamento) {
+        this.departamento = departamento;
+    }
+
+    public List<UnidadeCurricular> getUc() {
+        return new ArrayList<>(uc);
+    }
+
+    public boolean adicionarUnidadeCurricular(UnidadeCurricular novaUc) {
+        int contagemAno = 0;
+
+        // Conta quantas UCs já existem no mesmo ano da nova UC
+        for (UnidadeCurricular uc : uc) {
+            if (uc.getAnoCurricular() == novaUc.getAnoCurricular()) {
+                contagemAno++;
+            }
+        }
+
+        // Se ainda não chegou às 5, adiciona e devolve sucesso
+        if (contagemAno < 5) {
+            this.uc.add(novaUc);
+            return true;
+        }
+
+        // Se já tem 5, bloqueia a inserção
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return "Curso [" +
+                "nome='" + nome + '\'' +
+                ", duracao=" + duracao +
+                ", departamento=" + departamento +
+                ", uc=" + getUc() +
+                '}';
     }
 }

@@ -4,29 +4,11 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.regex.Pattern;
 
-public class Utils {
-    //region Design
-    public static final String RESET = "\033[0m";
-    public static final String CYAN_BOLD = "\033[1;36m";
-    public static final String WHITE_BOLD = "\033[1;37m";
-    public static final String BLUE = "\033[0;34m";
-    public static final String GREEN = "\033[0;32m";
-    public static final String RED = "\033[0;31m";
-    public static final String YELLOW = "\033[0;33m";
-    private static final int LARGURA = 84;
+import static Common.DesignUtils.*;
 
-    public static String GetReset(){return RESET;}
-    public static String GetCyanBold(){return CYAN_BOLD;}
-    public static String GetWhiteBold(){return WHITE_BOLD;}
-    public static String GetBlue(){return BLUE;}
-    public static String GetGreen(){return GREEN;}
-    public static String GetRed(){return RED;}
-    public static String GetYellow(){return YELLOW;}
-    public static int GetLargura(){return LARGURA;}
-
-
-    //endregion
+public class MenuUtils {
     //region MENU
     public static void exibirTitulo() {
         System.out.print("\033[H\033[2J");
@@ -81,6 +63,38 @@ public class Utils {
     public static void pressionarEnter(Scanner ler) {
         System.out.print("\nPressione " + WHITE_BOLD + "ENTER" + RESET + " para continuar...");
         ler.nextLine();
+    }
+    //endregion
+
+    //region PasswordAleatorio
+
+    public static String gerarPalavraPasseAleatoria() {
+        String maiusculas = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        String minusculas = "abcdefghijklmnopqrstuvwxyz";
+        String numeros = "0123456789";
+        String especiais = "!@#$%^&*-_=";
+        String todosCaracteres = maiusculas + minusculas + numeros + especiais;
+
+        java.security.SecureRandom random = new java.security.SecureRandom();
+        StringBuilder passe = new StringBuilder();
+
+        passe.append(maiusculas.charAt(random.nextInt(maiusculas.length())));
+        passe.append(minusculas.charAt(random.nextInt(minusculas.length())));
+        passe.append(numeros.charAt(random.nextInt(numeros.length())));
+        passe.append(especiais.charAt(random.nextInt(especiais.length())));
+
+        for (int i = 0; i < 4; i ++) {
+            passe.append(todosCaracteres.charAt(random.nextInt(todosCaracteres.length())));
+        }
+
+        char[] caracteres = passe.toString().toCharArray();
+        for (int i = caracteres.length - 1; i > 0; i--) {
+            int j = random.nextInt(i + 1);
+            char temp = caracteres[i];
+            caracteres[i] = caracteres[j];
+            caracteres[j] = temp;
+        }
+        return new String(caracteres);
     }
     //endregion
 }

@@ -25,16 +25,20 @@ public class EstudanteCRUD {
             String linha;
             while((linha = reader.readLine()) != null){
                 String[] dados = linha.split(";");
-                if(dados.length >= 8){
+                if(dados.length >= 9){
+                    String hash = dados[6];
+                    String salt = dados[7];
+
                     Estudante estudante = new Estudante(
                             dados[0], // nome
                             dados[1], // morada
                             Integer.parseInt(dados[2]), // nif
                             LocalDate.parse(dados[3]), // dataNascimento
                             dados[4], // email
-                            Integer.parseInt(dados[6]), // numeroMec
-                            dados[5], // palavraPasse
-                            dados[7]);
+                            Integer.parseInt(dados[5]), // numeroMec
+                            hash, // hash
+                            salt, // salt
+                            dados[8]);
                     estudantes.add(estudante);
                     if(estudante.getNumeroMec() >= numeroMecCounter) {
                         numeroMecCounter = estudante.getNumeroMec() + 1;
@@ -60,15 +64,16 @@ public class EstudanteCRUD {
     private void guardarTodosNoFicheiro() {
         try (PrintWriter print = new PrintWriter(new FileWriter(CAMINHO_FICHEIRO))) {
             for (Estudante estudante : estudantes) {
-                String linha = String.format("%s;%s;%d;%s;%s;%d;%s;%s",
-                        estudante.getNome(),
-                        estudante.getMorada(),
-                        estudante.getNif(),
-                        estudante.getDataNascimento(),
-                        estudante.getEmail(),
-                        estudante.getNumeroMec(),
-                        estudante.getPalavraPasse(),
-                        estudante.getNomeCurso());
+                String linha = String.format("%s;%s;%s;%s;%s;%s;%s;%s;%s",
+                        safe(estudante.getNome()),
+                        safe(estudante.getMorada()),
+                        safe(estudante.getNif()),
+                        safe(estudante.getDataNascimento()),
+                        safe(estudante.getEmail()),
+                        safe(estudante.getNumeroMec()),
+                        safe(estudante.getHash()),
+                        safe(estudante.getSalt()),
+                        safe(estudante.getNomeCurso()));
                 print.println(linha);
             }
         } catch (IOException e) {
@@ -76,7 +81,6 @@ public class EstudanteCRUD {
         }
     }
 
-    //Retorna a lista de estudantes
     public List<Estudante> getEstudantes() {
             return estudantes;
     }
@@ -117,6 +121,28 @@ public class EstudanteCRUD {
         return false;
     }
 
+    public int gerarNumeroMecanografico() {
+        int anoAtual = java.time.LocalDate.now().getYear() % 100; // mudar quando for criado opção para avançar o tempo manualmento
+        int prefixo = 100 + anoAtual;
+
+        int maxSequencia = 0;
+
+        for (Estudante estudante : estudantes) {
+            int mec = estudante.getNumeroMec();
+            int anoMec = (mec / 10000) % 100;
+
+            if (anoMec == anoAtual) {
+                int sequencia = mec % 10000;
+                if (sequencia > maxSequencia) {
+                    maxSequencia = sequencia;
+                }
+            }
+        }
+        int novaSequencia = maxSequencia + 1;
+
+        return (prefixo * 10000) + novaSequencia;
+    }
+
     public Estudante procurarNumeroMec(int numeroMecanografico) {
         for (int i = 0; i < estudantes.size(); i++) {
             if (estudantes.get(i).getNumeroMec() == numeroMecanografico) {
@@ -124,5 +150,9 @@ public class EstudanteCRUD {
             }
         }
         return null;
+    }
+
+    private String safe(Object o){
+        return (o == null) ? "SEM REGISTO" : o.toString();
     }
 }

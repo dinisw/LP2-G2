@@ -4,12 +4,14 @@ public class Departamento {
     private String nome;
     private String sigla;
 
-    public Departamento() {
-    }
-
     public Departamento(String nome, String sigla) {
         this.nome = nome;
         this.sigla = sigla;
+    }
+
+    public Departamento() {
+        this.nome = "";
+        this.sigla = "";
     }
 
     public String getNome() {
@@ -27,4 +29,13 @@ public class Departamento {
     public void setSigla(String sigla) {
         this.sigla = sigla;
     }
+
+    @Override
+    public String toString() {
+        return "Departamento{" +
+                "nome='" + nome + '\'' +
+                ", sigla='" + sigla + '\'' +
+                '}';
+    }
 }
+
