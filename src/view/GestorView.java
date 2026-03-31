@@ -543,7 +543,7 @@ public class GestorView {
                     System.out.println("Palavra-passe: " + passAuto);
                     System.out.println("-----------------------------------------");
 
-                    if (estudanteController.registarEstudante(nome, morada, nif, data, curso)) {
+                    if (estudanteController.registarEstudante(nome, morada, nif, data, curso,senha,salt)) {
                         System.out.println(GREEN + "Estudante registado com sucesso!" + RESET);
                     } else {
                         System.out.println(RED + "Erro ao registar estudante." + RESET);

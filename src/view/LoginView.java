@@ -69,8 +69,7 @@ public class LoginView {
 
             if (pessoa != null && senhaValida) {
                 if (pessoa instanceof Estudante) {
-                    EstudanteView estudanteView = new EstudanteView();
-                    estudanteView.exibirMenu((Estudante) pessoa);
+                    EstudanteView.exibirMenu((Estudante) pessoa);
                 } else if (pessoa instanceof Docente) {
                     DocenteView docenteView = new DocenteView();
                     docenteView.exibirMenuPessoalDocente((Docente) pessoa);

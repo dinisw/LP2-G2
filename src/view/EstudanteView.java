@@ -88,9 +88,6 @@ public class EstudanteView {
         if (minhasNotas.isEmpty()) {
             System.out.println(CYAN_BOLD + "║" + YELLOW + " Ainda não existem notas registadas no seu perfil.  " + CYAN_BOLD + "║" + RESET);
         } else {
-            double soma = 0;
-            int count = 0;
-
             for (model.Avaliacao avaliacao : minhasNotas) {
                 String notaStr;
                 String estado;
@@ -100,8 +97,6 @@ public class EstudanteView {
                     estado = YELLOW + "A Aguardar" + RESET;
                 } else {
                     notaStr = String.format("%.2f", avaliacao.getNota());
-                    soma += avaliacao.getNota();
-                    count++;
 
                     if (avaliacao.getNota() >= 9.5) {
                         estado = GREEN + "Aprovado" + RESET;
@@ -115,8 +110,8 @@ public class EstudanteView {
             }
 
             System.out.println(CYAN_BOLD + bordaMeio + RESET);
-            if (count > 0) {
-                double media = soma / count;
+            double media = BLL.NotasCalculo.calcularMedia(minhasNotas);
+            if (media > 0) {
                 System.out.printf(CYAN_BOLD + "║" + WHITE_BOLD + " MÉDIA ATUAL DO CURSO: %-46.2f" + CYAN_BOLD + "║\n" + RESET, media);
             }
         }

@@ -26,8 +26,8 @@ public class EstudanteCRUD {
             while((linha = reader.readLine()) != null){
                 String[] dados = linha.split(";");
                 if(dados.length >= 9){
-                    String salt = dados[5];
                     String hash = dados[6];
+                    String salt = dados[7];
 
                     Estudante estudante = new Estudante(
                             dados[0], // nome
@@ -35,7 +35,7 @@ public class EstudanteCRUD {
                             Integer.parseInt(dados[2]), // nif
                             LocalDate.parse(dados[3]), // dataNascimento
                             dados[4], // email
-                            Integer.parseInt(dados[7]), // numeroMec
+                            Integer.parseInt(dados[5]), // numeroMec
                             hash, // hash
                             salt, // salt
                             dados[8]);

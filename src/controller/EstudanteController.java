@@ -23,7 +23,7 @@ public class EstudanteController {
         // Constructor for CRUD operations
     }
 
-    public void exibirFichaEstudante() {
+    public String exibirFichaEstudante() {
         String dataNascimentoStr = (model.getDataNascimento() != null) ? model.getDataNascimento().toString() : "Não definida";
         String cursoStr = (model.getNomeCurso() != null && !model.getNomeCurso().isEmpty()) ? model.getNomeCurso() : "Sem curso";
 
@@ -90,12 +90,9 @@ public class EstudanteController {
     // CRUD methods
     private EstudanteCRUD estudanteCRUD = new EstudanteCRUD();
 
-    public boolean registarEstudante(String nome, String morada, int nif, java.time.LocalDate dataNascimento, String curso) {
+    public boolean registarEstudante(String nome, String morada, int nif, java.time.LocalDate dataNascimento, String curso,String hash, String salt) {
         int numeroMec = estudanteCRUD.gerarNumeroMecanografico();
         String email = numeroMec + "@isep.ipp.pt";
-        String salt = SenhaUtils.gerarSalt();
-        String passAuto = SenhaUtils.gerarPalavraPasseAleatoria();
-        String hash = SenhaUtils.gerarHashComSalt(passAuto, salt);
         Estudante estudante = new Estudante(nome, morada, nif, dataNascimento, email, numeroMec, hash, salt, curso);
         return estudanteCRUD.registarEstudante(estudante);
     }
