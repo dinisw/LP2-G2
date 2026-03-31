@@ -203,6 +203,7 @@ public class DocenteView {
         ArrayList<String> opcoes = new ArrayList<>();
         opcoes.add("1. Ver minhas Unidades Curriculares");
         opcoes.add("2. Alterar minha Password");
+        opcoes.add("3. Lançar Nota de Avaliação");
         opcoes.add("0. Logout");
 
         do {
@@ -212,9 +213,18 @@ public class DocenteView {
 
             switch (opcao) {
                 case "1":
-                    new controller.UnidadeCurricularController().listarUCsPorDocente(docente.getSigla());
-                    MenuUtils.pressionarEnter(scanner);
-                    break;
+                List<model.UnidadeCurricular> minhasUcs = new controller.UnidadeCurricularController().listarUCsPorDocente(docente.getSigla());
+
+                System.out.println("\n--- MINHAS UNIDADES CURRICULARES ---");
+                if (minhasUcs == null || minhasUcs.isEmpty()) {
+                    System.out.println(DesignUtils.GetYellow() + "Não tem Unidades Curriculares atribuídas neste momento." + DesignUtils.GetReset());
+                } else {
+                    for (model.UnidadeCurricular uc : minhasUcs) {
+                        System.out.println(DesignUtils.GetCyanBold() + uc.getNome() + DesignUtils.GetReset() + " (Ano Curricular: " + uc.getAnoCurricular() + ")");
+                    }
+                }
+                MenuUtils.pressionarEnter(scanner);
+                break;
                 case "2":
                     alterarPasswordPropria(docente);
                     break;

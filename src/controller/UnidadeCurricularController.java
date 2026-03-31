@@ -9,17 +9,16 @@ import java.util.List;
 
 public class UnidadeCurricularController {
     private final UnidadeCurricularCRUD ucCRUD;
-    private final UnidadeCurricularView view;
     private final DocenteCRUD docenteCRUD;
 
     public UnidadeCurricularController() {
         this.ucCRUD = new UnidadeCurricularCRUD();
-        this.view = new UnidadeCurricularView();
         this.docenteCRUD = new DocenteCRUD();
     }
 
     // Método para exibir o menu completo
     public void exibirMenuUnidadesCurriculares() {
+        UnidadeCurricularView view = new UnidadeCurricularView();
         view.exibirMenuUnidadesCurriculares();
     }
 
