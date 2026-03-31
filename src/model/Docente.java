@@ -5,22 +5,28 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Docente extends Pessoa{
-    private UnidadeCurricular unidadeCurricular;
+    private List<UnidadeCurricular> unidadesCurriculares;
     private String sigla;
     private List<Avaliacao> listaAvaliacao = new ArrayList<>();
 
 
-    public Docente(List<Avaliacao> listaAvaliacao, UnidadeCurricular unidadeCurricular, String sigla) {
+    public Docente(List<Avaliacao> listaAvaliacao, List<UnidadeCurricular> unidadesCurriculares, String sigla) {
         this.listaAvaliacao = listaAvaliacao;
-        this.unidadeCurricular = unidadeCurricular;
+        this.unidadesCurriculares = unidadesCurriculares;
         this.sigla = sigla;
     }
 
-    public Docente(String nome, String morada, int nif, LocalDate dataNascimento, String email, String hash, String salt, String sigla, List<Avaliacao> listaAvaliacao, UnidadeCurricular unidadeCurricular) {
+    public Docente() {
+        this.listaAvaliacao = new ArrayList<>();
+        this.unidadesCurriculares = new ArrayList<>();
+        this.sigla = "";
+    }
+
+    public Docente(String nome, String morada, int nif, LocalDate dataNascimento, String email, String hash, String salt, String sigla, List<Avaliacao> listaAvaliacao, List<UnidadeCurricular> unidadesCurriculares) {
         super(nome, morada, nif, dataNascimento, email, hash, salt);
         this.listaAvaliacao = (listaAvaliacao != null) ? listaAvaliacao : new ArrayList<>();
         this.sigla = sigla;
-        this.unidadeCurricular = unidadeCurricular;
+        this.unidadesCurriculares = (unidadesCurriculares != null) ? unidadesCurriculares : new ArrayList<>();
     }
 
     public String getSigla() {
@@ -31,12 +37,24 @@ public class Docente extends Pessoa{
         this.sigla = sigla;
     }
 
-    public UnidadeCurricular getUnidadeCurricular() {
-        return unidadeCurricular;
+    public List<UnidadeCurricular> getUnidadesCurriculares() {
+        return new ArrayList<>(unidadesCurriculares);
     }
 
-    public void setUnidadeCurricular(UnidadeCurricular unidadeCurricular) {
-        this.unidadeCurricular = unidadeCurricular;
+    public void setUnidadesCurriculares(List<UnidadeCurricular> unidadesCurriculares) {
+        this.unidadesCurriculares = unidadesCurriculares;
+    }
+
+    public boolean adicionarUnidadeCurricular(UnidadeCurricular uc) {
+        if (unidadesCurriculares.contains(uc)) {
+            return false;
+        }
+        unidadesCurriculares.add(uc);
+        return true;
+    }
+
+    public boolean removerUnidadeCurricular(UnidadeCurricular uc) {
+        return unidadesCurriculares.remove(uc);
     }
 
     public List<Avaliacao> getListaAvaliacao() {
