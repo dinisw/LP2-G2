@@ -4,7 +4,9 @@ import Common.DesignUtils;
 import Common.MenuUtils;
 import controller.CursoController;
 import controller.DepartamentoController;
+import controller.UnidadeCurricularController;
 import model.Curso;
+import model.UnidadeCurricular;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -12,11 +14,13 @@ import java.util.Scanner;
 public class CursoView {
     private final CursoController cursoController;
     private final DepartamentoController departamentoController;
+    private final UnidadeCurricularController ucController;
     private final Scanner scanner;
 
     public CursoView() {
         this.cursoController = new CursoController();
         this.departamentoController = new DepartamentoController();
+        this.ucController = new UnidadeCurricularController();
         this.scanner = new Scanner(System.in);
     }
 
@@ -57,7 +61,27 @@ public class CursoView {
         System.out.print("Sigla do Departamento Associado (ex: EI): ");
         String siglaDep = scanner.nextLine().trim().toUpperCase();
 
-        int resultado = cursoController.registarCurso(nome, siglaDep);
+        // Selecionar Unidades Curriculares
+        System.out.println("\n--- Unidades Curriculares Disponíveis ---");
+        List<UnidadeCurricular> ucs = ucController.listarTodasUCs();
+        List<String> nomesUC = new ArrayList<>();
+        if (ucs.isEmpty()) {
+            System.out.println("Nenhuma UC registada. Curso será registado sem UCs associadas.");
+        } else {
+            for (UnidadeCurricular uc : ucs) {
+                System.out.println("- " + uc.getNome());
+            }
+            System.out.print("Digite os nomes das Unidades Curriculares a associar (separados por vírgula, ou Enter para nenhuma): ");
+            String input = scanner.nextLine();
+            if (!input.trim().isEmpty()) {
+                String[] parts = input.split(",");
+                for (String part : parts) {
+                    nomesUC.add(part.trim());
+                }
+            }
+        }
+
+        int resultado = cursoController.registarCurso(nome, siglaDep, nomesUC);
 
         if (resultado == 1) {
             System.out.println(DesignUtils.GetGreen() + "Curso registado com sucesso!" + DesignUtils.GetReset());

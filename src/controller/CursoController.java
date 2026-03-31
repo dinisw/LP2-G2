@@ -2,9 +2,10 @@ package controller;
 
 import DAL.CursoCRUD;
 import DAL.DepartamentoCRUD;
-import DAL.GestorCRUD;
+import DAL.UnidadeCurricularCRUD;
 import model.Curso;
 import model.Departamento;
+import model.UnidadeCurricular;
 import java.util.List;
 
 public class CursoController {
@@ -12,19 +13,29 @@ public class CursoController {
     // O Controller dos cursos precisa de falar com os dois ficheiros (Cursos e Departamentos)
     private CursoCRUD cursoCRUD;
     private DepartamentoCRUD depCRUD;
+    private UnidadeCurricularCRUD ucCRUD;
 
     public CursoController() {
         this.cursoCRUD = new CursoCRUD();
         this.depCRUD = new DepartamentoCRUD();
+        this.ucCRUD = new UnidadeCurricularCRUD();
     }
 
-    public int registarCurso(String nome, String siglaDep) {
+    public int registarCurso(String nome, String siglaDep, List<String> nomesUC) {
         Departamento dep = depCRUD.procurarPorSigla(siglaDep);
 
         if (dep == null) {
             return -1;
         }
         Curso novo = new Curso(nome, 3, dep);
+        for (String nomeUC : nomesUC) {
+            UnidadeCurricular uc = ucCRUD.procurarPorNome(nomeUC.trim());
+            if (uc != null) {
+                novo.adicionarUnidadeCurricular(uc);
+            } else {
+                System.out.println("Aviso: UC '" + nomeUC + "' não encontrada, ignorada.");
+            }
+        }
         if (cursoCRUD.registarCurso(novo)) {
             return 1;
         }

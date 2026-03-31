@@ -3,11 +3,12 @@ package view;
 import Common.DesignUtils;
 import Common.MenuUtils;
 import Common.SenhaUtils;
-import DAL.EstudanteCRUD;
 import controller.EstudanteController;
 import controller.DocenteController;
 import controller.GestorController;
+import controller.UnidadeCurricularController;
 import model.Gestor;
+import model.UnidadeCurricular;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,12 +23,20 @@ public class GestorView {
     private final GestorController gestorController;
     private final EstudanteController estudanteController;
     private final DocenteController docenteController;
+    private final UnidadeCurricularView unidadeCurricularView;
+    private final DepartamentoView departamentoView;
+    private final CursoView cursoView;
+    private final UnidadeCurricularController ucController;
     private final Scanner scanner;
 
     public GestorView() {
         this.gestorController = new GestorController();
         this.estudanteController = new EstudanteController();
         this.docenteController = new DocenteController();
+        this.unidadeCurricularView = new UnidadeCurricularView();
+        this.departamentoView = new DepartamentoView();
+        this.cursoView = new CursoView();
+        this.ucController = new UnidadeCurricularController();
         this.scanner = new Scanner(System.in);
     }
 
@@ -58,16 +67,13 @@ public class GestorView {
                     exibirMenuEstudantes();
                     break;
                 case "4":
-                    System.out.println("Funcionalidade em desenvolvimento.");
-                    MenuUtils.pressionarEnter(scanner);
+                    cursoView.exibirMenuCursos();
                     break;
                 case "5":
-                    System.out.println("Funcionalidade em desenvolvimento.");
-                    MenuUtils.pressionarEnter(scanner);
+                    departamentoView.exibirMenuDepartamentos();
                     break;
                 case "6":
-                    System.out.println("Funcionalidade em desenvolvimento.");
-                    MenuUtils.pressionarEnter(scanner);
+                    unidadeCurricularView.exibirMenuUnidadesCurriculares();
                     break;
                 case "0":
                     return;
@@ -339,16 +345,40 @@ public class GestorView {
                 System.out.print("Data de Nascimento (AAAA-MM-DD): ");
             }
         }
-        System.out.print("Email: ");
-        String email = scanner.nextLine();
-        System.out.print("Palavra-passe: ");
-        String passDigitada = scanner.nextLine();
+        
+        String passDigitada = SenhaUtils.gerarPalavraPasseAleatoria();
         String salt = SenhaUtils.gerarSalt();
         String hash = SenhaUtils.gerarHashComSalt(passDigitada, salt);
-        System.out.print("Sigla: ");
-        String sigla = scanner.nextLine();
+        String sigla = nome.length() >= 3 ? nome.substring(0, 3).toUpperCase() : nome.toUpperCase();
+        String email = sigla.toLowerCase() + "@isep.ipp.pt";
 
-        if (docenteController.registarDocente(nome, morada, nif, dataNascimento, email, hash, salt, sigla)) {
+        System.out.println("\n-- Credenciais Geradas Automaticamente --");
+        System.out.println("Sigla: " + sigla);
+        System.out.println("Email: " + email);
+        System.out.println("Palavra-passe: " + passDigitada);
+        System.out.println("-----------------------------------------");
+
+        // Selecionar Unidades Curriculares
+        System.out.println("\n--- Unidades Curriculares Disponíveis ---");
+        List<UnidadeCurricular> ucs = ucController.listarTodasUCs();
+        List<String> nomesUC = new ArrayList<>();
+        if (ucs.isEmpty()) {
+            System.out.println("Nenhuma UC registada. Docente será registado sem UCs associadas.");
+        } else {
+            for (UnidadeCurricular uc : ucs) {
+                System.out.println("- " + uc.getNome());
+            }
+            System.out.print("Digite os nomes das Unidades Curriculares a associar (separados por vírgula, ou Enter para nenhuma): ");
+            String input = scanner.nextLine();
+            if (!input.trim().isEmpty()) {
+                String[] parts = input.split(",");
+                for (String part : parts) {
+                    nomesUC.add(part.trim());
+                }
+            }
+        }
+
+        if (docenteController.registarDocente(nome, morada, nif, dataNascimento, email, hash, salt, sigla, nomesUC)) {
             System.out.println("Docente registado com sucesso!");
         } else {
             System.out.println("Erro ao registar: NIF ou sigla já existe ou dados inválidos.");

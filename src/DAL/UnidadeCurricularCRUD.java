@@ -1,7 +1,5 @@
 package DAL;
 import model.UnidadeCurricular;
-import model.Docente;
-import model.Curso;
 import model.Avaliacao;
 import java.io.*;
 import java.util.ArrayList;
@@ -20,19 +18,15 @@ public class UnidadeCurricularCRUD {
         File ficheiro = new File(CAMINHO_FICHEIRO);
         if (!ficheiro.exists()) return;
 
-        DocenteCRUD docCRUD = new DocenteCRUD();
-
         try (BufferedReader reader = new BufferedReader(new FileReader(CAMINHO_FICHEIRO))) {
             String linha;
             while ((linha = reader.readLine()) != null) {
                 String[] dados = linha.split(";");
-                if (dados.length >= 3) {
+                if (dados.length >= 2) {
                     String nome = dados[0];
                     int ano = Integer.parseInt(dados[1]);
-                    String siglaDocente = dados[2];
 
-                    Docente docente = docCRUD.procurarPorSigla(siglaDocente);
-                    UnidadeCurricular uc = new UnidadeCurricular(nome, ano, docente);
+                    UnidadeCurricular uc = new UnidadeCurricular(nome, ano, null);
                     ucs.add(uc);
 
                 }
@@ -45,11 +39,9 @@ public class UnidadeCurricularCRUD {
     private void guardarTodosNoFicheiro() {
         try (PrintWriter print = new PrintWriter(new FileWriter(CAMINHO_FICHEIRO))) {
             for (UnidadeCurricular uc : ucs) {
-                String siglaDocente = (uc.getDocente() != null) ? uc.getDocente().getSigla() : "SEM REGISTO";
-                String linha = String.format("%s;%s;%s",
+                String linha = String.format("%s;%s",
                         safe(uc.getNome()),
-                        uc.getAnoCurricular(),
-                        siglaDocente);
+                        uc.getAnoCurricular());
                 print.println(linha);
             }
         } catch (IOException e) {

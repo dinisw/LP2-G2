@@ -1,20 +1,27 @@
 package controller;
 
 import DAL.DocenteCRUD;
+import DAL.UnidadeCurricularCRUD;
 import model.Docente;
+import model.UnidadeCurricular;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 public class DocenteController {
     private final DocenteCRUD docenteCRUD;
+    private final UnidadeCurricularCRUD ucCRUD;
+    private final Docente docente;
 
     public DocenteController() {
         this.docenteCRUD = new DocenteCRUD();
+        this.ucCRUD = new UnidadeCurricularCRUD();
+        this.docente = new Docente();
     }
 
     // CREATE - Registar docente
-    public boolean registarDocente(String nome, String morada, int nif, LocalDate dataNascimento, String email, String hash, String salt, String sigla) {
+    public boolean registarDocente(String nome, String morada, int nif, LocalDate dataNascimento, String email, String hash, String salt, String sigla, List<String> nomesUC) {
         if (nome == null || nome.isEmpty()) {
             System.out.println("Erro: Nome não pode estar vazio.");
             return false;
@@ -62,7 +69,15 @@ public class DocenteController {
             return false;
         }
 
-        Docente docente = new Docente(nome, morada, nif, dataNascimento, email, hash, salt, sigla, null, null);
+        Docente docente = new Docente(nome, morada, nif, dataNascimento, email, hash, salt, sigla, new ArrayList<>(), new ArrayList<>());
+        for (String nomeUC : nomesUC) {
+            UnidadeCurricular uc = ucCRUD.procurarPorNome(nomeUC.trim());
+            if (uc != null) {
+                docente.adicionarUnidadeCurricular(uc);
+            } else {
+                System.out.println("Aviso: UC '" + nomeUC + "' não encontrada, ignorada.");
+            }
+        }
         return docenteCRUD.registarDocente(docente);
     }
 
@@ -116,7 +131,7 @@ public class DocenteController {
             docenteExistente.getSalt(),
             docenteExistente.getSigla(),
             docenteExistente.getListaAvaliacao(),
-            docenteExistente.getUnidadeCurricular()
+            docenteExistente.getUnidadesCurriculares()
         );
 
         return docenteCRUD.atualizarDocente(docenteAtualizado);
@@ -150,7 +165,7 @@ public class DocenteController {
             novoSalt,
             docenteExistente.getSigla(),
             docenteExistente.getListaAvaliacao(),
-            docenteExistente.getUnidadeCurricular()
+            docenteExistente.getUnidadesCurriculares()
         );
 
         return docenteCRUD.atualizarDocente(docenteAtualizado);
@@ -170,4 +185,10 @@ public class DocenteController {
 
         return docenteCRUD.eliminarDocente(nif);
     }
+
+
+    public String getSiglaDoDocenteAtual() {
+        return this.docente.getSigla();
+    }
+
 }
