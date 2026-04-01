@@ -11,8 +11,8 @@ public class Estudante extends Pessoa{
     private int anoLetivo;
     private List<Avaliacao> listaAvaliacoes;
 
-    public Estudante(String nome, String morada, int nif, LocalDate dataNascimento, String email, int numeroMec, String hash, String salt, String nomeCurso) {
-        super(nome, morada, nif, dataNascimento, email, hash, salt);
+    public Estudante(String nome, String morada, int nif, LocalDate dataNascimento, String email, int numeroMec, String hash, String nomeCurso) {
+        super(nome, morada, nif, dataNascimento, email, hash);
         this.nomeCurso = nomeCurso;
         this.anoLetivo = 1;
         this.listaAvaliacoes = new ArrayList<>();

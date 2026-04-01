@@ -37,7 +37,6 @@ public class DocenteCRUD {
                             LocalDate.parse(dados[3]), // dataNascimento
                             dados[4], // email
                             dados[5], // hash
-                            dados[6], // salt
                             dados[7], // sigla
                             new ArrayList<>(), // listaAvaliacao
                             new ArrayList<>()  // unidadesCurriculares
@@ -61,7 +60,6 @@ public class DocenteCRUD {
                             LocalDate.parse(dados[3]), // dataNascimento
                             dados[4], // email
                             dados[5], // hash
-                            dados[6], // salt
                             dados[7], // sigla
                             new ArrayList<>(), // listaAvaliacao
                             new ArrayList<>()  // unidadesCurriculares
@@ -87,7 +85,6 @@ public class DocenteCRUD {
                         safe(docente.getDataNascimento()),
                         safe(docente.getEmail()),
                         safe(docente.getHash()),
-                        safe(docente.getSalt()),
                         safe(docente.getSigla()),
                         safe(ucNames));
                 print.println(linha);

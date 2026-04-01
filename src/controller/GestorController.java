@@ -14,7 +14,7 @@ public class GestorController {
     }
 
     // CREATE - Registar gestor
-    public boolean registarGestor(String nome, String morada, int nif, LocalDate dataNascimento, String email, String hash, String salt, String cargo) {
+    public boolean registarGestor(String nome, String morada, int nif, LocalDate dataNascimento, String email, String hash, String cargo) {
         if (nome == null || nome.isEmpty()) {
             System.out.println("Erro: Nome não pode estar vazio.");
             return false;
@@ -40,7 +40,7 @@ public class GestorController {
             return false;
         }
 
-        if (hash == null || hash.isEmpty() || salt == null || salt.isEmpty()) {
+        if (hash == null || hash.isEmpty()) {
             System.out.println("Erro: Dados de senha inválidos.");
             return false;
         }
@@ -62,7 +62,7 @@ public class GestorController {
             return false;
         }
 
-        Gestor gestor = new Gestor(nome, morada, nif, dataNascimento, email, hash, salt, cargo);
+        Gestor gestor = new Gestor(nome, morada, nif, dataNascimento, email, hash, cargo);
         return gestorCRUD.registarGestor(gestor);
     }
 
@@ -114,7 +114,6 @@ public class GestorController {
             dataFinal,
             emailFinal,
             gestorExistente.getHash(),
-            gestorExistente.getSalt(),
             cargoFinal
         );
 
@@ -146,7 +145,6 @@ public class GestorController {
             gestorExistente.getDataNascimento(),
             gestorExistente.getEmail(),
             novoHash,
-            novoSalt,
             gestorExistente.getCargo()
         );
 

@@ -32,7 +32,6 @@ public class GestorCRUD {
                             LocalDate.parse(dados[3]),
                             dados[4],
                             dados[5],
-                            dados[6],
                             dados[7]
                     );
                     gestores.add(gestor);
@@ -53,7 +52,6 @@ public class GestorCRUD {
                         safe(gestor.getDataNascimento()),
                         safe(gestor.getEmail()),
                         safe(gestor.getHash()),
-                        safe(gestor.getSalt()),
                         safe(gestor.getCargo()));
                 print.println(linha);
             }

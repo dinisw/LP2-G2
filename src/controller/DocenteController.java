@@ -21,7 +21,7 @@ public class DocenteController {
     }
 
     // CREATE - Registar docente
-    public boolean registarDocente(String nome, String morada, int nif, LocalDate dataNascimento, String email, String hash, String salt, String sigla, List<String> nomesUC) {
+    public boolean registarDocente(String nome, String morada, int nif, LocalDate dataNascimento, String email, String hash, String sigla, List<String> nomesUC) {
         if (nome == null || nome.isEmpty()) {
             System.out.println("Erro: Nome não pode estar vazio.");
             return false;
@@ -47,7 +47,7 @@ public class DocenteController {
             return false;
         }
 
-        if (hash == null || hash.isEmpty() || salt == null || salt.isEmpty()) {
+        if (hash == null || hash.isEmpty()) {
             System.out.println("Erro: Dados de senha inválidos.");
             return false;
         }
@@ -69,7 +69,7 @@ public class DocenteController {
             return false;
         }
 
-        Docente docente = new Docente(nome, morada, nif, dataNascimento, email, hash, salt, sigla, new ArrayList<>(), new ArrayList<>());
+        Docente docente = new Docente(nome, morada, nif, dataNascimento, email, hash, sigla, new ArrayList<>(), new ArrayList<>());
         for (String nomeUC : nomesUC) {
             UnidadeCurricular uc = ucCRUD.procurarPorNome(nomeUC.trim());
             if (uc != null) {
@@ -128,7 +128,6 @@ public class DocenteController {
             dataFinal,
             emailFinal,
             docenteExistente.getHash(),
-            docenteExistente.getSalt(),
             docenteExistente.getSigla(),
             docenteExistente.getListaAvaliacao(),
             docenteExistente.getUnidadesCurriculares()
@@ -138,13 +137,13 @@ public class DocenteController {
     }
 
     // UPDATE - Alterar password
-    public boolean alterarPassword(int nif, String novoHash, String novoSalt) {
+    public boolean alterarPassword(int nif, String novoHash) {
         if (nif <= 0) {
             System.out.println("Erro: NIF inválido.");
             return false;
         }
 
-        if (novoHash == null || novoHash.isEmpty() || novoSalt == null || novoSalt.isEmpty()) {
+        if (novoHash == null || novoHash.isEmpty()) {
             System.out.println("Erro: Dados de senha inválidos.");
             return false;
         }
@@ -162,7 +161,6 @@ public class DocenteController {
             docenteExistente.getDataNascimento(),
             docenteExistente.getEmail(),
             novoHash,
-            novoSalt,
             docenteExistente.getSigla(),
             docenteExistente.getListaAvaliacao(),
             docenteExistente.getUnidadesCurriculares()

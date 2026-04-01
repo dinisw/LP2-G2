@@ -90,10 +90,10 @@ public class EstudanteController {
     // CRUD methods
     private EstudanteCRUD estudanteCRUD = new EstudanteCRUD();
 
-    public boolean registarEstudante(String nome, String morada, int nif, java.time.LocalDate dataNascimento, String curso,String hash, String salt) {
+    public boolean registarEstudante(String nome, String morada, int nif, java.time.LocalDate dataNascimento, String curso,String hash) {
         int numeroMec = estudanteCRUD.gerarNumeroMecanografico();
         String email = numeroMec + "@isep.ipp.pt";
-        Estudante estudante = new Estudante(nome, morada, nif, dataNascimento, email, numeroMec, hash, salt, curso);
+        Estudante estudante = new Estudante(nome, morada, nif, dataNascimento, email, numeroMec, hash, curso);
         return estudanteCRUD.registarEstudante(estudante);
     }
 

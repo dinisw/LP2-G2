@@ -10,8 +10,8 @@ public class Gestor extends Pessoa {
         this.cargo = "";
     }
 
-    public Gestor(String nome, String morada, int nif, LocalDate dataNascimento, String email, String hash, String salt, String cargo) {
-        super(nome, morada, nif, dataNascimento, email, hash, salt);
+    public Gestor(String nome, String morada, int nif, LocalDate dataNascimento, String email, String hash, String cargo) {
+        super(nome, morada, nif, dataNascimento, email, hash);
         this.cargo = cargo;
     }
 

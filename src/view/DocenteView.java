@@ -59,10 +59,10 @@ public class DocenteView {
         String passDigitada = scanner.nextLine();
 
         if (!passDigitada.isEmpty()) {
-            String salt = SenhaUtils.gerarSalt();
-            String pass = SenhaUtils.gerarHashComSalt(passDigitada, salt);
+            SenhaUtils su = new SenhaUtils();
+            String pass = su.gerarHashComSalt(passDigitada);
 
-            if (docenteController.alterarPassword(d.getNif(), pass, salt)) {
+            if (docenteController.alterarPassword(d.getNif(), pass)) {
                 System.out.println("Password alterada com sucesso!");
             } else {
                 System.out.println("Erro ao guardar alteração da password.");
