@@ -37,7 +37,6 @@ public class EstudanteCRUD {
                             dados[4], // email
                             Integer.parseInt(dados[5]), // numeroMec
                             hash, // hash
-                            salt, // salt
                             dados[8]);
                     estudantes.add(estudante);
                     if(estudante.getNumeroMec() >= numeroMecCounter) {
@@ -72,7 +71,6 @@ public class EstudanteCRUD {
                         safe(estudante.getEmail()),
                         safe(estudante.getNumeroMec()),
                         safe(estudante.getHash()),
-                        safe(estudante.getSalt()),
                         safe(estudante.getNomeCurso()));
                 print.println(linha);
             }

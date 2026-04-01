@@ -22,8 +22,8 @@ public class Docente extends Pessoa{
         this.sigla = "";
     }
 
-    public Docente(String nome, String morada, int nif, LocalDate dataNascimento, String email, String hash, String salt, String sigla, List<Avaliacao> listaAvaliacao, List<UnidadeCurricular> unidadesCurriculares) {
-        super(nome, morada, nif, dataNascimento, email, hash, salt);
+    public Docente(String nome, String morada, int nif, LocalDate dataNascimento, String email, String hash, String sigla, List<Avaliacao> listaAvaliacao, List<UnidadeCurricular> unidadesCurriculares) {
+        super(nome, morada, nif, dataNascimento, email, hash);
         this.listaAvaliacao = (listaAvaliacao != null) ? listaAvaliacao : new ArrayList<>();
         this.sigla = sigla;
         this.unidadesCurriculares = (unidadesCurriculares != null) ? unidadesCurriculares : new ArrayList<>();

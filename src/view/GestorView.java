@@ -158,12 +158,12 @@ public class GestorView {
         String email = scanner.nextLine();
         System.out.print("Palavra-passe: ");
         String passDigitada = scanner.nextLine();
-        String salt = SenhaUtils.gerarSalt();
-        String hash = SenhaUtils.gerarHashComSalt(passDigitada, salt);
+        SenhaUtils su = new SenhaUtils();
+        String hash = su.gerarHashComSalt(passDigitada);
         System.out.print("Cargo: ");
         String cargo = scanner.nextLine();
 
-        if (gestorController.registarGestor(nome, morada, nif, dataNascimento, email, hash, salt, cargo)) {
+        if (gestorController.registarGestor(nome, morada, nif, dataNascimento, email, hash, cargo)) {
             System.out.println("Gestor registado com sucesso!");
         } else {
             System.out.println("Erro ao registar: NIF já existe ou dados inválidos.");
@@ -347,8 +347,8 @@ public class GestorView {
         }
         
         String passDigitada = SenhaUtils.gerarPalavraPasseAleatoria();
-        String salt = SenhaUtils.gerarSalt();
-        String hash = SenhaUtils.gerarHashComSalt(passDigitada, salt);
+        SenhaUtils su = new SenhaUtils();
+        String hash = su.gerarHashComSalt(passDigitada);
         String sigla = nome.length() >= 3 ? nome.substring(0, 3).toUpperCase() : nome.toUpperCase();
         String email = sigla.toLowerCase() + "@isep.ipp.pt";
 
@@ -378,7 +378,7 @@ public class GestorView {
             }
         }
 
-        if (docenteController.registarDocente(nome, morada, nif, dataNascimento, email, hash, salt, sigla, nomesUC)) {
+        if (docenteController.registarDocente(nome, morada, nif, dataNascimento, email, hash, sigla, nomesUC)) {
             System.out.println("Docente registado com sucesso!");
         } else {
             System.out.println("Erro ao registar: NIF ou sigla já existe ou dados inválidos.");
@@ -480,10 +480,10 @@ public class GestorView {
         }
         System.out.print("Nova palavra-passe: ");
         String novaPass = scanner.nextLine();
-        String novoSalt = SenhaUtils.gerarSalt();
-        String novoHash = SenhaUtils.gerarHashComSalt(novaPass, novoSalt);
+        SenhaUtils su = new SenhaUtils();
+        String novoHash = su.gerarHashComSalt(novaPass);
 
-        if (docenteController.alterarPassword(nif, novoHash, novoSalt)) {
+        if (docenteController.alterarPassword(nif, novoHash)) {
             System.out.println("Password alterada com sucesso!");
         } else {
             System.out.println("Erro ao alterar password: Docente não encontrado.");
@@ -561,11 +561,10 @@ public class GestorView {
                     System.out.print("Curso: ");
                     String curso = scanner.nextLine();
                     int mecAuto = estudanteController.gerarNumeroMecanografico();
-                    String emailAuto = mecAuto + "@isep.ipp.pt";
-                    String salt = SenhaUtils.gerarSalt();
+                    String emailAuto = mecAuto + "@issmf.ipp.pt";
                     String passAuto = SenhaUtils.gerarPalavraPasseAleatoria();
-
-                    String senha = SenhaUtils.gerarHashComSalt(passAuto, salt);
+                    SenhaUtils su = new SenhaUtils();
+                    String senha = su.gerarHashComSalt(passAuto);
 
                     System.out.println("\n-- Credenciais Geradas Automaticamente --");
                     System.out.println("Nº Mecanográfico: " + mecAuto);
@@ -573,7 +572,7 @@ public class GestorView {
                     System.out.println("Palavra-passe: " + passAuto);
                     System.out.println("-----------------------------------------");
 
-                    if (estudanteController.registarEstudante(nome, morada, nif, data, curso,senha,salt)) {
+                    if (estudanteController.registarEstudante(nome, morada, nif, data, curso,senha)) {
                         System.out.println(GREEN + "Estudante registado com sucesso!" + RESET);
                     } else {
                         System.out.println(RED + "Erro ao registar estudante." + RESET);
