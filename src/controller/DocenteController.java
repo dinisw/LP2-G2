@@ -3,8 +3,8 @@ package controller;
 import DAL.DocenteCRUD;
 import DAL.UnidadeCurricularCRUD;
 import model.Docente;
+import model.Resultado;
 import model.UnidadeCurricular;
-
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,81 +12,74 @@ import java.util.List;
 public class DocenteController {
     private final DocenteCRUD docenteCRUD;
     private final UnidadeCurricularCRUD ucCRUD;
-    private final Docente docente;
 
     public DocenteController() {
         this.docenteCRUD = new DocenteCRUD();
         this.ucCRUD = new UnidadeCurricularCRUD();
-        this.docente = new Docente();
     }
 
-    // CREATE - Registar docente
-    public boolean registarDocente(String nome, String morada, int nif, LocalDate dataNascimento, String email, String hash, String sigla, List<String> nomesUC) {
-        if (nome == null || nome.isEmpty()) {
-            System.out.println("Erro: Nome não pode estar vazio.");
-            return false;
-        }
+    public Resultado registarDocente(String nome, String morada, int nif, LocalDate dataNascimento, String email, String hash, String sigla, List<String> nomesUC) {
+        Resultado res = new Resultado();
 
-        if (morada == null || morada.isEmpty()) {
-            System.out.println("Erro: Morada não pode estar vazia.");
-            return false;
+        if (nome == null || nome.trim().isEmpty() || morada == null || morada.trim().isEmpty() ||
+                email == null || email.trim().isEmpty() || hash == null || hash.trim().isEmpty() ||
+                sigla == null || sigla.trim().isEmpty()) {
+            res.success = false;
+            res.errorMessage = "Todos os campos de texto (nome, morada, email, senha, sigla) são obrigatórios.";
+            return res;
         }
 
         if (nif <= 0) {
-            System.out.println("Erro: NIF inválido.");
-            return false;
+            res.success = false;
+            res.errorMessage = "O NIF fornecido é inválido.";
+            return res;
         }
 
         if (dataNascimento == null) {
-            System.out.println("Erro: Data de nascimento inválida.");
-            return false;
+            res.success = false;
+            res.errorMessage = "A data de nascimento fornecida é inválida.";
+            return res;
         }
 
-        if (email == null || email.isEmpty()) {
-            System.out.println("Erro: Email não pode estar vazio.");
-            return false;
-        }
-
-        if (hash == null || hash.isEmpty()) {
-            System.out.println("Erro: Dados de senha inválidos.");
-            return false;
-        }
-
-        if (sigla == null || sigla.isEmpty()) {
-            System.out.println("Erro: Sigla não pode estar vazia.");
-            return false;
-        }
-
-        // Verificar se já existe docente com mesmo NIF
         if (docenteCRUD.procurarPorNif(nif) != null) {
-            System.out.println("Erro: Já existe docente com este NIF.");
-            return false;
+            res.success = false;
+            res.errorMessage = "Já existe um docente registado com este NIF.";
+            return res;
         }
 
-        // Verificar se já existe docente com mesma sigla
         if (docenteCRUD.procurarPorSigla(sigla) != null) {
-            System.out.println("Erro: Já existe docente com esta sigla.");
-            return false;
+            res.success = false;
+            res.errorMessage = "Já existe um docente registado com esta sigla.";
+            return res;
         }
 
         Docente docente = new Docente(nome, morada, nif, dataNascimento, email, hash, sigla, new ArrayList<>(), new ArrayList<>());
+        StringBuilder avisos = new StringBuilder();
+
         for (String nomeUC : nomesUC) {
             UnidadeCurricular uc = ucCRUD.procurarPorNome(nomeUC.trim());
             if (uc != null) {
                 docente.adicionarUnidadeCurricular(uc);
             } else {
-                System.out.println("Aviso: UC '" + nomeUC + "' não encontrada, ignorada.");
+                avisos.append("UC '").append(nomeUC.trim()).append("' não encontrada (ignorada). ");
             }
         }
-        return docenteCRUD.registarDocente(docente);
+
+        if (docenteCRUD.registarDocente(docente)) {
+            res.success = true;
+            res.object = avisos.toString();
+        } else {
+            res.success = false;
+            res.errorMessage = "Ocorreu um erro na base de dados ao tentar registar o docente.";
+        }
+
+        return res;
     }
 
-    // READ - Listar todos os docentes
     public List<Docente> listarDocentes() {
         return docenteCRUD.getDocentes();
     }
 
-    // READ - Procurar docente por NIF
     public Docente procurarDocentePorNif(int nif) {
         if (nif <= 0) {
             return null;
@@ -94,99 +87,124 @@ public class DocenteController {
         return docenteCRUD.procurarPorNif(nif);
     }
 
-    // READ - Procurar docente por sigla
     public Docente procurarDocentePorSigla(String sigla) {
-        if (sigla == null || sigla.isEmpty()) {
+        if (sigla == null || sigla.trim().isEmpty()) {
             return null;
         }
         return docenteCRUD.procurarPorSigla(sigla);
     }
 
-    // UPDATE - Atualizar docente
-    public boolean atualizarDocente(int nif, String novoNome, String novaMorada, LocalDate novaDataNascimento, String novoEmail) {
+    public Resultado atualizarDocente(int nif, String novoNome, String novaMorada, LocalDate novaDataNascimento, String novoEmail) {
+        Resultado res = new Resultado();
+
         if (nif <= 0) {
-            System.out.println("Erro: NIF inválido.");
-            return false;
+            res.success = false;
+            res.errorMessage = "NIF inválido.";
+            return res;
         }
 
         Docente docenteExistente = docenteCRUD.procurarPorNif(nif);
+
         if (docenteExistente == null) {
-            System.out.println("Erro: Docente não encontrado.");
-            return false;
+            res.success = false;
+            res.errorMessage = "Docente não encontrado com o NIF informado.";
+            return res;
         }
 
-        // Usar valores existentes se novos valores forem null/vazios
-        String nomeFinal = (novoNome != null && !novoNome.isEmpty()) ? novoNome : docenteExistente.getNome();
-        String moradaFinal = (novaMorada != null && !novaMorada.isEmpty()) ? novaMorada : docenteExistente.getMorada();
+        String nomeFinal = (novoNome != null && !novoNome.trim().isEmpty()) ? novoNome : docenteExistente.getNome();
+        String moradaFinal = (novaMorada != null && !novaMorada.trim().isEmpty()) ? novaMorada : docenteExistente.getMorada();
         LocalDate dataFinal = (novaDataNascimento != null) ? novaDataNascimento : docenteExistente.getDataNascimento();
-        String emailFinal = (novoEmail != null && !novoEmail.isEmpty()) ? novoEmail : docenteExistente.getEmail();
+        String emailFinal = (novoEmail != null && !novoEmail.trim().isEmpty()) ? novoEmail : docenteExistente.getEmail();
 
         Docente docenteAtualizado = new Docente(
-            nomeFinal,
-            moradaFinal,
-            docenteExistente.getNif(),
-            dataFinal,
-            emailFinal,
-            docenteExistente.getHash(),
-            docenteExistente.getSigla(),
-            docenteExistente.getListaAvaliacao(),
-            docenteExistente.getUnidadesCurriculares()
+                nomeFinal,
+                moradaFinal,
+                docenteExistente.getNif(),
+                dataFinal,
+                emailFinal,
+                docenteExistente.getHash(),
+                docenteExistente.getSigla(),
+                docenteExistente.getListaAvaliacao(),
+                docenteExistente.getUnidadesCurriculares()
         );
 
-        return docenteCRUD.atualizarDocente(docenteAtualizado);
-    }
-
-    // UPDATE - Alterar password
-    public boolean alterarPassword(int nif, String novoHash) {
-        if (nif <= 0) {
-            System.out.println("Erro: NIF inválido.");
-            return false;
+        if (docenteCRUD.atualizarDocente(docenteAtualizado)) {
+            res.success = true;
+        } else {
+            res.success = false;
+            res.errorMessage = "Erro ao guardar as alterações na base de dados.";
         }
 
-        if (novoHash == null || novoHash.isEmpty()) {
-            System.out.println("Erro: Dados de senha inválidos.");
-            return false;
+        return res;
+    }
+
+    public Resultado alterarPassword(int nif, String novoHash) {
+        Resultado res = new Resultado();
+
+        if (nif <= 0) {
+            res.success = false;
+            res.errorMessage = "NIF inválido.";
+            return res;
+        }
+
+        if (novoHash == null || novoHash.trim().isEmpty()) {
+            res.success = false;
+            res.errorMessage = "Dados de senha inválidos.";
+            return res;
         }
 
         Docente docenteExistente = docenteCRUD.procurarPorNif(nif);
+
         if (docenteExistente == null) {
-            System.out.println("Erro: Docente não encontrado.");
-            return false;
+            res.success = false;
+            res.errorMessage = "Docente não encontrado.";
+            return res;
         }
 
         Docente docenteAtualizado = new Docente(
-            docenteExistente.getNome(),
-            docenteExistente.getMorada(),
-            docenteExistente.getNif(),
-            docenteExistente.getDataNascimento(),
-            docenteExistente.getEmail(),
-            novoHash,
-            docenteExistente.getSigla(),
-            docenteExistente.getListaAvaliacao(),
-            docenteExistente.getUnidadesCurriculares()
+                docenteExistente.getNome(),
+                docenteExistente.getMorada(),
+                docenteExistente.getNif(),
+                docenteExistente.getDataNascimento(),
+                docenteExistente.getEmail(),
+                novoHash,
+                docenteExistente.getSigla(),
+                docenteExistente.getListaAvaliacao(),
+                docenteExistente.getUnidadesCurriculares()
         );
 
-        return docenteCRUD.atualizarDocente(docenteAtualizado);
+        if (docenteCRUD.atualizarDocente(docenteAtualizado)) {
+            res.success = true;
+        } else {
+            res.success = false;
+            res.errorMessage = "Erro ao atualizar a password na base de dados.";
+        }
+
+        return res;
     }
 
-    // DELETE - Eliminar docente
-    public boolean eliminarDocente(int nif) {
+    public Resultado eliminarDocente(int nif) {
+        Resultado res = new Resultado();
+
         if (nif <= 0) {
-            System.out.println("Erro: NIF inválido.");
-            return false;
+            res.success = false;
+            res.errorMessage = "NIF inválido.";
+            return res;
         }
 
         if (docenteCRUD.procurarPorNif(nif) == null) {
-            System.out.println("Erro: Docente não encontrado.");
-            return false;
+            res.success = false;
+            res.errorMessage = "Docente não encontrado com o NIF informado.";
+            return res;
         }
 
-        return docenteCRUD.eliminarDocente(nif);
+        if (docenteCRUD.eliminarDocente(nif)) {
+            res.success = true;
+        } else {
+            res.success = false;
+            res.errorMessage = "Erro na base de dados ao eliminar o docente.";
+        }
+
+        return res;
     }
-
-
-    public String getSiglaDoDocenteAtual() {
-        return this.docente.getSigla();
-    }
-
 }

@@ -1,5 +1,6 @@
 package DAL;
 import model.Estudante;
+import model.Resultado;
 
 import java.io.*;
 import java.time.LocalDate;
@@ -25,10 +26,8 @@ public class EstudanteCRUD {
             String linha;
             while((linha = reader.readLine()) != null){
                 String[] dados = linha.split(";");
-                if(dados.length >= 9){
+                if(dados.length >= 8){
                     String hash = dados[6];
-                    String salt = dados[7];
-
                     Estudante estudante = new Estudante(
                             dados[0], // nome
                             dados[1], // morada
@@ -37,7 +36,7 @@ public class EstudanteCRUD {
                             dados[4], // email
                             Integer.parseInt(dados[5]), // numeroMec
                             hash, // hash
-                            dados[8]);
+                            dados[7]);
                     estudantes.add(estudante);
                     if(estudante.getNumeroMec() >= numeroMecCounter) {
                         numeroMecCounter = estudante.getNumeroMec() + 1;
@@ -59,11 +58,27 @@ public class EstudanteCRUD {
         return false;
     }
 
+    public Resultado atualizarSenha(Estudante estudante){
+        Resultado res = new Resultado();
+        if(estudante != null){
+            for (int i = 0; i < estudantes.size(); i++) {
+                if (estudantes.get(i).getNumeroMec() == estudante.getNumeroMec()) {
+                    estudantes.set(i, estudante);
+                    guardarTodosNoFicheiro();
+                    res.success = true;
+                    return res;
+                }
+            }
+        }
+        res.success = false;
+        res.errorMessage = "Erro ao atualizar o ficheiro do estudante";
+        return res;
+    }
 
     private void guardarTodosNoFicheiro() {
         try (PrintWriter print = new PrintWriter(new FileWriter(CAMINHO_FICHEIRO))) {
             for (Estudante estudante : estudantes) {
-                String linha = String.format("%s;%s;%s;%s;%s;%s;%s;%s;%s",
+                String linha = String.format("%s;%s;%s;%s;%s;%s;%s;%s",
                         safe(estudante.getNome()),
                         safe(estudante.getMorada()),
                         safe(estudante.getNif()),

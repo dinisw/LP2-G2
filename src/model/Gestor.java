@@ -1,7 +1,7 @@
 package model;
 import java.time.LocalDate;
 
-public class Gestor extends Pessoa {
+public class Gestor extends Utilizador {
 
     private String cargo;
 
@@ -25,8 +25,7 @@ public class Gestor extends Pessoa {
 
     @Override
     public String toString() {
-        return super.toString() + " Gestor{" +
-                "cargo='" + cargo + '\'' +
-                '}';
+        return super.toString() +
+                "\n  Cargo: " + cargo;
     }
 }
