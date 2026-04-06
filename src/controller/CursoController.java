@@ -22,27 +22,27 @@ public class CursoController {
     }
 
     public Resultado registarCurso(String nome, String siglaDep, List<String> nomesUC) {
-        Resultado res = new Resultado();
+        Resultado resultado = new Resultado();
 
         // 1. Validação de segurança dos inputs
         if (nome == null || nome.trim().isEmpty()) {
-            res.success = false;
-            res.errorMessage = "O nome do curso é obrigatório.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "O nome do curso é obrigatório.";
+            return resultado;
         }
 
         if (siglaDep == null || siglaDep.trim().isEmpty()) {
-            res.success = false;
-            res.errorMessage = "A sigla do departamento associado é obrigatória.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "A sigla do departamento associado é obrigatória.";
+            return resultado;
         }
 
         // 2. Regra de Negócio: O Departamento tem de existir
         Departamento dep = depCRUD.procurarPorSigla(siglaDep);
         if (dep == null) {
-            res.success = false;
-            res.errorMessage = "O Departamento com a sigla '" + siglaDep + "' não existe! Registe-o primeiro.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "O Departamento com a sigla '" + siglaDep + "' não existe! Registe-o primeiro.";
+            return resultado;
         }
 
         // Assumindo a duração padrão de 3 anos
@@ -65,14 +65,14 @@ public class CursoController {
 
         // 4. Gravar na DAL
         if (cursoCRUD.registarCurso(novo)) {
-            res.success = true;
-            res.object = avisos.toString();
+            resultado.success = true;
+            resultado.object = avisos.toString();
         } else {
-            res.success = false;
-            res.errorMessage = "Já existe um curso com o nome '" + nome + "' no sistema.";
+            resultado.success = false;
+            resultado.errorMessage = "Já existe um curso com o nome '" + nome + "' no sistema.";
         }
 
-        return res;
+        return resultado;
     }
 
     public List<Curso> listarCursos() {
@@ -88,62 +88,90 @@ public class CursoController {
     }
 
     public Resultado atualizarCurso(String nomeAntigo, String novoNome) {
-        Resultado res = new Resultado();
+        Resultado resultado = new Resultado();
 
         if (nomeAntigo == null || nomeAntigo.trim().isEmpty()) {
-            res.success = false;
-            res.errorMessage = "O nome do curso a atualizar é obrigatório.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "O nome do curso a atualizar é obrigatório.";
+            return resultado;
         }
 
         if (novoNome == null || novoNome.trim().isEmpty()) {
-            res.success = false;
-            res.errorMessage = "O novo nome do curso não pode estar vazio.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "O novo nome do curso não pode estar vazio.";
+            return resultado;
         }
 
         Curso curso = cursoCRUD.procurarPorNome(nomeAntigo);
 
         if (curso == null) {
-            res.success = false;
-            res.errorMessage = "O curso original não foi encontrado na base de dados.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "O curso original não foi encontrado na base de dados.";
+            return resultado;
         }
 
         Curso cursoAtualizado = new Curso(novoNome, curso.getDuracao(), curso.getDepartamento());
-
+        cursoAtualizado.setIniciado(curso.isIniciado());
+        for (UnidadeCurricular unidadeCurricular : curso.getUc()) {
+            cursoAtualizado.adicionarUnidadeCurricular(unidadeCurricular);
+        }
         if (cursoCRUD.atualizarCurso(nomeAntigo, cursoAtualizado)) {
-            res.success = true;
+            resultado.success = true;
         } else {
-            res.success = false;
-            res.errorMessage = "Não foi possível atualizar. Verifique se já existe um curso com o nome '" + novoNome + "'.";
+            resultado.success = false;
+            resultado.errorMessage = "Não foi possível atualizar. Verifique se já existe um curso com o nome '" + novoNome + "'.";
         }
 
-        return res;
+        return resultado;
     }
 
     public Resultado eliminarCurso(String nome) {
-        Resultado res = new Resultado();
+        Resultado resultado = new Resultado();
 
         if (nome == null || nome.trim().isEmpty()) {
-            res.success = false;
-            res.errorMessage = "O nome do curso a eliminar é obrigatório.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "O nome do curso a eliminar é obrigatório.";
+            return resultado;
         }
 
         if (cursoCRUD.procurarPorNome(nome) == null) {
-            res.success = false;
-            res.errorMessage = "O curso especificado não foi encontrado no sistema.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "O curso especificado não foi encontrado no sistema.";
+            return resultado;
         }
 
         if (cursoCRUD.eliminarCurso(nome)) {
-            res.success = true;
+            resultado.success = true;
         } else {
-            res.success = false;
-            res.errorMessage = "Erro na base de dados ao eliminar o curso (ex: tem alunos alocados).";
+            resultado.success = false;
+            resultado.errorMessage = "Erro na base de dados ao eliminar o curso (ex: tem alunos alocados).";
         }
 
-        return res;
+        return resultado;
+    }
+    public Resultado iniciarCurso(String nome) {
+        Resultado resultado = new Resultado();
+
+        Curso curso = cursoCRUD.procurarPorNome(nome);
+        if (curso == null) {
+            resultado.success = false;
+            resultado.errorMessage = "Curso não encontrado.";
+            return resultado;
+        }
+
+        if (curso.isIniciado()) {
+            resultado.success = false;
+            resultado.errorMessage = "Este curso já se encontra iniciado.";
+            return resultado;
+        }
+
+        curso.setIniciado(true);
+        if (cursoCRUD.atualizarCurso(curso.getNome(), curso)) {
+            resultado.success = true;
+        } else {
+            resultado.success = false;
+            resultado.errorMessage = "Erro ao guardar o estado do curso na base de dados.";
+        }
+        return resultado;
     }
 }

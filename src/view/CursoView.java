@@ -11,6 +11,8 @@ import model.Curso;
 import model.Departamento;
 import model.Resultado;
 import model.UnidadeCurricular;
+
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -38,6 +40,7 @@ public class CursoView {
         opcoes.add("3. Procurar Curso");
         opcoes.add("4. Atualizar Curso");
         opcoes.add("5. Eliminar Curso");
+        opcoes.add("6. Iniciar Curso (Bloqueio de Inscrições)");
         opcoes.add("0. Voltar ao Menu de Gestão");
 
         do {
@@ -52,6 +55,7 @@ public class CursoView {
                     case "3": procurarCurso(); break;
                     case "4": atualizarCurso(); break;
                     case "5": eliminarCurso(); break;
+                    case "6": iniciarAnoLetivoCurso(); break;
                     case "0":
                         System.out.println(GetYellow() + "\nA voltar ao menu de gestão..." + GetReset());
                         return;
@@ -241,4 +245,58 @@ public class CursoView {
             MenuUtils.pressionarEnter(scanner);
         }
     }
+    private void iniciarAnoLetivoCurso() {
+        try {
+            System.out.println(GetBlue() + "\n--- INICIAR ANO LETIVO DO CURSO ---" + GetReset());
+            System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
+
+            List<Curso> lista = cursoController.listarCursos();
+            if(lista.isEmpty()) {
+                System.out.println(GetYellow() + "Não há cursos registados no sistema!" + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+            listarCursos();
+            String nome = BackendUtils.lerInputString(scanner, "\nDigite o nome do curso a iniciar: ");
+            Resultado resultado = cursoController.iniciarCurso(nome);
+
+            if (resultado.success) {
+                System.out.println(GetGreen() + "\nSucesso! O curso '" + nome + "' foi iniciado." + GetReset());
+                System.out.println(GetGreen() + "As inscrições e transferências para este curso estão agora bloqueadas." + GetReset());
+            } else {
+                System.out.println(GetRed() + "\nErro: " + resultado.errorMessage + GetReset());
+            }
+            MenuUtils.pressionarEnter(scanner);
+        } catch (CancelarRegistoException e) {
+            System.out.println("\n" + GetYellow() + "Aviso: " + e.getMessage() + GetReset());
+            System.out.println(GetRed() + "Operação interrompida!" + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Ocorreu um erro inesperado: " + e.getMessage() + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
