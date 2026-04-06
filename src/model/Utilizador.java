@@ -1,9 +1,8 @@
 package model;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
-public abstract class Pessoa {
+public abstract class Utilizador {
 
     private String nome;
     private String email;
@@ -13,7 +12,7 @@ public abstract class Pessoa {
     private String hash;
 
 
-    public Pessoa() {
+    public Utilizador() {
         nome = "";
         email = "";
         nif = 0;
@@ -22,7 +21,7 @@ public abstract class Pessoa {
         hash = "";
     }
 
-    public Pessoa(String nome, String morada, int nif, LocalDate dataNascimento, String email, String hash) {
+    public Utilizador(String nome, String morada, int nif, LocalDate dataNascimento, String email, String hash) {
         this.nome = nome;
         this.morada = morada;
         this.nif = nif;
@@ -78,14 +77,13 @@ public abstract class Pessoa {
         this.hash = hash;
     }
 
+
     @Override
     public String toString() {
-        return "Pessoa {" +
-                "nome='" + nome + '\'' +
-                ", email='" + email + '\'' +
-                ", nif=" + nif +
-                ", dataNascimento='" + dataNascimento + '\'' +
-                ", morada='" + morada + '\'' +
-                '}';
+        return  "\n  Nome: " + nome +
+                "\n  NIF: " + nif +
+                "\n  Data de Nascimento: " + dataNascimento +
+                "\n  Email: " + email +
+                "\n  Morada: " + morada;
     }
 }

@@ -2,7 +2,7 @@ package controller;
 
 import DAL.GestorCRUD;
 import model.Gestor;
-import view.GestorView;
+import model.Resultado;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -13,65 +13,57 @@ public class GestorController {
         this.gestorCRUD = new GestorCRUD();
     }
 
-    // CREATE - Registar gestor
-    public boolean registarGestor(String nome, String morada, int nif, LocalDate dataNascimento, String email, String hash, String cargo) {
-        if (nome == null || nome.isEmpty()) {
-            System.out.println("Erro: Nome não pode estar vazio.");
-            return false;
-        }
+    public Resultado registarGestor(String nome, String morada, int nif, LocalDate dataNascimento, String email, String hash, String cargo) {
+        Resultado res = new Resultado();
 
-        if (morada == null || morada.isEmpty()) {
-            System.out.println("Erro: Morada não pode estar vazia.");
-            return false;
+        if (nome == null || nome.trim().isEmpty() || morada == null || morada.trim().isEmpty() ||
+                email == null || email.trim().isEmpty() || hash == null || hash.trim().isEmpty() ||
+                cargo == null || cargo.trim().isEmpty()) {
+            res.success = false;
+            res.errorMessage = "Todos os campos de texto (nome, morada, email, senha, cargo) são obrigatórios.";
+            return res;
         }
 
         if (nif <= 0) {
-            System.out.println("Erro: NIF inválido.");
-            return false;
+            res.success = false;
+            res.errorMessage = "O NIF fornecido é inválido.";
+            return res;
         }
 
         if (dataNascimento == null) {
-            System.out.println("Erro: Data de nascimento inválida.");
-            return false;
+            res.success = false;
+            res.errorMessage = "A data de nascimento fornecida é inválida.";
+            return res;
         }
 
-        if (email == null || email.isEmpty()) {
-            System.out.println("Erro: Email não pode estar vazio.");
-            return false;
-        }
-
-        if (hash == null || hash.isEmpty()) {
-            System.out.println("Erro: Dados de senha inválidos.");
-            return false;
-        }
-
-        if (cargo == null || cargo.isEmpty()) {
-            System.out.println("Erro: Cargo não pode estar vazio.");
-            return false;
-        }
-
-        // Verificar se já existe gestor com mesmo NIF
         if (gestorCRUD.procurarPorNif(nif) != null) {
-            System.out.println("Erro: Já existe gestor com este NIF.");
-            return false;
+            res.success = false;
+            res.errorMessage = "Já existe um gestor registado com este NIF.";
+            return res;
         }
 
-        // Verificar se já existe gestor com mesmo email
         if (gestorCRUD.procurarPorEmail(email) != null) {
-            System.out.println("Erro: Já existe gestor com este email.");
-            return false;
+            res.success = false;
+            res.errorMessage = "Já existe um gestor registado com este email.";
+            return res;
         }
 
         Gestor gestor = new Gestor(nome, morada, nif, dataNascimento, email, hash, cargo);
-        return gestorCRUD.registarGestor(gestor);
+
+        if (gestorCRUD.registarGestor(gestor)) {
+            res.success = true;
+        } else {
+            res.success = false;
+            res.errorMessage = "Ocorreu um erro na base de dados ao registar o gestor.";
+        }
+
+        return res;
     }
 
-    // READ - Listar todos os gestores
     public List<Gestor> listarGestores() {
         return gestorCRUD.getGestores();
     }
 
-    // READ - Procurar gestor por NIF
     public Gestor procurarGestorPorNif(int nif) {
         if (nif <= 0) {
             return null;
@@ -79,90 +71,121 @@ public class GestorController {
         return gestorCRUD.procurarPorNif(nif);
     }
 
-    // READ - Procurar gestor por email
     public Gestor procurarGestorPorEmail(String email) {
-        if (email == null || email.isEmpty()) {
+        if (email == null || email.trim().isEmpty()) {
             return null;
         }
         return gestorCRUD.procurarPorEmail(email);
     }
 
-    // UPDATE - Atualizar gestor
-    public boolean atualizarGestor(int nif, String novoNome, String novaMorada, LocalDate novaDataNascimento, String novoEmail, String novoCargo) {
+    public Resultado atualizarGestor(int nif, String novoNome, String novaMorada, LocalDate novaDataNascimento, String novoEmail, String novoCargo) {
+        Resultado res = new Resultado();
+
         if (nif <= 0) {
-            System.out.println("Erro: NIF inválido.");
-            return false;
+            res.success = false;
+            res.errorMessage = "NIF inválido.";
+            return res;
         }
 
         Gestor gestorExistente = gestorCRUD.procurarPorNif(nif);
         if (gestorExistente == null) {
-            System.out.println("Erro: Gestor não encontrado.");
-            return false;
+            res.success = false;
+            res.errorMessage = "Gestor não encontrado com o NIF informado.";
+            return res;
         }
 
-        // Usar valores existentes se novos valores forem null/vazios
-        String nomeFinal = (novoNome != null && !novoNome.isEmpty()) ? novoNome : gestorExistente.getNome();
-        String moradaFinal = (novaMorada != null && !novaMorada.isEmpty()) ? novaMorada : gestorExistente.getMorada();
+        String nomeFinal = (novoNome != null && !novoNome.trim().isEmpty()) ? novoNome : gestorExistente.getNome();
+        String moradaFinal = (novaMorada != null && !novaMorada.trim().isEmpty()) ? novaMorada : gestorExistente.getMorada();
         LocalDate dataFinal = (novaDataNascimento != null) ? novaDataNascimento : gestorExistente.getDataNascimento();
-        String emailFinal = (novoEmail != null && !novoEmail.isEmpty()) ? novoEmail : gestorExistente.getEmail();
-        String cargoFinal = (novoCargo != null && !novoCargo.isEmpty()) ? novoCargo : gestorExistente.getCargo();
+        String emailFinal = (novoEmail != null && !novoEmail.trim().isEmpty()) ? novoEmail : gestorExistente.getEmail();
+        String cargoFinal = (novoCargo != null && !novoCargo.trim().isEmpty()) ? novoCargo : gestorExistente.getCargo();
 
         Gestor gestorAtualizado = new Gestor(
-            nomeFinal,
-            moradaFinal,
-            gestorExistente.getNif(),
-            dataFinal,
-            emailFinal,
-            gestorExistente.getHash(),
-            cargoFinal
+                nomeFinal,
+                moradaFinal,
+                gestorExistente.getNif(),
+                dataFinal,
+                emailFinal,
+                gestorExistente.getHash(),
+                cargoFinal
         );
 
-        return gestorCRUD.atualizarGestor(gestorAtualizado);
-    }
-
-    // UPDATE - Alterar password
-    public boolean alterarPassword(int nif, String novoHash, String novoSalt) {
-        if (nif <= 0) {
-            System.out.println("Erro: NIF inválido.");
-            return false;
+        if (gestorCRUD.atualizarGestor(gestorAtualizado)) {
+            res.success = true;
+        } else {
+            res.success = false;
+            res.errorMessage = "Erro ao guardar as alterações na base de dados.";
         }
 
-        if (novoHash == null || novoHash.isEmpty() || novoSalt == null || novoSalt.isEmpty()) {
-            System.out.println("Erro: Dados de senha inválidos.");
-            return false;
+        return res;
+    }
+
+    public Resultado alterarPassword(int nif, String novoHash) {
+        Resultado res = new Resultado();
+
+        if (nif <= 0) {
+            res.success = false;
+            res.errorMessage = "NIF inválido.";
+            return res;
+        }
+
+        if (novoHash == null || novoHash.trim().isEmpty()) {
+            res.success = false;
+            res.errorMessage = "A nova senha não pode estar vazia.";
+            return res;
         }
 
         Gestor gestorExistente = gestorCRUD.procurarPorNif(nif);
         if (gestorExistente == null) {
-            System.out.println("Erro: Gestor não encontrado.");
-            return false;
+            res.success = false;
+            res.errorMessage = "Gestor não encontrado.";
+            return res;
         }
 
         Gestor gestorAtualizado = new Gestor(
-            gestorExistente.getNome(),
-            gestorExistente.getMorada(),
-            gestorExistente.getNif(),
-            gestorExistente.getDataNascimento(),
-            gestorExistente.getEmail(),
-            novoHash,
-            gestorExistente.getCargo()
+                gestorExistente.getNome(),
+                gestorExistente.getMorada(),
+                gestorExistente.getNif(),
+                gestorExistente.getDataNascimento(),
+                gestorExistente.getEmail(),
+                novoHash,
+                gestorExistente.getCargo()
         );
 
-        return gestorCRUD.atualizarGestor(gestorAtualizado);
+        // Se a sua classe GestorCRUD tiver o método atualizarSenha(gestorAtualizado),
+        // pode usá-lo. Aqui uso o atualizarGestor para manter a consistência do seu original.
+        if (gestorCRUD.atualizarGestor(gestorAtualizado)) {
+            res.success = true;
+        } else {
+            res.success = false;
+            res.errorMessage = "Erro ao atualizar a password na base de dados.";
+        }
+
+        return res;
     }
 
-    // DELETE - Eliminar gestor
-    public boolean eliminarGestor(int nif) {
+    public Resultado eliminarGestor(int nif) {
+        Resultado res = new Resultado();
+
         if (nif <= 0) {
-            System.out.println("Erro: NIF inválido.");
-            return false;
+            res.success = false;
+            res.errorMessage = "NIF inválido.";
+            return res;
         }
 
         if (gestorCRUD.procurarPorNif(nif) == null) {
-            System.out.println("Erro: Gestor não encontrado.");
-            return false;
+            res.success = false;
+            res.errorMessage = "Gestor não encontrado com o NIF informado.";
+            return res;
         }
 
-        return gestorCRUD.eliminarGestor(nif);
+        if (gestorCRUD.eliminarGestor(nif)) {
+            res.success = true;
+        } else {
+            res.success = false;
+            res.errorMessage = "Erro na base de dados ao tentar eliminar o gestor.";
+        }
+
+        return res;
     }
 }

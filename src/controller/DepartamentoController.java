@@ -3,56 +3,99 @@ package controller;
 import DAL.DepartamentoCRUD;
 import DAL.CursoCRUD;
 import model.Departamento;
+import model.Resultado;
 import java.util.List;
 
 public class DepartamentoController {
+
     private DepartamentoCRUD crud;
     private CursoCRUD cursoCRUD;
-    
+
     public DepartamentoController() {
         this.crud = new DepartamentoCRUD();
         this.cursoCRUD = new CursoCRUD();
     }
 
-    // Regista e devolve true (sucesso) ou false (erro) para a View
-    public boolean registarDepartamento(String nome, String sigla) {
+    public Resultado registarDepartamento(String nome, String sigla) {
+        Resultado res = new Resultado();
+
+        if (nome == null || nome.trim().isEmpty() || sigla == null || sigla.trim().isEmpty()) {
+            res.success = false;
+            res.errorMessage = "O nome e a sigla do departamento são obrigatórios.";
+            return res;
+        }
+
         Departamento novo = new Departamento(nome, sigla);
-        return crud.registarDepartamento(novo);
+
+        if (crud.registarDepartamento(novo)) {
+            res.success = true;
+        } else {
+            res.success = false;
+            res.errorMessage = "Já existe um departamento registado com a sigla '" + sigla + "'.";
+        }
+
+        return res;
     }
 
-    // Devolve a lista para a View imprimir
-    public List<Departamento> listarDepartamentos() {
+    public List<Departamento> listarTodosDepartamentos() {
         return crud.getDepartamentos();
     }
 
-    // Procura e devolve o objeto (ou null)
     public Departamento procurarDepartamento(String sigla) {
         return crud.procurarPorSigla(sigla);
     }
 
-    // Pega nos novos dados e manda o CRUD atualizar
-    public boolean atualizarDepartamento(String siglaAntiga, String novoNome) {
+    public Resultado atualizarDepartamento(String siglaAntiga, String novoNome) {
+        Resultado res = new Resultado();
+
         if (cursoCRUD.existeCursoComDepartamento(siglaAntiga)) {
-            System.out.println("Erro: O departamento tem cursos associados e não pode ser alterado!");
-            return false;
+            res.success = false;
+            res.errorMessage = "O departamento possui cursos associados e não pode ser alterado.";
+            return res;
         }
 
         Departamento dep = crud.procurarPorSigla(siglaAntiga);
 
-        if (dep != null) {
-            if (novoNome != null && !novoNome.isEmpty()) {
-                dep.setNome(novoNome);
-            }
-            return crud.atualizarDepartamento(dep);
+        if (dep == null) {
+            res.success = false;
+            res.errorMessage = "Departamento não encontrado com a sigla informada.";
+            return res;
         }
-        return false;
+
+        if (novoNome == null || novoNome.trim().isEmpty()) {
+            res.success = false;
+            res.errorMessage = "O novo nome do departamento não pode estar vazio.";
+            return res;
+        }
+
+        dep.setNome(novoNome);
+
+        if (crud.atualizarDepartamento(dep)) {
+            res.success = true;
+        } else {
+            res.success = false;
+            res.errorMessage = "Ocorreu um erro ao guardar a atualização na base de dados.";
+        }
+
+        return res;
     }
 
-    // Manda eliminar
-    public boolean eliminarDepartamento(String sigla) {
+    public Resultado eliminarDepartamento(String sigla) {
+        Resultado res = new Resultado();
+
         if (cursoCRUD.existeCursoComDepartamento(sigla)) {
-            return false;
+            res.success = false;
+            res.errorMessage = "O departamento possui cursos associados e não pode ser eliminado.";
+            return res;
         }
-        return crud.eliminarDepartamento(sigla);
+
+        if (crud.eliminarDepartamento(sigla)) {
+            res.success = true;
+        } else {
+            res.success = false;
+            res.errorMessage = "Departamento não encontrado com a sigla informada.";
+        }
+
+        return res;
     }
 }

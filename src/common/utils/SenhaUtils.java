@@ -1,8 +1,7 @@
-package Common;
+package common.utils;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.Base64;
 
 public class SenhaUtils {
@@ -11,7 +10,6 @@ public class SenhaUtils {
     public String gerarHashComSalt(String senha) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            // Junta a senha com o salt
             String senhaComSalt = senha + this.salt;
             byte[] hashBytes = digest.digest(senhaComSalt.getBytes());
 

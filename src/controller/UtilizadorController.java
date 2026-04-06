@@ -1,13 +1,13 @@
 package controller;
 
-import model.Pessoa;
-import view.PessoaView;
+import model.Utilizador;
+import view.UtilizadorView;
 
-public class PessoaController {
-    private Pessoa model;
-    private PessoaView view;
+public class UtilizadorController {
+    private Utilizador model;
+    private UtilizadorView view;
 
-    public PessoaController(Pessoa model, PessoaView view) {
+    public UtilizadorController(Utilizador model, UtilizadorView view) {
         this.model = model;
         this.view = view;
     }

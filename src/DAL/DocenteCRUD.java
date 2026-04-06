@@ -1,6 +1,8 @@
 package DAL;
 
 import model.Docente;
+import model.Estudante;
+import model.Resultado;
 import model.UnidadeCurricular;
 import java.io.*;
 import java.time.LocalDate;
@@ -60,7 +62,7 @@ public class DocenteCRUD {
                             LocalDate.parse(dados[3]), // dataNascimento
                             dados[4], // email
                             dados[5], // hash
-                            dados[7], // sigla
+                            dados[6], // sigla
                             new ArrayList<>(), // listaAvaliacao
                             new ArrayList<>()  // unidadesCurriculares
                     );
@@ -78,7 +80,7 @@ public class DocenteCRUD {
                 String ucNames = docente.getUnidadesCurriculares().stream()
                         .map(UnidadeCurricular::getNome)
                         .collect(Collectors.joining(";"));
-                String linha = String.format("%s;%s;%s;%s;%s;%s;%s;%s;%s",
+                String linha = String.format("%s;%s;%s;%s;%s;%s;%s;%s",
                         safe(docente.getNome()),
                         safe(docente.getMorada()),
                         safe(docente.getNif()),
@@ -116,6 +118,23 @@ public class DocenteCRUD {
             }
         }
         return null;
+    }
+
+    public Resultado atualizarSenha(Docente docente){
+        Resultado res = new Resultado();
+        if(docente != null){
+            for (int i = 0; i < docentes.size(); i++) {
+                if (docentes.get(i).getNif() == docente.getNif()) {
+                    docentes.set(i, docente);
+                    guardarTodosNoFicheiro();
+                    res.success = true;
+                    return res;
+                }
+            }
+        }
+        res.success = false;
+        res.errorMessage = "Erro ao atualizar o ficheiro do docente";
+        return res;
     }
 
     public Docente procurarPorSigla(String sigla) {

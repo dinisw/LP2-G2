@@ -1,21 +1,22 @@
 package view;
 
-import Common.MenuUtils;
-import Common.SenhaUtils;
+import common.utils.MenuUtils;
 import model.Estudante;
-import java.time.LocalDate;
+import model.Avaliacao;
+import controller.EstudanteController;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import controller.EstudanteController;
 
-import static Common.DesignUtils.*;
+import static common.utils.DesignUtils.*;
 
 public class EstudanteView {
-    public static void exibirMenu(Estudante estudante){
+
+    public static void exibirMenu(Estudante estudante) {
         MenuUtils.limparTela();
         Scanner ler = new Scanner(System.in);
-        String opcao = "";
+        String opcao;
         ArrayList<String> opcoes = new ArrayList<>();
         opcoes.add("1. Inscrever em Curso");
         opcoes.add("2. Consultar Ficha de Estudante");
@@ -23,100 +24,113 @@ public class EstudanteView {
         opcoes.add("0. Voltar ao Menu Principal");
 
         do {
-            MenuUtils.exibirTitulo();
-            MenuUtils.exibirSubTitulo("OPÇÕES ESTUDANTE", opcoes);
+            try {
+                MenuUtils.exibirTitulo();
+                MenuUtils.exibirSubTitulo("OPÇÕES ESTUDANTE: " + estudante.getNome().toUpperCase(), opcoes);
 
-            System.out.print("\n" + WHITE_BOLD + "Selecione uma opção: " + RESET);
-            opcao = ler.nextLine().trim();
+                System.out.print("\n" + GetWhiteBold() + "Selecione uma opção: " + GetReset());
+                opcao = ler.nextLine().trim();
 
-            switch (opcao) {
-                case "1":
-                    System.out.println("\n" + YELLOW + "[EM MANUTENÇÃO] Esta funcionalidade ainda não está finalizada." + RESET);
-                    MenuUtils.pressionarEnter(ler);
-                    break;
-                case "2":
-					consultarFichaEstudante(estudante, ler);
-                    break;
-                case "3":
-                    consultarNotasEstudante(estudante, ler);
-                    break;
-                case "0":
-                    return;
-                default:
-                    System.out.println("\n" + RED + "Opção inválida! Tente novamente." + RESET);
-                    MenuUtils.pressionarEnter(ler);
+                switch (opcao) {
+                    case "1":
+                        System.out.println("\n" + GetYellow() + "[EM MANUTENÇÃO] Esta funcionalidade ainda não está finalizada." + GetReset());
+                        MenuUtils.pressionarEnter(ler);
+                        break;
+                    case "2":
+                        consultarFichaEstudante(estudante, ler);
+                        break;
+                    case "3":
+                        consultarNotasEstudante(estudante, ler);
+                        break;
+                    case "0":
+                        System.out.println(GetYellow() + "\nA efetuar logout..." + GetReset());
+                        return;
+                    default:
+                        System.out.println("\n" + GetRed() + "Opção inválida! Tente novamente." + GetReset());
+                        MenuUtils.pressionarEnter(ler);
+                }
+            } catch (Exception e) {
+                System.out.println("\n" + GetRed() + "Ocorreu um erro na navegação: " + e.getMessage() + GetReset());
+                MenuUtils.pressionarEnter(ler);
             }
-        } while (!opcao.equals("0"));
+        } while (true);
     }
 
     public static void inscreverEmCurso(Scanner ler) {
-//        Curso c = new Curso();
-        String opcao = "";
 
+        String opcao = "";
         do {
-//            var opcoes = c.pegarCursos();
-//            menu.exibirSubTitulo("CURSOS", opcoes);
-//            System.out.println(CYAN_BOLD + bordaInferior + RESET);
-//
-//            System.out.print("\n" + WHITE_BOLD + "Selecione uma opção: " + RESET);
-//            opcao = ler.nextLine().trim();
-        }while (!opcao.equals("0"));
+            // Lógica a implementar no futuro
+        } while (!opcao.equals("0"));
     }
 
     public static void consultarFichaEstudante(Estudante estudante, Scanner ler) {
+        try {
+            System.out.println(GetCyanBold() + GetBordaSuperior() + GetReset());
+            System.out.println(GetCyanBold() + "║" + GetWhiteBold() + "            CONSULTAR FICHA DE ESTUDANTE            " + GetCyanBold() + "║" + GetReset());
+            System.out.println(GetCyanBold() + GetBordaInferior() + GetReset());
 
-        System.out.println(CYAN_BOLD + bordaSuperior + RESET);
-        System.out.println(CYAN_BOLD + "║" + WHITE_BOLD + "            CONSULTAR FICHA DE ESTUDANTE            " + CYAN_BOLD + "║" + RESET);
-        System.out.println(CYAN_BOLD + bordaInferior + RESET);
+            EstudanteController controller = new EstudanteController();
+            System.out.println(controller.obterFichaEstudanteFormatada(estudante));
 
-        EstudanteView ev = new EstudanteView();
-        EstudanteController controller = new EstudanteController(estudante, ev);
-        System.out.println(controller.exibirFichaEstudante());
-        MenuUtils.pressionarEnter(ler);
+            MenuUtils.pressionarEnter(ler);
+
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Ocorreu um erro ao carregar a ficha: " + e.getMessage() + GetReset());
+            MenuUtils.pressionarEnter(ler);
+        }
     }
 
     public static void consultarNotasEstudante(Estudante estudante, Scanner ler) {
-        DAL.AvaliacaoCRUD avaliacaoCRUD = new DAL.AvaliacaoCRUD();
-        List<model.Avaliacao> minhasNotas = avaliacaoCRUD.listarPorEstudante(estudante.getNumeroMec());
+        try {
+            List<Avaliacao> minhasNotas = estudante.getListaAvaliacoes();
 
-        System.out.println("\033[H\033[2J");
-        System.out.println(CYAN_BOLD + bordaSuperior + RESET);
-        System.out.println(CYAN_BOLD + "║" + WHITE_BOLD + "                 PAUTA DE AVALIAÇÕES                  " + CYAN_BOLD + "║" + RESET);
-        System.out.println(CYAN_BOLD + bordaMeio + RESET);
-        System.out.printf(CYAN_BOLD + "║" + RESET + " %-20s | %-15s | %-10s | %-20s " + CYAN_BOLD + "║\n" + RESET, "Disciplina", "Época", "Nota", "Estado");
-        System.out.println(CYAN_BOLD + bordaMeio + RESET);
+            System.out.println("\033[H\033[2J");
+            System.out.println(GetCyanBold() + GetBordaSuperior() + GetReset());
+            System.out.println(GetCyanBold() + "║" + GetWhiteBold() + "                 PAUTA DE AVALIAÇÕES                  " + GetCyanBold() + "║" + GetReset());
+            System.out.println(GetCyanBold() + GetBordaMeio() + GetReset());
+            System.out.printf(GetCyanBold() + "║" + GetReset() + " %-20s | %-15s | %-10s | %-20s " + GetCyanBold() + "║\n" + GetReset(), "Disciplina", "Época", "Nota", "Estado");
+            System.out.println(GetCyanBold() + GetBordaMeio() + GetReset());
 
-        if (minhasNotas.isEmpty()) {
-            System.out.println(CYAN_BOLD + "║" + YELLOW + " Ainda não existem notas registadas no seu perfil.  " + CYAN_BOLD + "║" + RESET);
-        } else {
-            for (model.Avaliacao avaliacao : minhasNotas) {
-                String notaStr;
-                String estado;
+            if (minhasNotas == null || minhasNotas.isEmpty()) {
+                System.out.println(GetCyanBold() + "║" + GetYellow() + " Ainda não existem notas registadas no seu perfil.  " + GetCyanBold() + "║" + GetReset());
+            } else {
+                for (Avaliacao avaliacao : minhasNotas) {
+                    String notaStr;
+                    String estado;
 
-                if (avaliacao.getNota() == null) {
-                    notaStr = "-";
-                    estado = YELLOW + "A Aguardar" + RESET;
-                } else {
-                    notaStr = String.format("%.2f", avaliacao.getNota());
-
-                    if (avaliacao.getNota() >= 9.5) {
-                        estado = GREEN + "Aprovado" + RESET;
+                    if (avaliacao.getNota() == null) {
+                        notaStr = "-";
+                        estado = GetYellow() + "A Aguardar" + GetReset();
                     } else {
-                        estado = RED + "Reprovado" + RESET;
+                        notaStr = String.format("%.2f", avaliacao.getNota());
+
+                        if (avaliacao.getNota() >= 9.5) {
+                            estado = GetGreen() + "Aprovado" + GetReset();
+                        } else {
+                            estado = GetRed() + "Reprovado" + GetReset();
+                        }
                     }
+
+                    String nomeUc = (avaliacao.getUnidadeCurricular() != null) ? avaliacao.getUnidadeCurricular().getNome() : "UC Desconhecida";
+
+                    System.out.printf(GetCyanBold() + "║" + GetReset() + " %-20s | %-15s | %-10s | %-29s " + GetCyanBold() + "║\n" + GetReset(),
+                            nomeUc, avaliacao.getMomento(), notaStr, estado);
                 }
 
-                System.out.printf(CYAN_BOLD + "║" + RESET + " %-20s | %-15s | %-10s | %-29s " + CYAN_BOLD + "║\n" + RESET,
-                        avaliacao.getUnidadeCurricular().getNome(), avaliacao.getMomento(), notaStr, estado);
-            }
+                System.out.println(GetCyanBold() + GetBordaMeio() + GetReset());
 
-            System.out.println(CYAN_BOLD + bordaMeio + RESET);
-            double media = BLL.NotasCalculo.calcularMedia(minhasNotas);
-            if (media > 0) {
-                System.out.printf(CYAN_BOLD + "║" + WHITE_BOLD + " MÉDIA ATUAL DO CURSO: %-46.2f" + CYAN_BOLD + "║\n" + RESET, media);
+                double media = BLL.NotasCalculo.calcularMedia(minhasNotas);
+                if (media > 0) {
+                    System.out.printf(GetCyanBold() + "║" + GetWhiteBold() + " MÉDIA ATUAL DO CURSO: %-46.2f" + GetCyanBold() + "║\n" + GetReset(), media);
+                }
             }
+            System.out.println(GetCyanBold() + GetBordaInferior() + GetReset());
+            MenuUtils.pressionarEnter(ler);
+
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Ocorreu um erro ao carregar as notas: " + e.getMessage() + GetReset());
+            MenuUtils.pressionarEnter(ler);
         }
-        System.out.println(CYAN_BOLD + bordaInferior + RESET);
-        Common.MenuUtils.pressionarEnter(ler);
     }
 }
