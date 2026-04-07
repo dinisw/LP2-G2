@@ -13,7 +13,7 @@ public class BackendUtils {
     private static final String REGEX_EMAIL_DOCENTE_ISSMF = "^[a-zA-Z]{3}@issmf\\.ipp\\.pt$";
     private static final Pattern PATTERN_DOCENTE_ISSMF = Pattern.compile(REGEX_EMAIL_DOCENTE_ISSMF);
 
-    private static final String REGEX_EMAIL_ESTUDANTE_ISSMF = "^\\d{8}@issmf\\.ipp\\.pt$";
+    private static final String REGEX_EMAIL_ESTUDANTE_ISSMF = "^\\d{7}@issmf\\.ipp\\.pt$";
     private static final Pattern PATTERN_ESTUDANTE_ISSMF = Pattern.compile(REGEX_EMAIL_ESTUDANTE_ISSMF);
 
     public static boolean emailISSMFEstudanteValido(String email) {return PATTERN_ESTUDANTE_ISSMF.matcher(email).matches();}
