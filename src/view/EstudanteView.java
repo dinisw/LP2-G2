@@ -4,6 +4,7 @@ import common.utils.MenuUtils;
 import model.Estudante;
 import model.Avaliacao;
 import controller.EstudanteController;
+import org.jline.builtins.ConsoleOptionGetter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,12 +57,63 @@ public class EstudanteView {
         } while (true);
     }
 
-    public static void inscreverEmCurso(Scanner ler) {
+    public static void inscreverEmCurso(Estudante estudante, Scanner ler) {
+        System.out.println(GetCyanBold() + GetBordaSuperior() + GetReset());
+        System.out.println(GetCyanBold() + "║" + GetWhiteBold() + "               INSCRIÇÃO EM CURSO               " + GetCyanBold() + "║" + GetReset());
+        System.out.println(GetCyanBold() + GetBordaInferior() + GetReset());
 
-        String opcao = "";
-        do {
-            // Lógica a implementar no futuro
-        } while (!opcao.equals("0"));
+        DAL.CursoCRUD cursoCRUD = new DAL.CursoCRUD();
+        List<model.Curso> todosCursos = cursoCRUD.getCursos();
+        List<model.Curso> cursosDisponiveis = new java.util.ArrayList<>();
+
+        for (model.Curso curso : todosCursos) {
+            if(!curso.isIniciado()) {
+                cursosDisponiveis.add(curso);
+            }
+        }
+
+        if (estudante.getNomeCurso() != null && !estudante.getNomeCurso().equals("SEM REGISTO")) {
+            model.Curso cursoAtual = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
+            if (cursoAtual != null && cursoAtual.isIniciado()) {
+                System.out.println(GetRed() + "O seu curso atual ('" + cursoAtual.getNome() + "') já iniciou o ano letivo." + GetReset());
+                System.out.println(GetYellow() + "As transferências de curso encontram-se bloqueadas." + GetReset());
+                MenuUtils.pressionarEnter(ler);
+                return;
+            }
+        }
+
+        if (cursosDisponiveis.isEmpty()) {
+            System.out.println(GetYellow() + "De momento não existem curso com inscrições abertas." + GetReset());
+            MenuUtils.pressionarEnter(ler);
+            return;
+        }
+        System.out.println("\nCursos com Inscrições Abertas:\n");
+        for (int i = 0; i < cursosDisponiveis.size(); i++) {
+            System.out.println(GetWhiteBold() + (i + 1) + ". " + GetReset() + cursosDisponiveis.get(i).getNome() + " (" + cursosDisponiveis.get(i).getDuracao() + " anos)");
+        }
+        System.out.println(GetWhiteBold() + "0. " + GetReset() + "Cancelar e Voltar");
+
+        System.out.print("\nEscolha o número do curso pretendido: ");
+        try {
+            int escolha = Integer.parseInt(ler.nextLine().trim());
+            if (escolha == 0) return;
+
+            if (escolha > 0 && escolha <= cursosDisponiveis.size()) {
+                String cursoEscolhido = cursosDisponiveis.get(escolha - 1).getNome();
+                EstudanteController estudanteController = new EstudanteController();
+                if(estudanteController.atualizarEstudante(estudante.getNumeroMec(), null, null, null, cursoEscolhido).success) {
+                    estudante.setNomeCurso(cursoEscolhido);
+                    System.out.println(GetGreen() + "\nParabéns! Inscrição no curso de " + cursoEscolhido + " realizada com sucesso!" + GetReset());
+                } else {
+                    System.out.println(GetRed() + "\nErro ao processar a inscrição no sistema." + GetReset());
+                }
+            } else {
+                System.out.println(GetRed() + "Opção inválida." + GetReset());
+            }
+        } catch (NumberFormatException e) {
+            System.out.println(GetRed() + "Entrada inválida. Digite apenas números." + GetReset());
+        }
+        MenuUtils.pressionarEnter(ler);
     }
 
     public static void consultarFichaEstudante(Estudante estudante, Scanner ler) {

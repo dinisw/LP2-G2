@@ -18,6 +18,8 @@ public class UnidadeCurricularCRUD {
         File ficheiro = new File(CAMINHO_FICHEIRO);
         if (!ficheiro.exists()) return;
 
+        DAL.DocenteCRUD docenteCRUD = new DAL.DocenteCRUD();
+
         try (BufferedReader reader = new BufferedReader(new FileReader(CAMINHO_FICHEIRO))) {
             String linha;
             while ((linha = reader.readLine()) != null) {
@@ -25,6 +27,11 @@ public class UnidadeCurricularCRUD {
                 if (dados.length >= 2) {
                     String nome = dados[0];
                     int ano = Integer.parseInt(dados[1]);
+
+                    model.Docente docente = null;
+                    if(dados.length >= 3 && !dados[2].equals("SEM REGISTO")) {
+                        docente = docenteCRUD.procurarPorSigla(dados[2]);
+                    }
 
                     UnidadeCurricular uc = new UnidadeCurricular(nome, ano, null);
                     ucs.add(uc);
@@ -39,6 +46,8 @@ public class UnidadeCurricularCRUD {
     private void guardarTodosNoFicheiro() {
         try (PrintWriter print = new PrintWriter(new FileWriter(CAMINHO_FICHEIRO))) {
             for (UnidadeCurricular uc : ucs) {
+                String siglaDocente = (uc.getDocente() != null) ? uc.getDocente().getSigla() : "SEM REGISTO";
+
                 String linha = String.format("%s;%s",
                         safe(uc.getNome()),
                         uc.getAnoCurricular());

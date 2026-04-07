@@ -8,12 +8,14 @@ public class Curso {
     private int duracao = 3;
     private Departamento departamento;
     private List<UnidadeCurricular> uc;
+    private boolean iniciado;
 
     public Curso(String nome, int duracao, Departamento departamento) {
         this.nome = nome;
         this.duracao = duracao;
         this.departamento = departamento;
         this.uc = new ArrayList<>();
+        this.iniciado = false;
     }
 
     public String getNome() {
@@ -44,6 +46,14 @@ public class Curso {
         return new ArrayList<>(uc);
     }
 
+    public boolean isIniciado() {
+        return iniciado;
+    }
+
+    public void setIniciado(boolean iniciado) {
+        this.iniciado = iniciado;
+    }
+
     public boolean adicionarUnidadeCurricular(UnidadeCurricular novaUc) {
         int contagemAno = 0;
 
@@ -66,11 +76,10 @@ public class Curso {
 
     @Override
     public String toString() {
-        return "Curso [" +
-                "nome='" + nome + '\'' +
-                ", duracao=" + duracao +
-                ", departamento=" + departamento +
-                ", uc=" + getUc() +
-                '}';
+        String nomeDepartamento = (departamento != null) ? departamento.getNome() : "Sem Departamento Associado";
+        String estado = iniciado ? "Em curso (Bloqueado a inscrições)" : "Não iniciado (Inscrições Abertas)";
+
+        return String.format("Curso: %s | Duração: %d anos | Departamento: %s | UCs Inseridas: %d | Estado: %s",
+                nome, duracao, nomeDepartamento, uc.size(), estado);
     }
 }

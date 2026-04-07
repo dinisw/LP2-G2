@@ -138,7 +138,7 @@ public class DocenteCRUD {
     }
 
     public Docente procurarPorSigla(String sigla) {
-        for (Docente docente : docentes) {
+        for (model.Docente docente : docentes) {
             if (docente.getSigla().equalsIgnoreCase(sigla)) {
                 return docente;
             }

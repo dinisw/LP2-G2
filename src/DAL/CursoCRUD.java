@@ -29,15 +29,16 @@ public class CursoCRUD {
             String linha;
             while ((linha = reader.readLine()) != null) {
                 String[] dados = linha.split(";");
-                if (dados.length >= 3) {
+                if (dados.length >= 4) {
                     String nomeCurso = dados[0];
                     int duracao = Integer.parseInt(dados[1]);
                     String siglaDep = dados[2];
                     Departamento dep = depCRUD.procurarPorSigla(siglaDep);
 
                     Curso curso = new Curso(nomeCurso, duracao, dep);
-                    if (dados.length > 3) {
-                        for (int i = 3; i < dados.length; i++) {
+                    curso.setIniciado(Boolean.parseBoolean(dados[3]));
+                    if (dados.length > 4) {
+                        for (int i = 4; i < dados.length; i++) {
                             UnidadeCurricular uc = ucCRUD.procurarPorNome(dados[i]);
                             if (uc != null) {
                                 curso.adicionarUnidadeCurricular(uc);
@@ -57,7 +58,7 @@ public class CursoCRUD {
             for (Curso curso : cursos) {
                 String sigla = (curso.getDepartamento() != null) ? curso.getDepartamento().getSigla() : "SEM_DEP";
                 StringBuilder sb = new StringBuilder();
-                sb.append(safe(curso.getNome())).append(";").append(curso.getDuracao()).append(";").append(sigla);
+                sb.append(safe(curso.getNome())).append(";").append(curso.getDuracao()).append(";").append(sigla).append(";").append(curso.isIniciado());
                 
                 for (UnidadeCurricular uc : curso.getUc()) {
                     sb.append(";").append(safe(uc.getNome()));
