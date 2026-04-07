@@ -53,25 +53,20 @@ public class Docente extends Utilizador {
         return true;
     }
 
-    public boolean removerUnidadeCurricular(UnidadeCurricular uc) {
-        return unidadesCurriculares.remove(uc);
-    }
-
     public List<Avaliacao> getListaAvaliacao() {
         return listaAvaliacao;
     }
 
-    public void setListaAvaliacao(List<Avaliacao> listaAvaliacao) {
-        this.listaAvaliacao = listaAvaliacao;
+
+    @Override
+    public String toString() {
+        return String.format(
+                "===== FICHA DE DOCENTE =====\n" +
+                        "%s\n" +
+                        "Sigla: %s\n" +
+                        "============================",
+                super.toString(),
+                sigla
+        );
     }
-
-    public boolean registarAvaliacao(Avaliacao nota) {
-        if(listaAvaliacao.size() >= 3){
-            return false;
-        }
-        listaAvaliacao.add(nota);
-        return true;
-    }
-
-
 }

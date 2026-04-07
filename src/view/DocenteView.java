@@ -41,6 +41,7 @@ public class DocenteView {
         opcoes.add("1. Ver minhas Unidades Curriculares");
         opcoes.add("2. Alterar minha Password");
         opcoes.add("3. Lançar Nota de Avaliação");
+        opcoes.add("4. Consultar ficha docente");
         opcoes.add("0. Logout");
 
         do {
@@ -58,6 +59,9 @@ public class DocenteView {
                         break;
                     case "3":
                         lancarNotaDocente(docente);
+                        break;
+                    case "4":
+                        consultarFichaDocente(docente);
                         break;
                     case "0":
                         System.out.println(GetYellow() + "\nA efetuar logout..." + GetReset());
@@ -225,4 +229,23 @@ public class DocenteView {
             MenuUtils.pressionarEnter(scanner);
         }
     }
+
+    private void consultarFichaDocente(Docente docente){
+        try {
+            System.out.println(docente.toString());
+            System.out.println("Unidades Curriculares Atribuídas:");
+            if (docente.getUnidadesCurriculares() == null || docente.getUnidadesCurriculares().isEmpty()) {
+                System.out.println(GetYellow() + "Nenhuma unidade curricular atribuída." + GetReset());
+            } else {
+                for (UnidadeCurricular uc : docente.getUnidadesCurriculares()) {
+                    System.out.println("- " + uc.getNome() + " (Ano: " + uc.getAnoCurricular() + ")");
+                }
+            }
+            MenuUtils.pressionarEnter(scanner);
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Ocorreu um erro inesperado: " + e.getMessage() + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        }
+    }
+
 }
