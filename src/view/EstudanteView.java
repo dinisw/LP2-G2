@@ -22,7 +22,7 @@ public class EstudanteView {
         opcoes.add("1. Inscrever em Curso");
         opcoes.add("2. Consultar Ficha de Estudante");
         opcoes.add("3. Verificar Notas de Avaliação");
-        opcoes.add("0. Voltar ao Menu Principal");
+        opcoes.add("0. Logout");
 
         do {
             try {
