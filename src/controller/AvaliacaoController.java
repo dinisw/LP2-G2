@@ -1,5 +1,8 @@
 package controller;
 
+import model.Avaliacao;
+import java.util.List;
+
 public class AvaliacaoController {
 
     private DAL.AvaliacaoCRUD avaliacaoCRUD;
@@ -29,5 +32,10 @@ public class AvaliacaoController {
 
         return avaliacaoCRUD.registarAvaliacao(avaliacao);
     }
-
+    public List<Avaliacao> listarAvaliacoesPorUC(String nomeUC) {
+        if (nomeUC == null || nomeUC.trim().isEmpty()) {
+            return null;
+        }
+        return avaliacaoCRUD.listarPorUnidadeCurricular(nomeUC);
+    }
 }

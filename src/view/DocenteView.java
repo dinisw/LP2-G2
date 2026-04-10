@@ -17,6 +17,7 @@ import org.jline.reader.LineReaderBuilder;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -42,6 +43,7 @@ public class DocenteView {
         opcoes.add("2. Alterar minha Password");
         opcoes.add("3. Lançar Nota de Avaliação");
         opcoes.add("4. Consultar ficha docente");
+        opcoes.add("5. Consultar Pauta de Alunos (Ordenada)");
         opcoes.add("0. Logout");
 
         do {
@@ -63,6 +65,8 @@ public class DocenteView {
                     case "4":
                         consultarFichaDocente(docente);
                         break;
+                    case "5":
+                        consultarPautaOrdenada(docente);
                     case "0":
                         System.out.println(GetYellow() + "\nA efetuar logout..." + GetReset());
                         return;
@@ -247,5 +251,125 @@ public class DocenteView {
             MenuUtils.pressionarEnter(scanner);
         }
     }
+
+    private void consultarPautaOrdenada(Docente docente) {
+        try {
+            System.out.println(GetBlue() + "\n--- CONSULTAR PAUTA DE ALUNOS ---" + GetReset());
+
+            List<UnidadeCurricular> ucs = docente.getUnidadesCurriculares();
+
+            if(ucs == null || ucs.isEmpty()) {
+                System.out.println(GetYellow() + "Não tem Unidades Curriculares atribuídas neste momento." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+            System.out.println(GetWhiteBold() + "As suas Unidades Curriculares:" + GetReset());
+            for (int i = 0; i < ucs.size(); i++) {
+                System.out.println((i + 1) + ". " + ucs.get(i).getNome());
+            }
+
+            int escolhaUC = -1;
+            boolean ucValida = false;
+            while (!ucValida) {
+                try {
+                    String ucStr = BackendUtils.lerInputString(scanner, "\nSelecione o número da UC para ver a pauta (ou 0 para cancelar): ");
+                    escolhaUC = Integer.parseInt(ucStr);
+
+                    if (escolhaUC == 0) return;
+
+                    if (escolhaUC >= 1 && escolhaUC <= ucs.size()) {
+                        ucValida = true;
+                    } else {
+                        System.out.println(GetRed() + "Avisp: Escolha inválida." + GetReset());
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println(GetRed() + "Aviso: O valor deve ser um número." + GetReset());
+                }
+            }
+
+            UnidadeCurricular ucSelecionada = ucs.get(escolhaUC - 1);
+            List<model.Avaliacao> avaliacoesUC = avaliacaoController.listarAvaliacoesPorUC(ucSelecionada.getNome());
+
+            if (avaliacoesUC == null || avaliacoesUC.isEmpty()) {
+                System.out.println(GetYellow() + "\nAinda não existem avaliações registadas para a UC " + ucSelecionada.getNome() + "." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            System.out.println("\n" + GetWhiteBold() + "Como deseja ordenar a pauta?" + GetReset());
+            System.out.println("1. Ordem Alfabética (Nome do Aluno)");
+            System.out.println("2. Nota mais alta para mais baixa");
+            System.out.println("3. Nota mais baixa para mais alta");
+
+            String ordem = "";
+            while (!ordem.equals("1") && !ordem.equals("2") && !ordem.equals("3")) {
+                System.out.print("Escolha uma opção (1-3): ");
+                ordem = scanner.nextLine().trim();
+            }
+
+            switch (ordem) {
+                case "1":
+                    avaliacoesUC.sort((a1, a2) -> a1.getEstudante().getNome().compareToIgnoreCase(a2.getEstudante().getNome()));
+                    break;
+                case "2":
+                    avaliacoesUC.sort((a1, a2) -> {
+                        Double nota1 = (a1.getNota() != null) ? a1.getNota() : -1.0;
+                        Double nota2 = (a2.getNota() != null) ? a2.getNota() : -1.0;
+                        return nota2.compareTo(nota1); // Ordem Descendente
+                    });
+                    break;
+                case "3":
+                    avaliacoesUC.sort((a1, a2) -> {
+                        Double nota1 = (a1.getNota() != null) ? a1.getNota() : -1.0;
+                        Double nota2 = (a2.getNota() != null) ? a2.getNota() : -1.0;
+                        return nota1.compareTo(nota2); // Ordem Ascendente
+                    });
+                    break;
+            }
+            System.out.println("\n" + GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
+            System.out.printf(GetWhiteBold() + " %-30s | %-15s | %-15s | %-10s\n" + GetReset(), "NOME DO ESTUDANTE", "Nº MEC", "ÉPOCA", "NOTA");
+            System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
+
+            for (model.Avaliacao avaliacao : avaliacoesUC) {
+                String nomeEstudante = avaliacao.getEstudante().getNome();
+                int mec = avaliacao.getEstudante().getNumeroMec();
+                String epoca = avaliacao.getMomento();
+                String notaStr = (avaliacao.getNota() == null) ? GetYellow() + "A Aguardar" + GetReset() : String.format("%.2f", avaliacao.getNota());
+
+                System.out.printf(" %-30s | %-15d | %-15s | %-10s\n", nomeEstudante, mec, epoca, notaStr);
+            }
+            System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
+
+            MenuUtils.pressionarEnter(scanner);
+        }
+        catch (Exception e) {
+            System.out.println(GetRed() + "Ocorreu um erro ao carregar a pauta: " + e.getMessage() + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 }

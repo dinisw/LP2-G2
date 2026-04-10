@@ -5,12 +5,14 @@ import java.time.LocalDate;
 public class UnidadeCurricular {
     private String nome;
     private int anoCurricular;
+    private int semestre;
     private Docente docente;
     private final int ects = 6; // Valor fixo conforme requisito
 
-    public UnidadeCurricular(String nome, int anoCurricular, Docente docente) {
+    public UnidadeCurricular(String nome, int anoCurricular,int semestre, Docente docente) {
         this.nome = nome;
         this.anoCurricular = anoCurricular;
+        this.semestre = semestre;
         this.docente = docente;
     }
 
@@ -30,6 +32,14 @@ public class UnidadeCurricular {
         this.anoCurricular = anoCurricular;
     }
 
+    public int getSemestre() {
+        return semestre;
+    }
+
+    public void setSemestre(int semestre) {
+        this.semestre = semestre;
+    }
+
     public Docente getDocente() {
         return docente;
     }
@@ -47,6 +57,7 @@ public class UnidadeCurricular {
         return "UnidadeCurricular{" +
                 "nome='" + nome + '\'' +
                 ", anoCurricular=" + anoCurricular +
+                ", semestre=" + semestre +
                 ", docente=" + docente +
                 ", ects=" + ects +
                 '}';

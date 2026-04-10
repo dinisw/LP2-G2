@@ -11,12 +11,13 @@ public class Estudante extends Utilizador {
     private int anoLetivo;
     private List<Avaliacao> listaAvaliacoes;
 
-    public Estudante(String nome, String morada, int nif, LocalDate dataNascimento, String email, int numeroMec, String hash, String nomeCurso) {
+    public Estudante(String nome, String morada, int nif, LocalDate dataNascimento, String email, int numeroMec, String hash, String nomeCurso, boolean ativo) {
         super(nome, morada, nif, dataNascimento, email, hash);
         this.nomeCurso = nomeCurso;
         this.anoLetivo = 1;
         this.listaAvaliacoes = new ArrayList<>();
         this.numeroMec = numeroMec;
+        this.setAtivo(ativo);
     }
 
     public int getNumeroMec() {
