@@ -18,7 +18,7 @@ public class UnidadeCurricularController {
         this.docenteCRUD = new DocenteCRUD();
     }
 
-    public Resultado registarUC(String nome, int ano, String siglaDocente) {
+    public Resultado registarUC(String nome, int ano,int semestre, String siglaDocente) {
         Resultado res = new Resultado();
 
         if (nome == null || nome.trim().isEmpty()) {
@@ -30,6 +30,12 @@ public class UnidadeCurricularController {
         if (ano < 1 || ano > 3) {
             res.success = false;
             res.errorMessage = "O ano curricular deve ser 1, 2 ou 3.";
+            return res;
+        }
+
+        if (semestre < 1 || semestre > 2) {
+            res.success = false;
+            res.errorMessage = "O semestre deve ser 1 ou 2.";
             return res;
         }
 
@@ -49,7 +55,7 @@ public class UnidadeCurricularController {
             }
         }
 
-        UnidadeCurricular novaUC = new UnidadeCurricular(nome, ano, docente);
+        UnidadeCurricular novaUC = new UnidadeCurricular(nome, ano,semestre, docente);
 
         if (ucCRUD.registarUC(novaUC)) {
             res.success = true;
@@ -72,7 +78,7 @@ public class UnidadeCurricularController {
         return ucCRUD.procurarPorNome(nome);
     }
 
-    public Resultado atualizarUC(String nomeAtual, String novoNome, int novoAno, String novaSiglaDocente) {
+    public Resultado atualizarUC(String nomeAtual, String novoNome, int novoAno,int novoSemestre, String novaSiglaDocente) {
         Resultado res = new Resultado();
 
         if (nomeAtual == null || nomeAtual.trim().isEmpty()) {
@@ -91,6 +97,8 @@ public class UnidadeCurricularController {
         String novoNomeReal = (novoNome == null || novoNome.trim().isEmpty()) ? nomeAtual : novoNome;
         int novoAnoReal = (novoAno <= 0) ? ucExistente.getAnoCurricular() : novoAno;
 
+        int novoSemestreReal = (novoSemestre <= 0) ? ucExistente.getSemestre(): novoSemestre;
+
         Docente novoDocente = ucExistente.getDocente();
         if (novaSiglaDocente != null && !novaSiglaDocente.trim().isEmpty()) {
             novoDocente = docenteCRUD.procurarPorSigla(novaSiglaDocente);
@@ -101,7 +109,7 @@ public class UnidadeCurricularController {
             }
         }
 
-        UnidadeCurricular ucAtualizada = new UnidadeCurricular(novoNomeReal, novoAnoReal, novoDocente);
+        UnidadeCurricular ucAtualizada = new UnidadeCurricular(novoNomeReal, novoAnoReal,novoSemestreReal, novoDocente);
 
         if (ucCRUD.atualizarUC(nomeAtual, ucAtualizada)) {
             res.success = true;

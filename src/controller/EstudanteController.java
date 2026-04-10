@@ -98,7 +98,7 @@ public class EstudanteController {
         int numeroMec = estudanteCRUD.gerarNumeroMecanografico();
         String email = numeroMec + "@issmf.ipp.pt";
 
-        Estudante estudante = new Estudante(nome, morada, nif, dataNascimento, email, numeroMec, hash, curso);
+        Estudante estudante = new Estudante(nome, morada, nif, dataNascimento, email, numeroMec, hash, curso,true);
 
         if (estudanteCRUD.registarEstudante(estudante)) {
             res.success = true;
@@ -194,19 +194,38 @@ public class EstudanteController {
             return res;
         }
 
+        Estudante estudante = estudanteCRUD.lerEstudante(numeroMec);
+
         if (estudanteCRUD.lerEstudante(numeroMec) == null) {
             res.success = false;
             res.errorMessage = "Estudante não encontrado com o Número Mecanográfico informado.";
             return res;
         }
 
-        if (estudanteCRUD.eliminarEstudante(numeroMec)) {
-            res.success = true;
-        } else {
-            res.success = false;
-            res.errorMessage = "Erro na base de dados ao tentar eliminar o estudante.";
-        }
+        if (estudante.getNomeCurso() != null && !estudante.getNomeCurso().equals("SEM REGISTO")) {
+            if (!estudante.isAtivo()) {
+                res.success = false;
+                res.errorMessage = "O Estudante já se encontra inativo.";
+                return res;
+            }
+            estudante.setAtivo(false);
 
+            if (estudanteCRUD.atualizarEstudante(estudante)) {
+                res.success = true;
+                res.object = "INATIVADO";
+            } else {
+                res.success = false;
+                res.errorMessage = "Erro ao inativar o estudante na base de dados.";
+            }
+        } else {
+            if (estudanteCRUD.eliminarEstudante(numeroMec)) {
+                res.success = true;
+                res.object = "ELIMINADO";
+            } else {
+                res.success = false;
+                res.errorMessage = "Erro na base de dados ao tentar eliminar o estudante.";
+            }
+        }
         return res;
     }
 }

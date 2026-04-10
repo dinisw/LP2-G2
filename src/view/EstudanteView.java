@@ -141,7 +141,7 @@ public class EstudanteView {
             System.out.println(GetCyanBold() + GetBordaSuperior() + GetReset());
             System.out.println(GetCyanBold() + "║" + GetWhiteBold() + "                 PAUTA DE AVALIAÇÕES                  " + GetCyanBold() + "║" + GetReset());
             System.out.println(GetCyanBold() + GetBordaMeio() + GetReset());
-            System.out.printf(GetCyanBold() + "║" + GetReset() + " %-20s | %-15s | %-10s | %-20s " + GetCyanBold() + "║\n" + GetReset(), "Disciplina", "Época", "Nota", "Estado");
+            System.out.printf(GetCyanBold() + "║" + GetReset() + " %-10s | %-10s | %-20s | %-6s | %-25s " + GetCyanBold() + "║\n" + GetReset(), "Ano Letivo", "Semestre", "Disciplina", "Nota", "Estado");
             System.out.println(GetCyanBold() + GetBordaMeio() + GetReset());
 
             if (minhasNotas == null || minhasNotas.isEmpty()) {
@@ -153,7 +153,7 @@ public class EstudanteView {
 
                     if (avaliacao.getNota() == null) {
                         notaStr = "-";
-                        estado = GetYellow() + "A Aguardar" + GetReset();
+                        estado = GetYellow() + "A Aguardar lançamento" + GetReset();
                     } else {
                         notaStr = String.format("%.2f", avaliacao.getNota());
 
@@ -164,10 +164,18 @@ public class EstudanteView {
                         }
                     }
 
-                    String nomeUc = (avaliacao.getUnidadeCurricular() != null) ? avaliacao.getUnidadeCurricular().getNome() : "UC Desconhecida";
+                    String nomeUc = "Desconhecida";
+                    String anoLetivo = "-";
+                    String semestre = "-";
 
-                    System.out.printf(GetCyanBold() + "║" + GetReset() + " %-20s | %-15s | %-10s | %-29s " + GetCyanBold() + "║\n" + GetReset(),
-                            nomeUc, avaliacao.getMomento(), notaStr, estado);
+                    if (avaliacao.getUnidadeCurricular() != null) {
+                        nomeUc = avaliacao.getUnidadeCurricular().getNome();
+                        anoLetivo = String.valueOf(avaliacao.getUnidadeCurricular().getAnoCurricular()) + "º Ano";
+                        semestre = String.valueOf(avaliacao.getUnidadeCurricular().getSemestre()) + "º Sem";
+                    }
+
+                    System.out.printf(GetCyanBold() + "║" + GetReset() + " %-10s | %-10s | %-20s | %-6s | %-34s " + GetCyanBold() + "║\n" + GetReset(),
+                            anoLetivo, semestre, nomeUc, notaStr, estado);
                 }
 
                 System.out.println(GetCyanBold() + GetBordaMeio() + GetReset());

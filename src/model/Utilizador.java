@@ -10,6 +10,7 @@ public abstract class Utilizador {
     private LocalDate dataNascimento;
     private String morada;
     private String hash;
+    private boolean ativo;
 
 
     public Utilizador() {
@@ -19,6 +20,7 @@ public abstract class Utilizador {
         dataNascimento = null;
         morada = "";
         hash = "";
+        ativo = true;
     }
 
     public Utilizador(String nome, String morada, int nif, LocalDate dataNascimento, String email, String hash) {
@@ -28,6 +30,7 @@ public abstract class Utilizador {
         this.dataNascimento = dataNascimento;
         this.email = email;
         this.hash = hash;
+        this.ativo = true;
     }
 
     public String getNome() {
@@ -77,6 +80,13 @@ public abstract class Utilizador {
         this.hash = hash;
     }
 
+    public boolean isAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(boolean ativo) {
+        this.ativo = ativo;
+    }
 
     @Override
     public String toString() {

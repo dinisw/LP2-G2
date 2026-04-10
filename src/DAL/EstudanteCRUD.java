@@ -26,8 +26,10 @@ public class EstudanteCRUD {
             String linha;
             while((linha = reader.readLine()) != null){
                 String[] dados = linha.split(";");
-                if(dados.length >= 8){
+                if(dados.length >= 9){
                     String hash = dados[6];
+                    boolean ativo = Boolean.parseBoolean(dados[8]);
+
                     Estudante estudante = new Estudante(
                             dados[0], // nome
                             dados[1], // morada
@@ -36,7 +38,10 @@ public class EstudanteCRUD {
                             dados[4], // email
                             Integer.parseInt(dados[5]), // numeroMec
                             hash, // hash
-                            dados[7]);
+                            dados[7],
+                            ativo
+                    );
+
                     estudantes.add(estudante);
                     if(estudante.getNumeroMec() >= numeroMecCounter) {
                         numeroMecCounter = estudante.getNumeroMec() + 1;
@@ -78,7 +83,7 @@ public class EstudanteCRUD {
     private void guardarTodosNoFicheiro() {
         try (PrintWriter print = new PrintWriter(new FileWriter(CAMINHO_FICHEIRO))) {
             for (Estudante estudante : estudantes) {
-                String linha = String.format("%s;%s;%s;%s;%s;%s;%s;%s",
+                String linha = String.format("%s;%s;%s;%s;%s;%s;%s;%s;%s",
                         safe(estudante.getNome()),
                         safe(estudante.getMorada()),
                         safe(estudante.getNif()),
@@ -86,7 +91,8 @@ public class EstudanteCRUD {
                         safe(estudante.getEmail()),
                         safe(estudante.getNumeroMec()),
                         safe(estudante.getHash()),
-                        safe(estudante.getNomeCurso()));
+                        safe(estudante.getNomeCurso()),
+                        estudante.isAtivo());
                 print.println(linha);
             }
         } catch (IOException e) {

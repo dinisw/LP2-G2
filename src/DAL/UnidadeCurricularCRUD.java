@@ -26,17 +26,18 @@ public class UnidadeCurricularCRUD {
             String linha;
             while ((linha = reader.readLine()) != null) {
                 String[] dados = linha.split(";");
-                if (dados.length >= 2) {
+                if (dados.length >= 3) {
                     String nome = dados[0];
                     int ano = Integer.parseInt(dados[1]);
+                    int semestre = Integer.parseInt(dados[2]);
 
                     Docente docente = null;
-                    if (dados.length >= 3 && !dados[2].equals("SEM REGISTO")) {
-                        docente = docenteCRUD.procurarPorSigla(dados[2]);
+                    if (dados.length >= 4 && !dados[3].equals("SEM REGISTO")) {
+                        docente = docenteCRUD.procurarPorSigla(dados[3]);
                     }
 
                     // CORREÇÃO: Estava a passar 'null' fixo, agora passa a variável docente correta!
-                    UnidadeCurricular uc = new UnidadeCurricular(nome, ano, docente);
+                    UnidadeCurricular uc = new UnidadeCurricular(nome, ano,semestre, docente);
                     ucs.add(uc);
                 }
             }
@@ -51,9 +52,10 @@ public class UnidadeCurricularCRUD {
                 String siglaDocente = (uc.getDocente() != null) ? uc.getDocente().getSigla() : "SEM REGISTO";
 
                 // CORREÇÃO: Faltava adicionar o %s para gravar o docente no ficheiro
-                String linha = String.format("%s;%s;%s",
+                String linha = String.format("%s;%s;%s;%s",
                         safe(uc.getNome()),
                         uc.getAnoCurricular(),
+                        uc.getSemestre(),
                         siglaDocente);
                 print.println(linha);
             }

@@ -85,10 +85,26 @@ public class UnidadeCurricularView {
                 }
             }
 
+            int semestre = 0;
+            boolean semestreValido = false;
+            while (!semestreValido) {
+                try {
+                    String semStr = BackendUtils.lerInputString(scanner, "Semestre (1 ou 2): ");
+                    semestre = Integer.parseInt(semStr);
+                    if (semestre == 1 || semestre == 2) {
+                        semestreValido = true;
+                    } else {
+                        System.out.println(GetRed() + "Aviso: O Semestre deve ser 1 ou 2." + GetReset());
+                    }
+                } catch (NumberFormatException e) {
+                System.out.println(GetRed() + "Aviso: O valor introduzido não é um número válido." + GetReset());
+                }
+            }
+
             listarDocentesDisponiveis();
             String siglaDocente = BackendUtils.lerInputString(scanner, "\nSigla do Docente Responsável (ou prima Enter para nenhum): ").toUpperCase();
 
-            Resultado res = ucController.registarUC(nome, ano, siglaDocente.isEmpty() ? null : siglaDocente);
+            Resultado res = ucController.registarUC(nome, ano,semestre, siglaDocente.isEmpty() ? null : siglaDocente);
 
             if (res.success) {
                 System.out.println(GetGreen() + "\nUC registada com sucesso!" + GetReset());
@@ -121,12 +137,12 @@ public class UnidadeCurricularView {
                 System.out.println(GetYellow() + "Nenhuma UC registada até ao momento!" + GetReset());
             } else {
                 System.out.println(GetCyanBold() + "-----------------------------------------------------------------" + GetReset());
-                System.out.printf(GetWhiteBold() + " %-25s | %-5s | %-15s | %-4s \n" + GetReset(), "NOME DA UC", "ANO", "DOCENTE", "ECTS");
+                System.out.printf(GetWhiteBold() + " %-25s | %-5s | %-3s | %-15s | %-4s \n" + GetReset(), "NOME DA UC", "ANO", "SEM", "DOCENTE", "ECTS");
                 System.out.println(GetCyanBold() + "-----------------------------------------------------------------" + GetReset());
 
                 for (UnidadeCurricular uc : ucs) {
                     String docenteNome = (uc.getDocente() != null) ? uc.getDocente().getSigla() : GetYellow() + "N/A" + GetReset();
-                    System.out.printf(" %-25s | %-5d | %-15s | %-4d \n",
+                    System.out.printf(" %-25s | %-5d |%-3d | %-15s | %-4d \n",
                             uc.getNome(), uc.getAnoCurricular(), docenteNome, uc.getEcts());
                 }
                 System.out.println(GetCyanBold() + "-----------------------------------------------------------------" + GetReset());
@@ -206,11 +222,25 @@ public class UnidadeCurricularView {
                 }
             }
 
+            int novoSemestre = 0;
+            String semInput = BackendUtils.lerInputString(scanner, "Novo semestre (1 ou 2): ");
+            if (!semInput.isEmpty()) {
+                try {
+                    novoSemestre = Integer.parseInt(semInput);
+                    if (novoSemestre < 1 || novoSemestre > 2) {
+                        System.out.println(GetYellow() + "Aviso: Semestre inválido. Mantendo o semestre original." + GetReset());
+                        novoSemestre = 0;
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println(GetYellow() + "Aviso: Formato inválido. Mantendo o semestre original." + GetReset());
+                }
+            }
+
             listarDocentesDisponiveis();
             String novaSiglaDocente = BackendUtils.lerInputString(scanner, "\nSigla do novo Docente: ").toUpperCase();
             String siglaFinal = novaSiglaDocente.isEmpty() ? null : novaSiglaDocente;
 
-            Resultado res = ucController.atualizarUC(nomeAtual, nomeFinal, novoAno, siglaFinal);
+            Resultado res = ucController.atualizarUC(nomeAtual, nomeFinal, novoAno,novoSemestre, siglaFinal);
 
             if (res.success) {
                 System.out.println(GetGreen() + "\nUC atualizada com sucesso!" + GetReset());
@@ -293,6 +323,7 @@ public class UnidadeCurricularView {
         System.out.println("\n" + GetWhiteBold() + "--- Dados da Unidade Curricular ---" + GetReset());
         System.out.println("Nome: " + uc.getNome());
         System.out.println("Ano Curricular: " + uc.getAnoCurricular());
+        System.out.println("Semestre: " + uc.getSemestre());
         System.out.println("ECTS: " + uc.getEcts());
 
         if (uc.getDocente() != null) {
