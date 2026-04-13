@@ -56,4 +56,10 @@ public class Estudante extends Utilizador {
         this.listaAvaliacoes.add(avaliacao);
     }
 
+    public boolean temAproveitamentoSuficiente() {
+        if (notas.isEmpty()) return false;
+        long positivas = notas.values().stream().filter(n -> n >= 9.5).count();
+        return (double) positivas / notas.size() >= 0.6;
+    }
+
 }

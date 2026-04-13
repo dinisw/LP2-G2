@@ -30,6 +30,7 @@ public class GestorView {
     private final DepartamentoView departamentoView;
     private final CursoView cursoView;
     private final UnidadeCurricularController ucController;
+    private final TurmaView turmaView;
     private final Scanner scanner;
 
     public GestorView() {
@@ -40,6 +41,7 @@ public class GestorView {
         this.departamentoView = new DepartamentoView();
         this.cursoView = new CursoView();
         this.ucController = new UnidadeCurricularController();
+        this.turmaView = new TurmaView();
         this.scanner = new Scanner(System.in);
     }
 
@@ -52,6 +54,7 @@ public class GestorView {
         opcoes.add("4. Gerir Cursos");
         opcoes.add("5. Gerir Departamentos");
         opcoes.add("6. Gerir Unidades Curriculares");
+        opcoes.add("7. Gerir Turmas");
         opcoes.add("0. Logout");
 
         do {
@@ -79,6 +82,9 @@ public class GestorView {
                         break;
                     case "6":
                         unidadeCurricularView.exibirMenuUnidadesCurriculares();
+                        break;
+                    case "7":
+                        turmaView.exiberMenuTurma();
                         break;
                     case "0":
                         System.out.println(GetYellow() + "\nA efetuar logout..." + GetReset());
