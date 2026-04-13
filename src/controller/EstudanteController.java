@@ -63,10 +63,15 @@ public class EstudanteController {
             res.object = "Sucesso: O estudante " + estudante.getNome() + " transitou para o " + estudante.getAnoLetivo() + "º ano letivo.";
         } else {
             res.success = false;
-            res.errorMessage = "Falhou: O estudante não cumpriu os 60% de aproveitamento e manter-se-á no " + estudante.getAnoLetivo() + "º ano.";
+            res.errorMessage = "Inscrição no ano seguinte não permitida. Aproveitamento insuficiente (mínimo exigido: >60%).";
         }
 
         return res;
+    }
+
+    public boolean temAproveitamentoSuficiente(Estudante estudante, int totalUCsInscritas) {
+        if (estudante == null) return false;
+        return bll.calculoPercentagem(estudante, totalUCsInscritas) > 0.60;
     }
 
     public int gerarNumeroMecanografico() {

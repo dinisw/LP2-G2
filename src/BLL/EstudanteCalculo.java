@@ -28,7 +28,7 @@ public class EstudanteCalculo {
     public boolean verificarProgressao(Estudante estudante, int totalUCsInscritas) {
         double percentagem = calculoPercentagem(estudante, totalUCsInscritas);
 
-        if (percentagem >= 0.60) {
+        if (percentagem > 0.60) {
             estudante.setAnoLetivo(estudante.getAnoLetivo() + 1);
             return true;
         }

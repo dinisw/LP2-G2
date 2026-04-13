@@ -28,7 +28,7 @@ public class Avaliacao {
         return nota;
     }
 
-    public void setNota(double nota) {
+    public void setNota(Double nota) {
         this.nota = nota;
     }
 
