@@ -67,6 +67,7 @@ public class DocenteView {
                         break;
                     case "5":
                         consultarPautaOrdenada(docente);
+                        break;
                     case "0":
                         System.out.println(GetYellow() + "\nA efetuar logout..." + GetReset());
                         return;
@@ -280,7 +281,7 @@ public class DocenteView {
                     if (escolhaUC >= 1 && escolhaUC <= ucs.size()) {
                         ucValida = true;
                     } else {
-                        System.out.println(GetRed() + "Avisp: Escolha inválida." + GetReset());
+                        System.out.println(GetRed() + "Aviso: Escolha inválida." + GetReset());
                     }
                 } catch (NumberFormatException e) {
                     System.out.println(GetRed() + "Aviso: O valor deve ser um número." + GetReset());
