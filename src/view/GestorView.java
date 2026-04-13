@@ -191,7 +191,8 @@ public class GestorView {
 
             String cargo = BackendUtils.lerInputString(scanner, "Cargo: ");
 
-            Resultado res = gestorController.registarGestor(nome, morada, nif, dataNascimento, email, hash, cargo);
+            GestorController gestorControllerAtualizado = new GestorController();
+            Resultado res = gestorControllerAtualizado.registarGestor(nome, morada, nif, dataNascimento, email, hash, cargo);
 
             if (res.success) {
                 System.out.println(GetGreen() + "\nGestor registado com sucesso!" + GetReset());
@@ -298,7 +299,8 @@ public class GestorView {
                 }
             }
 
-            Resultado res = gestorController.eliminarGestor(nif);
+            GestorController gestorControllerAtualizado = new GestorController();
+            Resultado res = gestorControllerAtualizado.eliminarGestor(nif);
 
             if (res.success) {
                 System.out.println(GetGreen() + "\nGestor eliminado com sucesso!" + GetReset());
@@ -371,7 +373,8 @@ public class GestorView {
                 String cargo = BackendUtils.lerInputString(scanner, "Novo Cargo: ");
                 if (!cargo.isEmpty()) g.setCargo(cargo);
 
-                Resultado res = gestorController.atualizarGestor(nif, nome.isEmpty() ? null : nome, morada.isEmpty() ? null : morada, null, email.isEmpty() ? null : email, cargo.isEmpty() ? null : cargo);
+                GestorController gestorControllerAtualizado = new GestorController();
+                Resultado res = gestorControllerAtualizado.atualizarGestor(nif, nome.isEmpty() ? null : nome, morada.isEmpty() ? null : morada, null, email.isEmpty() ? null : email, cargo.isEmpty() ? null : cargo);
 
                 if (res.success) {
                     System.out.println(GetGreen() + "\nGestor atualizado com sucesso!" + GetReset());
@@ -506,7 +509,8 @@ public class GestorView {
             }
 
             System.out.println("\n" + GetBlue() + "--- Unidades Curriculares Disponíveis ---" + GetReset());
-            List<UnidadeCurricular> ucs = ucController.listarTodasUCs();
+            UnidadeCurricularController ucControllerAtualizado = new UnidadeCurricularController();
+            List<UnidadeCurricular> ucs = ucControllerAtualizado.listarTodasUCs();
             List<String> nomesUC = new ArrayList<>();
             if (ucs.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhuma UC registada. Docente será registado sem UCs associadas." + GetReset());
@@ -523,7 +527,8 @@ public class GestorView {
                 }
             }
 
-            Resultado res = docenteController.registarDocente(nome, morada, nif, dataNascimento, email, hash, sigla, nomesUC);
+            DocenteController docenteControllerAtualizado = new DocenteController();
+            Resultado res = docenteControllerAtualizado.registarDocente(nome, morada, nif, dataNascimento, email, hash, sigla, nomesUC);
 
             if (res.success) {
                 System.out.println(GetGreen() + "\nDocente registado com sucesso!" + GetReset());
@@ -646,7 +651,8 @@ public class GestorView {
                 String sigla = BackendUtils.lerInputString(scanner, "Nova Sigla: ");
                 if (!sigla.isEmpty()) d.setSigla(sigla);
 
-                Resultado res = docenteController.atualizarDocente(nif, nome.isEmpty() ? null : nome, morada.isEmpty() ? null : morada, null, email.isEmpty() ? null : email);
+                DocenteController docenteControllerAtualizado = new DocenteController();
+                Resultado res = docenteControllerAtualizado.atualizarDocente(nif, nome.isEmpty() ? null : nome, morada.isEmpty() ? null : morada, null, email.isEmpty() ? null : email);
 
                 if (res.success) {
                     System.out.println(GetGreen() + "\nDocente atualizado com sucesso!" + GetReset());
@@ -707,7 +713,8 @@ public class GestorView {
             SenhaUtils su = new SenhaUtils();
             String novoHash = su.gerarHashComSalt(novaPass);
 
-            Resultado res = docenteController.alterarPassword(nif, novoHash);
+            DocenteController docenteControllerAtualizado = new DocenteController();
+            Resultado res = docenteControllerAtualizado.alterarPassword(nif, novoHash);
 
             if (res.success) {
                 System.out.println(GetGreen() + "\nPassword alterada com sucesso!" + GetReset());
@@ -746,7 +753,8 @@ public class GestorView {
                 }
             }
 
-            Resultado res = docenteController.eliminarDocente(nif);
+            DocenteController docenteControllerAtualizado = new DocenteController();
+            Resultado res = docenteControllerAtualizado.eliminarDocente(nif);
 
             if (res.success) {
                 System.out.println(GetGreen() + "\nDocente eliminado com sucesso!" + GetReset());
@@ -903,7 +911,8 @@ public class GestorView {
                 return;
             }
 
-            Resultado resReg = estudanteController.registarEstudante(nome, morada, nif, dataNascimento, cursoNomeSelecionado, senha);
+            EstudanteController estudanteControllerAtualizado = new EstudanteController();
+            Resultado resReg = estudanteControllerAtualizado.registarEstudante(nome, morada, nif, dataNascimento, cursoNomeSelecionado, senha);
 
             if (resReg.success) {
                 System.out.println(GetGreen() + "\nEstudante registado com sucesso!" + GetReset());
@@ -1033,7 +1042,8 @@ public class GestorView {
                 String cursoAt = BackendUtils.lerInputString(scanner, "Novo Curso: ");
                 if (!cursoAt.isEmpty()) eate.setNomeCurso(cursoAt);
 
-                Resultado res = estudanteController.atualizarEstudante(amec, nomeAt.isEmpty() ? null : nomeAt, moradaAt.isEmpty() ? null : moradaAt, emailAt.isEmpty() ? null : emailAt, cursoAt.isEmpty() ? null : cursoAt);
+                EstudanteController estudanteControllerAtualizado = new EstudanteController();
+                Resultado res = estudanteControllerAtualizado.atualizarEstudante(amec, nomeAt.isEmpty() ? null : nomeAt, moradaAt.isEmpty() ? null : moradaAt, emailAt.isEmpty() ? null : emailAt, cursoAt.isEmpty() ? null : cursoAt);
 
                 if (res.success) {
                     System.out.println(GetGreen() + "\nEstudante atualizado com sucesso!" + GetReset());
@@ -1079,7 +1089,8 @@ public class GestorView {
                 }
             }
 
-            Resultado res = estudanteController.eliminarEstudante(amec);
+            EstudanteController estudanteControllerAtualizado = new EstudanteController();
+            Resultado res = estudanteControllerAtualizado.eliminarEstudante(amec);
 
             if (res.success) {
                 System.out.println(GetGreen() + "\nEstudante eliminado com sucesso!" + GetReset());

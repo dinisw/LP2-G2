@@ -104,7 +104,8 @@ public class UnidadeCurricularView {
             listarDocentesDisponiveis();
             String siglaDocente = BackendUtils.lerInputString(scanner, "\nSigla do Docente Responsável (ou prima Enter para nenhum): ").toUpperCase();
 
-            Resultado res = ucController.registarUC(nome, ano,semestre, siglaDocente.isEmpty() ? null : siglaDocente);
+            UnidadeCurricularController ucControllerAtualizado = new UnidadeCurricularController();
+            Resultado res = ucControllerAtualizado.registarUC(nome, ano,semestre, siglaDocente.isEmpty() ? null : siglaDocente);
 
             if (res.success) {
                 System.out.println(GetGreen() + "\nUC registada com sucesso!" + GetReset());
@@ -143,7 +144,7 @@ public class UnidadeCurricularView {
                 for (UnidadeCurricular uc : ucs) {
                     String docenteNome = (uc.getDocente() != null) ? uc.getDocente().getSigla() : GetYellow() + "N/A" + GetReset();
                     System.out.printf(" %-25s | %-5d |%-3d | %-15s | %-4d \n",
-                            uc.getNome(), uc.getAnoCurricular(), docenteNome, uc.getEcts());
+                            uc.getNome(), uc.getAnoCurricular(),uc.getSemestre(), docenteNome, uc.getEcts());
                 }
                 System.out.println(GetCyanBold() + "-----------------------------------------------------------------" + GetReset());
             }
@@ -309,7 +310,8 @@ public class UnidadeCurricularView {
 
     private void listarDocentesDisponiveis() {
         System.out.println("\n" + GetBlue() + "--- Docentes Disponíveis ---" + GetReset());
-        List<Docente> docentes = docenteController.listarDocentes();
+        DocenteController docenteControllerAtualizado = new DocenteController();
+        List<Docente> docentes = docenteControllerAtualizado.listarDocentes();
         if (docentes == null || docentes.isEmpty()) {
             System.out.println(GetYellow() + "Nenhum docente registado no sistema." + GetReset());
         } else {
