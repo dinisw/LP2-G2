@@ -12,6 +12,12 @@ import controller.UnidadeCurricularController;
 import model.Docente;
 import model.Resultado;
 import model.UnidadeCurricular;
+import org.jline.reader.LineReader;
+import org.jline.reader.LineReaderBuilder;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
+
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -101,11 +107,16 @@ public class DocenteView {
             System.out.println(GetBlue() + "\n--- ALTERAR A MINHA PASSWORD ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
+            Terminal terminal = TerminalBuilder.terminal();
+            LineReader reader = LineReaderBuilder.builder()
+                    .terminal(terminal)
+                    .build();
+
             String novaPass = "";
             boolean senhaValida = false;
+
             while (!senhaValida) {
-                System.out.print("Nova senha: ");
-                novaPass = scanner.nextLine();
+                novaPass = reader.readLine("Nova senha: ", '*');
 
                 if (novaPass.equals("0")) {
                     throw new CancelarRegistoException("Operação cancelada pelo utilizador.");

@@ -19,7 +19,6 @@ public class UnidadeCurricularCRUD {
         File ficheiro = new File(CAMINHO_FICHEIRO);
         if (!ficheiro.exists()) return;
 
-        // Instanciação Local para evitar o StackOverflowError
         DAL.DocenteCRUD docenteCRUD = new DAL.DocenteCRUD();
 
         try (BufferedReader reader = new BufferedReader(new FileReader(CAMINHO_FICHEIRO))) {
@@ -36,7 +35,6 @@ public class UnidadeCurricularCRUD {
                         docente = docenteCRUD.procurarPorSigla(dados[3]);
                     }
 
-                    // CORREÇÃO: Estava a passar 'null' fixo, agora passa a variável docente correta!
                     UnidadeCurricular uc = new UnidadeCurricular(nome, ano,semestre, docente);
                     ucs.add(uc);
                 }
@@ -51,7 +49,6 @@ public class UnidadeCurricularCRUD {
             for (UnidadeCurricular uc : ucs) {
                 String siglaDocente = (uc.getDocente() != null) ? uc.getDocente().getSigla() : "SEM REGISTO";
 
-                // CORREÇÃO: Faltava adicionar o %s para gravar o docente no ficheiro
                 String linha = String.format("%s;%s;%s;%s",
                         safe(uc.getNome()),
                         uc.getAnoCurricular(),
@@ -129,9 +126,6 @@ public class UnidadeCurricularCRUD {
 
         for (int i = 0; i < ucs.size(); i++) {
             if (ucs.get(i).getNome().equalsIgnoreCase(nomeAtual)) {
-
-                // Nota: A regra de "não permitir atualizar se tiver alunos" deve estar no Controller
-
                 if (!nomeAtual.equalsIgnoreCase(ucAtualizada.getNome()) && procurarPorNome(ucAtualizada.getNome()) != null) {
                     return false;
                 }
@@ -151,9 +145,6 @@ public class UnidadeCurricularCRUD {
 
         for (int i = 0; i < ucs.size(); i++) {
             if (ucs.get(i).getNome().equalsIgnoreCase(nome)) {
-
-                // Nota: A regra de "não permitir eliminar se tiver alunos" deve estar no Controller
-
                 ucs.remove(i);
                 guardarTodosNoFicheiro();
                 return true;
