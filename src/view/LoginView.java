@@ -8,6 +8,10 @@ import model.Docente;
 import model.Estudante;
 import model.Gestor;
 import model.Utilizador;
+import org.jline.reader.LineReader;
+import org.jline.reader.LineReaderBuilder;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
 import java.util.Scanner;
 import static common.utils.DesignUtils.*;
 
@@ -20,6 +24,11 @@ public class LoginView {
         LoginController loginController = new LoginController();
 
         try {
+            Terminal terminal = TerminalBuilder.terminal();
+            LineReader reader = LineReaderBuilder.builder()
+                    .terminal(terminal)
+                    .build();
+
             boolean sair = false;
 
             do {
@@ -74,8 +83,7 @@ public class LoginView {
                     SenhaUtils su = new SenhaUtils();
 
                     while (!senhaCorreta) {
-                        System.out.print("Senha: ");
-                        String senha = scanner.nextLine();
+                        String senha = reader.readLine("Senha: ", '*');
 
                         if (senha.equals("0")) {
                             System.out.println(GetYellow() + "\nOperação cancelada." + GetReset());

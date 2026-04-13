@@ -16,9 +16,9 @@ public class BackendUtils {
     private static final String REGEX_EMAIL_ESTUDANTE_ISSMF = "^\\d{7}@issmf\\.ipp\\.pt$";
     private static final Pattern PATTERN_ESTUDANTE_ISSMF = Pattern.compile(REGEX_EMAIL_ESTUDANTE_ISSMF);
 
-    public static boolean emailISSMFEstudanteValido(String email) {return PATTERN_ESTUDANTE_ISSMF.matcher(email).matches();}
-    public static boolean emailISSMFDocenteValido(String email) {return PATTERN_DOCENTE_ISSMF.matcher(email).matches();}
-    public static boolean emailISSMFGestorValido(String email) {return PATTERN_GESTOR_ISSMF.matcher(email).matches();}
+    public static boolean emailISSMFEstudanteValido(String email) {return PATTERN_ESTUDANTE_ISSMF.matcher(email.toLowerCase()).matches();}
+    public static boolean emailISSMFDocenteValido(String email) {return PATTERN_DOCENTE_ISSMF.matcher(email.toLowerCase()).matches();}
+    public static boolean emailISSMFGestorValido(String email) {return PATTERN_GESTOR_ISSMF.matcher(email.toLowerCase()).matches();}
     //endregion
 
     //region Validador de Senha
