@@ -101,6 +101,12 @@ public class UnidadeCurricularController {
 
         Docente novoDocente = ucExistente.getDocente();
         if (novaSiglaDocente != null && !novaSiglaDocente.trim().isEmpty()) {
+            if (ucExistente.getDocente() != null && !ucExistente.getDocente().getSigla().equalsIgnoreCase(novaSiglaDocente)) {
+                res.success = false;
+                res.errorMessage = "Não é possível atribuir um novo docente a esta UC, pois já possui um docente associado.";
+                return res;
+            }
+
             novoDocente = docenteCRUD.procurarPorSigla(novaSiglaDocente);
             if (novoDocente == null) {
                 res.success = false;

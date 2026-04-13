@@ -16,10 +16,6 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import org.jline.reader.LineReader;
-import org.jline.reader.LineReaderBuilder;
-import org.jline.terminal.Terminal;
-import org.jline.terminal.TerminalBuilder;
 import static common.utils.DesignUtils.*;
 
 public class GestorView {
@@ -137,11 +133,6 @@ public class GestorView {
 
     private void registarGestor() {
         try {
-            Terminal terminal = TerminalBuilder.terminal();
-            LineReader reader = LineReaderBuilder.builder()
-                    .terminal(terminal)
-                    .build();
-
             System.out.println(GetBlue() + "\n--- REGISTO DE GESTOR ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
@@ -185,7 +176,8 @@ public class GestorView {
             String passDigitada = "";
             boolean senhaValida = false;
             while (!senhaValida) {
-                passDigitada = reader.readLine("Senha: ", '*');
+                System.out.print("Senha: ");
+                passDigitada = scanner.nextLine();
                 if (passDigitada.equals("0")) {
                     throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
                 }
@@ -681,11 +673,6 @@ public class GestorView {
             System.out.println(GetBlue() + "\n--- ALTERAR PASSWORD DO DOCENTE ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
-            Terminal terminal = TerminalBuilder.terminal();
-            LineReader reader = LineReaderBuilder.builder()
-                    .terminal(terminal)
-                    .build();
-
             int nif = 0;
             boolean nifValido = false;
             while (!nifValido) {
@@ -704,7 +691,8 @@ public class GestorView {
             String novaPass = "";
             boolean senhaValida = false;
             while (!senhaValida) {
-                novaPass = reader.readLine("Nova senha: ", '*');
+                System.out.print("Nova senha: ");
+                novaPass = scanner.nextLine();
 
                 if (novaPass.equals("0")) {
                     throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
