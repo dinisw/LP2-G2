@@ -60,16 +60,24 @@ public class TurmaView {
             }
         } while (true);
     }
+
     private void registarTurmas(){
+        System.out.println("Em desenvolvimento!");
     }
 
     private void listarTurmas(){
+        System.out.println("Em desenvolvimento!");
     }
 
-    private void procurarTurmas(){}
+    private void procurarTurmas(){
+        System.out.println("Em desenvolvimento!");
+    }
 
-    private void atualizarTurmas(){}
+    private void atualizarTurmas(){
+        System.out.println("Em desenvolvimento!");
+    }
 
     private void excluirTurmas(){
+        System.out.println("Em desenvolvimento!");
     }
 }
