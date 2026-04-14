@@ -19,7 +19,7 @@ import static common.utils.DesignUtils.GetReset;
 
 public class TurmaView{
 
-    private final TurmaController turmaController;
+    private TurmaController turmaController = null;
     private final Scanner scanner;
 
 
@@ -76,6 +76,7 @@ public class TurmaView{
 
         if (cursos.isEmpty()) {
             System.out.println(GetYellow() + "Não existem cursos registados." + GetReset());
+            //perguntar se a pessoa quer criar um curso e redirecionar
             return null;
         }
 
@@ -97,10 +98,12 @@ public class TurmaView{
         Curso curso = obterCursoInterativo();
         if (curso == null) return;
 
+        //faltam validações
         int ano = Integer.parseInt(BackendUtils.lerInputString(scanner, "Ano Curricular (1 a 3): "));
         String anoLetivo = BackendUtils.lerInputString(scanner, "Ano Letivo (ex: 2025/2026): ");
 
         try {
+            //da erro aqui
             turmaController.criarTurma(curso, ano, anoLetivo);
             System.out.println(GetGreen() + "Turma criada com sucesso!" + GetReset());
         } catch (Exception e) {

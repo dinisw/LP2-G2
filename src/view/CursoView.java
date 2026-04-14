@@ -148,9 +148,11 @@ public class CursoView {
             if (cursos.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhum curso registado até ao momento!" + GetReset());
             } else {
+                int count = 1;
                 for (Curso c : cursos) {
                     // Idealmente o toString() do curso deve estar formatado verticalmente
-                    System.out.println(c.toString());
+                    System.out.printf("%d - %s", count, c.toString());
+                    count++;
                 }
             }
             MenuUtils.pressionarEnter(scanner);
@@ -265,8 +267,9 @@ public class CursoView {
                 MenuUtils.pressionarEnter(scanner);
                 return;
             }
+            //colocar um id na lista dos cursos para facilitar a escolha
             listarCursos();
-            String nome = BackendUtils.lerInputString(scanner, "\nDigite o nome do curso a iniciar: ");
+            String nome = BackendUtils.lerInputString(scanner, "\nSelecione o id do curso a iniciar: ");
             Resultado resultado = cursoControllerAtualizado.iniciarCurso(nome);
 
             if (resultado.success) {
