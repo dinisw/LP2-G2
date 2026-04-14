@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Estudante extends Utilizador {
-
+    private Curso curso;
     private String nomeCurso;
     private int numeroMec;
     private int anoLetivo;
@@ -56,4 +56,11 @@ public class Estudante extends Utilizador {
         this.listaAvaliacoes.add(avaliacao);
     }
 
+    public Curso getCurso() {
+        return curso;
+    }
+
+    public void setCurso(Curso curso) {
+        this.curso = curso;
+    }
 }
