@@ -97,23 +97,36 @@ public class UnidadeCurricularController {
         String novoNomeReal = (novoNome == null || novoNome.trim().isEmpty()) ? nomeAtual : novoNome;
         int novoAnoReal = (novoAno <= 0) ? ucExistente.getAnoCurricular() : novoAno;
 
-        int novoSemestreReal = (novoSemestre <= 0) ? ucExistente.getSemestre(): novoSemestre;
+        int novoSemestreReal = (novoSemestre <= 0) ? ucExistente.getSemestre() : novoSemestre;
 
         Docente novoDocente = ucExistente.getDocente();
         if (novaSiglaDocente != null && !novaSiglaDocente.trim().isEmpty()) {
-            if (ucExistente.getDocente() != null && !ucExistente.getDocente().getSigla().equalsIgnoreCase(novaSiglaDocente)) {
-                resultado.success = false;
-                resultado.errorMessage = "Não é possível atribuir um novo docente a esta UC, pois já possui um docente associado.";
-                return resultado;
-            }
+            DAL.DocenteCRUD docenteCRUD = new DocenteCRUD();
+            Docente docenteEncontrado = docenteCRUD.procurarPorSigla(novaSiglaDocente);
 
-            novoDocente = docenteCRUD.procurarPorSigla(novaSiglaDocente);
-            if (novoDocente == null) {
+            if (docenteEncontrado != null) {
+                if (ucExistente.getDocente() != null && !ucExistente.getDocente().getSigla().equalsIgnoreCase(novaSiglaDocente)) {
+                    Docente docenteAntigo = docenteCRUD.procurarPorNif(ucExistente.getDocente().getNif());
+                    if (docenteAntigo != null) {
+                        docenteAntigo.getUnidadesCurriculares().removeIf(u -> u.getNome().equalsIgnoreCase(nomeAtual));
+                        docenteCRUD.atualizarDocente(docenteAntigo);
+                    }
+                }
+
+                if (ucExistente.getDocente() == null || !ucExistente.getDocente().getSigla().equalsIgnoreCase(novaSiglaDocente)) {
+                    UnidadeCurricular unidadeCurricularTemp = new UnidadeCurricular(novoNomeReal, novoAnoReal, novoSemestreReal, docenteEncontrado);
+                    docenteEncontrado.adicionarUnidadeCurricular(unidadeCurricularTemp);
+                    docenteCRUD.atualizarDocente(docenteEncontrado);
+
+                    novoDocente = docenteEncontrado;
+                }
+            } else {
                 resultado.success = false;
                 resultado.errorMessage = "Novo docente não encontrado com a sigla informada.";
                 return resultado;
             }
         }
+
 
         UnidadeCurricular ucAtualizada = new UnidadeCurricular(novoNomeReal, novoAnoReal,novoSemestreReal, novoDocente);
 
