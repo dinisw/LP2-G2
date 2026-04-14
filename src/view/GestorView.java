@@ -6,10 +6,7 @@ import common.utils.DesignUtils;
 import common.utils.MenuUtils;
 import common.utils.SenhaUtils;
 import DAL.CursoCRUD;
-import controller.EstudanteController;
-import controller.DocenteController;
-import controller.GestorController;
-import controller.UnidadeCurricularController;
+import controller.*;
 import model.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -953,6 +950,27 @@ public class GestorView {
             if (resReg.success) {
                 System.out.println(GetGreen() + "\nEstudante registado com sucesso!" + GetReset());
                 System.out.println("Nº Mecanográfico atribuído: " + mecAuto);
+                // --- NOVA LIGAÇÃO: INSCRIÇÃO AUTOMÁTICA NA TURMA DO 1º ANO ---
+                try {
+                    TurmaController turmaController = new TurmaController();
+                    // Assumindo que tem um CursoCRUD ou CursoController para ir buscar o objeto Curso
+                    CursoCRUD cursoCRUD = new CursoCRUD();
+                    Curso curso = cursoCRUD.procurarPorNome(cursoNomeSelecionado);
+                    model.Estudante recemCriado = estudanteController.procurarEstudantePorNumeroMec(mecAuto);
+
+                    String anoLetivoAtual = "2025/2026";
+
+                    // Verifica se a turma do 1º ano já existe, se não, cria-a
+                    if (!turmaController.existeTurma(curso, 1, anoLetivoAtual)) {
+                        turmaController.criarTurma(curso, 1, anoLetivoAtual);
+                    }
+
+                    // Inscreve o estudante na turma
+                    turmaController.inscreverEstudante(curso, 1, anoLetivoAtual, recemCriado);
+                    System.out.println(GetGreen() + "Estudante alocado automaticamente à turma do 1º ano de " + cursoNomeSelecionado + "." + GetReset());
+                } catch (Exception ex) {
+                    System.out.println(GetYellow() + "Aviso: Não foi possível alocar automaticamente à turma: " + ex.getMessage() + GetReset());
+                }
             } else {
                 System.out.println(GetRed() + "\nErro ao registar estudante: " + resReg.errorMessage + GetReset());
             }

@@ -1,45 +1,49 @@
 package controller;
 
 import DAL.TurmaCRUD;
-import model.*;
+import model.Curso;
+import model.Estudante;
+import model.Turma;
+import model.UnidadeCurricular;
+
+import java.util.List;
 
 public class TurmaController {
 
-    /**
-     * Cria uma turma validando se já não existe uma para aquele ano do curso.
-     */
-//    public boolean criarTurma(Curso curso, int ano) {
-//        if (TurmaCRUD.procurarPorCursoEAno(curso.getNome(), ano) != null) {
-//            return false; // Regra: Só existe uma turma para cada ano letivo
-//        }
-//        Turma nova = new Turma(curso, ano);
-//        TurmaCRUD.guardar(nova);
-//        return true;
-//    }
-
-    /**
-     * Promove um estudante para o ano seguinte se tiver >60% de aproveitamento.
-     */
-//    public String promoverEstudante(Estudante estudante, int anoAtual) {
-//        if (estudante.temAproveitamentoSuficiente()) {
-//            int proximoAno = anoAtual + 1;
-//            if (proximoAno > estudante.getCurso().getDuracao()) {
-//                return "Estudante concluiu o curso com sucesso!";
-//            }
-//
-//            Turma proximaTurma = TurmaCRUD.procurarPorCursoEAno(estudante.getCurso().getNome(), proximoAno);
-//            if (proximaTurma != null) {
-//                proximaTurma.adicionarEstudante(estudante);
-//                return "Promovido para o " + proximoAno + "º ano.";
-//            }
-//            return "Erro: Turma do próximo ano ainda não foi criada.";
-//        }
-//        return "Reprovado: Aproveitamento inferior a 60%.";
-//    }
-
-    public void imprimirRelatorioTurmas() {
-        for (Turma t : TurmaCRUD.listarTodas()) {
-            System.out.println(t);
+    public Turma criarTurma(Curso curso, int anoCurricular, String anoLetivo) {
+        if (existeTurma(curso, anoCurricular, anoLetivo)) {
+            throw new IllegalStateException(String.format("Já existe uma turma para o curso '%s', %dº ano.", curso.getNome(), anoCurricular));
         }
+        Turma novaTurma = new Turma(anoCurricular, anoLetivo, curso);
+        TurmaCRUD.guardar(novaTurma);
+        return novaTurma;
+    }
+
+    public Turma obterTurma(Curso curso, int anoCurricular, String anoLetivo) {
+        return TurmaCRUD.encontrar(curso.getNome(), anoCurricular, anoLetivo);
+    }
+
+    public List<Turma> listarTodas() {
+        return TurmaCRUD.listarTodas();
+    }
+
+    public boolean existeTurma(Curso curso, int anoCurricular, String anoLetivo) {
+        return TurmaCRUD.procurarPorCursoEAno(curso.getNome(), anoCurricular) != null;
+    }
+
+    public void inscreverEstudante(Curso curso, int anoCurricular, String anoLetivo, Estudante estudante) {
+        Turma turma = obterTurma(curso, anoCurricular, anoLetivo);
+        if (turma == null) {
+            throw new IllegalStateException("Turma não encontrada.");
+        }
+        turma.adicionarEstudante(estudante);
+    }
+
+    public void adicionarUC(Curso curso, int anoCurricular, String anoLetivo, UnidadeCurricular uc) {
+        Turma turma = obterTurma(curso, anoCurricular, anoLetivo);
+        if (turma == null) {
+            throw new IllegalStateException("Turma não encontrada.");
+        }
+        turma.adicionarUnidadeCurricular(uc);
     }
 }
