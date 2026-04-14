@@ -9,7 +9,7 @@ public class Avaliacao {
     public Avaliacao() {
     }
 
-    public Avaliacao(String momento, double nota, UnidadeCurricular unidadeCurricular, Estudante estudante) {
+    public Avaliacao(String momento, Double nota, UnidadeCurricular unidadeCurricular, Estudante estudante) {
         this.momento = momento;
         this.nota = nota;
         this.unidadeCurricular = unidadeCurricular;
@@ -28,7 +28,7 @@ public class Avaliacao {
         return nota;
     }
 
-    public void setNota(double nota) {
+    public void setNota(Double nota) {
         this.nota = nota;
     }
 

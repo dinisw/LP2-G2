@@ -4,7 +4,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Docente extends Pessoa{
+public class Docente extends Utilizador {
     private List<UnidadeCurricular> unidadesCurriculares;
     private String sigla;
     private List<Avaliacao> listaAvaliacao = new ArrayList<>();
@@ -22,8 +22,8 @@ public class Docente extends Pessoa{
         this.sigla = "";
     }
 
-    public Docente(String nome, String morada, int nif, LocalDate dataNascimento, String email, String hash, String salt, String sigla, List<Avaliacao> listaAvaliacao, List<UnidadeCurricular> unidadesCurriculares) {
-        super(nome, morada, nif, dataNascimento, email, hash, salt);
+    public Docente(String nome, String morada, int nif, LocalDate dataNascimento, String email, String hash, String sigla, List<Avaliacao> listaAvaliacao, List<UnidadeCurricular> unidadesCurriculares) {
+        super(nome, morada, nif, dataNascimento, email, hash);
         this.listaAvaliacao = (listaAvaliacao != null) ? listaAvaliacao : new ArrayList<>();
         this.sigla = sigla;
         this.unidadesCurriculares = (unidadesCurriculares != null) ? unidadesCurriculares : new ArrayList<>();
@@ -53,25 +53,20 @@ public class Docente extends Pessoa{
         return true;
     }
 
-    public boolean removerUnidadeCurricular(UnidadeCurricular uc) {
-        return unidadesCurriculares.remove(uc);
-    }
-
     public List<Avaliacao> getListaAvaliacao() {
         return listaAvaliacao;
     }
 
-    public void setListaAvaliacao(List<Avaliacao> listaAvaliacao) {
-        this.listaAvaliacao = listaAvaliacao;
+
+    @Override
+    public String toString() {
+        return String.format(
+                "===== FICHA DE DOCENTE =====\n" +
+                        "%s\n" +
+                        "Sigla: %s\n" +
+                        "============================",
+                super.toString(),
+                sigla
+        );
     }
-
-    public boolean registarAvaliacao(Avaliacao nota) {
-        if(listaAvaliacao.size() >= 3){
-            return false;
-        }
-        listaAvaliacao.add(nota);
-        return true;
-    }
-
-
 }

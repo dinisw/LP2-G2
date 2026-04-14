@@ -1,6 +1,9 @@
 package DAL;
 
+import model.Docente;
 import model.Gestor;
+import model.Resultado;
+
 import java.io.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -24,16 +27,15 @@ public class GestorCRUD {
             String linha;
             while ((linha = reader.readLine()) != null) {
                 String[] dados = linha.split(";");
-                if (dados.length == 8) {
+                if (dados.length == 7) {
                     Gestor gestor = new Gestor(
-                            dados[0],
-                            dados[1],
-                            Integer.parseInt(dados[2]),
-                            LocalDate.parse(dados[3]),
-                            dados[4],
-                            dados[5],
-                            dados[6],
-                            dados[7]
+                            dados[0],//nome
+                            dados[1],//morada
+                            Integer.parseInt(dados[2]),//nif
+                            LocalDate.parse(dados[3]),//data de nascimento
+                            dados[4],//email
+                            dados[5],//senha
+                            dados[6]//Cargo
                     );
                     gestores.add(gestor);
                 }
@@ -46,14 +48,13 @@ public class GestorCRUD {
     private void guardarTodosNoFicheiro() {
         try (PrintWriter print = new PrintWriter(new FileWriter(CAMINHO_FICHEIRO))) {
             for (Gestor gestor : gestores) {
-                String linha = String.format("%s;%s;%s;%s;%s;%s;%s;%s",
+                String linha = String.format("%s;%s;%s;%s;%s;%s;%s",
                         safe(gestor.getNome()),
                         safe(gestor.getMorada()),
                         safe(gestor.getNif()),
                         safe(gestor.getDataNascimento()),
                         safe(gestor.getEmail()),
                         safe(gestor.getHash()),
-                        safe(gestor.getSalt()),
                         safe(gestor.getCargo()));
                 print.println(linha);
             }
@@ -105,6 +106,23 @@ public class GestorCRUD {
             }
         }
         return false;
+    }
+
+    public Resultado atualizarSenha(Gestor gestor){
+        Resultado res = new Resultado();
+        if(gestor != null){
+            for (int i = 0; i < gestores.size(); i++) {
+                if (gestores.get(i).getNif() == gestor.getNif()) {
+                    gestores.set(i, gestor);
+                    guardarTodosNoFicheiro();
+                    res.success = true;
+                    return res;
+                }
+            }
+        }
+        res.success = false;
+        res.errorMessage = "Erro ao atualizar o ficheiro do gestor";
+        return res;
     }
 
     // DELETE

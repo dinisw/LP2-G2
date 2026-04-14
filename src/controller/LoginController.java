@@ -6,11 +6,11 @@ import DAL.GestorCRUD;
 import model.Docente;
 import model.Estudante;
 import model.Gestor;
-import model.Pessoa;
+import model.Utilizador;
 
 public class LoginController {
 
-    public Pessoa login(String email){
+    public Utilizador login(String email){
         EstudanteCRUD estudanteCRUD = new EstudanteCRUD();
         for(Estudante estudante: estudanteCRUD.getEstudantes()){
             if(estudante.getEmail().equals(email)){

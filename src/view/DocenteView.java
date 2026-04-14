@@ -1,21 +1,35 @@
 package view;
 
-import Common.DesignUtils;
-import Common.MenuUtils;
-import Common.SenhaUtils;
+import common.exceptions.CancelarRegistoException;
+import common.utils.BackendUtils;
+import common.utils.DesignUtils;
+import common.utils.MenuUtils;
+import common.utils.SenhaUtils;
+import controller.AvaliacaoController;
 import controller.DocenteController;
+import controller.EstudanteController;
 import controller.UnidadeCurricularController;
 import model.Docente;
+import model.Resultado;
 import model.UnidadeCurricular;
+import org.jline.reader.LineReader;
+import org.jline.reader.LineReaderBuilder;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
 
-import java.time.LocalDate;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+import static common.utils.DesignUtils.*;
+
 public class DocenteView {
     private final DocenteController docenteController;
     private final Scanner scanner;
+    private EstudanteController estudanteController = new EstudanteController();
+    private UnidadeCurricularController ucController = new UnidadeCurricularController();
+    private AvaliacaoController avaliacaoController = new AvaliacaoController();
 
     public DocenteView() {
         this.docenteController = new DocenteController();
@@ -28,115 +42,321 @@ public class DocenteView {
         opcoes.add("1. Ver minhas Unidades Curriculares");
         opcoes.add("2. Alterar minha Password");
         opcoes.add("3. Lançar Nota de Avaliação");
+        opcoes.add("4. Consultar ficha docente");
+        opcoes.add("5. Consultar Pauta de Alunos (Ordenada)");
         opcoes.add("0. Logout");
 
         do {
-            MenuUtils.exibirSubTitulo("MENU DOCENTE: " + docente.getNome(), opcoes);
-            System.out.print("\n" + DesignUtils.GetWhiteBold() + "Selecione uma opção: " + DesignUtils.GetReset());
-            opcao = scanner.nextLine().trim();
+            try {
+                MenuUtils.exibirSubTitulo("MENU DOCENTE: " + docente.getNome().toUpperCase(), opcoes);
+                System.out.print("\n" + GetWhiteBold() + "Selecione uma opção: " + GetReset());
+                opcao = scanner.nextLine().trim();
 
-            switch (opcao) {
-                case "1":
-                    verUC();
-                    break;
-                case "2":
-                    alterarPasswordPropria(docente);
-                    break;
-                case "3":
-                    lancarNotaDocente();
-                    break;
-                case "0":
-                    return;
-                default:
-                    System.out.println("Opção inválida!");
-                    MenuUtils.pressionarEnter(scanner);
+                switch (opcao) {
+                    case "1":
+                        verUC(docente);
+                        break;
+                    case "2":
+                        alterarPasswordPropria(docente);
+                        break;
+                    case "3":
+                        lancarNotaDocente(docente);
+                        break;
+                    case "4":
+                        consultarFichaDocente(docente);
+                        break;
+                    case "5":
+                        consultarPautaOrdenada(docente);
+                        break;
+                    case "0":
+                        System.out.println(GetYellow() + "\nA efetuar logout..." + GetReset());
+                        return;
+                    default:
+                        System.out.println(GetRed() + "Opção inválida! Por favor, escolha uma opção da lista." + GetReset());
+                        MenuUtils.pressionarEnter(scanner);
+                }
+            } catch (Exception e) {
+                System.out.println("\n" + GetRed() + "Ocorreu um erro na navegação: " + e.getMessage() + GetReset());
+                MenuUtils.pressionarEnter(scanner);
             }
         } while (true);
     }
 
-    private void alterarPasswordPropria(Docente d) {
-        System.out.print("Nova Palavra-passe: ");
-        String passDigitada = scanner.nextLine();
+    private void verUC(Docente docenteAtual) {
+        try {
+            System.out.println(GetBlue() + "\n--- MINHAS UNIDADES CURRICULARES ---" + GetReset());
 
-        if (!passDigitada.isEmpty()) {
-            String salt = SenhaUtils.gerarSalt();
-            String pass = SenhaUtils.gerarHashComSalt(passDigitada, salt);
+            List<UnidadeCurricular> minhasUcs = docenteAtual.getUnidadesCurriculares();
 
-            if (docenteController.alterarPassword(d.getNif(), pass, salt)) {
-                System.out.println("Password alterada com sucesso!");
+            if (minhasUcs == null || minhasUcs.isEmpty()) {
+                System.out.println(GetYellow() + "Não tem Unidades Curriculares atribuídas neste momento." + GetReset());
             } else {
-                System.out.println("Erro ao guardar alteração da password.");
+                for (UnidadeCurricular uc : minhasUcs) {
+                    System.out.println(uc.getNome() + " (Ano: " + uc.getAnoCurricular() + ")");
+                }
             }
+            MenuUtils.pressionarEnter(scanner);
+
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Ocorreu um erro inesperado: " + e.getMessage() + GetReset());
+            MenuUtils.pressionarEnter(scanner);
         }
-        MenuUtils.pressionarEnter(scanner);
     }
 
-    private void lancarNotaDocente() {
-        System.out.println("\n--- LANÇAR NOTA ---");
-        System.out.print("Nº Mecanográfico do Estudante: ");
-        int numMec = Integer.parseInt(scanner.nextLine().trim());
+    private void alterarPasswordPropria(Docente d) {
+        try {
+            System.out.println(GetBlue() + "\n--- ALTERAR A MINHA PASSWORD ---" + GetReset());
+            System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
-        DAL.EstudanteCRUD estudanteCRUD = new DAL.EstudanteCRUD();
-        model.Estudante estudante = estudanteCRUD.lerEstudante(numMec);
+            Terminal terminal = TerminalBuilder.terminal();
+            LineReader reader = LineReaderBuilder.builder()
+                    .terminal(terminal)
+                    .build();
 
-        if (estudante == null) {
-            System.out.println("Erro: Estudante não encontrado!");
-            Common.MenuUtils.pressionarEnter(scanner);
-            return;
-        }
-        System.out.print("Nome da Unidade Curricular:  ");
-        String nomeUC = scanner.nextLine().trim();
-        DAL.UnidadeCurricularCRUD unidadeCurricularCRUD = new DAL.UnidadeCurricularCRUD();
-        model.UnidadeCurricular unidadeCurricular = unidadeCurricularCRUD.procurarPorNome(nomeUC);
+            String novaPass = "";
+            boolean senhaValida = false;
 
-        if (unidadeCurricular == null) {
-            System.out.println("Erro: UC não encontrada!");
-            Common.MenuUtils.pressionarEnter(scanner);
-            return;
-        }
-        System.out.print("Época de Avaliação (ex. Frequência, Exame): ");
-        String momento = scanner.nextLine().trim();
+            while (!senhaValida) {
+                novaPass = reader.readLine("Nova senha: ", '*');
 
-        System.out.println("Nota (Deixe em branco e dê Enter se for 'Aguardar Lançamento'): ");
-        String notaInput = scanner.nextLine().trim();
+                if (novaPass.equals("0")) {
+                    throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
+                }
 
-        Double nota = null;
-        if (!notaInput.isEmpty()) {
-            nota = Double.parseDouble(notaInput.replace(",", "."));
-        }
-
-        model.Avaliacao novaAvaliacao = new model.Avaliacao(momento, nota, unidadeCurricular, estudante);
-        DAL.AvaliacaoCRUD avaliacaoCRUD = new DAL.AvaliacaoCRUD();
-
-        if (avaliacaoCRUD.registarAvaliacao(novaAvaliacao)) {
-            System.out.println(Common.DesignUtils.GetGreen() + "Avaliação registada com sucesso!" + Common.DesignUtils.GetReset());
-        } else {
-            System.out.println(Common.DesignUtils.GetRed() + "Erro ao registar avaliação." + Common.DesignUtils.GetReset());
-        }
-        Common.MenuUtils.pressionarEnter(scanner);
-    }
-
-    private void verUC() {
-
-        String siglaDocente = docenteController.getSiglaDoDocenteAtual();
-
-        model.Docente docenteAtual = docenteController.procurarDocentePorSigla(siglaDocente);
-
-        List<UnidadeCurricular> minhasUcs = docenteAtual.getUnidadesCurriculares();
-
-        System.out.println("\n--- MINHAS UNIDADES CURRICULARES ---");
-
-        if (minhasUcs == null || minhasUcs.isEmpty()) {
-            System.out.println("Não tem Unidades Curriculares atribuídas neste momento.");
-        } else {
-            for (UnidadeCurricular uc : minhasUcs) {
-                System.out.println(uc.getNome() + " (Ano: " + uc.getAnoCurricular() + ")");
+                senhaValida = BackendUtils.isSenhaValida(novaPass);
+                if(!senhaValida) {
+                    System.out.println(GetRed() + "SENHA deve conter pelo menos uma letra maiúscula, um número e um caracter especial. Tente novamente." + GetReset());
+                }
             }
+
+            SenhaUtils su = new SenhaUtils();
+            String passHash = su.gerarHashComSalt(novaPass);
+
+            DocenteController docenteControllerAtualizado = new DocenteController();
+            Resultado resultado = docenteControllerAtualizado.alterarPassword(d.getNif(), passHash);
+
+            if (resultado.success) {
+                System.out.println(GetGreen() + "\nPassword alterada com sucesso!" + GetReset());
+            } else {
+                System.out.println(GetRed() + "\nErro ao guardar alteração da password: " + resultado.errorMessage + GetReset());
+            }
+
+            MenuUtils.pressionarEnter(scanner);
+
+        } catch (CancelarRegistoException e) {
+            System.out.println("\n" + GetYellow() + "Aviso: " + e.getMessage() + GetReset());
+            System.out.println(GetRed() + "Operação interrompida!" + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Ocorreu um erro inesperado: " + e.getMessage() + GetReset());
+            MenuUtils.pressionarEnter(scanner);
         }
-
-        MenuUtils.pressionarEnter(scanner);
-
     }
+
+    private void lancarNotaDocente(Docente docente) {
+        try {
+            System.out.println(GetBlue() + "\n--- LANÇAR NOTA ---" + GetReset());
+            System.out.println(GetYellow() + "[Digite '0' para cancelar | Dica: Para atribuir nota zero, digite '0.0']" + GetReset());
+
+            int numMec = 0;
+            boolean mecValido = false;
+            while (!mecValido) {
+                try {
+                    String mecStr = BackendUtils.lerInputString(scanner, "Nº Mecanográfico do Estudante: ");
+                    numMec = Integer.parseInt(mecStr);
+                    mecValido = true;
+                } catch (NumberFormatException e) {
+                    System.out.println(GetRed() + "Aviso: O valor deve ser numérico." + GetReset());
+                }
+            }
+
+            EstudanteController estudanteControllerAtualizado = new EstudanteController();
+            model.Estudante estudante = estudanteControllerAtualizado.procurarEstudantePorNumeroMec(numMec);
+            if (estudante == null) {
+                System.out.println(GetYellow() + "\nErro: Estudante não encontrado!" + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            String nomeUC = BackendUtils.lerInputString(scanner, "Nome da Unidade Curricular: ");
+            UnidadeCurricularController unidadeCurricularControllerAtualizado = new UnidadeCurricularController();
+            model.UnidadeCurricular unidadeCurricular = unidadeCurricularControllerAtualizado.procurarUCPorNome(nomeUC);
+
+            if (unidadeCurricular == null) {
+                System.out.println(GetYellow() + "\nErro: Unidade Curricular não encontrada!" + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            String momento = BackendUtils.lerInputString(scanner, "Época de Avaliação (ex. Frequência, Exame): ");
+
+            Double nota = null;
+            boolean notaValida = false;
+
+            while (!notaValida) {
+                try {
+                    System.out.print("Nota (Deixe em branco e dê Enter se for 'Aguardar Lançamento'): ");
+                    String notaInput = scanner.nextLine().trim();
+
+                    if (notaInput.equals("0")) {
+                        throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
+                    }
+
+                    if (notaInput.isEmpty()) {
+                        notaValida = true;
+                    } else {
+                        nota = Double.parseDouble(notaInput.replace(",", "."));
+
+                        if (nota >= 0.0 && nota <= 20.0) {
+                            notaValida = true;
+                        } else {
+                            System.out.println(GetRed() + "Aviso: A nota deve estar entre 0.0 e 20.0." + GetReset());
+                        }
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println(GetRed() + "Aviso: Formato de nota inválido (use números)." + GetReset());
+                }
+            }
+
+            model.Avaliacao novaAvaliacao = new model.Avaliacao(momento, nota, unidadeCurricular, estudante);
+
+            if (avaliacaoController.registarAvaliacao(novaAvaliacao)) {
+                System.out.println(GetGreen() + "\nAvaliação registada com sucesso!" + GetReset());
+            } else {
+                System.out.println(GetRed() + "\nErro ao registar avaliação na base de dados." + GetReset());
+            }
+
+            MenuUtils.pressionarEnter(scanner);
+
+        } catch (CancelarRegistoException e) {
+            System.out.println("\n" + GetYellow() + "Aviso: " + e.getMessage() + GetReset());
+            System.out.println(GetRed() + "Operação interrompida!" + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Ocorreu um erro inesperado: " + e.getMessage() + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        }
+    }
+
+    private void consultarFichaDocente(Docente docente){
+        try {
+            System.out.println(docente.toString());
+            System.out.println("Unidades Curriculares Atribuídas:");
+            if (docente.getUnidadesCurriculares() == null || docente.getUnidadesCurriculares().isEmpty()) {
+                System.out.println(GetYellow() + "Nenhuma unidade curricular atribuída." + GetReset());
+            } else {
+                for (UnidadeCurricular uc : docente.getUnidadesCurriculares()) {
+                    System.out.println("- " + uc.getNome() + " (Ano: " + uc.getAnoCurricular() + ")");
+                }
+            }
+            MenuUtils.pressionarEnter(scanner);
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Ocorreu um erro inesperado: " + e.getMessage() + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        }
+    }
+
+    private void consultarPautaOrdenada(Docente docente) {
+        try {
+            System.out.println(GetBlue() + "\n--- CONSULTAR PAUTA DE ALUNOS ---" + GetReset());
+
+            List<UnidadeCurricular> ucs = docente.getUnidadesCurriculares();
+
+            if(ucs == null || ucs.isEmpty()) {
+                System.out.println(GetYellow() + "Não tem Unidades Curriculares atribuídas neste momento." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+            System.out.println(GetWhiteBold() + "As suas Unidades Curriculares:" + GetReset());
+            for (int i = 0; i < ucs.size(); i++) {
+                System.out.println((i + 1) + ". " + ucs.get(i).getNome());
+            }
+
+            int escolhaUC = -1;
+            boolean ucValida = false;
+            while (!ucValida) {
+                try {
+                    String ucStr = BackendUtils.lerInputString(scanner, "\nSelecione o número da UC para ver a pauta (ou 0 para cancelar): ");
+                    escolhaUC = Integer.parseInt(ucStr);
+
+                    if (escolhaUC == 0) return;
+
+                    if (escolhaUC >= 1 && escolhaUC <= ucs.size()) {
+                        ucValida = true;
+                    } else {
+                        System.out.println(GetRed() + "Aviso: Escolha inválida." + GetReset());
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println(GetRed() + "Aviso: O valor deve ser um número." + GetReset());
+                }
+            }
+
+            UnidadeCurricular ucSelecionada = ucs.get(escolhaUC - 1);
+            List<model.Avaliacao> avaliacoesUC = avaliacaoController.listarAvaliacoesPorUC(ucSelecionada.getNome());
+
+            if (avaliacoesUC == null || avaliacoesUC.isEmpty()) {
+                System.out.println(GetYellow() + "\nAinda não existem avaliações registadas para a UC " + ucSelecionada.getNome() + "." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            System.out.println("\n" + GetWhiteBold() + "Como deseja ordenar a pauta?" + GetReset());
+            System.out.println("1. Ordem Alfabética (Nome do Aluno)");
+            System.out.println("2. Nota mais alta para mais baixa");
+            System.out.println("3. Nota mais baixa para mais alta");
+
+            String ordem = "";
+            while (!ordem.equals("1") && !ordem.equals("2") && !ordem.equals("3")) {
+                System.out.print("Escolha uma opção (1-3): ");
+                ordem = scanner.nextLine().trim();
+            }
+
+            switch (ordem) {
+                case "1":
+                    avaliacoesUC.sort((a1, a2) -> a1.getEstudante().getNome().compareToIgnoreCase(a2.getEstudante().getNome()));
+                    break;
+                case "2":
+                    avaliacoesUC.sort((a1, a2) -> {
+                        Double nota1 = (a1.getNota() != null) ? a1.getNota() : -1.0;
+                        Double nota2 = (a2.getNota() != null) ? a2.getNota() : -1.0;
+                        return nota2.compareTo(nota1); // Ordem Descendente
+                    });
+                    break;
+                case "3":
+                    avaliacoesUC.sort((a1, a2) -> {
+                        Double nota1 = (a1.getNota() != null) ? a1.getNota() : -1.0;
+                        Double nota2 = (a2.getNota() != null) ? a2.getNota() : -1.0;
+                        return nota1.compareTo(nota2); // Ordem Ascendente
+                    });
+                    break;
+            }
+            System.out.println("\n" + GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
+            System.out.printf(GetWhiteBold() + " %-30s | %-15s | %-15s | %-10s\n" + GetReset(), "NOME DO ESTUDANTE", "Nº MEC", "ÉPOCA", "NOTA");
+            System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
+
+            for (model.Avaliacao avaliacao : avaliacoesUC) {
+                String nomeEstudante = avaliacao.getEstudante().getNome();
+                int mec = avaliacao.getEstudante().getNumeroMec();
+                String epoca = avaliacao.getMomento();
+                String notaStr = (avaliacao.getNota() == null) ? GetYellow() + "A Aguardar" + GetReset() : String.format("%.2f", avaliacao.getNota());
+
+                System.out.printf(" %-30s | %-15d | %-15s | %-10s\n", nomeEstudante, mec, epoca, notaStr);
+            }
+            System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
+
+            MenuUtils.pressionarEnter(scanner);
+        }
+        catch (Exception e) {
+            System.out.println(GetRed() + "Ocorreu um erro ao carregar a pauta: " + e.getMessage() + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        }
+    }
+
+
+
+
+
+
 
 
 

@@ -2,35 +2,37 @@ package BLL;
 
 import model.Avaliacao;
 import model.Estudante;
-import view.EstudanteView;
 
 public class EstudanteCalculo {
 
-    private Estudante model;
-    private EstudanteView view;
-
-    public EstudanteCalculo (Estudante model, EstudanteView view) {
-        this.model = model;
-        this.view = view;
+    public EstudanteCalculo() {
     }
-    public double calculoPercentagem(int totalUCsInscritas) {
-        if (model.getListaAvaliacoes() == null || model.getListaAvaliacoes().isEmpty() || totalUCsInscritas <= 0) {
+
+    public double calculoPercentagem(Estudante estudante, int totalUCsInscritas) {
+        if (estudante == null || estudante.getListaAvaliacoes() == null ||
+                estudante.getListaAvaliacoes().isEmpty() || totalUCsInscritas <= 0) {
             return 0.0;
         }
+
         int notasPositivas = 0;
-        for (Avaliacao avaliacao : model.getListaAvaliacoes()) {
-            if (avaliacao.getNota() >= 9.5) {
+
+        for (Avaliacao avaliacao : estudante.getListaAvaliacoes()) {
+            if (avaliacao.getNota() != null && avaliacao.getNota() >= 9.5) {
                 notasPositivas++;
             }
         }
+
         return (double) notasPositivas / totalUCsInscritas;
     }
-    public boolean verificarProgressao(int totalUCsInscritas) {
-        double percentagem = calculoPercentagem(totalUCsInscritas);
-        if (percentagem >= 0.60) {
-            model.setAnoLetivo(model.getAnoLetivo() + 1);
+
+    public boolean verificarProgressao(Estudante estudante, int totalUCsInscritas) {
+        double percentagem = calculoPercentagem(estudante, totalUCsInscritas);
+
+        if (percentagem > 0.60) {
+            estudante.setAnoLetivo(estudante.getAnoLetivo() + 1);
             return true;
         }
+
         return false;
     }
 }
