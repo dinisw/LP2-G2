@@ -19,38 +19,38 @@ public class DocenteController {
     }
 
     public Resultado registarDocente(String nome, String morada, int nif, LocalDate dataNascimento, String email, String hash, String sigla, List<String> nomesUC) {
-        Resultado res = new Resultado();
+        Resultado resultado = new Resultado();
 
         if (nome == null || nome.trim().isEmpty() || morada == null || morada.trim().isEmpty() ||
                 email == null || email.trim().isEmpty() || hash == null || hash.trim().isEmpty() ||
                 sigla == null || sigla.trim().isEmpty()) {
-            res.success = false;
-            res.errorMessage = "Todos os campos de texto (nome, morada, email, senha, sigla) são obrigatórios.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "Todos os campos de texto (nome, morada, email, senha, sigla) são obrigatórios.";
+            return resultado;
         }
 
         if (nif <= 0) {
-            res.success = false;
-            res.errorMessage = "O NIF fornecido é inválido.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "O NIF fornecido é inválido.";
+            return resultado;
         }
 
         if (dataNascimento == null) {
-            res.success = false;
-            res.errorMessage = "A data de nascimento fornecida é inválida.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "A data de nascimento fornecida é inválida.";
+            return resultado;
         }
 
         if (docenteCRUD.procurarPorNif(nif) != null) {
-            res.success = false;
-            res.errorMessage = "Já existe um docente registado com este NIF.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "Já existe um docente registado com este NIF.";
+            return resultado;
         }
 
         if (docenteCRUD.procurarPorSigla(sigla) != null) {
-            res.success = false;
-            res.errorMessage = "Já existe um docente registado com esta sigla.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "Já existe um docente registado com esta sigla.";
+            return resultado;
         }
 
         Docente docente = new Docente(nome, morada, nif, dataNascimento, email, hash, sigla, new ArrayList<>(), new ArrayList<>());
@@ -63,6 +63,18 @@ public class DocenteController {
                 if (nomeUC != null && !nomeUC.trim().isEmpty()) {
                     UnidadeCurricular unidadeCurricular = unidadeCurricularCRUDAtualizado.procurarPorNome(nomeUC.trim());
                     if (unidadeCurricular != null) {
+                        if (unidadeCurricular.getDocente() != null && !unidadeCurricular.getDocente().getSigla().equals(docente.getSigla())) {
+                            DAL.DocenteCRUD docenteCRUDParaRemover = new DAL.DocenteCRUD();
+                            model.Docente docenteAntigo = docenteCRUDParaRemover.procurarPorNif(unidadeCurricular.getDocente().getNif());
+
+                            if (docenteAntigo != null) {
+                                docenteAntigo.getUnidadesCurriculares().removeIf(u -> u.getNome().equalsIgnoreCase(unidadeCurricular.getNome()));
+                                docenteCRUDParaRemover.atualizarDocente(docenteAntigo);
+                            }
+                        }
+
+
+
                         docente.adicionarUnidadeCurricular(unidadeCurricular);
                         unidadeCurricular.setDocente(docente);
                         unidadeCurricularCRUDAtualizado.atualizarUC(unidadeCurricular.getNome(), unidadeCurricular);
@@ -74,14 +86,14 @@ public class DocenteController {
         }
 
         if (docenteCRUD.registarDocente(docente)) {
-            res.success = true;
-            res.object = avisos.toString();
+            resultado.success = true;
+            resultado.object = avisos.toString();
         } else {
-            res.success = false;
-            res.errorMessage = "Ocorreu um erro na base de dados ao tentar registar o docente.";
+            resultado.success = false;
+            resultado.errorMessage = "Ocorreu um erro na base de dados ao tentar registar o docente.";
         }
 
-        return res;
+        return resultado;
     }
 
     public List<Docente> listarDocentes() {

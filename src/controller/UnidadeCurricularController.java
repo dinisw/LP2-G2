@@ -79,19 +79,19 @@ public class UnidadeCurricularController {
     }
 
     public Resultado atualizarUC(String nomeAtual, String novoNome, int novoAno,int novoSemestre, String novaSiglaDocente) {
-        Resultado res = new Resultado();
+        Resultado resultado = new Resultado();
 
         if (nomeAtual == null || nomeAtual.trim().isEmpty()) {
-            res.success = false;
-            res.errorMessage = "O nome atual da UC é obrigatório para a pesquisa.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "O nome atual da UC é obrigatório para a pesquisa.";
+            return resultado;
         }
 
         UnidadeCurricular ucExistente = ucCRUD.procurarPorNome(nomeAtual);
         if (ucExistente == null) {
-            res.success = false;
-            res.errorMessage = "Unidade Curricular não encontrada na base de dados.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "Unidade Curricular não encontrada na base de dados.";
+            return resultado;
         }
 
         String novoNomeReal = (novoNome == null || novoNome.trim().isEmpty()) ? nomeAtual : novoNome;
@@ -102,29 +102,42 @@ public class UnidadeCurricularController {
         Docente novoDocente = ucExistente.getDocente();
         if (novaSiglaDocente != null && !novaSiglaDocente.trim().isEmpty()) {
             if (ucExistente.getDocente() != null && !ucExistente.getDocente().getSigla().equalsIgnoreCase(novaSiglaDocente)) {
-                res.success = false;
-                res.errorMessage = "Não é possível atribuir um novo docente a esta UC, pois já possui um docente associado.";
-                return res;
+                resultado.success = false;
+                resultado.errorMessage = "Não é possível atribuir um novo docente a esta UC, pois já possui um docente associado.";
+                return resultado;
             }
 
             novoDocente = docenteCRUD.procurarPorSigla(novaSiglaDocente);
             if (novoDocente == null) {
-                res.success = false;
-                res.errorMessage = "Novo docente não encontrado com a sigla informada.";
-                return res;
+                resultado.success = false;
+                resultado.errorMessage = "Novo docente não encontrado com a sigla informada.";
+                return resultado;
             }
         }
 
         UnidadeCurricular ucAtualizada = new UnidadeCurricular(novoNomeReal, novoAnoReal,novoSemestreReal, novoDocente);
 
         if (ucCRUD.atualizarUC(nomeAtual, ucAtualizada)) {
-            res.success = true;
-        } else {
-            res.success = false;
-            res.errorMessage = "Erro ao guardar as alterações. Verifique se o novo nome já pertence a outra UC.";
+            resultado.success = true;
+
+            if (novoNome != null && !novoNome.equals(nomeAtual)) {
+                if (ucAtualizada.getDocente() != null) {
+                    DAL.DocenteCRUD docenteCRUD = new DAL.DocenteCRUD();
+                    model.Docente docenteAfetado = docenteCRUD.procurarPorNif(ucAtualizada.getDocente().getNif());
+
+                    if (docenteAfetado != null) {
+                        for (model.UnidadeCurricular unidadeCurricular : docenteAfetado.getUnidadesCurriculares()) {
+                            if (unidadeCurricular.getNome().equalsIgnoreCase(nomeAtual)) {
+                                unidadeCurricular.setNome(novoNome);
+                            }
+                        }
+                        docenteCRUD.atualizarDocente(docenteAfetado);
+                    }
+                }
+            }
         }
 
-        return res;
+        return resultado;
     }
 
     public Resultado eliminarUC(String nome) {
