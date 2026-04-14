@@ -3,6 +3,7 @@ package view;
 import DAL.CursoCRUD;
 import common.utils.BackendUtils;
 import common.utils.MenuUtils;
+import controller.CursoController;
 import controller.TurmaController;
 import controller.UnidadeCurricularController;
 import model.Curso;
@@ -24,7 +25,7 @@ public class TurmaView{
 
 
     public TurmaView() {
-        this.turmaController = turmaController;
+        this.turmaController = new TurmaController();
         this.scanner = new Scanner(System.in);
     }
 
@@ -71,8 +72,8 @@ public class TurmaView{
     }
 
     private Curso obterCursoInterativo() {
-        CursoCRUD cursoCRUD = new CursoCRUD();
-        List<Curso> cursos = cursoCRUD.getCursos();
+        CursoController cursoController = new CursoController();
+        List<Curso> cursos = cursoController.listarCursos();
 
         if (cursos.isEmpty()) {
             System.out.println(GetYellow() + "Não existem cursos registados." + GetReset());
