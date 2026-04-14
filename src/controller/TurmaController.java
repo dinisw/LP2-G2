@@ -10,25 +10,27 @@ import java.util.List;
 
 public class TurmaController {
 
+    //deveria ser do tipo resultado
     public Turma criarTurma(Curso curso, int anoCurricular, String anoLetivo) {
         if (existeTurma(curso, anoCurricular, anoLetivo)) {
             throw new IllegalStateException(String.format("Já existe uma turma para o curso '%s', %dº ano.", curso.getNome(), anoCurricular));
         }
         Turma novaTurma = new Turma(anoCurricular, anoLetivo, curso);
-        TurmaCRUD.guardar(novaTurma);
+        TurmaCRUD.getInstance().guardar(novaTurma);
         return novaTurma;
     }
 
     public Turma obterTurma(Curso curso, int anoCurricular, String anoLetivo) {
-        return TurmaCRUD.encontrar(curso.getNome(), anoCurricular, anoLetivo);
+        return TurmaCRUD.getInstance().encontrar(curso, anoCurricular, anoLetivo).get();
     }
 
     public List<Turma> listarTodas() {
-        return TurmaCRUD.listarTodas();
+        return TurmaCRUD.getInstance().listarTodas();
     }
 
     public boolean existeTurma(Curso curso, int anoCurricular, String anoLetivo) {
-        return TurmaCRUD.procurarPorCursoEAno(curso.getNome(), anoCurricular) != null;
+        //TurmaCRUD.getInstance().procurarPorCursoEAno(curso.getNome(), anoCurricular) != null;
+        return true;
     }
 
     public void inscreverEstudante(Curso curso, int anoCurricular, String anoLetivo, Estudante estudante) {
