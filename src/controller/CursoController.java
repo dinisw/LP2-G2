@@ -174,4 +174,54 @@ public class CursoController {
         }
         return resultado;
     }
+
+    public Resultado associarUCAoCurso (String nomeCurso, String nomeUC) {
+        Resultado resultado = new Resultado();
+
+        if (nomeCurso == null || nomeCurso.trim().isEmpty() || nomeUC == null || nomeUC.trim().isEmpty()) {
+            resultado.success = false;
+            resultado.errorMessage = "O nome do curso e da UC são obrigatórios.";
+            return resultado;
+        }
+
+        CursoCRUD cursoCRUDAtualizado = new CursoCRUD();
+        UnidadeCurricularCRUD unidadeCurricularCRUDAtualizado = new UnidadeCurricularCRUD();
+
+        Curso curso = cursoCRUDAtualizado.procurarPorNome(nomeCurso);
+        if (curso == null) {
+            resultado.success = false;
+            resultado.errorMessage = "Curso não encontrado.";
+            return resultado;
+        }
+
+        UnidadeCurricular unidadeCurricular = unidadeCurricularCRUDAtualizado.procurarPorNome(nomeUC);
+        if (unidadeCurricular == null) {
+            resultado.success = false;
+            resultado.errorMessage = "Unidade Curricular não encontrado";
+            return resultado;
+        }
+
+        for (UnidadeCurricular unidadeCurricularExistente : curso.getUc()) {
+            if (unidadeCurricularExistente.getNome().equalsIgnoreCase(nomeUC)) {
+                resultado.success = false;
+                resultado.errorMessage = "A UC '" + nomeUC + "' já está associada a este curso.";
+                return resultado;
+            }
+        }
+
+        boolean adicionadoComSucesso = curso.adicionarUnidadeCurricular(unidadeCurricular);
+
+        if (adicionadoComSucesso) {
+            if (cursoCRUDAtualizado.atualizarCurso(curso.getNome(), curso)) {
+                resultado.success = true;
+            } else {
+                resultado.success = false;
+                resultado.errorMessage = "Erro ao guardar a associação no ficheiro CSV.";
+            }
+        } else {
+            resultado.success = false;
+            resultado.errorMessage = "Limite Atingido: Não é possível associar a UC! O curso já tem 5 UCs no ano curricular" + unidadeCurricular.getAnoCurricular() + ".";
+        }
+        return resultado;
+    }
 }

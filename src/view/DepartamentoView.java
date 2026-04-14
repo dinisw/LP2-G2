@@ -67,12 +67,13 @@ public class DepartamentoView {
             String nome = BackendUtils.lerInputString(scanner, "Nome do Departamento: ");
             String sigla = BackendUtils.lerInputString(scanner, "Sigla (ex: EI, MAT): ").toUpperCase();
 
-            Resultado res = departamentoController.registarDepartamento(nome, sigla);
+            DepartamentoController departamentoControllerAtualizado = new DepartamentoController();
+            Resultado resultado = departamentoControllerAtualizado.registarDepartamento(nome, sigla);
 
-            if (res.success) {
+            if (resultado.success) {
                 System.out.println(GetGreen() + "\nDepartamento registado com sucesso!" + GetReset());
             } else {
-                System.out.println(GetRed() + "\nErro ao registar: " + res.errorMessage + GetReset());
+                System.out.println(GetRed() + "\nErro ao registar: " + resultado.errorMessage + GetReset());
             }
 
             MenuUtils.pressionarEnter(scanner);
@@ -91,13 +92,14 @@ public class DepartamentoView {
         try {
             System.out.println(GetBlue() + "\n--- LISTA DE DEPARTAMENTOS ---" + GetReset());
 
-            List<Departamento> lista = departamentoController.listarTodosDepartamentos();
+            DepartamentoController departamentoControllerAtualizado = new DepartamentoController();
+            List<Departamento> lista = departamentoControllerAtualizado.listarTodosDepartamentos();
 
             if (lista.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhum departamento registado no sistema." + GetReset());
             } else {
-                for (Departamento d : lista) {
-                    System.out.println("Sigla: " + d.getSigla() + " | Nome: " + d.getNome());
+                for (Departamento departamento : lista) {
+                    System.out.println("Sigla: " + departamento.getSigla() + " | Nome: " + departamento.getNome());
                 }
             }
 
@@ -118,11 +120,12 @@ public class DepartamentoView {
 
             String sigla = BackendUtils.lerInputString(scanner, "\nDigite a sigla do departamento: ").toUpperCase();
 
-            Departamento d = departamentoController.procurarDepartamento(sigla);
+            DepartamentoController departamentoControllerAtualizado = new DepartamentoController();
+            Departamento departamento = departamentoControllerAtualizado.procurarDepartamento(sigla);
 
-            if (d != null) {
+            if (departamento != null) {
                 System.out.println(GetGreen() + "\nDados encontrados:" + GetReset());
-                System.out.println(d.getNome() + " (" + d.getSigla() + ")");
+                System.out.println(departamento.getNome() + " (" + departamento.getSigla() + ")");
             } else {
                 System.out.println(GetYellow() + "\nDepartamento não encontrado com a sigla informada." + GetReset());
             }
@@ -148,23 +151,24 @@ public class DepartamentoView {
 
             String sigla = BackendUtils.lerInputString(scanner, "\nDigite a sigla do departamento a atualizar: ").toUpperCase();
 
-            Departamento d = departamentoController.procurarDepartamento(sigla);
+            DepartamentoController departamentoControllerAtualizado = new DepartamentoController();
+            Departamento departamento = departamentoControllerAtualizado.procurarDepartamento(sigla);
 
-            if (d != null) {
+            if (departamento != null) {
                 System.out.println(GetGreen() + "\nDados atuais:" + GetReset());
-                System.out.println("Nome: " + d.getNome());
+                System.out.println("Nome: " + departamento.getNome());
 
                 System.out.println(GetYellow() + "\n[Pressione ENTER para manter o nome igual]" + GetReset());
                 String nome = BackendUtils.lerInputString(scanner, "Novo Nome: ");
 
-                String nomeFinal = nome.isEmpty() ? d.getNome() : nome;
+                String nomeFinal = nome.isEmpty() ? departamento.getNome() : nome;
 
-                Resultado res = departamentoController.atualizarDepartamento(sigla, nomeFinal);
+                Resultado resultado = departamentoControllerAtualizado.atualizarDepartamento(sigla, nomeFinal);
 
-                if (res.success) {
+                if (resultado.success) {
                     System.out.println(GetGreen() + "\nDepartamento atualizado com sucesso!" + GetReset());
                 } else {
-                    System.out.println(GetRed() + "\nErro ao atualizar: " + res.errorMessage + GetReset());
+                    System.out.println(GetRed() + "\nErro ao atualizar: " + resultado.errorMessage + GetReset());
                 }
             } else {
                 System.out.println(GetYellow() + "\nDepartamento não encontrado com a sigla informada." + GetReset());
@@ -191,12 +195,13 @@ public class DepartamentoView {
 
             String sigla = BackendUtils.lerInputString(scanner, "\nDigite a sigla do departamento a eliminar: ").toUpperCase();
 
-            Resultado res = departamentoController.eliminarDepartamento(sigla);
+            DepartamentoController departamentoControllerAtualizado = new DepartamentoController();
+            Resultado resultado = departamentoControllerAtualizado.eliminarDepartamento(sigla);
 
-            if (res.success) {
+            if (resultado.success) {
                 System.out.println(GetGreen() + "\nDepartamento eliminado com sucesso!" + GetReset());
             } else {
-                System.out.println(GetRed() + "\nErro ao eliminar: " + res.errorMessage + GetReset());
+                System.out.println(GetRed() + "\nErro ao eliminar: " + resultado.errorMessage + GetReset());
             }
 
             MenuUtils.pressionarEnter(scanner);

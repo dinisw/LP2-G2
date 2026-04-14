@@ -56,12 +56,20 @@ public class DocenteController {
         Docente docente = new Docente(nome, morada, nif, dataNascimento, email, hash, sigla, new ArrayList<>(), new ArrayList<>());
         StringBuilder avisos = new StringBuilder();
 
-        for (String nomeUC : nomesUC) {
-            UnidadeCurricular uc = ucCRUD.procurarPorNome(nomeUC.trim());
-            if (uc != null) {
-                docente.adicionarUnidadeCurricular(uc);
-            } else {
-                avisos.append("UC '").append(nomeUC.trim()).append("' não encontrada (ignorada). ");
+        DAL.UnidadeCurricularCRUD unidadeCurricularCRUDAtualizado = new DAL.UnidadeCurricularCRUD();
+
+        if (nomesUC != null) {
+            for ( String nomeUC : nomesUC) {
+                if (nomeUC != null && !nomeUC.trim().isEmpty()) {
+                    UnidadeCurricular unidadeCurricular = unidadeCurricularCRUDAtualizado.procurarPorNome(nomeUC.trim());
+                    if (unidadeCurricular != null) {
+                        docente.adicionarUnidadeCurricular(unidadeCurricular);
+                        unidadeCurricular.setDocente(docente);
+                        unidadeCurricularCRUDAtualizado.atualizarUC(unidadeCurricular.getNome(), unidadeCurricular);
+                    } else {
+                        avisos.append("UC '").append(nomeUC.trim()).append("' não encontrado (ignorada). ");
+                    }
+                }
             }
         }
 

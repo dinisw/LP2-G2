@@ -132,12 +132,13 @@ public class DocenteView {
             SenhaUtils su = new SenhaUtils();
             String passHash = su.gerarHashComSalt(novaPass);
 
-            Resultado res = docenteController.alterarPassword(d.getNif(), passHash);
+            DocenteController docenteControllerAtualizado = new DocenteController();
+            Resultado resultado = docenteControllerAtualizado.alterarPassword(d.getNif(), passHash);
 
-            if (res.success) {
+            if (resultado.success) {
                 System.out.println(GetGreen() + "\nPassword alterada com sucesso!" + GetReset());
             } else {
-                System.out.println(GetRed() + "\nErro ao guardar alteração da password: " + res.errorMessage + GetReset());
+                System.out.println(GetRed() + "\nErro ao guardar alteração da password: " + resultado.errorMessage + GetReset());
             }
 
             MenuUtils.pressionarEnter(scanner);
@@ -169,7 +170,8 @@ public class DocenteView {
                 }
             }
 
-            model.Estudante estudante = estudanteController.procurarEstudantePorNumeroMec(numMec);
+            EstudanteController estudanteControllerAtualizado = new EstudanteController();
+            model.Estudante estudante = estudanteControllerAtualizado.procurarEstudantePorNumeroMec(numMec);
             if (estudante == null) {
                 System.out.println(GetYellow() + "\nErro: Estudante não encontrado!" + GetReset());
                 MenuUtils.pressionarEnter(scanner);
@@ -177,9 +179,10 @@ public class DocenteView {
             }
 
             String nomeUC = BackendUtils.lerInputString(scanner, "Nome da Unidade Curricular: ");
-            model.UnidadeCurricular uc = ucController.procurarUCPorNome(nomeUC);
+            UnidadeCurricularController unidadeCurricularControllerAtualizado = new UnidadeCurricularController();
+            model.UnidadeCurricular unidadeCurricular = unidadeCurricularControllerAtualizado.procurarUCPorNome(nomeUC);
 
-            if (uc == null) {
+            if (unidadeCurricular == null) {
                 System.out.println(GetYellow() + "\nErro: Unidade Curricular não encontrada!" + GetReset());
                 MenuUtils.pressionarEnter(scanner);
                 return;
@@ -215,7 +218,7 @@ public class DocenteView {
                 }
             }
 
-            model.Avaliacao novaAvaliacao = new model.Avaliacao(momento, nota, uc, estudante);
+            model.Avaliacao novaAvaliacao = new model.Avaliacao(momento, nota, unidadeCurricular, estudante);
 
             if (avaliacaoController.registarAvaliacao(novaAvaliacao)) {
                 System.out.println(GetGreen() + "\nAvaliação registada com sucesso!" + GetReset());

@@ -523,8 +523,8 @@ public class GestorView {
             }
 
             System.out.println("\n" + GetBlue() + "--- Unidades Curriculares Disponíveis ---" + GetReset());
-            UnidadeCurricularController ucControllerAtualizado = new UnidadeCurricularController();
-            List<UnidadeCurricular> ucs = ucControllerAtualizado.listarTodasUCs();
+            UnidadeCurricularController unidadeCurricularControllerAtualizado = new UnidadeCurricularController();
+            List<UnidadeCurricular> ucs = unidadeCurricularControllerAtualizado.listarTodasUCs();
             List<String> nomesUC = new ArrayList<>();
             if (ucs.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhuma UC registada. Docente será registado sem UCs associadas." + GetReset());
@@ -536,7 +536,25 @@ public class GestorView {
                 if (!input.isEmpty()) {
                     String[] parts = input.split(",");
                     for (String part : parts) {
-                        nomesUC.add(part.trim());
+                        String nomeUC = part.trim();
+                        UnidadeCurricular unidadeCurricularCheck = unidadeCurricularControllerAtualizado.procurarUCPorNome(nomeUC);
+
+                        if (unidadeCurricularCheck != null) {
+
+
+                            if (unidadeCurricularCheck.getDocente() != null) {
+                                String resp = BackendUtils.lerInputString(scanner, GetYellow() + "Aviso: A UC '" + nomeUC + "' já tem o docente " + unidadeCurricularCheck.getDocente().getSigla() + " atribuído. Deseja substituir pelo novo docente? (S/N): " + GetReset());
+                                if (resp.equalsIgnoreCase("S")) {
+                                    nomesUC.add(nomeUC);
+                                } else {
+                                    System.out.println(GetYellow() + "Atribuição da UC '" + nomeUC + "' ignorada." + GetReset());
+                                }
+                            } else {
+                                nomesUC.add(nomeUC);
+                            }
+                        } else {
+                            System.out.println(GetRed() + "Erro: A UC '" + nomeUC + "' não existe no sistema." + GetReset());
+                        }
                     }
                 }
             }
