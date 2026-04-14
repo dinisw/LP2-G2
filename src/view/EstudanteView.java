@@ -77,50 +77,67 @@ public class EstudanteView {
         }
 
         List<model.Avaliacao> avaliacoes = estudante.getListaAvaliacoes();
-        int totalUCsAnoAnterior = 0;
-        // Supomos que o curso tem 5 UCs por ano (conforme regra de negócio no modelo Curso)
-        totalUCsAnoAnterior = 5; // Valor base para cálculo de aproveitamento do ano anterior
 
-        boolean bloqueado = false;
-        if (estudante.getAnoLetivo() > 1) {
-             // Verificar aproveitamento do ano anterior (ou atual se ainda não passou)
-             // No contexto desta tarefa, se ele tentar inscrever-se e tiver <60%, recebe a mensagem.
-             if (!estudanteController.temAproveitamentoSuficiente(estudante, totalUCsAnoAnterior)) {
-                 System.out.println(GetRed() + "\nInscrição no ano seguinte não permitida. Aproveitamento insuficiente (mínimo exigido: >60%)." + GetReset());
-                 bloqueado = true;
-             }
+        int anoDesbloqueado = 1;
+
+        long unidadesCurricularesAno1Total = curso.getUc().stream().filter(u -> u.getAnoCurricular() == 1).count();
+        long unidadesCurricularesAno1Aprovadas = avaliacoes.stream().filter(a -> a.getUnidadeCurricular().getAnoCurricular() == 1 && a.getNota() != null && a.getNota() >= 9.5).count();
+
+        long unidadesCurricularesAno2Total = curso.getUc().stream().filter(u -> u.getAnoCurricular() == 2).count();
+        long unidadesCurricularesAno2Aprovadas = avaliacoes.stream().filter(a -> a.getUnidadeCurricular().getAnoCurricular() == 2 && a.getNota() != null && a.getNota() >= 9.5).count();
+
+        if (unidadesCurricularesAno1Total == 0) unidadesCurricularesAno1Total = 5;
+        if (unidadesCurricularesAno2Total == 0) unidadesCurricularesAno2Total = 5;
+
+        boolean mostrouAvisoBLoqueio = false;
+
+        long inscritasAno1 = avaliacoes.stream().filter(a -> a.getUnidadeCurricular().getAnoCurricular() == 1).count();
+
+        if (inscritasAno1 > 0) {
+            double aproveitamentoAno1 = (double) unidadesCurricularesAno1Aprovadas / unidadesCurricularesAno1Total;
+            if (aproveitamentoAno1 > 0.60) {
+                anoDesbloqueado = 2;
+
+                long inscritasAno2 = avaliacoes.stream().filter(a -> a.getUnidadeCurricular().getAnoCurricular() == 2).count();
+                if (inscritasAno2 > 0) {
+                    double aproveitamentoAno2 = (double) unidadesCurricularesAno2Aprovadas / unidadesCurricularesAno2Total;
+                    if (aproveitamentoAno2 > 0.60) {
+                        anoDesbloqueado = 3;
+                    } else {
+                        mostrouAvisoBLoqueio = true;
+                    }
+                }
+            } else {
+                mostrouAvisoBLoqueio = true;
+            }
+        }
+
+        if (mostrouAvisoBLoqueio) {
+            System.out.println(GetRed() + "\nInscrição no ano seguinte não permitida. Aproveitamento insuficiente (mínimo exigido: >60%)." + GetReset());
+            System.out.println(GetYellow() + "Apenas estão disponíveis disciplinas em atraso para o seu nível atual." + GetReset());
         }
 
         List<model.UnidadeCurricular> disponiveis = new ArrayList<>();
         List<model.UnidadeCurricular> todasUCsCurso = curso.getUc();
 
-        for (model.UnidadeCurricular uc : todasUCsCurso) {
+        for (model.UnidadeCurricular unidadeCurricular : todasUCsCurso) {
             // Verificar se o aluno já está inscrito ou já concluiu a UC
-            boolean jaInscrito = false;
+            boolean aAguardarNota = false;
             boolean aprovado = false;
             for (model.Avaliacao a : avaliacoes) {
-                if (a.getUnidadeCurricular().getNome().equalsIgnoreCase(uc.getNome())) {
-                    jaInscrito = true;
-                    if (a.getNota() != null && a.getNota() >= 9.5) {
-                        aprovado = true;
-                    }
-                    break;
+                if (a.getUnidadeCurricular().getNome().equalsIgnoreCase(unidadeCurricular.getNome())) {
+                    aAguardarNota = true;
+                } else if (a.getNota() >= 9.5) {
+                    aprovado = true;
                 }
             }
 
-            if (aprovado) continue; // Já passou, não precisa inscrever
+            if (aprovado || aAguardarNota) continue;
 
-            if (bloqueado) {
-                // Se bloqueado, apenas permite disciplinas em atraso do ano anterior
-                if (uc.getAnoCurricular() < estudante.getAnoLetivo()) {
-                    disponiveis.add(uc);
-                }
-            } else {
-                // Se não bloqueado, permite inscrever em UCs do ano atual/seguinte (e atraso)
-                if (!jaInscrito) {
-                    disponiveis.add(uc);
-                }
-            }
+           if (unidadeCurricular.getAnoCurricular() <= anoDesbloqueado) {
+               disponiveis.add(unidadeCurricular);
+           }
+
         }
 
         if (disponiveis.isEmpty()) {
@@ -144,7 +161,6 @@ public class EstudanteView {
             if (escolha > 0 && escolha <= disponiveis.size()) {
                 model.UnidadeCurricular ucEscolhida = disponiveis.get(escolha - 1);
                 
-                // Registar a inscrição como uma nova Avaliação (sem nota)
                 model.Avaliacao novaInscricao = new model.Avaliacao("1ª Época", null, ucEscolhida, estudante);
                 controller.AvaliacaoController avaliacaoController = new controller.AvaliacaoController();
                 

@@ -41,6 +41,7 @@ public class CursoView {
         opcoes.add("4. Atualizar Curso");
         opcoes.add("5. Eliminar Curso");
         opcoes.add("6. Iniciar Curso (Bloqueio de Inscrições)");
+        opcoes.add("7. Associar UC a Curso");
         opcoes.add("0. Voltar ao Menu de Gestão");
 
         do {
@@ -56,6 +57,7 @@ public class CursoView {
                     case "4": atualizarCurso(); break;
                     case "5": eliminarCurso(); break;
                     case "6": iniciarAnoLetivoCurso(); break;
+                    case "7": associarUCAoCurso(); break;
                     case "0":
                         System.out.println(GetYellow() + "\nA voltar ao menu de gestão..." + GetReset());
                         return;
@@ -78,7 +80,8 @@ public class CursoView {
             String nome = BackendUtils.lerInputString(scanner, "Nome do Curso: ");
 
             System.out.println("\n" + GetBlue() + "--- Departamentos Disponíveis ---" + GetReset());
-            List<Departamento> deps = departamentoController.listarTodosDepartamentos();
+            DepartamentoController departamentoControllerAtualizado = new DepartamentoController();
+            List<Departamento> deps = departamentoControllerAtualizado.listarTodosDepartamentos();
             if (deps.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhum departamento registado. Crie um departamento primeiro." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
@@ -91,7 +94,8 @@ public class CursoView {
             String siglaDep = BackendUtils.lerInputString(scanner, "\nSigla do Departamento Associado (ex: EI): ").toUpperCase();
 
             System.out.println("\n" + GetBlue() + "--- Unidades Curriculares Disponíveis ---" + GetReset());
-            List<UnidadeCurricular> ucs = ucController.listarTodasUCs();
+            UnidadeCurricularController unidadeCurricularControllerAtualizado = new UnidadeCurricularController();
+            List<UnidadeCurricular> ucs = unidadeCurricularControllerAtualizado.listarTodasUCs();
             List<String> nomesUC = new ArrayList<>();
 
             if (ucs.isEmpty()) {
@@ -109,17 +113,18 @@ public class CursoView {
                 }
             }
 
-            Resultado res = cursoController.registarCurso(nome, siglaDep, nomesUC);
+            CursoController cursoControllerAtualizado = new CursoController();
+            Resultado resultado = cursoControllerAtualizado.registarCurso(nome, siglaDep, nomesUC);
 
-            if (res.success) {
+            if (resultado.success) {
                 System.out.println(GetGreen() + "\nCurso registado com sucesso!" + GetReset());
 
-                String avisos = (String) res.object;
+                String avisos = (String) resultado.object;
                 if (avisos != null && !avisos.isEmpty()) {
                     System.out.println(GetYellow() + "Notas: " + avisos + GetReset());
                 }
             } else {
-                System.out.println(GetRed() + "\nErro ao registar: " + res.errorMessage + GetReset());
+                System.out.println(GetRed() + "\nErro ao registar: " + resultado.errorMessage + GetReset());
             }
 
             MenuUtils.pressionarEnter(scanner);
@@ -137,7 +142,8 @@ public class CursoView {
     private void listarCursos() {
         try {
             System.out.println(GetBlue() + "\n--- LISTA DE CURSOS ---" + GetReset());
-            List<Curso> cursos = cursoController.listarCursos();
+            CursoController cursoControllerAtualizado = new CursoController();
+            List<Curso> cursos = cursoControllerAtualizado.listarCursos();
 
             if (cursos.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhum curso registado até ao momento!" + GetReset());
@@ -161,10 +167,11 @@ public class CursoView {
 
             String nome = BackendUtils.lerInputString(scanner, "Digite o nome do curso a procurar: ");
 
-            Curso c = cursoController.procurarCurso(nome);
-            if (c != null) {
+            CursoController cursoControllerAtualizado = new CursoController();
+            Curso curso = cursoControllerAtualizado.procurarCurso(nome);
+            if (curso != null) {
                 System.out.println(GetGreen() + "\nDados encontrados:" + GetReset());
-                System.out.println(c.toString());
+                System.out.println(curso.toString());
             } else {
                 System.out.println(GetYellow() + "\nCurso não encontrado." + GetReset());
             }
@@ -187,23 +194,23 @@ public class CursoView {
 
             String nomeAtual = BackendUtils.lerInputString(scanner, "Digite o nome do curso a atualizar: ");
 
-            Curso c = cursoController.procurarCurso(nomeAtual);
+            CursoController cursoControllerAtualizado = new CursoController();
+            Curso curso = cursoControllerAtualizado.procurarCurso(nomeAtual);
 
-            if (c != null) {
+            if (curso != null) {
                 System.out.println(GetGreen() + "\nDados atuais:" + GetReset());
-                System.out.println(c.toString());
+                System.out.println(curso.toString());
 
                 System.out.println(GetYellow() + "\n[Pressione ENTER nos campos que deseja manter iguais]" + GetReset());
 
                 String novoNome = BackendUtils.lerInputString(scanner, "Novo Nome: ");
 
-                // Se devolver Resultado, fica igual ao registarCurso
-                Resultado res = cursoController.atualizarCurso(nomeAtual, novoNome.isEmpty() ? nomeAtual : novoNome);
+                Resultado resultado = cursoControllerAtualizado.atualizarCurso(nomeAtual, novoNome.isEmpty() ? nomeAtual : novoNome);
 
-                if (res.success) {
+                if (resultado.success) {
                     System.out.println(GetGreen() + "\nCurso atualizado com sucesso!" + GetReset());
                 } else {
-                    System.out.println(GetRed() + "\nErro ao atualizar: " + res.errorMessage + GetReset());
+                    System.out.println(GetRed() + "\nErro ao atualizar: " + resultado.errorMessage + GetReset());
                 }
             } else {
                 System.out.println(GetYellow() + "\nCurso não encontrado com o nome informado." + GetReset());
@@ -227,12 +234,13 @@ public class CursoView {
 
             String nome = BackendUtils.lerInputString(scanner, "Digite o nome do curso a eliminar: ");
 
-            Resultado res = cursoController.eliminarCurso(nome);
+            CursoController cursoControllerAtualizado = new CursoController();
+            Resultado resultado = cursoControllerAtualizado.eliminarCurso(nome);
 
-            if (res.success) {
+            if (resultado.success) {
                 System.out.println(GetGreen() + "\nCurso eliminado com sucesso!" + GetReset());
             } else {
-                System.out.println(GetRed() + "\nErro ao eliminar: " + res.errorMessage + GetReset());
+                System.out.println(GetRed() + "\nErro ao eliminar: " + resultado.errorMessage + GetReset());
             }
             MenuUtils.pressionarEnter(scanner);
 
@@ -250,7 +258,8 @@ public class CursoView {
             System.out.println(GetBlue() + "\n--- INICIAR ANO LETIVO DO CURSO ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
-            List<Curso> lista = cursoController.listarCursos();
+            CursoController cursoControllerAtualizado = new CursoController();
+            List<Curso> lista = cursoControllerAtualizado.listarCursos();
             if(lista.isEmpty()) {
                 System.out.println(GetYellow() + "Não há cursos registados no sistema!" + GetReset());
                 MenuUtils.pressionarEnter(scanner);
@@ -258,7 +267,7 @@ public class CursoView {
             }
             listarCursos();
             String nome = BackendUtils.lerInputString(scanner, "\nDigite o nome do curso a iniciar: ");
-            Resultado resultado = cursoController.iniciarCurso(nome);
+            Resultado resultado = cursoControllerAtualizado.iniciarCurso(nome);
 
             if (resultado.success) {
                 System.out.println(GetGreen() + "\nSucesso! O curso '" + nome + "' foi iniciado." + GetReset());
@@ -277,7 +286,57 @@ public class CursoView {
         }
     }
 
+    private void associarUCAoCurso() {
+        try {
+            System.out.println(GetBlue() + "\n--- ASSOCIAR UNIDADE CURRICULAR A UM CURSO ---" + GetReset());
+            System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
+            CursoController cursoControllerAtualizado = new CursoController();
+            List<Curso> cursos = cursoControllerAtualizado.listarCursos();
+            if(cursos.isEmpty()){
+                System.out.println(GetYellow() + "Não existem cursos registados no sistema." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+            System.out.println("\n" + GetWhiteBold() + "Cursos Disponíveis:" + GetReset());
+            for (Curso c : cursos) {
+                System.out.println("- " + c.getNome());
+            }
+
+            String nomeCurso = BackendUtils.lerInputString(scanner, "\nDigite o nome do Curso: ");
+
+            UnidadeCurricularController unidadeCurricularControllerAtualizado = new UnidadeCurricularController();
+            List<UnidadeCurricular> ucs = unidadeCurricularControllerAtualizado.listarTodasUCs();
+            if(ucs.isEmpty()){
+                System.out.println(GetYellow() + "Não existem UCs registadas no sistema." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+            System.out.println("\n" + GetWhiteBold() + "UCs Disponíveis:" + GetReset());
+            for (UnidadeCurricular uc : ucs) {
+                System.out.println("- " + uc.getNome() + " (Ano: " + uc.getAnoCurricular() + " | Sem: " + uc.getSemestre() + ")");
+            }
+
+            String nomeUC = BackendUtils.lerInputString(scanner, "\nDigite o nome da UC a associar: ");
+
+            Resultado resultado = cursoControllerAtualizado.associarUCAoCurso(nomeCurso, nomeUC);
+
+            if (resultado.success) {
+                System.out.println(GetGreen() + "\nAssociação guardada com sucesso! A UC foi ligada ao Curso." + GetReset());
+            } else {
+                System.out.println(GetRed() + "\nErro ao associar: " + resultado.errorMessage + GetReset());
+            }
+            MenuUtils.pressionarEnter(scanner);
+
+        } catch (CancelarRegistoException e) {
+            System.out.println("\n" + GetYellow() + "Aviso: " + e.getMessage() + GetReset());
+            System.out.println(GetRed() + "Operação interrompida!" + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Ocorreu um erro inesperado: " + e.getMessage() + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        }
+    }
 
 
 
