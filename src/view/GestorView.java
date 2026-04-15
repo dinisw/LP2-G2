@@ -27,7 +27,6 @@ public class GestorView {
     private final DepartamentoView departamentoView;
     private final CursoView cursoView;
     private final UnidadeCurricularController ucController;
-    private final TurmaView turmaView;
     private final Scanner scanner;
 
     public GestorView() {
@@ -38,7 +37,6 @@ public class GestorView {
         this.departamentoView = new DepartamentoView();
         this.cursoView = new CursoView();
         this.ucController = new UnidadeCurricularController();
-        this.turmaView = new TurmaView();
         this.scanner = new Scanner(System.in);
     }
 
@@ -51,7 +49,6 @@ public class GestorView {
         opcoes.add("4. Gerir Cursos");
         opcoes.add("5. Gerir Departamentos");
         opcoes.add("6. Gerir Unidades Curriculares");
-        opcoes.add("7. Gerir Turmas");
         opcoes.add("0. Logout");
 
         do {
@@ -79,9 +76,6 @@ public class GestorView {
                         break;
                     case "6":
                         unidadeCurricularView.exibirMenuUnidadesCurriculares();
-                        break;
-                    case "7":
-                        turmaView.exiberMenuTurma();
                         break;
                     case "0":
                         System.out.println(GetYellow() + "\nA efetuar logout..." + GetReset());
@@ -950,27 +944,6 @@ public class GestorView {
             if (resReg.success) {
                 System.out.println(GetGreen() + "\nEstudante registado com sucesso!" + GetReset());
                 System.out.println("Nº Mecanográfico atribuído: " + mecAuto);
-                // --- NOVA LIGAÇÃO: INSCRIÇÃO AUTOMÁTICA NA TURMA DO 1º ANO ---
-                try {
-                    TurmaController turmaController = new TurmaController();
-                    // Assumindo que tem um CursoCRUD ou CursoController para ir buscar o objeto Curso
-                    CursoCRUD cursoCRUD = new CursoCRUD();
-                    Curso curso = cursoCRUD.procurarPorNome(cursoNomeSelecionado);
-                    model.Estudante recemCriado = estudanteController.procurarEstudantePorNumeroMec(mecAuto);
-
-                    String anoLetivoAtual = "2025/2026";
-
-                    // Verifica se a turma do 1º ano já existe, se não, cria-a
-                    if (!turmaController.existeTurma(curso, 1, anoLetivoAtual)) {
-                        turmaController.criarTurma(curso, 1, anoLetivoAtual);
-                    }
-
-                    // Inscreve o estudante na turma
-                    turmaController.inscreverEstudante(curso, 1, anoLetivoAtual, recemCriado);
-                    System.out.println(GetGreen() + "Estudante alocado automaticamente à turma do 1º ano de " + cursoNomeSelecionado + "." + GetReset());
-                } catch (Exception ex) {
-                    System.out.println(GetYellow() + "Aviso: Não foi possível alocar automaticamente à turma: " + ex.getMessage() + GetReset());
-                }
             } else {
                 System.out.println(GetRed() + "\nErro ao registar estudante: " + resReg.errorMessage + GetReset());
             }
