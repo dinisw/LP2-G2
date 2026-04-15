@@ -17,6 +17,9 @@ import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
+
+import javax.print.Doc;
+
 import static common.utils.DesignUtils.*;
 
 public class GestorView {
@@ -221,7 +224,8 @@ public class GestorView {
         try {
             System.out.println(GetBlue() + "\n--- LISTA DE GESTORES ---" + GetReset());
 
-            List<Gestor> gestores = gestorController.listarGestores();
+            GestorController gestorControllerAtualizado = new GestorController();
+            List<Gestor> gestores = gestorControllerAtualizado.listarGestores();
 
             if (gestores.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhum gestor registado no sistema." + GetReset());
@@ -261,11 +265,12 @@ public class GestorView {
                 }
             }
 
-            Gestor g = gestorController.procurarGestorPorNif(nif);
+            GestorController gestorControllerAtualizado = new GestorController();
+            Gestor gestor = gestorControllerAtualizado.procurarGestorPorNif(nif);
 
-            if (g != null) {
+            if (gestor != null) {
                 System.out.println(GetGreen() + "\nDados encontrados:" + GetReset());
-                System.out.println(g.toString());
+                System.out.println(gestor.toString());
             } else {
                 System.out.println(GetYellow() + "\nGestor não encontrado com o NIF informado." + GetReset());
             }
@@ -305,12 +310,12 @@ public class GestorView {
             }
 
             GestorController gestorControllerAtualizado = new GestorController();
-            Resultado res = gestorControllerAtualizado.eliminarGestor(nif);
+            Resultado resultado = gestorControllerAtualizado.eliminarGestor(nif);
 
-            if (res.success) {
+            if (resultado.success) {
                 System.out.println(GetGreen() + "\nGestor eliminado com sucesso!" + GetReset());
             } else {
-                System.out.println(GetRed() + "\nErro ao eliminar: " + res.errorMessage + GetReset());
+                System.out.println(GetRed() + "\nErro ao eliminar: " + resultado.errorMessage + GetReset());
             }
 
             MenuUtils.pressionarEnter(scanner);
@@ -346,19 +351,20 @@ public class GestorView {
                 }
             }
 
-            Gestor g = gestorController.procurarGestorPorNif(nif);
+            GestorController gestorControllerAtualizado = new GestorController();
+            Gestor gestor = gestorControllerAtualizado.procurarGestorPorNif(nif);
 
-            if (g != null) {
+            if (gestor != null) {
                 System.out.println(GetGreen() + "\nDados atuais:" + GetReset());
-                System.out.println(g.toString());
+                System.out.println(gestor.toString());
 
                 System.out.println(GetYellow() + "\n[Pressione ENTER nos campos que deseja manter iguais]" + GetReset());
 
                 String nome = BackendUtils.lerInputString(scanner, "Novo Nome: ");
-                if (!nome.isEmpty()) g.setNome(nome);
+                if (!nome.isEmpty()) gestor.setNome(nome);
 
                 String morada = BackendUtils.lerInputString(scanner, "Nova Morada: ");
-                if (!morada.isEmpty()) g.setMorada(morada);
+                if (!morada.isEmpty()) gestor.setMorada(morada);
 
                 String email = "";
                 boolean emailValido = false;
@@ -373,18 +379,17 @@ public class GestorView {
                         }
                     }
                 }
-                if (!email.isEmpty()) g.setEmail(email);
+                if (!email.isEmpty()) gestor.setEmail(email);
 
                 String cargo = BackendUtils.lerInputString(scanner, "Novo Cargo: ");
-                if (!cargo.isEmpty()) g.setCargo(cargo);
+                if (!cargo.isEmpty()) gestor.setCargo(cargo);
 
-                GestorController gestorControllerAtualizado = new GestorController();
-                Resultado res = gestorControllerAtualizado.atualizarGestor(nif, nome.isEmpty() ? null : nome, morada.isEmpty() ? null : morada, null, email.isEmpty() ? null : email, cargo.isEmpty() ? null : cargo);
+                Resultado resultado = gestorControllerAtualizado.atualizarGestor(nif, nome.isEmpty() ? null : nome, morada.isEmpty() ? null : morada, null, email.isEmpty() ? null : email, cargo.isEmpty() ? null : cargo);
 
-                if (res.success) {
+                if (resultado.success) {
                     System.out.println(GetGreen() + "\nGestor atualizado com sucesso!" + GetReset());
                 } else {
-                    System.out.println(GetRed() + "\nErro ao atualizar gestor: " + res.errorMessage + GetReset());
+                    System.out.println(GetRed() + "\nErro ao atualizar gestor: " + resultado.errorMessage + GetReset());
                 }
 
             } else {
@@ -579,7 +584,9 @@ public class GestorView {
     private void listarDocentes() {
         try {
             System.out.println(GetBlue() + "\n--- LISTA DE DOCENTES ---" + GetReset());
-            List<model.Docente> docentes = docenteController.listarDocentes();
+
+            DocenteController docenteControllerAtualizado = new DocenteController();
+            List<model.Docente> docentes = docenteControllerAtualizado.listarDocentes();
 
             if (docentes.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhum docente registado." + GetReset());
@@ -615,10 +622,11 @@ public class GestorView {
                 }
             }
 
-            model.Docente d = docenteController.procurarDocentePorNif(nif);
-            if (d != null) {
+            DocenteController docenteControllerAtualizado = new DocenteController();
+            model.Docente docente = docenteControllerAtualizado.procurarDocentePorNif(nif);
+            if (docente != null) {
                 System.out.println(GetGreen() + "\nDados encontrados:" + GetReset());
-                System.out.println(d.toString());
+                System.out.println(docente.toString());
             } else {
                 System.out.println(GetYellow() + "\nDocente não encontrado com o NIF informado." + GetReset());
             }
@@ -654,33 +662,33 @@ public class GestorView {
                 }
             }
 
-            model.Docente d = docenteController.procurarDocentePorNif(nif);
+            DocenteController docenteControllerAtualizado = new DocenteController();
+            model.Docente docente = docenteControllerAtualizado.procurarDocentePorNif(nif);
 
-            if (d != null) {
+            if (docente != null) {
                 System.out.println(GetGreen() + "\nDados atuais:" + GetReset());
-                System.out.println(d.toString());
+                System.out.println(docente.toString());
 
                 System.out.println(GetYellow() + "\n[Pressione ENTER nos campos que deseja manter iguais]" + GetReset());
 
                 String nome = BackendUtils.lerInputString(scanner, "Novo Nome: ");
-                if (!nome.isEmpty()) d.setNome(nome);
+                if (!nome.isEmpty()) docente.setNome(nome);
 
                 String morada = BackendUtils.lerInputString(scanner, "Nova Morada: ");
-                if (!morada.isEmpty()) d.setMorada(morada);
+                if (!morada.isEmpty()) docente.setMorada(morada);
 
                 String email = BackendUtils.lerInputString(scanner, "Novo Email: ");
-                if (!email.isEmpty()) d.setEmail(email);
+                if (!email.isEmpty()) docente.setEmail(email);
 
                 String sigla = BackendUtils.lerInputString(scanner, "Nova Sigla: ");
-                if (!sigla.isEmpty()) d.setSigla(sigla);
+                if (!sigla.isEmpty()) docente.setSigla(sigla);
 
-                DocenteController docenteControllerAtualizado = new DocenteController();
-                Resultado res = docenteControllerAtualizado.atualizarDocente(nif, nome.isEmpty() ? null : nome, morada.isEmpty() ? null : morada, null, email.isEmpty() ? null : email);
+                Resultado resultado = docenteControllerAtualizado.atualizarDocente(nif, nome.isEmpty() ? null : nome, morada.isEmpty() ? null : morada, null, email.isEmpty() ? null : email);
 
-                if (res.success) {
+                if (resultado.success) {
                     System.out.println(GetGreen() + "\nDocente atualizado com sucesso!" + GetReset());
                 } else {
-                    System.out.println(GetRed() + "\nErro ao atualizar docente: " + res.errorMessage + GetReset());
+                    System.out.println(GetRed() + "\nErro ao atualizar docente: " + resultado.errorMessage + GetReset());
                 }
             } else {
                 System.out.println(GetYellow() + "\nDocente não encontrado com o NIF informado." + GetReset());
@@ -741,12 +749,12 @@ public class GestorView {
             String novoHash = su.gerarHashComSalt(novaPass);
 
             DocenteController docenteControllerAtualizado = new DocenteController();
-            Resultado res = docenteControllerAtualizado.alterarPassword(nif, novoHash);
+            Resultado resultado = docenteControllerAtualizado.alterarPassword(nif, novoHash);
 
-            if (res.success) {
+            if (resultado.success) {
                 System.out.println(GetGreen() + "\nPassword alterada com sucesso!" + GetReset());
             } else {
-                System.out.println(GetRed() + "\nErro ao alterar password: " + res.errorMessage + GetReset());
+                System.out.println(GetRed() + "\nErro ao alterar password: " + resultado.errorMessage + GetReset());
             }
             MenuUtils.pressionarEnter(scanner);
 
@@ -781,12 +789,12 @@ public class GestorView {
             }
 
             DocenteController docenteControllerAtualizado = new DocenteController();
-            Resultado res = docenteControllerAtualizado.eliminarDocente(nif);
+            Resultado resultado = docenteControllerAtualizado.eliminarDocente(nif);
 
-            if (res.success) {
+            if (resultado.success) {
                 System.out.println(GetGreen() + "\nDocente eliminado com sucesso!" + GetReset());
             } else {
-                System.out.println(GetRed() + "\nErro ao eliminar: " + res.errorMessage + GetReset());
+                System.out.println(GetRed() + "\nErro ao eliminar: " + resultado.errorMessage + GetReset());
             }
             MenuUtils.pressionarEnter(scanner);
 
@@ -915,7 +923,9 @@ public class GestorView {
             }
 
             System.out.println(GetYellow() + "\nA gerar credenciais e a tentar enviar o email..." + GetReset());
-            int mecAuto = estudanteController.gerarNumeroMecanografico();
+
+            EstudanteController estudanteControllerAtualizado = new EstudanteController();
+            int mecAuto = estudanteControllerAtualizado.gerarNumeroMecanografico();
             String emailAuto = mecAuto + "@issmf.ipp.pt";
             String passAuto = SenhaUtils.gerarPalavraPasseAleatoria();
             SenhaUtils su = new SenhaUtils();
@@ -938,14 +948,13 @@ public class GestorView {
                 return;
             }
 
-            EstudanteController estudanteControllerAtualizado = new EstudanteController();
-            Resultado resReg = estudanteControllerAtualizado.registarEstudante(nome, morada, nif, dataNascimento, cursoNomeSelecionado, senha);
+            Resultado resultado = estudanteControllerAtualizado.registarEstudante(nome, morada, nif, dataNascimento, cursoNomeSelecionado, senha);
 
-            if (resReg.success) {
+            if (resultado.success) {
                 System.out.println(GetGreen() + "\nEstudante registado com sucesso!" + GetReset());
                 System.out.println("Nº Mecanográfico atribuído: " + mecAuto);
             } else {
-                System.out.println(GetRed() + "\nErro ao registar estudante: " + resReg.errorMessage + GetReset());
+                System.out.println(GetRed() + "\nErro ao registar estudante: " + resultado.errorMessage + GetReset());
             }
 
             MenuUtils.pressionarEnter(scanner);
@@ -964,7 +973,8 @@ public class GestorView {
         try {
             System.out.println(GetBlue() + "\n--- LISTA DE ESTUDANTES ---" + GetReset());
 
-            List<model.Estudante> lista = estudanteController.listarEstudantes();
+            EstudanteController estudanteControllerAtualizado = new EstudanteController();
+            List<model.Estudante> lista = estudanteControllerAtualizado.listarEstudantes();
 
             if (lista.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhum estudante registado no sistema." + GetReset());
@@ -1006,11 +1016,12 @@ public class GestorView {
                 }
             }
 
-            model.Estudante est = estudanteController.procurarEstudantePorNumeroMec(nmec);
+            EstudanteController estudanteControllerAtualizado = new EstudanteController();
+            model.Estudante estudante = estudanteControllerAtualizado.procurarEstudantePorNumeroMec(nmec);
 
-            if (est != null) {
+            if (estudante != null) {
                 System.out.println(GetGreen() + "\nDados encontrados:" + GetReset());
-                System.out.println(est.toString());
+                System.out.println(estudante.toString());
             } else {
                 System.out.println(GetYellow() + "\nEstudante não encontrado com o Número Mecanográfico informado." + GetReset());
             }
@@ -1049,33 +1060,34 @@ public class GestorView {
                 }
             }
 
-            model.Estudante eate = estudanteController.procurarEstudantePorNumeroMec(amec);
+            EstudanteController estudanteControllerAtualizadp = new EstudanteController();
+            model.Estudante estudante = estudanteControllerAtualizadp.procurarEstudantePorNumeroMec(amec);
 
-            if (eate != null) {
+            if (estudante != null) {
                 System.out.println(GetGreen() + "\nDados atuais:" + GetReset());
-                System.out.println(eate.toString());
+                System.out.println(estudante.toString());
 
                 System.out.println(GetYellow() + "\n[Pressione ENTER nos campos que deseja manter iguais]" + GetReset());
 
                 String nomeAt = BackendUtils.lerInputString(scanner, "Novo Nome: ");
-                if (!nomeAt.isEmpty()) eate.setNome(nomeAt);
+                if (!nomeAt.isEmpty()) estudante.setNome(nomeAt);
 
                 String moradaAt = BackendUtils.lerInputString(scanner, "Nova Morada: ");
-                if (!moradaAt.isEmpty()) eate.setMorada(moradaAt);
+                if (!moradaAt.isEmpty()) estudante.setMorada(moradaAt);
 
                 String emailAt = BackendUtils.lerInputString(scanner, "Novo Email: ");
-                if (!emailAt.isEmpty()) eate.setEmail(emailAt);
+                if (!emailAt.isEmpty()) estudante.setEmail(emailAt);
 
                 String cursoAt = BackendUtils.lerInputString(scanner, "Novo Curso: ");
-                if (!cursoAt.isEmpty()) eate.setNomeCurso(cursoAt);
+                if (!cursoAt.isEmpty()) estudante.setNomeCurso(cursoAt);
 
                 EstudanteController estudanteControllerAtualizado = new EstudanteController();
-                Resultado res = estudanteControllerAtualizado.atualizarEstudante(amec, nomeAt.isEmpty() ? null : nomeAt, moradaAt.isEmpty() ? null : moradaAt, emailAt.isEmpty() ? null : emailAt, cursoAt.isEmpty() ? null : cursoAt);
+                Resultado resultado = estudanteControllerAtualizado.atualizarEstudante(amec, nomeAt.isEmpty() ? null : nomeAt, moradaAt.isEmpty() ? null : moradaAt, emailAt.isEmpty() ? null : emailAt, cursoAt.isEmpty() ? null : cursoAt);
 
-                if (res.success) {
+                if (resultado.success) {
                     System.out.println(GetGreen() + "\nEstudante atualizado com sucesso!" + GetReset());
                 } else {
-                    System.out.println(GetRed() + "\nErro ao atualizar estudante: " + res.errorMessage + GetReset());
+                    System.out.println(GetRed() + "\nErro ao atualizar estudante: " + resultado.errorMessage + GetReset());
                 }
             } else {
                 System.out.println(GetYellow() + "\nEstudante não encontrado com o Número Mecanográfico informado." + GetReset());
