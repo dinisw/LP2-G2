@@ -10,7 +10,7 @@ public class EmailService {
 
     private static final String SMTP_HOST = "smtp.office365.com";
     private static final String SMTP_PORT = "587"; // Porta para TLS
-    private static final String EMAIL_REMETENTE = "1252331@isep.ipp.pt";
+    private static final String EMAIL_REMETENTE = ""; //por defenir;
     private static final String PASSWORD_REMETENTE = "dZ3T7Qkbye";
 
     private static final String EMAIL_DEFAULT_FALLBACK = "1252331@isep.ipp.pt, 1252039@isep.ipp.pt, 1251653@isep.ipp.pt";
