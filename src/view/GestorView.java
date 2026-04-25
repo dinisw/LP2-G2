@@ -149,9 +149,14 @@ public class GestorView {
                 try {
                     String nifString = BackendUtils.lerInputString(scanner, "NIF: ");
                     nif = Integer.parseInt(nifString);
-                    nifValido = BackendUtils.nifIsValid(nifString);
-                    if (!nifValido)
+                    nifValido = BackendUtils.nifEValido(nifString);
+                    if (!nifValido) {
                         System.out.println(GetRed() + "NIF deve ser um número inteiro válido e conter 9 dígitos. Tente novamente." + GetReset());
+                    }else{
+                        nifValido = BackendUtils.nifExiste(nif);
+                        if(!nifValido)
+                            System.out.println(GetRed() + "NIF já existente no sistema. Tente com outro NIF." + GetReset());
+                    }
                 } catch (NumberFormatException e) {
                     System.out.println(GetRed() + "Aviso: O valor introduzido não é um número. Tente novamente." + GetReset());
                 }
@@ -162,7 +167,11 @@ public class GestorView {
                 try {
                     String dataString = BackendUtils.lerInputString(scanner, "Data de Nascimento (AAAA-MM-DD): ");
                     dataNascimento = LocalDate.parse(dataString);
-                    break;
+                    if(dataNascimento.getYear() < dataNascimento.getYear() + 17){
+                        System.out.println(GetRed() + "Sistem só permite pessoas maiores de 18 anos. Tente novamente." + GetReset());
+                    }else {
+                        break;
+                    }
                 } catch (DateTimeParseException e) {
                     System.out.println(GetRed() + "Data deve estar no formato AAAA-MM-DD. Tente novamente." + GetReset());
                 }
@@ -251,7 +260,7 @@ public class GestorView {
                     String nifString = BackendUtils.lerInputString(scanner, "Digite o NIF do gestor: ");
                     nif = Integer.parseInt(nifString);
 
-                    nifValido = BackendUtils.nifIsValid(nifString);
+                    nifValido = BackendUtils.nifEValido(nifString);
                     if (!nifValido) {
                         System.out.println(GetRed() + "NIF deve ser um número inteiro válido e conter 9 dígitos. Tente novamente." + GetReset());
                     }
@@ -295,7 +304,7 @@ public class GestorView {
                     String nifString = BackendUtils.lerInputString(scanner, "Digite o NIF do gestor a eliminar: ");
                     nif = Integer.parseInt(nifString);
 
-                    nifValido = BackendUtils.nifIsValid(nifString);
+                    nifValido = BackendUtils.nifEValido(nifString);
                     if (!nifValido) {
                         System.out.println(GetRed() + "NIF deve ser um número inteiro válido e conter 9 dígitos. Tente novamente." + GetReset());
                     }
@@ -337,7 +346,7 @@ public class GestorView {
                     String nifString = BackendUtils.lerInputString(scanner, "Digite o NIF do gestor a atualizar: ");
                     nif = Integer.parseInt(nifString);
 
-                    nifValido = BackendUtils.nifIsValid(nifString);
+                    nifValido = BackendUtils.nifEValido(nifString);
                     if (!nifValido) {
                         System.out.println(GetRed() + "NIF deve ser um número inteiro válido e conter 9 dígitos. Tente novamente." + GetReset());
                     }
@@ -469,9 +478,13 @@ public class GestorView {
                 try {
                     String nifString = BackendUtils.lerInputString(scanner, "NIF: ");
                     nif = Integer.parseInt(nifString);
-                    nifValido = BackendUtils.nifIsValid(nifString);
+                    nifValido = BackendUtils.nifEValido(nifString);
                     if (!nifValido) {
                         System.out.println(GetRed() + "NIF deve ser um número inteiro válido e conter 9 dígitos. Tente novamente." + GetReset());
+                    }else{
+                        nifValido = BackendUtils.nifExiste(nif);
+                        if(!nifValido)
+                            System.out.println(GetRed() + "NIF já existente no sistema. Tente com outro NIF." + GetReset());
                     }
                 } catch (NumberFormatException e) {
                     System.out.println(GetRed() + "Aviso: O valor introduzido não é um número. Tente novamente." + GetReset());
@@ -483,7 +496,11 @@ public class GestorView {
                 try {
                     String dataString = BackendUtils.lerInputString(scanner, "Data de Nascimento (AAAA-MM-DD): ");
                     dataNascimento = LocalDate.parse(dataString);
-                    break;
+                    if(dataNascimento.getYear() < dataNascimento.getYear() + 17){
+                        System.out.println(GetRed() + "Sistem só permite pessoas maiores de 18 anos. Tente novamente." + GetReset());
+                    }else {
+                        break;
+                    }
                 } catch (DateTimeParseException e) {
                     System.out.println(GetRed() + "Data deve estar no formato AAAA-MM-DD. Tente novamente." + GetReset());
                 }
@@ -608,7 +625,7 @@ public class GestorView {
                 try {
                     String nifString = BackendUtils.lerInputString(scanner, "Digite o NIF do docente: ");
                     nif = Integer.parseInt(nifString);
-                    nifValido = BackendUtils.nifIsValid(nifString);
+                    nifValido = BackendUtils.nifEValido(nifString);
                     if (!nifValido) {
                         System.out.println(GetRed() + "NIF deve ser um número inteiro válido e conter 9 dígitos. Tente novamente." + GetReset());
                     }
@@ -648,7 +665,7 @@ public class GestorView {
                 try {
                     String nifString = BackendUtils.lerInputString(scanner, "Digite o NIF do docente a atualizar: ");
                     nif = Integer.parseInt(nifString);
-                    nifValido = BackendUtils.nifIsValid(nifString);
+                    nifValido = BackendUtils.nifEValido(nifString);
                     if (!nifValido) {
                         System.out.println(GetRed() + "NIF deve ser um número inteiro válido e conter 9 dígitos. Tente novamente." + GetReset());
                     }
@@ -716,7 +733,7 @@ public class GestorView {
                 try {
                     String nifString = BackendUtils.lerInputString(scanner, "Digite o NIF do docente: ");
                     nif = Integer.parseInt(nifString);
-                    nifValido = BackendUtils.nifIsValid(nifString);
+                    nifValido = BackendUtils.nifEValido(nifString);
                     if (!nifValido) {
                         System.out.println(GetRed() + "NIF deve ser um número inteiro válido e conter 9 dígitos. Tente novamente." + GetReset());
                     }
@@ -774,9 +791,13 @@ public class GestorView {
                 try {
                     String nifString = BackendUtils.lerInputString(scanner, "Digite o NIF do docente a eliminar: ");
                     nif = Integer.parseInt(nifString);
-                    nifValido = BackendUtils.nifIsValid(nifString);
+                    nifValido = BackendUtils.nifEValido(nifString);
                     if (!nifValido) {
                         System.out.println(GetRed() + "NIF deve ser um número inteiro válido e conter 9 dígitos. Tente novamente." + GetReset());
+                    }else{
+                        nifValido = BackendUtils.nifExiste(nif);
+                        if(!nifValido)
+                            System.out.println(GetRed() + "NIF já existente no sistema. Tente com outro NIF." + GetReset());
                     }
                 } catch (NumberFormatException e) {
                     System.out.println(GetRed() + "Aviso: O valor introduzido não é um número. Tente novamente." + GetReset());
@@ -866,9 +887,13 @@ public class GestorView {
                     String nifString = BackendUtils.lerInputString(scanner, "NIF: ");
                     nif = Integer.parseInt(nifString);
 
-                    nifValido = BackendUtils.nifIsValid(nifString);
+                    nifValido = BackendUtils.nifEValido(nifString);
                     if (!nifValido) {
                         System.out.println(GetRed() + "NIF deve ser um número inteiro válido e conter 9 dígitos. Tente novamente." + GetReset());
+                    }else{
+                        nifValido = BackendUtils.nifExiste(nif);
+                        if(!nifValido)
+                            System.out.println(GetRed() + "NIF já existente no sistema. Tente com outro NIF." + GetReset());
                     }
                 } catch (NumberFormatException e) {
                     System.out.println(GetRed() + "Aviso: O valor introduzido não é um número. Tente novamente." + GetReset());
@@ -880,7 +905,11 @@ public class GestorView {
                 try {
                     String dataString = BackendUtils.lerInputString(scanner, "Data de Nascimento (AAAA-MM-DD): ");
                     dataNascimento = LocalDate.parse(dataString);
-                    break;
+                    if(dataNascimento.getYear() < dataNascimento.getYear() + 17){
+                        System.out.println(GetRed() + "Sistem só permite pessoas maiores de 18 anos. Tente novamente." + GetReset());
+                    }else {
+                        break;
+                    }
                 } catch (DateTimeParseException e) {
                     System.out.println(GetRed() + "Data deve estar no formato AAAA-MM-DD. Tente novamente." + GetReset());
                 }

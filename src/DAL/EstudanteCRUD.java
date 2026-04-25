@@ -1,4 +1,5 @@
 package DAL;
+import model.Docente;
 import model.Estudante;
 import model.Resultado;
 
@@ -114,6 +115,14 @@ public class EstudanteCRUD {
         return null;
     }
 
+    public Estudante procurarPorNif(int nif) {
+        for (Estudante estudante : estudantes) {
+            if (estudante.getNif() == nif) {
+                return estudante;
+            }
+        }
+        return null;
+    }
     //UPDATE
     public boolean atualizarEstudante(Estudante estudante) {
         if(estudante != null){

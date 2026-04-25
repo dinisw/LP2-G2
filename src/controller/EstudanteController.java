@@ -2,7 +2,6 @@ package controller;
 
 import BLL.EstudanteCalculo;
 import DAL.EstudanteCRUD;
-import model.Avaliacao;
 import model.Estudante;
 import model.Resultado;
 
@@ -118,6 +117,13 @@ public class EstudanteController {
 
     public List<Estudante> listarEstudantes() {
         return estudanteCRUD.getEstudantes();
+    }
+
+    public Estudante procurarEstudantePorNif(int nif) {
+        if (nif <= 0) {
+            return null;
+        }
+        return estudanteCRUD.procurarPorNif(nif);
     }
 
     public Estudante procurarEstudantePorNumeroMec(int numeroMec) {
