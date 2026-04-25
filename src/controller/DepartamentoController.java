@@ -17,24 +17,24 @@ public class DepartamentoController {
     }
 
     public Resultado registarDepartamento(String nome, String sigla) {
-        Resultado res = new Resultado();
+        Resultado resultado = new Resultado();
 
         if (nome == null || nome.trim().isEmpty() || sigla == null || sigla.trim().isEmpty()) {
-            res.success = false;
-            res.errorMessage = "O nome e a sigla do departamento são obrigatórios.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "O nome e a sigla do departamento são obrigatórios.";
+            return resultado;
         }
 
         Departamento novo = new Departamento(nome, sigla);
 
         if (crud.registarDepartamento(novo)) {
-            res.success = true;
+            resultado.success = true;
         } else {
-            res.success = false;
-            res.errorMessage = "Já existe um departamento registado com a sigla '" + sigla + "'.";
+            resultado.success = false;
+            resultado.errorMessage = "Já existe um departamento registado com a sigla '" + sigla + "'.";
         }
 
-        return res;
+        return resultado;
     }
 
     public List<Departamento> listarTodosDepartamentos() {
@@ -46,56 +46,56 @@ public class DepartamentoController {
     }
 
     public Resultado atualizarDepartamento(String siglaAntiga, String novoNome) {
-        Resultado res = new Resultado();
+        Resultado resultado = new Resultado();
 
         if (cursoCRUD.existeCursoComDepartamento(siglaAntiga)) {
-            res.success = false;
-            res.errorMessage = "O departamento possui cursos associados e não pode ser alterado.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "O departamento possui cursos associados e não pode ser alterado.";
+            return resultado;
         }
 
         Departamento dep = crud.procurarPorSigla(siglaAntiga);
 
         if (dep == null) {
-            res.success = false;
-            res.errorMessage = "Departamento não encontrado com a sigla informada.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "Departamento não encontrado com a sigla informada.";
+            return resultado;
         }
 
         if (novoNome == null || novoNome.trim().isEmpty()) {
-            res.success = false;
-            res.errorMessage = "O novo nome do departamento não pode estar vazio.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "O novo nome do departamento não pode estar vazio.";
+            return resultado;
         }
 
         dep.setNome(novoNome);
 
         if (crud.atualizarDepartamento(dep)) {
-            res.success = true;
+            resultado.success = true;
         } else {
-            res.success = false;
-            res.errorMessage = "Ocorreu um erro ao guardar a atualização na base de dados.";
+            resultado.success = false;
+            resultado.errorMessage = "Ocorreu um erro ao guardar a atualização na base de dados.";
         }
 
-        return res;
+        return resultado;
     }
 
     public Resultado eliminarDepartamento(String sigla) {
-        Resultado res = new Resultado();
+        Resultado resultado = new Resultado();
 
         if (cursoCRUD.existeCursoComDepartamento(sigla)) {
-            res.success = false;
-            res.errorMessage = "O departamento possui cursos associados e não pode ser eliminado.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "O departamento possui cursos associados e não pode ser eliminado.";
+            return resultado;
         }
 
         if (crud.eliminarDepartamento(sigla)) {
-            res.success = true;
+            resultado.success = true;
         } else {
-            res.success = false;
-            res.errorMessage = "Departamento não encontrado com a sigla informada.";
+            resultado.success = false;
+            resultado.errorMessage = "Departamento não encontrado com a sigla informada.";
         }
 
-        return res;
+        return resultado;
     }
 }

@@ -44,11 +44,12 @@ public class DocenteView {
         opcoes.add("3. Lançar Nota de Avaliação");
         opcoes.add("4. Consultar ficha docente");
         opcoes.add("5. Consultar Pauta de Alunos (Ordenada)");
+        opcoes.add("6. Definir Momentos de Avaliação");
         opcoes.add("0. Logout");
 
         do {
             try {
-                MenuUtils.exibirSubTitulo("MENU DOCENTE: " + docente.getNome().toUpperCase(), opcoes);
+                MenuUtils.exibirSubTitulo("PORTAL DOCENTE > " + docente.getNome().toUpperCase(), opcoes);
                 System.out.print("\n" + GetWhiteBold() + "Selecione uma opção: " + GetReset());
                 opcao = scanner.nextLine().trim();
 
@@ -67,6 +68,9 @@ public class DocenteView {
                         break;
                     case "5":
                         consultarPautaOrdenada(docente);
+                        break;
+                    case "6":
+                        definirMomentosAvaliacao(docente);
                         break;
                     case "0":
                         System.out.println(GetYellow() + "\nA efetuar logout..." + GetReset());
@@ -91,8 +95,8 @@ public class DocenteView {
             if (minhasUcs == null || minhasUcs.isEmpty()) {
                 System.out.println(GetYellow() + "Não tem Unidades Curriculares atribuídas neste momento." + GetReset());
             } else {
-                for (UnidadeCurricular uc : minhasUcs) {
-                    System.out.println(uc.getNome() + " (Ano: " + uc.getAnoCurricular() + ")");
+                for (UnidadeCurricular unidadeCurricular : minhasUcs) {
+                    System.out.println(unidadeCurricular.getNome() + " (Ano: " + unidadeCurricular.getAnoCurricular() + ")");
                 }
             }
             MenuUtils.pressionarEnter(scanner);
@@ -103,7 +107,7 @@ public class DocenteView {
         }
     }
 
-    private void alterarPasswordPropria(Docente d) {
+    private void alterarPasswordPropria(Docente docente) {
         try {
             System.out.println(GetBlue() + "\n--- ALTERAR A MINHA PASSWORD ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
@@ -133,7 +137,7 @@ public class DocenteView {
             String passHash = su.gerarHashComSalt(novaPass);
 
             DocenteController docenteControllerAtualizado = new DocenteController();
-            Resultado resultado = docenteControllerAtualizado.alterarPassword(d.getNif(), passHash);
+            Resultado resultado = docenteControllerAtualizado.alterarPassword(docente.getNif(), passHash);
 
             if (resultado.success) {
                 System.out.println(GetGreen() + "\nPassword alterada com sucesso!" + GetReset());
@@ -188,7 +192,31 @@ public class DocenteView {
                 return;
             }
 
-            String momento = BackendUtils.lerInputString(scanner, "Época de Avaliação (ex. Frequência, Exame): ");
+            List<String> momentos = unidadeCurricular.getMomentosAvaliacao();
+            if (momentos == null || momentos.isEmpty()) {
+                System.out.println(GetRed() + "\nErro: Esta UC ainda não tem momentos de avaliação definidos." + GetReset());
+                System.out.println(GetYellow() + "Por favor, utilize a opção 6 do menu primeiro." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            System.out.println("\nSelecione o Momento de Avaliação:");
+            for (int i = 0; i < momentos.size(); i++) {
+                System.out.println((i + 1) + ". " + momentos.get(i));
+            }
+
+            int escolha = -1;
+            while (escolha < 1 || escolha > momentos.size()) {
+                try {
+                    String input = BackendUtils.lerInputString(scanner, "Escolha (1-" + momentos.size() + "): ");
+                    if (input.equals("0")) return;
+                    escolha = Integer.parseInt(input);
+                } catch (NumberFormatException e) {
+                    System.out.println(GetRed() + "Aviso: Escolha um número da lista." + GetReset());
+                }
+            }
+
+            String momentoSelecionado = momentos.get(escolha - 1);
 
             Double nota = null;
             boolean notaValida = false;
@@ -218,7 +246,7 @@ public class DocenteView {
                 }
             }
 
-            model.Avaliacao novaAvaliacao = new model.Avaliacao(momento, nota, unidadeCurricular, estudante);
+            model.Avaliacao novaAvaliacao = new model.Avaliacao(momentoSelecionado, nota, unidadeCurricular, estudante);
 
             if (avaliacaoController.registarAvaliacao(novaAvaliacao)) {
                 System.out.println(GetGreen() + "\nAvaliação registada com sucesso!" + GetReset());
@@ -245,8 +273,8 @@ public class DocenteView {
             if (docente.getUnidadesCurriculares() == null || docente.getUnidadesCurriculares().isEmpty()) {
                 System.out.println(GetYellow() + "Nenhuma unidade curricular atribuída." + GetReset());
             } else {
-                for (UnidadeCurricular uc : docente.getUnidadesCurriculares()) {
-                    System.out.println("- " + uc.getNome() + " (Ano: " + uc.getAnoCurricular() + ")");
+                for (UnidadeCurricular unidadeCurricular : docente.getUnidadesCurriculares()) {
+                    System.out.println("- " + unidadeCurricular.getNome() + " (Ano: " + unidadeCurricular.getAnoCurricular() + ")");
                 }
             }
             MenuUtils.pressionarEnter(scanner);
@@ -260,16 +288,16 @@ public class DocenteView {
         try {
             System.out.println(GetBlue() + "\n--- CONSULTAR PAUTA DE ALUNOS ---" + GetReset());
 
-            List<UnidadeCurricular> ucs = docente.getUnidadesCurriculares();
+            List<UnidadeCurricular> unidadesCurriculares = docente.getUnidadesCurriculares();
 
-            if(ucs == null || ucs.isEmpty()) {
+            if(unidadesCurriculares == null || unidadesCurriculares.isEmpty()) {
                 System.out.println(GetYellow() + "Não tem Unidades Curriculares atribuídas neste momento." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
                 return;
             }
             System.out.println(GetWhiteBold() + "As suas Unidades Curriculares:" + GetReset());
-            for (int i = 0; i < ucs.size(); i++) {
-                System.out.println((i + 1) + ". " + ucs.get(i).getNome());
+            for (int i = 0; i < unidadesCurriculares.size(); i++) {
+                System.out.println((i + 1) + ". " + unidadesCurriculares.get(i).getNome());
             }
 
             int escolhaUC = -1;
@@ -281,7 +309,7 @@ public class DocenteView {
 
                     if (escolhaUC == 0) return;
 
-                    if (escolhaUC >= 1 && escolhaUC <= ucs.size()) {
+                    if (escolhaUC >= 1 && escolhaUC <= unidadesCurriculares.size()) {
                         ucValida = true;
                     } else {
                         System.out.println(GetRed() + "Aviso: Escolha inválida." + GetReset());
@@ -291,7 +319,7 @@ public class DocenteView {
                 }
             }
 
-            UnidadeCurricular ucSelecionada = ucs.get(escolhaUC - 1);
+            UnidadeCurricular ucSelecionada = unidadesCurriculares.get(escolhaUC - 1);
             List<model.Avaliacao> avaliacoesUC = avaliacaoController.listarAvaliacoesPorUC(ucSelecionada.getNome());
 
             if (avaliacoesUC == null || avaliacoesUC.isEmpty()) {
@@ -352,28 +380,75 @@ public class DocenteView {
         }
     }
 
+    private void definirMomentosAvaliacao(Docente docente) {
+        try {
+            System.out.println(GetBlue() + "\n--- DEFINIR MOMENTOS DE AVALIAÇÃO ---" + GetReset());
+            List<UnidadeCurricular> unidadesCurriculares = docente.getUnidadesCurriculares();
 
+            if (unidadesCurriculares == null || unidadesCurriculares.isEmpty()) {
+                System.out.println(GetYellow() + "Não tem Unidades Curriculares atribuídas neste momento." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
 
+            System.out.println(GetWhiteBold() + "As suas Unidades Curriculares:" + GetReset());
+            for (int i = 0; i < unidadesCurriculares.size(); i++) {
+                System.out.println((i + 1) + ". " + unidadesCurriculares.get(i).getNome());
+            }
 
+            int escolhaUC = -1;
+            boolean ucValida = false;
+            while (!ucValida) {
+                try {
+                    String ucStr = BackendUtils.lerInputString(scanner, "\nSelecione o número da UC (ou 0 para cancelar): ");
+                    escolhaUC = Integer.parseInt(ucStr);
+                    if (escolhaUC == 0) return;
 
+                    if (escolhaUC >= 1 && escolhaUC <= unidadesCurriculares.size()) {
+                        ucValida = true;
+                    } else {
+                        System.out.println(GetRed() + "Aviso: Escolha inválida." + GetReset());
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println(GetRed() + "Aviso: O valor deve ser um número." + GetReset());
+                }
+            }
+            UnidadeCurricular unidadeCurricularSelecionada = unidadesCurriculares.get(escolhaUC - 1);
 
+            System.out.printf("\nUC Selecionada: " + unidadeCurricularSelecionada.getNome());
+            if (unidadeCurricularSelecionada.getMomentosAvaliacao() != null && !unidadeCurricularSelecionada.getMomentosAvaliacao().isEmpty()) {
+                System.out.println(GetYellow() + "Momentos atuais: " + String.join(", ", unidadeCurricularSelecionada.getMomentosAvaliacao()) + GetReset());
+            }
 
+            String novosMomentos = BackendUtils.lerInputString(scanner, "Digite os momentos separados por vírgula (ex: Teste 1, Exame): ");
 
+            if (!novosMomentos.isEmpty()) {
 
+                String[] momentosArray = novosMomentos.split(",");
+                if (momentosArray.length > 3) {
+                    System.out.println(GetRed() + "\nErro: O regulamento permite um máximo de 3 avaliações por UC." + GetReset());
+                    System.out.println(GetYellow() + "Tentou registar " + momentosArray.length + " momentos. Operação cancelada." + GetReset());
+                    MenuUtils.pressionarEnter(scanner);
+                    return;
+                }
 
+                UnidadeCurricularController unidadeCurricularControllerAtualizado = new UnidadeCurricularController();
+                Resultado resultado = unidadeCurricularControllerAtualizado.definirMomentos(unidadeCurricularSelecionada.getNome(), novosMomentos);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                if (resultado.success) {
+                    System.out.println(GetGreen() + "\nMomentos de Avaliação guardados com sucesso no sistema!" + GetReset());
+                    unidadeCurricularSelecionada.getMomentosAvaliacao().clear();
+                    for (String momento : novosMomentos.split(",")) {
+                        unidadeCurricularSelecionada.adicionarMomento(momento.trim());
+                    }
+                } else {
+                    System.out.println(GetRed() + "\nErro ao guardar: " + resultado.errorMessage + GetReset());
+                }
+            }
+            MenuUtils.pressionarEnter(scanner);
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Ocorreu um erro: " + e.getMessage() + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        }
+    }
 }

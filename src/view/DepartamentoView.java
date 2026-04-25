@@ -35,7 +35,7 @@ public class DepartamentoView {
 
         do {
             try {
-                MenuUtils.exibirSubTitulo("GESTÃO DE DEPARTAMENTOS", opcoes);
+                MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL > DEPARTAMENTOS", opcoes);
                 System.out.print("\n" + GetWhiteBold() + "Selecione uma opção: " + GetReset());
                 opcao = scanner.nextLine().trim();
 

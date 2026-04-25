@@ -38,7 +38,7 @@ public class UnidadeCurricularView {
 
         do {
             try {
-                MenuUtils.exibirSubTitulo("GESTÃO DE UNIDADES CURRICULARES", opcoes);
+                MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL > UNIDADES CURRICULARES", opcoes);
                 System.out.print("\n" + GetWhiteBold() + "Selecione uma opção: " + GetReset());
                 opcao = scanner.nextLine().trim();
 
@@ -144,16 +144,16 @@ public class UnidadeCurricularView {
         try {
             System.out.println(GetBlue() + "\n--- LISTA DE UNIDADES CURRICULARES ---" + GetReset());
             UnidadeCurricularController unidadeCurricularControllerAtualizado = new UnidadeCurricularController();
-            List<UnidadeCurricular> unidadeCurriculares = unidadeCurricularControllerAtualizado.listarTodasUCs();
+            List<UnidadeCurricular> unidadeCurriculars = unidadeCurricularControllerAtualizado.listarTodasUCs();
 
-            if (unidadeCurriculares.isEmpty()) {
+            if (unidadeCurriculars.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhuma UC registada até ao momento!" + GetReset());
             } else {
                 System.out.println(GetCyanBold() + "-----------------------------------------------------------------" + GetReset());
                 System.out.printf(GetWhiteBold() + " %-25s | %-5s | %-3s | %-15s | %-4s \n" + GetReset(), "NOME DA UC", "ANO", "SEM", "DOCENTE", "ECTS");
                 System.out.println(GetCyanBold() + "-----------------------------------------------------------------" + GetReset());
 
-                for (UnidadeCurricular unidadeCurricular : unidadeCurriculares) {
+                for (UnidadeCurricular unidadeCurricular : unidadeCurriculars) {
                     String docenteNome = (unidadeCurricular.getDocente() != null) ? unidadeCurricular.getDocente().getSigla() : GetYellow() + "N/A" + GetReset();
                     System.out.printf(" %-25s | %-5d |%-3d | %-15s | %-4d \n",
                             unidadeCurricular.getNome(), unidadeCurricular.getAnoCurricular(),unidadeCurricular.getSemestre(), docenteNome, unidadeCurricular.getEcts());
@@ -182,6 +182,22 @@ public class UnidadeCurricularView {
             if (unidadeCurricular != null) {
                 System.out.println(GetGreen() + "\nUC Encontrada:" + GetReset());
                 imprimirDadosUnidadeCurricular(unidadeCurricular);
+
+                DAL.CursoCRUD cursoCRUD = new DAL.CursoCRUD();
+                List<String> cursosAssociados = new ArrayList<>();
+
+                for (model.Curso curso : cursoCRUD.getCursos()) {
+                    if (curso.getUnidadeCurriculars() != null) {
+                        for (model.UnidadeCurricular unidadeCurricularDoCurso : curso.getUnidadeCurriculars()) {
+                            if (unidadeCurricularDoCurso.getNome().equalsIgnoreCase(unidadeCurricular.getNome())) {
+                                cursosAssociados.add(curso.getNome());
+                                break;
+                            }
+                        }
+                    }
+                }
+                System.out.println(GetWhiteBold() + "Cursos a que pertence: " + GetReset() +
+                        (cursosAssociados.isEmpty() ? GetYellow() + "Nenhum curso associado" + GetReset() : String.join(" | ", cursosAssociados)));
             } else {
                 System.out.println(GetYellow() + "\nUnidade Curricular não encontrada com o nome informado." + GetReset());
             }
@@ -255,6 +271,18 @@ public class UnidadeCurricularView {
             String novaSiglaDocente = BackendUtils.lerInputString(scanner, "\nSigla do novo Docente (ou Enter para manter o mesmo): ").toUpperCase();
             String siglaFinal = novaSiglaDocente.isEmpty() ? null : novaSiglaDocente;
 
+            System.out.println(GetYellow() + "\n AVISO DE IMPACTO GLOBAL ");
+            System.out.println("A Unidade Curricular que está a editar pode estar a ser partilhada por múltiplos cursos.");
+            System.out.println("Qualquer alteração que faça agora irá refletir-se automaticamente no plano de estudos de TODOS os cursos que a incluem." + GetReset());
+            System.out.print(GetWhiteBold() + "\nTem a certeza que deseja guardar estas alterações? (S/N): " + GetReset());
+
+            String confirmacao = BackendUtils.lerInputString(scanner, GetWhiteBold() + "\nTem a certeza que deseja guardar estas alterações? (S/N): " + GetReset());
+            if (!confirmacao.equalsIgnoreCase("S")) {
+                System.out.println(GetBlue() + "\nOperação de atualização cancelada pelo utilizador." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
             Resultado resultado = unidadeCurricularControllerAtualizado.atualizarUC(nomeAtual, nomeFinal, novoAno,novoSemestre, siglaFinal);
 
             if (resultado.success) {
@@ -300,12 +328,12 @@ public class UnidadeCurricularView {
             String confirmacao = BackendUtils.lerInputString(scanner, GetYellow() + "Tem a certeza que deseja eliminar a UC '" + nome + "'? (S/N): " + GetReset()).toUpperCase();
 
             if (confirmacao.equals("S")) {
-                Resultado res = unidadeCurricularControllerAtualizado.eliminarUC(nome);
+                Resultado resultado = unidadeCurricularControllerAtualizado.eliminarUC(nome);
 
-                if (res.success) {
+                if (resultado.success) {
                     System.out.println(GetGreen() + "\nUC eliminada com sucesso!" + GetReset());
                 } else {
-                    System.out.println(GetRed() + "\nErro ao eliminar: " + res.errorMessage + GetReset());
+                    System.out.println(GetRed() + "\nErro ao eliminar: " + resultado.errorMessage + GetReset());
                 }
             } else {
                 System.out.println(GetYellow() + "\nEliminação cancelada." + GetReset());
@@ -330,8 +358,8 @@ public class UnidadeCurricularView {
         if (docentes == null || docentes.isEmpty()) {
             System.out.println(GetYellow() + "Nenhum docente registado no sistema." + GetReset());
         } else {
-            for (Docente d : docentes) {
-                System.out.println(d.getSigla() + " - " + d.getNome());
+            for (Docente docente : docentes) {
+                System.out.println(docente.getSigla() + " - " + docente.getNome());
             }
         }
     }

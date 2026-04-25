@@ -115,20 +115,20 @@ public class DocenteController {
     }
 
     public Resultado atualizarDocente(int nif, String novoNome, String novaMorada, LocalDate novaDataNascimento, String novoEmail) {
-        Resultado res = new Resultado();
+        Resultado resultado = new Resultado();
 
         if (nif <= 0) {
-            res.success = false;
-            res.errorMessage = "NIF inválido.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "NIF inválido.";
+            return resultado;
         }
 
         Docente docenteExistente = docenteCRUD.procurarPorNif(nif);
 
         if (docenteExistente == null) {
-            res.success = false;
-            res.errorMessage = "Docente não encontrado com o NIF informado.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "Docente não encontrado com o NIF informado.";
+            return resultado;
         }
 
         String nomeFinal = (novoNome != null && !novoNome.trim().isEmpty()) ? novoNome : docenteExistente.getNome();
@@ -149,36 +149,36 @@ public class DocenteController {
         );
 
         if (docenteCRUD.atualizarDocente(docenteAtualizado)) {
-            res.success = true;
+            resultado.success = true;
         } else {
-            res.success = false;
-            res.errorMessage = "Erro ao guardar as alterações na base de dados.";
+            resultado.success = false;
+            resultado.errorMessage = "Erro ao guardar as alterações na base de dados.";
         }
 
-        return res;
+        return resultado;
     }
 
     public Resultado alterarPassword(int nif, String novoHash) {
-        Resultado res = new Resultado();
+        Resultado resultado = new Resultado();
 
         if (nif <= 0) {
-            res.success = false;
-            res.errorMessage = "NIF inválido.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "NIF inválido.";
+            return resultado;
         }
 
         if (novoHash == null || novoHash.trim().isEmpty()) {
-            res.success = false;
-            res.errorMessage = "Dados de senha inválidos.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "Dados de senha inválidos.";
+            return resultado;
         }
 
         Docente docenteExistente = docenteCRUD.procurarPorNif(nif);
 
         if (docenteExistente == null) {
-            res.success = false;
-            res.errorMessage = "Docente não encontrado.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "Docente não encontrado.";
+            return resultado;
         }
 
         Docente docenteAtualizado = new Docente(
@@ -194,37 +194,37 @@ public class DocenteController {
         );
 
         if (docenteCRUD.atualizarDocente(docenteAtualizado)) {
-            res.success = true;
+            resultado.success = true;
         } else {
-            res.success = false;
-            res.errorMessage = "Erro ao atualizar a password na base de dados.";
+            resultado.success = false;
+            resultado.errorMessage = "Erro ao atualizar a password na base de dados.";
         }
 
-        return res;
+        return resultado;
     }
 
     public Resultado eliminarDocente(int nif) {
-        Resultado res = new Resultado();
+        Resultado resultado = new Resultado();
 
         if (nif <= 0) {
-            res.success = false;
-            res.errorMessage = "NIF inválido.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "NIF inválido.";
+            return resultado;
         }
 
         if (docenteCRUD.procurarPorNif(nif) == null) {
-            res.success = false;
-            res.errorMessage = "Docente não encontrado com o NIF informado.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "Docente não encontrado com o NIF informado.";
+            return resultado;
         }
 
         if (docenteCRUD.eliminarDocente(nif)) {
-            res.success = true;
+            resultado.success = true;
         } else {
-            res.success = false;
-            res.errorMessage = "Erro na base de dados ao eliminar o docente.";
+            resultado.success = false;
+            resultado.errorMessage = "Erro na base de dados ao eliminar o docente.";
         }
 
-        return res;
+        return resultado;
     }
 }

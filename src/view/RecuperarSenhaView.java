@@ -44,14 +44,14 @@ public class RecuperarSenhaView {
 
             System.out.println(GetYellow() + "\nA processar o pedido e a contactar o servidor de email..." + GetReset());
 
-            var res = recuperarSenhaController.iniciarProcessoRecuperacao(email);
+            var resultado = recuperarSenhaController.iniciarProcessoRecuperacao(email);
 
-            if (res.success) {
+            if (resultado.success) {
 
                 Utilizador utilizador = loginController.login(email);
 
                 if (utilizador != null) {
-                    var resAtualizarSenha = recuperarSenhaController.atualizarSenha(utilizador, res.object.toString());
+                    var resAtualizarSenha = recuperarSenhaController.atualizarSenha(utilizador, resultado.object.toString());
 
                     if (resAtualizarSenha.success) {
                         System.out.println(GetGreen() + "\nEmail enviado com sucesso! Verifique a sua caixa de entrada com a nova senha e tente fazer login." + GetReset());
@@ -62,7 +62,7 @@ public class RecuperarSenhaView {
                     System.out.println(GetRed() + "\nErro crítico: Utilizador não encontrado na base de dados após a validação do email." + GetReset());
                 }
             } else {
-                System.out.println(GetRed() + "\nFalha na recuperação de senha: " + res.errorMessage + GetReset());
+                System.out.println(GetRed() + "\nFalha na recuperação de senha: " + resultado.errorMessage + GetReset());
             }
 
             MenuUtils.pressionarEnter(ler);

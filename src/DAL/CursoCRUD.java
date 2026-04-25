@@ -39,9 +39,9 @@ public class CursoCRUD {
                     curso.setIniciado(Boolean.parseBoolean(dados[3]));
                     if (dados.length > 4) {
                         for (int i = 4; i < dados.length; i++) {
-                            UnidadeCurricular uc = ucCRUD.procurarPorNome(dados[i]);
-                            if (uc != null) {
-                                curso.adicionarUnidadeCurricular(uc);
+                            UnidadeCurricular unidadeCurricular = ucCRUD.procurarPorNome(dados[i]);
+                            if (unidadeCurricular != null) {
+                                curso.adicionarUnidadeCurricular(unidadeCurricular);
                             }
                         }
                     }
@@ -60,8 +60,8 @@ public class CursoCRUD {
                 StringBuilder sb = new StringBuilder();
                 sb.append(safe(curso.getNome())).append(";").append(curso.getDuracao()).append(";").append(sigla).append(";").append(curso.isIniciado());
                 
-                for (UnidadeCurricular uc : curso.getUc()) {
-                    sb.append(";").append(safe(uc.getNome()));
+                for (UnidadeCurricular unidadeCurricular : curso.getUnidadeCurriculars()) {
+                    sb.append(";").append(safe(unidadeCurricular.getNome()));
                 }
                 
                 print.println(sb.toString());

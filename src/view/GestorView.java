@@ -17,9 +17,6 @@ import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
-
-import javax.print.Doc;
-
 import static common.utils.DesignUtils.*;
 
 public class GestorView {
@@ -29,7 +26,6 @@ public class GestorView {
     private final UnidadeCurricularView unidadeCurricularView;
     private final DepartamentoView departamentoView;
     private final CursoView cursoView;
-    private final UnidadeCurricularController ucController;
     private final Scanner scanner;
 
     public GestorView() {
@@ -39,7 +35,6 @@ public class GestorView {
         this.unidadeCurricularView = new UnidadeCurricularView();
         this.departamentoView = new DepartamentoView();
         this.cursoView = new CursoView();
-        this.ucController = new UnidadeCurricularController();
         this.scanner = new Scanner(System.in);
     }
 
@@ -56,7 +51,7 @@ public class GestorView {
 
         do {
             try {
-                MenuUtils.exibirSubTitulo("MENU DE GESTÃO ADMINISTRATIVA", opcoes);
+                MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL", opcoes);
 
                 System.out.print("\nSelecione uma opção: ");
                 opcao = scanner.nextLine().trim();
@@ -106,7 +101,7 @@ public class GestorView {
         opcoes.add("0. Voltar ao Menu Principal");
 
         do {
-            MenuUtils.exibirSubTitulo("GESTÃO DE GESTORES", opcoes);
+            MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL > GESTORES", opcoes);
             System.out.print("\n" + DesignUtils.GetWhiteBold() + "Selecione uma opção: " + DesignUtils.GetReset());
             opcao = scanner.nextLine().trim();
 
@@ -200,12 +195,12 @@ public class GestorView {
             String cargo = BackendUtils.lerInputString(scanner, "Cargo: ");
 
             GestorController gestorControllerAtualizado = new GestorController();
-            Resultado res = gestorControllerAtualizado.registarGestor(nome, morada, nif, dataNascimento, email, hash, cargo);
+            Resultado resultado = gestorControllerAtualizado.registarGestor(nome, morada, nif, dataNascimento, email, hash, cargo);
 
-            if (res.success) {
+            if (resultado.success) {
                 System.out.println(GetGreen() + "\nGestor registado com sucesso!" + GetReset());
             } else {
-                System.out.println(GetRed() + "\nErro ao registar: " + res.errorMessage + GetReset());
+                System.out.println(GetRed() + "\nErro ao registar: " + resultado.errorMessage + GetReset());
             }
 
             MenuUtils.pressionarEnter(scanner);
@@ -230,8 +225,8 @@ public class GestorView {
             if (gestores.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhum gestor registado no sistema." + GetReset());
             } else {
-                for (Gestor g : gestores) {
-                    System.out.println("NIF: " + g.getNif() + " | Nome: " + g.getNome() + " | Cargo: " + g.getCargo());
+                for (Gestor gestor : gestores) {
+                    System.out.println("NIF: " + gestor.getNif() + " | Nome: " + gestor.getNome() + " | Cargo: " + gestor.getCargo());
                 }
             }
 
@@ -423,7 +418,7 @@ public class GestorView {
 
         do {
             try {
-                MenuUtils.exibirSubTitulo("GESTÃO DE DOCENTES", opcoes);
+                MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL > DOCENTES", opcoes);
                 System.out.print("\n" + GetWhiteBold() + "Selecione uma opção: " + GetReset());
                 opcao = scanner.nextLine().trim();
 
@@ -520,13 +515,13 @@ public class GestorView {
 
             System.out.println("\n" + GetBlue() + "--- Unidades Curriculares Disponíveis ---" + GetReset());
             UnidadeCurricularController unidadeCurricularControllerAtualizado = new UnidadeCurricularController();
-            List<UnidadeCurricular> ucs = unidadeCurricularControllerAtualizado.listarTodasUCs();
+            List<UnidadeCurricular> unidadeCurriculars = unidadeCurricularControllerAtualizado.listarTodasUCs();
             List<String> nomesUC = new ArrayList<>();
-            if (ucs.isEmpty()) {
+            if (unidadeCurriculars.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhuma UC registada. Docente será registado sem UCs associadas." + GetReset());
             } else {
-                for (UnidadeCurricular uc : ucs) {
-                    System.out.println("- " + uc.getNome());
+                for (UnidadeCurricular unidadeCurricular : unidadeCurriculars) {
+                    System.out.println("- " + unidadeCurricular.getNome());
                 }
                 String input = BackendUtils.lerInputString(scanner, "Digite os nomes das UCs a associar (separados por vírgula, ou Enter para nenhuma): ");
                 if (!input.isEmpty()) {
@@ -591,8 +586,8 @@ public class GestorView {
             if (docentes.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhum docente registado." + GetReset());
             } else {
-                for (model.Docente d : docentes) {
-                    System.out.println("NIF: " + d.getNif() + " | Nome: " + d.getNome() + " | Sigla: " + d.getSigla());
+                for (model.Docente docente : docentes) {
+                    System.out.println("NIF: " + docente.getNif() + " | Nome: " + docente.getNome() + " | Sigla: " + docente.getSigla());
                 }
             }
             MenuUtils.pressionarEnter(scanner);
@@ -822,7 +817,7 @@ public class GestorView {
 
         do {
             try {
-                MenuUtils.exibirSubTitulo("CRUD - ESTUDANTES", opcoes);
+                MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL > ESTUDANTES", opcoes);
                 System.out.print("\n" + GetWhiteBold() + "Selecione uma opção: " + GetReset());
                 opcao = scanner.nextLine().trim();
 
@@ -979,9 +974,13 @@ public class GestorView {
             if (lista.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhum estudante registado no sistema." + GetReset());
             } else {
+                System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
+                System.out.printf(GetWhiteBold() + " %-15s | %-30s | %-25s \n" + GetReset(), "Nº MEC", "NOME", "CURSO");
+                System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
                 for (model.Estudante e : lista) {
-                    System.out.println("Mec: " + e.getNumeroMec() + " | Nome: " + e.getNome() + " | Curso: " + e.getNomeCurso());
+                    System.out.printf(" %-15d | %-30s | %-25s \n", e.getNumeroMec(), e.getNome(), e.getNomeCurso());
                 }
+                System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
             }
 
             MenuUtils.pressionarEnter(scanner);
@@ -1128,16 +1127,27 @@ public class GestorView {
                 }
             }
 
-            EstudanteController estudanteControllerAtualizado = new EstudanteController();
-            Resultado res = estudanteControllerAtualizado.eliminarEstudante(amec);
+            model.Estudante estudanteAapagar = estudanteController.procurarEstudantePorNumeroMec(amec);
 
-            if (res.success) {
-                System.out.println(GetGreen() + "\nEstudante eliminado com sucesso!" + GetReset());
+            if (estudanteAapagar != null) {
+                System.out.print(GetYellow() + "\nAVISO: Tem a certeza que deseja eliminar o estudante " + estudanteAapagar.getNome() + "? (S/N): " + GetReset());
+                String confirmacao = scanner.nextLine().trim();
+
+                if (confirmacao.equalsIgnoreCase("S")) {
+                    EstudanteController estudanteControllerAtualizado = new EstudanteController();
+                    Resultado resultado = estudanteControllerAtualizado.eliminarEstudante(amec);
+
+                    if (resultado.success) {
+                        System.out.println(GetGreen() + "\nEstudante eliminado com sucesso!" + GetReset());
+                    } else {
+                        System.out.println(GetRed() + "\nErro ao eliminar: " + resultado.errorMessage + GetReset());
+                    }
+                } else {
+                    System.out.println(GetBlue() + "\nOperação de eliminação cancelada pelo utilizador." + GetReset());
+                }
             } else {
-                System.out.println(GetRed() + "\nErro ao eliminar: " + res.errorMessage + GetReset());
+                System.out.println(GetYellow() + "\nEstudante não encontrado com o Número Mecanográfico informado." + GetReset());
             }
-
-            MenuUtils.pressionarEnter(scanner);
 
         } catch (CancelarRegistoException e) {
             System.out.println("\n" + GetYellow() + "Aviso: " + e.getMessage() + GetReset());
