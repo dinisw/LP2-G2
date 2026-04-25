@@ -2,11 +2,10 @@ package controller;
 
 import DAL.CursoCRUD;
 import DAL.DepartamentoCRUD;
+import DAL.EstudanteCRUD;
 import DAL.UnidadeCurricularCRUD;
-import model.Curso;
-import model.Departamento;
-import model.Resultado;
-import model.UnidadeCurricular;
+import model.*;
+
 import java.util.List;
 
 public class CursoController {
@@ -144,14 +143,14 @@ public class CursoController {
             resultado.success = true;
 
             try {
-                DAL.EstudanteCRUD estudanteCRUD = new DAL.EstudanteCRUD();
-                controller.EstudanteController estudanteController = new controller.EstudanteController();
-                java.util.List<model.Estudante> todosEstudantes = estudanteController.listarEstudantes();
+                EstudanteCRUD estudanteCRUD = new EstudanteCRUD();
+                EstudanteController estudanteController = new EstudanteController();
+                List<Estudante> todosEstudantes = estudanteController.listarEstudantes();
 
-                for (model.Estudante estudante : todosEstudantes) {
+                for (Estudante estudante : todosEstudantes) {
                     if (estudante.getNomeCurso() != null && estudante.getNomeCurso().equalsIgnoreCase(nome)) {
                         estudante.setNomeCurso("SEM REGISTO");
-                        estudanteCRUD.atualizarEstudante(estudante.getNumeroMec(), estudante);
+                        estudanteCRUD.atualizarEstudante(estudante);
                     }
                 }
             } catch (Exception e) {
