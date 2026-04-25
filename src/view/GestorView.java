@@ -167,7 +167,11 @@ public class GestorView {
                 try {
                     String dataString = BackendUtils.lerInputString(scanner, "Data de Nascimento (AAAA-MM-DD): ");
                     dataNascimento = LocalDate.parse(dataString);
-                    break;
+                    if(dataNascimento.getYear() < dataNascimento.getYear() + 17){
+                        System.out.println(GetRed() + "Sistem só permite pessoas maiores de 18 anos. Tente novamente." + GetReset());
+                    }else {
+                        break;
+                    }
                 } catch (DateTimeParseException e) {
                     System.out.println(GetRed() + "Data deve estar no formato AAAA-MM-DD. Tente novamente." + GetReset());
                 }
@@ -492,7 +496,11 @@ public class GestorView {
                 try {
                     String dataString = BackendUtils.lerInputString(scanner, "Data de Nascimento (AAAA-MM-DD): ");
                     dataNascimento = LocalDate.parse(dataString);
-                    break;
+                    if(dataNascimento.getYear() < dataNascimento.getYear() + 17){
+                        System.out.println(GetRed() + "Sistem só permite pessoas maiores de 18 anos. Tente novamente." + GetReset());
+                    }else {
+                        break;
+                    }
                 } catch (DateTimeParseException e) {
                     System.out.println(GetRed() + "Data deve estar no formato AAAA-MM-DD. Tente novamente." + GetReset());
                 }
@@ -897,7 +905,11 @@ public class GestorView {
                 try {
                     String dataString = BackendUtils.lerInputString(scanner, "Data de Nascimento (AAAA-MM-DD): ");
                     dataNascimento = LocalDate.parse(dataString);
-                    break;
+                    if(dataNascimento.getYear() < dataNascimento.getYear() + 17){
+                        System.out.println(GetRed() + "Sistem só permite pessoas maiores de 18 anos. Tente novamente." + GetReset());
+                    }else {
+                        break;
+                    }
                 } catch (DateTimeParseException e) {
                     System.out.println(GetRed() + "Data deve estar no formato AAAA-MM-DD. Tente novamente." + GetReset());
                 }
