@@ -1,8 +1,11 @@
 package controller;
 
+import DAL.AvaliacaoCRUD;
 import DAL.DocenteCRUD;
 import DAL.UnidadeCurricularCRUD;
+import model.Avaliacao;
 import model.Docente;
+import model.Estudante;
 import model.Resultado;
 import model.UnidadeCurricular;
 import java.time.LocalDate;
@@ -12,10 +15,12 @@ import java.util.List;
 public class DocenteController {
     private final DocenteCRUD docenteCRUD;
     private final UnidadeCurricularCRUD ucCRUD;
+    private final AvaliacaoCRUD avaliacaoCRUD;
 
     public DocenteController() {
         this.docenteCRUD = new DocenteCRUD();
         this.ucCRUD = new UnidadeCurricularCRUD();
+        this.avaliacaoCRUD = new AvaliacaoCRUD();
     }
 
     public Resultado registarDocente(String nome, String morada, int nif, LocalDate dataNascimento, String email, String hash, String sigla, List<String> nomesUC) {
@@ -226,5 +231,27 @@ public class DocenteController {
         }
 
         return resultado;
+    }
+
+
+    public List<Estudante> listarAlunosPorUC(String nomeUC) {
+        if (nomeUC == null || nomeUC.trim().isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<Avaliacao> avaliacoes = avaliacaoCRUD.listarPorUnidadeCurricular(nomeUC);
+        List<Estudante> alunosUnicos = new ArrayList<>();
+        List<Integer> mecsAdicionados = new ArrayList<>();
+
+        for (Avaliacao av : avaliacoes) {
+            Estudante est = av.getEstudante();
+            if (est != null && !mecsAdicionados.contains(est.getNumeroMec())) {
+                alunosUnicos.add(est);
+                mecsAdicionados.add(est.getNumeroMec());
+            }
+        }
+
+        alunosUnicos.sort((a, b) -> a.getNome().compareToIgnoreCase(b.getNome()));
+        return alunosUnicos;
     }
 }
