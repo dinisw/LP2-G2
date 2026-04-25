@@ -47,7 +47,7 @@ public class UnidadeCurricularCRUD {
                 }
             }
         } catch (IOException | NumberFormatException e) {
-            System.out.println("Erro ao carregar UCs: " + e.getMessage());
+            throw new RuntimeException("Erro interno ao carregar o ficheiro de UCs.", e);
         }
     }
 
@@ -68,7 +68,7 @@ public class UnidadeCurricularCRUD {
                 print.println(linha);
             }
         } catch (IOException e) {
-            System.out.println("Erro ao guardar UCs: " + e.getMessage());
+            throw new RuntimeException("Erro interno ao guardar o ficheiro de UCs.", e);
         }
     }
 

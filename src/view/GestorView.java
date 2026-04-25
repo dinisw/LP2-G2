@@ -48,6 +48,7 @@ public class GestorView {
         opcoes.add("4. Gerir Cursos");
         opcoes.add("5. Gerir Departamentos");
         opcoes.add("6. Gerir Unidades Curriculares");
+        opcoes.add("7. Consultar Alunos em Dívida (Tesouraria)"); // NOVA OPÇÃO
         opcoes.add("0. Logout");
 
         do {
@@ -75,6 +76,9 @@ public class GestorView {
                         break;
                     case "6":
                         unidadeCurricularView.exibirMenuUnidadesCurriculares();
+                        break;
+                    case "7": // NOVO CASE
+                        consultarAlunosEmDivida();
                         break;
                     case "0":
                         System.out.println(GetYellow() + "\nA efetuar logout..." + GetReset());
@@ -254,33 +258,41 @@ public class GestorView {
             System.out.println(GetBlue() + "\n--- PROCURAR GESTOR ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
-            int nif = 0;
-            boolean nifValido = false;
+            GestorController controllerAux = new GestorController();
+            List<Gestor> listaGestores = controllerAux.listarGestores();
+            if (listaGestores.isEmpty()) {
+                System.out.println(GetYellow() + "Não há gestores registados no sistema." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
 
-            while (!nifValido) {
+            System.out.println("\n" + GetWhiteBold() + "Gestores Disponíveis:" + GetReset());
+            for (int i = 0; i < listaGestores.size(); i++) {
+                Gestor g = listaGestores.get(i);
+                System.out.printf("%d - %s (NIF: %d)\n", i + 1, g.getNome(), g.getNif());
+            }
+
+            int escolha = -1;
+            while (escolha < 0 || escolha > listaGestores.size()) {
                 try {
-                    String nifString = BackendUtils.lerInputString(scanner, "Digite o NIF do gestor: ");
-                    nif = Integer.parseInt(nifString);
+                    String op = BackendUtils.lerInputString(scanner, "\nDigite a opção desejada: ");
+                    escolha = Integer.parseInt(op);
 
-                    nifValido = BackendUtils.nifEValido(nifString);
-                    if (!nifValido) {
-                        System.out.println(GetRed() + "NIF deve ser um número inteiro válido e conter 9 dígitos. Tente novamente." + GetReset());
+                    if (escolha == 0) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
+
+                    if (escolha < 1 || escolha > listaGestores.size()) {
+                        System.out.println(GetRed() + "Opção inválida. Escolha um número entre 1 e " + listaGestores.size() + "." + GetReset());
                     }
                 } catch (NumberFormatException e) {
-                    System.out.println(GetRed() + "Aviso: O valor introduzido não é um número. Tente novamente." + GetReset());
+                    System.out.println(GetRed() + "Por favor, digite apenas números." + GetReset());
+                    escolha = -1;
                 }
             }
 
-            GestorController gestorControllerAtualizado = new GestorController();
-            Gestor gestor = gestorControllerAtualizado.procurarGestorPorNif(nif);
+            Gestor gestor = listaGestores.get(escolha - 1);
 
-            if (gestor != null) {
-                System.out.println(GetGreen() + "\nDados encontrados:" + GetReset());
-                System.out.println(gestor.toString());
-            } else {
-                System.out.println(GetYellow() + "\nGestor não encontrado com o NIF informado." + GetReset());
-            }
-
+            System.out.println(GetGreen() + "\nDados encontrados:" + GetReset());
+            System.out.println(gestor.toString());
             MenuUtils.pressionarEnter(scanner);
 
         } catch (CancelarRegistoException e) {
@@ -293,30 +305,125 @@ public class GestorView {
         }
     }
 
+    private void atualizarGestor() {
+        try {
+            System.out.println(GetBlue() + "\n--- ATUALIZAR GESTOR ---" + GetReset());
+            System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
+
+            GestorController gestorControllerAtualizado = new GestorController();
+            List<Gestor> listaGestores = gestorControllerAtualizado.listarGestores();
+            if (listaGestores.isEmpty()) {
+                System.out.println(GetYellow() + "Não há gestores registados no sistema." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            System.out.println("\n" + GetWhiteBold() + "Gestores Disponíveis:" + GetReset());
+            for (int i = 0; i < listaGestores.size(); i++) {
+                Gestor g = listaGestores.get(i);
+                System.out.printf("%d - %s (NIF: %d)\n", i + 1, g.getNome(), g.getNif());
+            }
+
+            int escolha = -1;
+            while (escolha < 0 || escolha > listaGestores.size()) {
+                try {
+                    String op = BackendUtils.lerInputString(scanner, "\nDigite a opção do gestor a atualizar: ");
+                    escolha = Integer.parseInt(op);
+                    if (escolha == 0) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
+                    if (escolha < 1 || escolha > listaGestores.size()) {
+                        System.out.println(GetRed() + "Opção inválida. Escolha um número entre 1 e " + listaGestores.size() + "." + GetReset());
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println(GetRed() + "Por favor, digite apenas números." + GetReset());
+                    escolha = -1;
+                }
+            }
+
+            Gestor gestor = listaGestores.get(escolha - 1);
+
+            System.out.println(GetGreen() + "\nDados atuais:" + GetReset());
+            System.out.println(gestor.toString());
+            System.out.println(GetYellow() + "\n[Pressione ENTER nos campos que deseja manter iguais]" + GetReset());
+
+            String nome = BackendUtils.lerInputString(scanner, "Novo Nome: ");
+            if (!nome.isEmpty()) gestor.setNome(nome);
+
+            String morada = BackendUtils.lerInputString(scanner, "Nova Morada: ");
+            if (!morada.isEmpty()) gestor.setMorada(morada);
+
+            String email = "";
+            boolean emailValido = false;
+            while (!emailValido) {
+                email = BackendUtils.lerInputString(scanner, "Novo Email: ");
+                if (email.isEmpty()) {
+                    emailValido = true;
+                } else {
+                    emailValido = BackendUtils.emailISSMFGestorValido(email);
+                    if(!emailValido) {
+                        System.out.println(GetRed() + "EMAIL deve ter o formato xxxx.gestor@issmf.ipp.pt. Tente novamente." + GetReset());
+                    }
+                }
+            }
+            if (!email.isEmpty()) gestor.setEmail(email);
+
+            String cargo = BackendUtils.lerInputString(scanner, "Novo Cargo: ");
+            if (!cargo.isEmpty()) gestor.setCargo(cargo);
+
+            Resultado resultado = gestorControllerAtualizado.atualizarGestor(gestor.getNif(), nome.isEmpty() ? null : nome, morada.isEmpty() ? null : morada, null, email.isEmpty() ? null : email, cargo.isEmpty() ? null : cargo);
+
+            if (resultado.success) {
+                System.out.println(GetGreen() + "\nGestor atualizado com sucesso!" + GetReset());
+            } else {
+                System.out.println(GetRed() + "\nErro ao atualizar gestor: " + resultado.errorMessage + GetReset());
+            }
+
+            MenuUtils.pressionarEnter(scanner);
+
+        } catch (CancelarRegistoException e) {
+            System.out.println("\n" + GetYellow() + "Aviso: " + e.getMessage() + GetReset());
+            System.out.println(GetRed() + "Operação de atualização interrompida!" + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Ocorreu um erro inesperado: " + e.getMessage() + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        }
+    }
+
     private void eliminarGestor() {
         try {
             System.out.println(GetBlue() + "\n--- ELIMINAR GESTOR ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
-            int nif = 0;
-            boolean nifValido = false;
+            GestorController gestorControllerAtualizado = new GestorController();
+            List<Gestor> listaGestores = gestorControllerAtualizado.listarGestores();
+            if (listaGestores.isEmpty()) {
+                System.out.println(GetYellow() + "Não há gestores registados no sistema." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
 
-            while (!nifValido) {
+            System.out.println("\n" + GetWhiteBold() + "Gestores Disponíveis:" + GetReset());
+            for (int i = 0; i < listaGestores.size(); i++) {
+                System.out.printf("%d - %s (NIF: %d)\n", i + 1, listaGestores.get(i).getNome(), listaGestores.get(i).getNif());
+            }
+
+            int escolha = -1;
+            while (escolha < 0 || escolha > listaGestores.size()) {
                 try {
-                    String nifString = BackendUtils.lerInputString(scanner, "Digite o NIF do gestor a eliminar: ");
-                    nif = Integer.parseInt(nifString);
-
-                    nifValido = BackendUtils.nifEValido(nifString);
-                    if (!nifValido) {
-                        System.out.println(GetRed() + "NIF deve ser um número inteiro válido e conter 9 dígitos. Tente novamente." + GetReset());
+                    String op = BackendUtils.lerInputString(scanner, "\nDigite a opção do gestor a eliminar: ");
+                    escolha = Integer.parseInt(op);
+                    if (escolha == 0) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
+                    if (escolha < 1 || escolha > listaGestores.size()) {
+                        System.out.println(GetRed() + "Opção inválida. Escolha um número entre 1 e " + listaGestores.size() + "." + GetReset());
                     }
                 } catch (NumberFormatException e) {
-                    System.out.println(GetRed() + "Aviso: O valor introduzido não é um número. Tente novamente." + GetReset());
+                    System.out.println(GetRed() + "Por favor, digite apenas números." + GetReset());
+                    escolha = -1;
                 }
             }
 
-            GestorController gestorControllerAtualizado = new GestorController();
-            Resultado resultado = gestorControllerAtualizado.eliminarGestor(nif);
+            Gestor gestor = listaGestores.get(escolha - 1);
+            Resultado resultado = gestorControllerAtualizado.eliminarGestor(gestor.getNif());
 
             if (resultado.success) {
                 System.out.println(GetGreen() + "\nGestor eliminado com sucesso!" + GetReset());
@@ -329,84 +436,6 @@ public class GestorView {
         } catch (CancelarRegistoException e) {
             System.out.println("\n" + GetYellow() + "Aviso: " + e.getMessage() + GetReset());
             System.out.println(GetRed() + "Operação de eliminação interrompida!" + GetReset());
-            MenuUtils.pressionarEnter(scanner);
-        } catch (Exception e) {
-            System.out.println(GetRed() + "Ocorreu um erro inesperado: " + e.getMessage() + GetReset());
-            MenuUtils.pressionarEnter(scanner);
-        }
-    }
-
-    private void atualizarGestor() {
-        try {
-            System.out.println(GetBlue() + "\n--- ATUALIZAR GESTOR ---" + GetReset());
-            System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
-
-            int nif = 0;
-            boolean nifValido = false;
-            while (!nifValido) {
-                try {
-                    String nifString = BackendUtils.lerInputString(scanner, "Digite o NIF do gestor a atualizar: ");
-                    nif = Integer.parseInt(nifString);
-
-                    nifValido = BackendUtils.nifEValido(nifString);
-                    if (!nifValido) {
-                        System.out.println(GetRed() + "NIF deve ser um número inteiro válido e conter 9 dígitos. Tente novamente." + GetReset());
-                    }
-                } catch (NumberFormatException e) {
-                    System.out.println(GetRed() + "Aviso: O valor introduzido não é um número. Tente novamente." + GetReset());
-                }
-            }
-
-            GestorController gestorControllerAtualizado = new GestorController();
-            Gestor gestor = gestorControllerAtualizado.procurarGestorPorNif(nif);
-
-            if (gestor != null) {
-                System.out.println(GetGreen() + "\nDados atuais:" + GetReset());
-                System.out.println(gestor.toString());
-
-                System.out.println(GetYellow() + "\n[Pressione ENTER nos campos que deseja manter iguais]" + GetReset());
-
-                String nome = BackendUtils.lerInputString(scanner, "Novo Nome: ");
-                if (!nome.isEmpty()) gestor.setNome(nome);
-
-                String morada = BackendUtils.lerInputString(scanner, "Nova Morada: ");
-                if (!morada.isEmpty()) gestor.setMorada(morada);
-
-                String email = "";
-                boolean emailValido = false;
-                while (!emailValido) {
-                    email = BackendUtils.lerInputString(scanner, "Novo Email: ");
-                    if (email.isEmpty()) {
-                        emailValido = true;
-                    } else {
-                        emailValido = BackendUtils.emailISSMFGestorValido(email);
-                        if(!emailValido) {
-                            System.out.println(GetRed() + "EMAIL deve ter o formato xxxx.gestor@issmf.ipp.pt. Tente novamente." + GetReset());
-                        }
-                    }
-                }
-                if (!email.isEmpty()) gestor.setEmail(email);
-
-                String cargo = BackendUtils.lerInputString(scanner, "Novo Cargo: ");
-                if (!cargo.isEmpty()) gestor.setCargo(cargo);
-
-                Resultado resultado = gestorControllerAtualizado.atualizarGestor(nif, nome.isEmpty() ? null : nome, morada.isEmpty() ? null : morada, null, email.isEmpty() ? null : email, cargo.isEmpty() ? null : cargo);
-
-                if (resultado.success) {
-                    System.out.println(GetGreen() + "\nGestor atualizado com sucesso!" + GetReset());
-                } else {
-                    System.out.println(GetRed() + "\nErro ao atualizar gestor: " + resultado.errorMessage + GetReset());
-                }
-
-            } else {
-                System.out.println(GetYellow() + "\nGestor não encontrado com o NIF informado." + GetReset());
-            }
-
-            MenuUtils.pressionarEnter(scanner);
-
-        } catch (CancelarRegistoException e) {
-            System.out.println("\n" + GetYellow() + "Aviso: " + e.getMessage() + GetReset());
-            System.out.println(GetRed() + "Operação de atualização interrompida!" + GetReset());
             MenuUtils.pressionarEnter(scanner);
         } catch (Exception e) {
             System.out.println(GetRed() + "Ocorreu um erro inesperado: " + e.getMessage() + GetReset());
@@ -622,29 +651,38 @@ public class GestorView {
             System.out.println(GetBlue() + "\n--- PROCURAR DOCENTE ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
-            int nif = 0;
-            boolean nifValido = false;
-            while (!nifValido) {
+            DocenteController docenteControllerAtualizado = new DocenteController();
+            List<model.Docente> listaDocentes = docenteControllerAtualizado.listarDocentes();
+            if (listaDocentes.isEmpty()) {
+                System.out.println(GetYellow() + "Não há docentes registados no sistema." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            System.out.println("\n" + GetWhiteBold() + "Docentes Disponíveis:" + GetReset());
+            for (int i = 0; i < listaDocentes.size(); i++) {
+                model.Docente d = listaDocentes.get(i);
+                System.out.printf("%d - %s (Sigla: %s | NIF: %d)\n", i + 1, d.getNome(), d.getSigla(), d.getNif());
+            }
+
+            int escolha = -1;
+            while (escolha < 0 || escolha > listaDocentes.size()) {
                 try {
-                    String nifString = BackendUtils.lerInputString(scanner, "Digite o NIF do docente: ");
-                    nif = Integer.parseInt(nifString);
-                    nifValido = BackendUtils.nifEValido(nifString);
-                    if (!nifValido) {
-                        System.out.println(GetRed() + "NIF deve ser um número inteiro válido e conter 9 dígitos. Tente novamente." + GetReset());
+                    String op = BackendUtils.lerInputString(scanner, "\nDigite a opção desejada: ");
+                    escolha = Integer.parseInt(op);
+                    if (escolha == 0) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
+                    if (escolha < 1 || escolha > listaDocentes.size()) {
+                        System.out.println(GetRed() + "Opção inválida. Escolha um número entre 1 e " + listaDocentes.size() + "." + GetReset());
                     }
                 } catch (NumberFormatException e) {
-                    System.out.println(GetRed() + "Aviso: O valor introduzido não é um número. Tente novamente." + GetReset());
+                    System.out.println(GetRed() + "Por favor, digite apenas números." + GetReset());
+                    escolha = -1;
                 }
             }
 
-            DocenteController docenteControllerAtualizado = new DocenteController();
-            model.Docente docente = docenteControllerAtualizado.procurarDocentePorNif(nif);
-            if (docente != null) {
-                System.out.println(GetGreen() + "\nDados encontrados:" + GetReset());
-                System.out.println(docente.toString());
-            } else {
-                System.out.println(GetYellow() + "\nDocente não encontrado com o NIF informado." + GetReset());
-            }
+            model.Docente docente = listaDocentes.get(escolha - 1);
+            System.out.println(GetGreen() + "\nDados encontrados:" + GetReset());
+            System.out.println(docente.toString());
             MenuUtils.pressionarEnter(scanner);
 
         } catch (CancelarRegistoException e) {
@@ -662,51 +700,59 @@ public class GestorView {
             System.out.println(GetBlue() + "\n--- ATUALIZAR DOCENTE ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
-            int nif = 0;
-            boolean nifValido = false;
-            while (!nifValido) {
+            DocenteController docenteControllerAtualizado = new DocenteController();
+            List<model.Docente> listaDocentes = docenteControllerAtualizado.listarDocentes();
+            if (listaDocentes.isEmpty()) {
+                System.out.println(GetYellow() + "Não há docentes registados no sistema." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            System.out.println("\n" + GetWhiteBold() + "Docentes Disponíveis:" + GetReset());
+            for (int i = 0; i < listaDocentes.size(); i++) {
+                model.Docente d = listaDocentes.get(i);
+                System.out.printf("%d - %s (Sigla: %s | NIF: %d)\n", i + 1, d.getNome(), d.getSigla(), d.getNif());
+            }
+
+            int escolha = -1;
+            while (escolha < 0 || escolha > listaDocentes.size()) {
                 try {
-                    String nifString = BackendUtils.lerInputString(scanner, "Digite o NIF do docente a atualizar: ");
-                    nif = Integer.parseInt(nifString);
-                    nifValido = BackendUtils.nifEValido(nifString);
-                    if (!nifValido) {
-                        System.out.println(GetRed() + "NIF deve ser um número inteiro válido e conter 9 dígitos. Tente novamente." + GetReset());
+                    String op = BackendUtils.lerInputString(scanner, "\nDigite a opção do docente a atualizar: ");
+                    escolha = Integer.parseInt(op);
+                    if (escolha == 0) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
+                    if (escolha < 1 || escolha > listaDocentes.size()) {
+                        System.out.println(GetRed() + "Opção inválida. Escolha um número entre 1 e " + listaDocentes.size() + "." + GetReset());
                     }
                 } catch (NumberFormatException e) {
-                    System.out.println(GetRed() + "Aviso: O valor introduzido não é um número. Tente novamente." + GetReset());
+                    System.out.println(GetRed() + "Por favor, digite apenas números." + GetReset());
+                    escolha = -1;
                 }
             }
 
-            DocenteController docenteControllerAtualizado = new DocenteController();
-            model.Docente docente = docenteControllerAtualizado.procurarDocentePorNif(nif);
+            model.Docente docente = listaDocentes.get(escolha - 1);
 
-            if (docente != null) {
-                System.out.println(GetGreen() + "\nDados atuais:" + GetReset());
-                System.out.println(docente.toString());
+            System.out.println(GetGreen() + "\nDados atuais:" + GetReset());
+            System.out.println(docente.toString());
+            System.out.println(GetYellow() + "\n[Pressione ENTER nos campos que deseja manter iguais]" + GetReset());
 
-                System.out.println(GetYellow() + "\n[Pressione ENTER nos campos que deseja manter iguais]" + GetReset());
+            String nome = BackendUtils.lerInputString(scanner, "Novo Nome: ");
+            if (!nome.isEmpty()) docente.setNome(nome);
 
-                String nome = BackendUtils.lerInputString(scanner, "Novo Nome: ");
-                if (!nome.isEmpty()) docente.setNome(nome);
+            String morada = BackendUtils.lerInputString(scanner, "Nova Morada: ");
+            if (!morada.isEmpty()) docente.setMorada(morada);
 
-                String morada = BackendUtils.lerInputString(scanner, "Nova Morada: ");
-                if (!morada.isEmpty()) docente.setMorada(morada);
+            String email = BackendUtils.lerInputString(scanner, "Novo Email: ");
+            if (!email.isEmpty()) docente.setEmail(email);
 
-                String email = BackendUtils.lerInputString(scanner, "Novo Email: ");
-                if (!email.isEmpty()) docente.setEmail(email);
+            String sigla = BackendUtils.lerInputString(scanner, "Nova Sigla: ");
+            if (!sigla.isEmpty()) docente.setSigla(sigla);
 
-                String sigla = BackendUtils.lerInputString(scanner, "Nova Sigla: ");
-                if (!sigla.isEmpty()) docente.setSigla(sigla);
+            Resultado resultado = docenteControllerAtualizado.atualizarDocente(docente.getNif(), nome.isEmpty() ? null : nome, morada.isEmpty() ? null : morada, null, email.isEmpty() ? null : email);
 
-                Resultado resultado = docenteControllerAtualizado.atualizarDocente(nif, nome.isEmpty() ? null : nome, morada.isEmpty() ? null : morada, null, email.isEmpty() ? null : email);
-
-                if (resultado.success) {
-                    System.out.println(GetGreen() + "\nDocente atualizado com sucesso!" + GetReset());
-                } else {
-                    System.out.println(GetRed() + "\nErro ao atualizar docente: " + resultado.errorMessage + GetReset());
-                }
+            if (resultado.success) {
+                System.out.println(GetGreen() + "\nDocente atualizado com sucesso!" + GetReset());
             } else {
-                System.out.println(GetYellow() + "\nDocente não encontrado com o NIF informado." + GetReset());
+                System.out.println(GetRed() + "\nErro ao atualizar docente: " + resultado.errorMessage + GetReset());
             }
             MenuUtils.pressionarEnter(scanner);
 
@@ -725,35 +771,45 @@ public class GestorView {
             System.out.println(GetBlue() + "\n--- ALTERAR PASSWORD DO DOCENTE ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
-            Terminal terminal = TerminalBuilder.terminal();
-            LineReader reader = LineReaderBuilder.builder()
-                    .terminal(terminal)
-                    .build();
+            DocenteController docenteControllerAtualizado = new DocenteController();
+            List<model.Docente> listaDocentes = docenteControllerAtualizado.listarDocentes();
+            if (listaDocentes.isEmpty()) {
+                System.out.println(GetYellow() + "Não há docentes registados no sistema." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
 
-            int nif = 0;
-            boolean nifValido = false;
-            while (!nifValido) {
+            System.out.println("\n" + GetWhiteBold() + "Docentes Disponíveis:" + GetReset());
+            for (int i = 0; i < listaDocentes.size(); i++) {
+                model.Docente d = listaDocentes.get(i);
+                System.out.printf("%d - %s (Sigla: %s | NIF: %d)\n", i + 1, d.getNome(), d.getSigla(), d.getNif());
+            }
+
+            int escolha = -1;
+            while (escolha < 0 || escolha > listaDocentes.size()) {
                 try {
-                    String nifString = BackendUtils.lerInputString(scanner, "Digite o NIF do docente: ");
-                    nif = Integer.parseInt(nifString);
-                    nifValido = BackendUtils.nifEValido(nifString);
-                    if (!nifValido) {
-                        System.out.println(GetRed() + "NIF deve ser um número inteiro válido e conter 9 dígitos. Tente novamente." + GetReset());
+                    String op = BackendUtils.lerInputString(scanner, "\nDigite a opção do docente: ");
+                    escolha = Integer.parseInt(op);
+                    if (escolha == 0) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
+                    if (escolha < 1 || escolha > listaDocentes.size()) {
+                        System.out.println(GetRed() + "Opção inválida. Escolha um número entre 1 e " + listaDocentes.size() + "." + GetReset());
                     }
                 } catch (NumberFormatException e) {
-                    System.out.println(GetRed() + "Aviso: O valor introduzido não é um número. Tente novamente." + GetReset());
+                    System.out.println(GetRed() + "Por favor, digite apenas números." + GetReset());
+                    escolha = -1;
                 }
             }
+
+            model.Docente docente = listaDocentes.get(escolha - 1);
+
+            Terminal terminal = TerminalBuilder.terminal();
+            LineReader reader = LineReaderBuilder.builder().terminal(terminal).build();
 
             String novaPass = "";
             boolean senhaValida = false;
             while (!senhaValida) {
                 novaPass = reader.readLine("Nova senha: ", '*');
-
-                if (novaPass.equals("0")) {
-                    throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
-                }
-
+                if (novaPass.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
                 senhaValida = BackendUtils.isSenhaValida(novaPass);
                 if(!senhaValida) {
                     System.out.println(GetRed() + "SENHA deve conter pelo menos uma letra maiúscula, um número e um caracter especial. Tente novamente." + GetReset());
@@ -763,8 +819,7 @@ public class GestorView {
             SenhaUtils su = new SenhaUtils();
             String novoHash = su.gerarHashComSalt(novaPass);
 
-            DocenteController docenteControllerAtualizado = new DocenteController();
-            Resultado resultado = docenteControllerAtualizado.alterarPassword(nif, novoHash);
+            Resultado resultado = docenteControllerAtualizado.alterarPassword(docente.getNif(), novoHash);
 
             if (resultado.success) {
                 System.out.println(GetGreen() + "\nPassword alterada com sucesso!" + GetReset());
@@ -788,23 +843,37 @@ public class GestorView {
             System.out.println(GetBlue() + "\n--- ELIMINAR DOCENTE ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
-            int nif = 0;
-            boolean nifValido = false;
-            while (!nifValido) {
+            DocenteController docenteControllerAtualizado = new DocenteController();
+            List<model.Docente> listaDocentes = docenteControllerAtualizado.listarDocentes();
+            if (listaDocentes.isEmpty()) {
+                System.out.println(GetYellow() + "Não há docentes registados no sistema." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            System.out.println("\n" + GetWhiteBold() + "Docentes Disponíveis:" + GetReset());
+            for (int i = 0; i < listaDocentes.size(); i++) {
+                model.Docente d = listaDocentes.get(i);
+                System.out.printf("%d - %s (Sigla: %s | NIF: %d)\n", i + 1, d.getNome(), d.getSigla(), d.getNif());
+            }
+
+            int escolha = -1;
+            while (escolha < 0 || escolha > listaDocentes.size()) {
                 try {
-                    String nifString = BackendUtils.lerInputString(scanner, "Digite o NIF do docente a eliminar: ");
-                    nif = Integer.parseInt(nifString);
-                    nifValido = BackendUtils.nifEValido(nifString);
-                    if (!nifValido) {
-                        System.out.println(GetRed() + "NIF deve ser um número inteiro válido e conter 9 dígitos. Tente novamente." + GetReset());
+                    String op = BackendUtils.lerInputString(scanner, "\nDigite a opção do docente a eliminar: ");
+                    escolha = Integer.parseInt(op);
+                    if (escolha == 0) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
+                    if (escolha < 1 || escolha > listaDocentes.size()) {
+                        System.out.println(GetRed() + "Opção inválida. Escolha um número entre 1 e " + listaDocentes.size() + "." + GetReset());
                     }
                 } catch (NumberFormatException e) {
-                    System.out.println(GetRed() + "Aviso: O valor introduzido não é um número. Tente novamente." + GetReset());
+                    System.out.println(GetRed() + "Por favor, digite apenas números." + GetReset());
+                    escolha = -1;
                 }
             }
 
-            DocenteController docenteControllerAtualizado = new DocenteController();
-            Resultado resultado = docenteControllerAtualizado.eliminarDocente(nif);
+            model.Docente docente = listaDocentes.get(escolha - 1);
+            Resultado resultado = docenteControllerAtualizado.eliminarDocente(docente.getNif());
 
             if (resultado.success) {
                 System.out.println(GetGreen() + "\nDocente eliminado com sucesso!" + GetReset());
@@ -1023,38 +1092,41 @@ public class GestorView {
 
     private void procurarEstudante() {
         try {
-            // Título e instrução de cancelamento padronizado
             System.out.println(GetBlue() + "\n--- PROCURAR ESTUDANTE ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
-            int nmec = 0;
-            boolean nmecValido = false;
+            EstudanteController estudanteControllerAtualizado = new EstudanteController();
+            List<model.Estudante> listaEstudantes = estudanteControllerAtualizado.listarEstudantes();
+            if (listaEstudantes.isEmpty()) {
+                System.out.println(GetYellow() + "Não há estudantes registados no sistema." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
 
-            while (!nmecValido) {
+            System.out.println("\n" + GetWhiteBold() + "Estudantes Disponíveis:" + GetReset());
+            for (int i = 0; i < listaEstudantes.size(); i++) {
+                model.Estudante e = listaEstudantes.get(i);
+                System.out.printf("%d - %s (Nº Mec: %d | Curso: %s)\n", i + 1, e.getNome(), e.getNumeroMec(), e.getNomeCurso());
+            }
+
+            int escolha = -1;
+            while (escolha < 0 || escolha > listaEstudantes.size()) {
                 try {
-                    String nmecString = BackendUtils.lerInputString(scanner, "Digite o Número Mecanográfico: ");
-                    nmec = Integer.parseInt(nmecString);
-
-                    if (nmec > 0) {
-                        nmecValido = true;
-                    } else {
-                        System.out.println(GetRed() + "O Número Mecanográfico deve ser superior a zero. Tente novamente." + GetReset());
+                    String op = BackendUtils.lerInputString(scanner, "\nDigite a opção desejada: ");
+                    escolha = Integer.parseInt(op);
+                    if (escolha == 0) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
+                    if (escolha < 1 || escolha > listaEstudantes.size()) {
+                        System.out.println(GetRed() + "Opção inválida. Escolha um número entre 1 e " + listaEstudantes.size() + "." + GetReset());
                     }
                 } catch (NumberFormatException e) {
-                    System.out.println(GetRed() + "Aviso: O valor introduzido não é um número válido. Tente novamente." + GetReset());
+                    System.out.println(GetRed() + "Por favor, digite apenas números." + GetReset());
+                    escolha = -1;
                 }
             }
 
-            EstudanteController estudanteControllerAtualizado = new EstudanteController();
-            model.Estudante estudante = estudanteControllerAtualizado.procurarEstudantePorNumeroMec(nmec);
-
-            if (estudante != null) {
-                System.out.println(GetGreen() + "\nDados encontrados:" + GetReset());
-                System.out.println(estudante.toString());
-            } else {
-                System.out.println(GetYellow() + "\nEstudante não encontrado com o Número Mecanográfico informado." + GetReset());
-            }
-
+            model.Estudante estudante = listaEstudantes.get(escolha - 1);
+            System.out.println(GetGreen() + "\nDados encontrados:" + GetReset());
+            System.out.println(estudante.toString());
             MenuUtils.pressionarEnter(scanner);
 
         } catch (CancelarRegistoException e) {
@@ -1072,56 +1144,60 @@ public class GestorView {
             System.out.println(GetBlue() + "\n--- ATUALIZAR ESTUDANTE ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
-            int amec = 0;
-            boolean nmecValido = false;
-            while (!nmecValido) {
-                try {
-                    String nmecString = BackendUtils.lerInputString(scanner, "Digite o Número Mecanográfico a atualizar: ");
-                    amec = Integer.parseInt(nmecString);
+            EstudanteController estudanteControllerAtualizado = new EstudanteController();
+            List<model.Estudante> listaEstudantes = estudanteControllerAtualizado.listarEstudantes();
+            if (listaEstudantes.isEmpty()) {
+                System.out.println(GetYellow() + "Não há estudantes registados no sistema." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
 
-                    if (amec > 0) {
-                        nmecValido = true;
-                    } else {
-                        System.out.println(GetRed() + "O Número Mecanográfico deve ser superior a zero. Tente novamente." + GetReset());
+            System.out.println("\n" + GetWhiteBold() + "Estudantes Disponíveis:" + GetReset());
+            for (int i = 0; i < listaEstudantes.size(); i++) {
+                model.Estudante e = listaEstudantes.get(i);
+                System.out.printf("%d - %s (Nº Mec: %d | Curso: %s)\n", i + 1, e.getNome(), e.getNumeroMec(), e.getNomeCurso());
+            }
+
+            int escolha = -1;
+            while (escolha < 0 || escolha > listaEstudantes.size()) {
+                try {
+                    String op = BackendUtils.lerInputString(scanner, "\nDigite a opção do estudante a atualizar: ");
+                    escolha = Integer.parseInt(op);
+                    if (escolha == 0) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
+                    if (escolha < 1 || escolha > listaEstudantes.size()) {
+                        System.out.println(GetRed() + "Opção inválida. Escolha um número entre 1 e " + listaEstudantes.size() + "." + GetReset());
                     }
                 } catch (NumberFormatException e) {
-                    System.out.println(GetRed() + "Aviso: O valor introduzido não é um número válido. Tente novamente." + GetReset());
+                    System.out.println(GetRed() + "Por favor, digite apenas números." + GetReset());
+                    escolha = -1;
                 }
             }
 
-            EstudanteController estudanteControllerAtualizadp = new EstudanteController();
-            model.Estudante estudante = estudanteControllerAtualizadp.procurarEstudantePorNumeroMec(amec);
+            model.Estudante estudante = listaEstudantes.get(escolha - 1);
 
-            if (estudante != null) {
-                System.out.println(GetGreen() + "\nDados atuais:" + GetReset());
-                System.out.println(estudante.toString());
+            System.out.println(GetGreen() + "\nDados atuais:" + GetReset());
+            System.out.println(estudante.toString());
+            System.out.println(GetYellow() + "\n[Pressione ENTER nos campos que deseja manter iguais]" + GetReset());
 
-                System.out.println(GetYellow() + "\n[Pressione ENTER nos campos que deseja manter iguais]" + GetReset());
+            String nomeAt = BackendUtils.lerInputString(scanner, "Novo Nome: ");
+            if (!nomeAt.isEmpty()) estudante.setNome(nomeAt);
 
-                String nomeAt = BackendUtils.lerInputString(scanner, "Novo Nome: ");
-                if (!nomeAt.isEmpty()) estudante.setNome(nomeAt);
+            String moradaAt = BackendUtils.lerInputString(scanner, "Nova Morada: ");
+            if (!moradaAt.isEmpty()) estudante.setMorada(moradaAt);
 
-                String moradaAt = BackendUtils.lerInputString(scanner, "Nova Morada: ");
-                if (!moradaAt.isEmpty()) estudante.setMorada(moradaAt);
+            String emailAt = BackendUtils.lerInputString(scanner, "Novo Email: ");
+            if (!emailAt.isEmpty()) estudante.setEmail(emailAt);
 
-                String emailAt = BackendUtils.lerInputString(scanner, "Novo Email: ");
-                if (!emailAt.isEmpty()) estudante.setEmail(emailAt);
+            String cursoAt = BackendUtils.lerInputString(scanner, "Novo Curso: ");
+            if (!cursoAt.isEmpty()) estudante.setNomeCurso(cursoAt);
 
-                String cursoAt = BackendUtils.lerInputString(scanner, "Novo Curso: ");
-                if (!cursoAt.isEmpty()) estudante.setNomeCurso(cursoAt);
+            Resultado resultado = estudanteControllerAtualizado.atualizarEstudante(estudante.getNumeroMec(), nomeAt.isEmpty() ? null : nomeAt, moradaAt.isEmpty() ? null : moradaAt, emailAt.isEmpty() ? null : emailAt, cursoAt.isEmpty() ? null : cursoAt);
 
-                EstudanteController estudanteControllerAtualizado = new EstudanteController();
-                Resultado resultado = estudanteControllerAtualizado.atualizarEstudante(amec, nomeAt.isEmpty() ? null : nomeAt, moradaAt.isEmpty() ? null : moradaAt, emailAt.isEmpty() ? null : emailAt, cursoAt.isEmpty() ? null : cursoAt);
-
-                if (resultado.success) {
-                    System.out.println(GetGreen() + "\nEstudante atualizado com sucesso!" + GetReset());
-                } else {
-                    System.out.println(GetRed() + "\nErro ao atualizar estudante: " + resultado.errorMessage + GetReset());
-                }
+            if (resultado.success) {
+                System.out.println(GetGreen() + "\nEstudante atualizado com sucesso!" + GetReset());
             } else {
-                System.out.println(GetYellow() + "\nEstudante não encontrado com o Número Mecanográfico informado." + GetReset());
+                System.out.println(GetRed() + "\nErro ao atualizar estudante: " + resultado.errorMessage + GetReset());
             }
-
             MenuUtils.pressionarEnter(scanner);
 
         } catch (CancelarRegistoException e) {
@@ -1139,44 +1215,50 @@ public class GestorView {
             System.out.println(GetBlue() + "\n--- ELIMINAR ESTUDANTE ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
-            int amec = 0;
-            boolean nmecValido = false;
+            EstudanteController estudanteControllerAtualizado = new EstudanteController();
+            List<model.Estudante> listaEstudantes = estudanteControllerAtualizado.listarEstudantes();
+            if (listaEstudantes.isEmpty()) {
+                System.out.println(GetYellow() + "Não há estudantes registados no sistema." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
 
-            while (!nmecValido) {
+            System.out.println("\n" + GetWhiteBold() + "Estudantes Disponíveis:" + GetReset());
+            for (int i = 0; i < listaEstudantes.size(); i++) {
+                model.Estudante e = listaEstudantes.get(i);
+                System.out.printf("%d - %s (Nº Mec: %d | Curso: %s)\n", i + 1, e.getNome(), e.getNumeroMec(), e.getNomeCurso());
+            }
+
+            int escolha = -1;
+            while (escolha < 0 || escolha > listaEstudantes.size()) {
                 try {
-                    String nmecString = BackendUtils.lerInputString(scanner, "Digite o Número Mecanográfico a eliminar: ");
-                    amec = Integer.parseInt(nmecString);
-
-                    if (amec > 0) {
-                        nmecValido = true;
-                    } else {
-                        System.out.println(GetRed() + "O Número Mecanográfico deve ser superior a zero. Tente novamente." + GetReset());
+                    String op = BackendUtils.lerInputString(scanner, "\nDigite a opção do estudante a eliminar: ");
+                    escolha = Integer.parseInt(op);
+                    if (escolha == 0) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
+                    if (escolha < 1 || escolha > listaEstudantes.size()) {
+                        System.out.println(GetRed() + "Opção inválida. Escolha um número entre 1 e " + listaEstudantes.size() + "." + GetReset());
                     }
                 } catch (NumberFormatException e) {
-                    System.out.println(GetRed() + "Aviso: O valor introduzido não é um número válido. Tente novamente." + GetReset());
+                    System.out.println(GetRed() + "Por favor, digite apenas números." + GetReset());
+                    escolha = -1;
                 }
             }
 
-            model.Estudante estudanteAapagar = estudanteController.procurarEstudantePorNumeroMec(amec);
+            model.Estudante estudanteAapagar = listaEstudantes.get(escolha - 1);
 
-            if (estudanteAapagar != null) {
-                System.out.print(GetYellow() + "\nAVISO: Tem a certeza que deseja eliminar o estudante " + estudanteAapagar.getNome() + "? (S/N): " + GetReset());
-                String confirmacao = scanner.nextLine().trim();
+            System.out.print(GetYellow() + "\nAVISO: Tem a certeza que deseja eliminar o estudante " + estudanteAapagar.getNome() + "? (S/N): " + GetReset());
+            String confirmacao = scanner.nextLine().trim();
 
-                if (confirmacao.equalsIgnoreCase("S")) {
-                    EstudanteController estudanteControllerAtualizado = new EstudanteController();
-                    Resultado resultado = estudanteControllerAtualizado.eliminarEstudante(amec);
+            if (confirmacao.equalsIgnoreCase("S")) {
+                Resultado resultado = estudanteControllerAtualizado.eliminarEstudante(estudanteAapagar.getNumeroMec());
 
-                    if (resultado.success) {
-                        System.out.println(GetGreen() + "\nEstudante eliminado com sucesso!" + GetReset());
-                    } else {
-                        System.out.println(GetRed() + "\nErro ao eliminar: " + resultado.errorMessage + GetReset());
-                    }
+                if (resultado.success) {
+                    System.out.println(GetGreen() + "\nEstudante eliminado com sucesso!" + GetReset());
                 } else {
-                    System.out.println(GetBlue() + "\nOperação de eliminação cancelada pelo utilizador." + GetReset());
+                    System.out.println(GetRed() + "\nErro ao eliminar: " + resultado.errorMessage + GetReset());
                 }
             } else {
-                System.out.println(GetYellow() + "\nEstudante não encontrado com o Número Mecanográfico informado." + GetReset());
+                System.out.println(GetBlue() + "\nOperação de eliminação cancelada pelo utilizador." + GetReset());
             }
 
         } catch (CancelarRegistoException e) {
@@ -1190,4 +1272,33 @@ public class GestorView {
     }
 //endregion
 
+    // NOVO MÉTODO DE TESOURARIA PARA O GESTOR
+    private void consultarAlunosEmDivida() {
+        try {
+            System.out.println(GetBlue() + "\n--- TESOURARIA: ALUNOS EM DÍVIDA ---" + GetReset());
+
+            PropinaController propinaController = new PropinaController();
+            List<Estudante> devedores = propinaController.obterAlunosEmDivida();
+
+            if (devedores.isEmpty()) {
+                System.out.println(GetGreen() + "\nExcelente notícia! Não há nenhum estudante com propinas em atraso no sistema." + GetReset());
+            } else {
+                System.out.println(GetYellow() + "\nLista de Estudantes com pagamentos pendentes:" + GetReset());
+                System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
+                System.out.printf(GetWhiteBold() + " %-15s | %-30s | %-25s \n" + GetReset(), "Nº MEC", "NOME", "CURSO");
+                System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
+
+                for (Estudante e : devedores) {
+                    System.out.printf(" %-15d | %-30s | %-25s \n", e.getNumeroMec(), e.getNome(), e.getNomeCurso());
+                }
+                System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
+            }
+
+            MenuUtils.pressionarEnter(scanner);
+
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Ocorreu um erro ao carregar a lista de tesouraria: " + e.getMessage() + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        }
+    }
 }

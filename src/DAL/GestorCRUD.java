@@ -1,6 +1,5 @@
 package DAL;
 
-import model.Docente;
 import model.Gestor;
 import model.Resultado;
 
@@ -41,7 +40,7 @@ public class GestorCRUD {
                 }
             }
         } catch (IOException | NumberFormatException e) {
-            System.out.println("Erro ao carregar gestores: " + e.getMessage());
+            throw new RuntimeException("Erro interno ao carregar o ficheiro de gestores.", e);
         }
     }
 
@@ -59,7 +58,7 @@ public class GestorCRUD {
                 print.println(linha);
             }
         } catch (IOException | NumberFormatException e) {
-            System.out.println("Erro ao guardar gestores: " + e.getMessage());
+            throw new RuntimeException("Erro interno ao carregar o ficheiro de gestores.", e);
         }
     }
 
@@ -89,7 +88,7 @@ public class GestorCRUD {
 
     public Gestor procurarPorEmail(String email) {
         for (Gestor gestor : gestores) {
-            if (gestor.getEmail().equals(email)) {
+            if (gestor.getEmail().equalsIgnoreCase(email)) {
                 return gestor;
             }
         }

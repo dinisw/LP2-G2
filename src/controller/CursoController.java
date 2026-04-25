@@ -110,15 +110,16 @@ public class CursoController {
         }
 
         Curso cursoAtualizado = new Curso(novoNome, curso.getDuracao(), curso.getDepartamento());
-        cursoAtualizado.setIniciado(curso.isIniciado());
+        cursoAtualizado.setAnosIniciados(curso.getAnosIniciados());
         for (UnidadeCurricular unidadeCurricular : curso.getUnidadeCurriculars()) {
             cursoAtualizado.adicionarUnidadeCurricular(unidadeCurricular);
         }
-        if (cursoCRUD.atualizarCurso(nomeAntigo, cursoAtualizado)) {
+        Resultado res = cursoCRUD.atualizarCurso(nomeAntigo, cursoAtualizado);
+        if (res.success) {
             resultado.success = true;
         } else {
             resultado.success = false;
-            resultado.errorMessage = "Não foi possível atualizar. Verifique se já existe um curso com o nome '" + novoNome + "'.";
+            resultado.errorMessage = res.errorMessage; // Pega o erro das pessoas alocadas!
         }
 
         return resultado;
@@ -139,7 +140,8 @@ public class CursoController {
             return resultado;
         }
 
-        if (cursoCRUD.eliminarCurso(nome)) {
+        Resultado res = cursoCRUD.eliminarCurso(nome);
+        if (res.success) {
             resultado.success = true;
 
             try {
@@ -158,14 +160,20 @@ public class CursoController {
             }
         } else {
             resultado.success = false;
-            resultado.errorMessage = "Erro na base de dados ao eliminar o curso (ex: tem alunos alocados).";
+            resultado.errorMessage = res.errorMessage;
         }
 
         return resultado;
     }
 
-    public Resultado iniciarCurso(String nome) {
+    public Resultado iniciarAnoLetivo(String nome, int anoLetivo) {
         Resultado resultado = new Resultado();
+
+        if (anoLetivo < 1 || anoLetivo > 3) {
+            resultado.success = false;
+            resultado.errorMessage = "Ano letivo inválido. Os cursos têm 3 anos curriculares.";
+            return resultado;
+        }
 
         Curso curso = cursoCRUD.procurarPorNome(nome);
         if (curso == null) {
@@ -174,9 +182,9 @@ public class CursoController {
             return resultado;
         }
 
-        if (curso.isIniciado()) {
+        if (curso.isAnoIniciado(anoLetivo)) {
             resultado.success = false;
-            resultado.errorMessage = "Este curso já se encontra iniciado.";
+            resultado.errorMessage = "O " + anoLetivo + "º ano deste curso já se encontra iniciado.";
             return resultado;
         }
 
@@ -187,37 +195,54 @@ public class CursoController {
         }
 
         List<String> unidadesCurricularesSemMomentos = obterUCsSemMomentosDeAvaliacao(curso);
-
         if (!unidadesCurricularesSemMomentos.isEmpty()) {
             resultado.success = false;
-            resultado.errorMessage = "Não é possível iniciar o curso. As seguintes UCs não têm Momentos de Avaliação: " + String.join(",", unidadesCurricularesSemMomentos) + ".";
+            resultado.errorMessage = "As seguintes UCs não têm Momentos de Avaliação: " + String.join(",", unidadesCurricularesSemMomentos) + ".";
             return resultado;
         }
 
         controller.EstudanteController estudanteController = new controller.EstudanteController();
         List<model.Estudante> todosEstudantes = estudanteController.listarEstudantes();
 
-        int alunosInscritos = 0;
+        int alunosNesteAno = 0;
         for (model.Estudante estudante : todosEstudantes) {
             if (estudante.getNomeCurso() != null && estudante.getNomeCurso().equalsIgnoreCase(curso.getNome())) {
-                alunosInscritos++;
+
+                // Vai buscar o ano atual do estudante para contabilizar corretamente
+                int anoDoEstudante = obterAnoCurricularProvisorio(estudante);
+
+                if (anoDoEstudante == anoLetivo) {
+                    alunosNesteAno++;
+                }
             }
         }
 
-        if (alunosInscritos < 5) {
+        // Aplicação da Regra de Negócio: 5 alunos para o 1º ano, 1 aluno para os restantes
+        int minimoExigido = (anoLetivo == 1) ? 5 : 1;
+
+        if (alunosNesteAno < minimoExigido) {
             resultado.success = false;
-            resultado.errorMessage = "O curso não pode ser iniciado. Tem de ter no mínimo 5 alunos inscritos (Atualmente tem: " + alunosInscritos + ").";
+            resultado.errorMessage = "O " + anoLetivo + "º ano exige no mínimo " + minimoExigido + " aluno(s). Atualmente tem " + alunosNesteAno + " aluno(s) apto(s).";
             return resultado;
         }
 
-        curso.setIniciado(true);
-        if (cursoCRUD.atualizarCurso(curso.getNome(), curso)) {
+        // Se passar em tudo, o ano arranca!
+        curso.adicionarAnoIniciado(anoLetivo);
+        Resultado res = cursoCRUD.atualizarCurso(curso.getNome(), curso);
+        if (res.success) {
             resultado.success = true;
         } else {
             resultado.success = false;
-            resultado.errorMessage = "Erro ao guardar o estado do curso na base de dados.";
+            resultado.errorMessage = res.errorMessage;
         }
         return resultado;
+    }
+
+    private int obterAnoCurricularProvisorio(Estudante estudante) {
+        // Por agora, todos os novos registos vão contar para abrir o 1º ano.
+        // Na próxima fase de desenvolvimento (Propinas/Notas), vamos substituir este '1'
+        // pelo cálculo real de UCs aprovadas do estudante.
+        return 1;
     }
 
     public Resultado associarUCAoCurso (String nomeCurso, String nomeUC) {
@@ -257,11 +282,12 @@ public class CursoController {
         boolean adicionadoComSucesso = curso.adicionarUnidadeCurricular(unidadeCurricular);
 
         if (adicionadoComSucesso) {
-            if (cursoCRUDAtualizado.atualizarCurso(curso.getNome(), curso)) {
+            Resultado res = cursoCRUD.atualizarCurso(curso.getNome(), curso);
+            if (res.success) {
                 resultado.success = true;
             } else {
                 resultado.success = false;
-                resultado.errorMessage = "Erro ao guardar a associação no ficheiro CSV.";
+                resultado.errorMessage = res.errorMessage;
             }
         } else {
             resultado.success = false;
@@ -293,30 +319,4 @@ public class CursoController {
         }
         return unidadesCurricularesEmFalta;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }

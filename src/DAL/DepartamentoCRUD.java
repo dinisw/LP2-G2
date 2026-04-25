@@ -28,7 +28,7 @@ public class DepartamentoCRUD {
                 }
             }
         } catch (IOException | NumberFormatException e) {
-            System.out.println("Erro ao carregar departamentos: " + e.getMessage());
+            throw new RuntimeException("Erro interno ao carregar o ficheiro de departamentos.", e);
         }
     }
 
@@ -41,7 +41,7 @@ public class DepartamentoCRUD {
                 print.println(linha);
             }
         } catch (IOException | NumberFormatException e) {
-            System.out.println("Erro ao guardar departamentos: " + e.getMessage());
+            throw new RuntimeException("Erro interno ao carregar o ficheiro de departamentos.", e);
         }
     }
 

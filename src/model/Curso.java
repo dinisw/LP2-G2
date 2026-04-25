@@ -7,15 +7,15 @@ public class Curso {
     private String nome;
     private int duracao = 3;
     private Departamento departamento;
-    private List<UnidadeCurricular> unidadeCurriculars;
-    private boolean iniciado;
+    private final List<UnidadeCurricular> unidadeCurriculars;
+    private List<Integer> anosIniciados;
 
     public Curso(String nome, int duracao, Departamento departamento) {
         this.nome = nome;
         this.duracao = duracao;
         this.departamento = departamento;
         this.unidadeCurriculars = new ArrayList<>();
-        this.iniciado = false;
+        this.anosIniciados = new ArrayList<>();
     }
 
     public String getNome() {
@@ -47,37 +47,46 @@ public class Curso {
     }
 
     public boolean isIniciado() {
-        return iniciado;
+        return !anosIniciados.isEmpty();
     }
 
-    public void setIniciado(boolean iniciado) {
-        this.iniciado = iniciado;
+    public boolean isAnoIniciado(int ano) {
+        return anosIniciados.contains(ano);
+    }
+
+    public void adicionarAnoIniciado(int ano) {
+        if (!anosIniciados.contains(ano)) {
+            anosIniciados.add(ano);
+        }
+    }
+
+    public List<Integer> getAnosIniciados() {
+        return new ArrayList<>(anosIniciados);
+    }
+
+    public void setAnosIniciados(List<Integer> anos) {
+        this.anosIniciados = anos != null ? anos : new ArrayList<>();
     }
 
     public boolean adicionarUnidadeCurricular(UnidadeCurricular novaUc) {
         int contagemAno = 0;
 
-        // Conta quantas UCs já existem no mesmo ano da nova UC
         for (UnidadeCurricular unidadeCurricular : unidadeCurriculars) {
             if (unidadeCurricular.getAnoCurricular() == novaUc.getAnoCurricular()) {
                 contagemAno++;
             }
         }
-
-        // Se ainda não chegou às 5, adiciona e devolve sucesso
         if (contagemAno < 5) {
             this.unidadeCurriculars.add(novaUc);
             return true;
         }
-
-        // Se já tem 5, bloqueia a inserção
         return false;
     }
 
     @Override
     public String toString() {
         String nomeDepartamento = (departamento != null) ? departamento.getNome() : "Sem Departamento Associado";
-        String estado = iniciado ? "Em curso (Bloqueado a inscrições)" : "Não iniciado (Inscrições Abertas)";
+        String estado = isIniciado() ? "Em curso (Anos ativos: " + anosIniciados.toString() + ")" : "Não iniciado (Inscrições Abertas)";
 
         return String.format("Curso: %s | Duração: %d anos | Departamento: %s | UCs Inseridas: %d | Estado: %s",
                 nome, duracao, nomeDepartamento, unidadeCurriculars.size(), estado);

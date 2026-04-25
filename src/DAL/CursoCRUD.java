@@ -1,9 +1,7 @@
 package DAL;
 
-import model.Departamento;
-import model.Curso;
-import model.Estudante;
-import model.UnidadeCurricular;
+import model.*;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +19,6 @@ public class CursoCRUD {
         File ficheiro = new File(CAMINHO_FICHEIRO);
         if (!ficheiro.exists()) return;
 
-        // Instanciamos o CRUD dos departamentos para fazer a "tradução" da sigla
         DepartamentoCRUD depCRUD = new DepartamentoCRUD();
         UnidadeCurricularCRUD ucCRUD = new UnidadeCurricularCRUD();
 
@@ -29,6 +26,7 @@ public class CursoCRUD {
             String linha;
             while ((linha = reader.readLine()) != null) {
                 String[] dados = linha.split(";");
+
                 if (dados.length >= 4) {
                     String nomeCurso = dados[0];
                     int duracao = Integer.parseInt(dados[1]);
@@ -36,7 +34,17 @@ public class CursoCRUD {
                     Departamento dep = depCRUD.procurarPorSigla(siglaDep);
 
                     Curso curso = new Curso(nomeCurso, duracao, dep);
-                    curso.setIniciado(Boolean.parseBoolean(dados[3]));
+                    String anosIniciadosStr = dados[3];
+                    List<Integer> anosIniciados = new ArrayList<>();
+
+                    if (!anosIniciadosStr.equalsIgnoreCase("Nenhum Curso Iniciado") && !anosIniciadosStr.isEmpty()) {
+                        String[] anos = anosIniciadosStr.split(",");
+                        for (String ano : anos) {
+                            anosIniciados.add(Integer.parseInt(ano.trim()));
+                        }
+                    }
+                    curso.setAnosIniciados(anosIniciados);
+
                     if (dados.length > 4) {
                         for (int i = 4; i < dados.length; i++) {
                             UnidadeCurricular unidadeCurricular = ucCRUD.procurarPorNome(dados[i]);
@@ -49,25 +57,35 @@ public class CursoCRUD {
                 }
             }
         } catch (IOException | NumberFormatException e) {
-            System.out.println("Erro ao carregar cursos: " + e.getMessage());
+            throw new RuntimeException("Erro interno ao carregar o ficheiro de cursos.", e);
         }
     }
 
     private void guardarTodosNoFicheiro() {
         try (PrintWriter print = new PrintWriter(new FileWriter(CAMINHO_FICHEIRO))) {
             for (Curso curso : cursos) {
-                String sigla = (curso.getDepartamento() != null) ? curso.getDepartamento().getSigla() : "SEM_DEP";
-                StringBuilder sb = new StringBuilder();
-                sb.append(safe(curso.getNome())).append(";").append(curso.getDuracao()).append(";").append(sigla).append(";").append(curso.isIniciado());
-                
-                for (UnidadeCurricular unidadeCurricular : curso.getUnidadeCurriculars()) {
-                    sb.append(";").append(safe(unidadeCurricular.getNome()));
+                String anosStr = curso.getAnosIniciados().stream()
+                        .map(String::valueOf)
+                        .collect(java.util.stream.Collectors.joining(","));
+
+                if (anosStr.isEmpty()) {
+                    anosStr = "Nenhum Curso Iniciado";
                 }
-                
-                print.println(sb.toString());
+
+                StringBuilder linha = new StringBuilder();
+                linha.append(safe(curso.getNome())).append(";");
+                linha.append(curso.getDuracao()).append(";");
+                linha.append(safe(curso.getDepartamento() != null ? curso.getDepartamento().getSigla() : null)).append(";");
+                linha.append(anosStr);
+
+                for (UnidadeCurricular uc : curso.getUnidadeCurriculars()) {
+                    linha.append(";").append(safe(uc.getNome()));
+                }
+
+                print.println(linha.toString());
             }
         } catch (IOException e) {
-            System.out.println("Erro ao guardar cursos: " + e.getMessage());
+            throw new RuntimeException("Erro interno ao guardar o ficheiro de cursos.", e);
         }
     }
 
@@ -103,43 +121,54 @@ public class CursoCRUD {
         return false;
     }
 
-    public boolean atualizarCurso(String nomeAntigo, Curso cursoNovo) {
+    public Resultado atualizarCurso(String nomeAntigo, Curso cursoNovo) {
+        Resultado resultado = new Resultado();
+
         if (temPessoasAlocadas(nomeAntigo)) {
-            System.out.println("Erro: O curso tem estudantes alocados e não pode ser alterado!");
-            return false;
+            resultado.success = false;
+            resultado.errorMessage = "O curso tem estudantes alocados e não pode ser alterado!";
+            return resultado;
         }
 
         for (int i = 0; i < cursos.size(); i++) {
             if (cursos.get(i).getNome().equalsIgnoreCase(nomeAntigo)) {
                 cursos.set(i, cursoNovo);
                 guardarTodosNoFicheiro();
-                return true;
+                resultado.success = true;
+                return resultado;
             }
         }
-        return false;
+        resultado.success = false;
+        resultado.errorMessage = "Curso não encontrado para atualização.";
+        return resultado;
     }
 
-    public boolean eliminarCurso(String nome) {
+    public Resultado eliminarCurso(String nome) {
+        Resultado resultado = new Resultado();
+
         if (temPessoasAlocadas(nome)) {
-            System.out.println("Erro: O curso tem estudantes alocados e não pode ser eliminado!");
-            return false;
+            resultado.success = false;
+            resultado.errorMessage = "O curso tem estudantes alocados e não pode ser eliminado!";
+            return resultado; // Retorna a mensagem em vez de fazer SOU
         }
 
         for (int i = 0; i < cursos.size(); i++) {
             if (cursos.get(i).getNome().equalsIgnoreCase(nome)) {
                 cursos.remove(i);
                 guardarTodosNoFicheiro();
-                return true;
+                resultado.success = true;
+                return resultado;
             }
         }
-        return false;
+        resultado.success = false;
+        resultado.errorMessage = "Curso não encontrado para eliminação.";
+        return resultado;
     }
     
     private String safe(Object o) {
         return (o == null) ? "SEM REGISTO" : o.toString();
     }
 
-    // Verifica se existe algum curso associado a um departamento (pela sigla)
     public boolean existeCursoComDepartamento(String siglaDepartamento) {
         for (Curso curso : cursos) {
             if (curso.getDepartamento() != null && curso.getDepartamento().getSigla().equalsIgnoreCase(siglaDepartamento)) {

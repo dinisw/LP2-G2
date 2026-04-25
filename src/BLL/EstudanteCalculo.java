@@ -1,38 +1,59 @@
 package BLL;
 
 import model.Avaliacao;
+import model.Curso;
 import model.Estudante;
+
+import java.util.List;
 
 public class EstudanteCalculo {
 
-    public EstudanteCalculo() {
-    }
+    public static int calcularAnoDesbloqueado(Estudante estudante, Curso curso) {
+        if (estudante == null || curso == null) return 1;
 
-    public double calculoPercentagem(Estudante estudante, int totalUCsInscritas) {
-        if (estudante == null || estudante.getListaAvaliacoes() == null ||
-                estudante.getListaAvaliacoes().isEmpty() || totalUCsInscritas <= 0) {
-            return 0.0;
-        }
+        List<Avaliacao> avaliacoes = estudante.getListaAvaliacoes();
+        int anoDesbloqueado = 1;
 
-        int notasPositivas = 0;
+        long totalAno1 = curso.getUnidadeCurriculars().stream().filter(u -> u.getAnoCurricular() == 1).count();
+        long aprovadasAno1 = avaliacoes.stream().filter(a -> a.getUnidadeCurricular().getAnoCurricular() == 1 && a.getNota() != null && a.getNota() >= 9.5).count();
+        if (totalAno1 == 0) totalAno1 = 5;
 
-        for (Avaliacao avaliacao : estudante.getListaAvaliacoes()) {
-            if (avaliacao.getNota() != null && avaliacao.getNota() >= 9.5) {
-                notasPositivas++;
+        long inscritasAno1 = avaliacoes.stream().filter(a -> a.getUnidadeCurricular().getAnoCurricular() == 1).count();
+
+        // Se já esteve inscrito no 1º ano, vamos ver se passa para o 2º
+        if (inscritasAno1 > 0) {
+            double aproveitamentoAno1 = (double) aprovadasAno1 / totalAno1;
+
+            // Regra do Enunciado: Aproveitamento igual ou superior a 60%
+            if (aproveitamentoAno1 >= 0.60) {
+                anoDesbloqueado = 2; // Passou para o 2º ano
+
+                // 2º ANO: Contar UCs e Aprovações
+                long totalAno2 = curso.getUnidadeCurriculars().stream().filter(u -> u.getAnoCurricular() == 2).count();
+                long aprovadasAno2 = avaliacoes.stream().filter(a -> a.getUnidadeCurricular().getAnoCurricular() == 2 && a.getNota() != null && a.getNota() >= 9.5).count();
+                if (totalAno2 == 0) totalAno2 = 5;
+
+                long inscritasAno2 = avaliacoes.stream().filter(a -> a.getUnidadeCurricular().getAnoCurricular() == 2).count();
+
+                if (inscritasAno2 > 0) {
+                    double aproveitamentoAno2 = (double) aprovadasAno2 / totalAno2;
+                    if (aproveitamentoAno2 >= 0.60) {
+                        anoDesbloqueado = 3; // Passou para o 3º ano
+                    }
+                }
             }
         }
-
-        return (double) notasPositivas / totalUCsInscritas;
+        return anoDesbloqueado;
     }
 
-    public boolean verificarProgressao(Estudante estudante, int totalUCsInscritas) {
-        double percentagem = calculoPercentagem(estudante, totalUCsInscritas);
+    public static boolean isCursoConcluido(Estudante estudante, Curso curso) {
+        if (estudante == null || curso == null || curso.getUnidadeCurriculars().isEmpty()) return false;
 
-        if (percentagem > 0.60) {
-            estudante.setAnoLetivo(estudante.getAnoLetivo() + 1);
-            return true;
-        }
+        int totalUCsCurso = curso.getUnidadeCurriculars().size();
+        long totalAprovadas = estudante.getListaAvaliacoes().stream()
+                .filter(a -> a.getNota() != null && a.getNota() >= 9.5)
+                .count();
 
-        return false;
+        return totalAprovadas == totalUCsCurso;
     }
 }

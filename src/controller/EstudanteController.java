@@ -11,18 +11,19 @@ import java.util.List;
 public class EstudanteController {
 
     private EstudanteCRUD estudanteCRUD;
-    private EstudanteCalculo bll;
 
     public EstudanteController() {
         this.estudanteCRUD = new EstudanteCRUD();
-        this.bll = new EstudanteCalculo();
     }
 
+    // 1. FICHA DE ESTUDANTE ATUALIZADA (Usa o novo cálculo dinâmico do ano)
     public String obterFichaEstudanteFormatada(Estudante estudante) {
         if (estudante == null) return "Erro: Estudante não encontrado.";
 
         String dataNascimentoStr = (estudante.getDataNascimento() != null) ? estudante.getDataNascimento().toString() : "Não definida";
         String cursoStr = (estudante.getNomeCurso() != null && !estudante.getNomeCurso().trim().isEmpty()) ? estudante.getNomeCurso() : "Sem curso atribuído";
+
+        int anoLetivoAtual = obterAnoDesbloqueado(estudante);
 
         return """
         --- FICHA DE ESTUDANTE ---
@@ -42,36 +43,55 @@ public class EstudanteController {
                 dataNascimentoStr,
                 estudante.getMorada(),
                 cursoStr,
-                estudante.getAnoLetivo()
+                anoLetivoAtual
         );
     }
 
-    public Resultado tentarPassarDeAno(Estudante estudante, int totalUCsInscritas) {
-        Resultado resultado = new Resultado();
+    // 2. NOVO MÉTODO PRINCIPAL DE PROGRESSÃO (COM BLOQUEIO FINANCEIRO)
+    public int obterAnoDesbloqueado(Estudante estudante) {
+        DAL.CursoCRUD cursoCRUD = new DAL.CursoCRUD();
+        model.Curso curso = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
 
-        if (estudante == null) {
-            resultado.success = false;
-            resultado.errorMessage = "Estudante inválido para a operação.";
-            return resultado;
+        if (curso == null) return 1;
+
+        // 1º Passo: Saber para que ano ele passa baseado NAS NOTAS (>60%)
+        int anoPorNotas = BLL.EstudanteCalculo.calcularAnoDesbloqueado(estudante, curso);
+
+        PropinaController propinaController = new PropinaController();
+        int anoReal = anoPorNotas;
+
+        // 2º Passo: Saber se ele fica retido por DÍVIDAS
+        if (anoPorNotas >= 2 && !propinaController.isPropinaPaga(estudante.getNumeroMec(), 1)) {
+            anoReal = 1; // Retido no 1º ano
+        } else if (anoPorNotas == 3 && !propinaController.isPropinaPaga(estudante.getNumeroMec(), 2)) {
+            anoReal = 2; // Retido no 2º ano
         }
 
-        boolean passou = bll.verificarProgressao(estudante, totalUCsInscritas);
+        // 3º Passo: Se chegou a um ano, garante que a fatura desse ano letivo é gerada (se ainda não existir)
+        propinaController.gerarPropinaAnual(estudante.getNumeroMec(), anoReal);
 
-        if (passou) {
-            resultado.success = true;
-            resultado.object = "Sucesso: O estudante " + estudante.getNome() + " transitou para o " + estudante.getAnoLetivo() + "º ano letivo.";
-        } else {
-            resultado.success = false;
-            resultado.errorMessage = "Inscrição no ano seguinte não permitida. Aproveitamento insuficiente (mínimo exigido: >60%).";
+        return anoReal;
+    }
+
+    // 3. NOVO MÉTODO DE CONCLUSÃO (COM BLOQUEIO FINANCEIRO)
+    public boolean verificarSeCursoConcluido(Estudante estudante) {
+        DAL.CursoCRUD cursoCRUD = new DAL.CursoCRUD();
+        model.Curso curso = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
+
+        if (curso == null) return false;
+
+        boolean concluiuNotas = BLL.EstudanteCalculo.isCursoConcluido(estudante, curso);
+
+        if (concluiuNotas) {
+            // Se as notas estão feitas, verifica se a propina do último ano está paga!
+            PropinaController propinaController = new PropinaController();
+            return propinaController.isPropinaPaga(estudante.getNumeroMec(), 3);
         }
 
-        return resultado;
+        return false;
     }
 
-    public boolean temAproveitamentoSuficiente(Estudante estudante, int totalUCsInscritas) {
-        if (estudante == null) return false;
-        return bll.calculoPercentagem(estudante, totalUCsInscritas) > 0.60;
-    }
+    // --- RESTANTES MÉTODOS MANTIDOS INTACTOS ---
 
     public int gerarNumeroMecanografico() {
         return estudanteCRUD.gerarNumeroMecanografico();
@@ -207,7 +227,7 @@ public class EstudanteController {
 
         Estudante estudante = estudanteCRUD.lerEstudante(numeroMec);
 
-        if (estudanteCRUD.lerEstudante(numeroMec) == null) {
+        if (estudante == null) {
             resultado.success = false;
             resultado.errorMessage = "Estudante não encontrado com o Número Mecanográfico informado.";
             return resultado;

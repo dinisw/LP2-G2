@@ -1,15 +1,14 @@
 package DAL;
-import model.Docente;
+
 import model.Estudante;
 import model.Resultado;
-
 import java.io.*;
 import java.time.LocalDate;
 import java.util.List;
 
 public class EstudanteCRUD {
     private static final String CAMINHO_FICHEIRO = "estudantes.csv";
-    private List<Estudante> estudantes;
+    private final List<Estudante> estudantes;
     private int numeroMecCounter;
 
     public EstudanteCRUD() {
@@ -50,13 +49,13 @@ public class EstudanteCRUD {
                 }
             }
         } catch (IOException | NumberFormatException e) {
-            System.out.println("Erro ao carregar estudantes: " + e.getMessage());
+            throw new RuntimeException("Erro interno ao carregar o ficheiro de estudantes.", e);
         }
     }
 
     //CREATE
     public boolean registarEstudante(Estudante estudante){
-        if (estudante != null) {
+        if (estudante != null && procurarPorNif(estudante.getNif()) == null) {
             estudantes.add(estudante);
             guardarTodosNoFicheiro();
             return true;
@@ -97,7 +96,7 @@ public class EstudanteCRUD {
                 print.println(linha);
             }
         } catch (IOException e) {
-            System.out.println("Erro ao guardar estudantes: " + e.getMessage());
+            throw new RuntimeException("Erro interno ao carregar o ficheiro de estudantes.", e);
         }
     }
 
@@ -172,9 +171,9 @@ public class EstudanteCRUD {
     }
 
     public Estudante procurarNumeroMec(int numeroMecanografico) {
-        for (int i = 0; i < estudantes.size(); i++) {
-            if (estudantes.get(i).getNumeroMec() == numeroMecanografico) {
-                return estudantes.get(i);
+        for (Estudante estudante : estudantes) {
+            if (estudante.getNumeroMec() == numeroMecanografico) {
+                return estudante;
             }
         }
         return null;

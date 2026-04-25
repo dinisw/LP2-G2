@@ -1,5 +1,6 @@
 package DAL;
 
+import model.Curso;
 import model.Docente;
 import model.Resultado;
 import model.UnidadeCurricular;
@@ -14,7 +15,6 @@ public class DocenteCRUD {
     private static final String CAMINHO_FICHEIRO = "docentes.csv";
     private List<Docente> docentes;
 
-    // VÁRIAVEL DE SEGURANÇA: Impede o ciclo infinito (StackOverflowError)
     private static boolean carregandoRelacoes = false;
 
     public DocenteCRUD() {
@@ -50,31 +50,23 @@ public class DocenteCRUD {
                 }
             }
         } catch (IOException | NumberFormatException e) {
-            System.out.println("Erro ao carregar docentes: " + e.getMessage());
+            throw new RuntimeException("Erro interno ao carregar o ficheiro de docentes.", e);
         }
 
-        // ------------------------------------------------------------------
-        // QUEBRA DO CICLO INFINITO (LAZY LOADING PROTEGIDO)
-        // Em vez de instanciar a classe no topo, chamamos apenas uma vez!
-        // ------------------------------------------------------------------
         if (!carregandoRelacoes) {
-            carregandoRelacoes = true; // Tranca a porta
+            carregandoRelacoes = true;
 
             UnidadeCurricularCRUD ucCRUD = new UnidadeCurricularCRUD();
             List<UnidadeCurricular> todasUCs = ucCRUD.getUnidadeCurriculars();
 
-            // Sincronização Perfeita: Vamos buscar as UCs à fonte (UnidadeCurricularCRUD)
-            // e associá-las aos respetivos docentes.
             for (Docente docente : docentes) {
                 for (UnidadeCurricular unidadeCurricular : todasUCs) {
                     if (unidadeCurricular.getDocente() != null && unidadeCurricular.getDocente().getSigla().equalsIgnoreCase(docente.getSigla())) {
-                        // Se a UC pertence a este docente, adicionamo-la à lista dele
-                        docente.adicionarUnidadeCurricular(unidadeCurricular);
+                       docente.adicionarUnidadeCurricular(unidadeCurricular);
                     }
                 }
             }
-
-            carregandoRelacoes = false; // Destranca a porta
+            carregandoRelacoes = false;
         }
     }
 
@@ -82,8 +74,6 @@ public class DocenteCRUD {
         try (PrintWriter print = new PrintWriter(new FileWriter(CAMINHO_FICHEIRO))) {
             for (Docente docente : docentes) {
 
-                // CORREÇÃO CRÍTICA: Juntar com VÍRGULA (",") e não com PONTO E VÍRGULA (";")
-                // Se usarmos ";", o CSV fica corrompido na leitura!
                 String ucNames = docente.getUnidadesCurriculares().stream()
                         .map(UnidadeCurricular::getNome)
                         .collect(Collectors.joining(","));
@@ -100,7 +90,7 @@ public class DocenteCRUD {
                 print.println(linha);
             }
         } catch (IOException e) {
-            System.out.println("Erro ao guardar docentes: " + e.getMessage());
+            throw new RuntimeException("Erro interno ao carregar o ficheiro de docentes.", e);
         }
     }
 
@@ -180,15 +170,32 @@ public class DocenteCRUD {
         return false;
     }
 
-    // MÉTODO AUXILIAR PARA O CONTROLLER (Verificação de Dependências no Curso)
     public int contarDocentesNoCurso(String nomeCurso) {
+        CursoCRUD cursoCRUD = new CursoCRUD();
+        Curso curso = cursoCRUD.procurarPorNome(nomeCurso);
+
+        if (curso == null) return 0;
+
         int count = 0;
+
         for (Docente docente : docentes) {
-            for (UnidadeCurricular unidadeCurricular : docente.getUnidadesCurriculares()) {
-                // Se a lógica do seu projeto ligar UCs ao Curso, poderá validar aqui
-                // (Por agora retorna 0, pode ser expandido conforme a sua estrutura)
+            boolean lecionaNesteCurso = false;
+
+            for (UnidadeCurricular ucDocente : docente.getUnidadesCurriculares()) {
+                for (UnidadeCurricular ucCurso : curso.getUnidadeCurriculars()) {
+                    if (ucDocente.getNome().equalsIgnoreCase(ucCurso.getNome())) {
+                        lecionaNesteCurso = true;
+                        break;
+                    }
+                }
+                if (lecionaNesteCurso) break;
+            }
+
+            if (lecionaNesteCurso) {
+                count++;
             }
         }
+
         return count;
     }
 

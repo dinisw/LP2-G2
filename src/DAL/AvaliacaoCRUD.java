@@ -42,7 +42,7 @@ public class AvaliacaoCRUD {
                 }
             }
         } catch (IOException | NumberFormatException e) {
-            System.out.println("Erro ao carregar avaliações: " + e.getMessage());
+            throw new RuntimeException("Erro interno ao carregar o ficheiro de avaliações.", e);
         }
     }
 
@@ -58,7 +58,7 @@ public class AvaliacaoCRUD {
                 printWriter.println(linha);
             }
         } catch (IOException e) {
-            System.out.println("Erro ao guardar avaliações: " + e.getMessage());
+            throw new RuntimeException("Erro interno ao guardar o ficheiro de avaliações.", e);
         }
     }
 

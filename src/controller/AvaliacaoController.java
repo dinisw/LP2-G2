@@ -12,11 +12,7 @@ public class AvaliacaoController {
     }
 
     public boolean registarAvaliacao(model.Avaliacao avaliacao) {
-        if (avaliacao == null) {
-            return false;
-        }
-
-        if (avaliacao.getEstudante() == null || avaliacao.getUnidadeCurricular() == null) {
+        if (avaliacao == null || avaliacao.getEstudante() == null || avaliacao.getUnidadeCurricular() == null) {
             return false;
         }
 
@@ -30,8 +26,22 @@ public class AvaliacaoController {
             return false;
         }
 
+        List<Avaliacao> avaliacoesExistentes = avaliacaoCRUD.listarPorUnidadeCurricular(avaliacao.getUnidadeCurricular().getNome());
+
+        if (avaliacoesExistentes != null) {
+            long contagem = avaliacoesExistentes.stream()
+                    .filter(a -> a.getEstudante().getNumeroMec() == avaliacao.getEstudante().getNumeroMec())
+                    .count();
+
+            if (contagem >= 3) {
+                System.out.println("Erro: O estudante já atingiu o limite máximo de 3 avaliações para esta UC.");
+                return false;
+            }
+        }
+
         return avaliacaoCRUD.registarAvaliacao(avaliacao);
     }
+
     public List<Avaliacao> listarAvaliacoesPorUC(String nomeUC) {
         if (nomeUC == null || nomeUC.trim().isEmpty()) {
             return null;
