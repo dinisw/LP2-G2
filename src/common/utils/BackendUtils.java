@@ -60,6 +60,6 @@ public class BackendUtils {
         EstudanteController e = new EstudanteController();
         DocenteController d = new DocenteController();
         GestorController g = new GestorController();
-        return e.procurarEstudantePorNif(nif) == null || d.procurarDocentePorNif(nif) == null || g.procurarGestorPorNif(nif) == null;
+        return e.procurarEstudantePorNif(nif) != null || d.procurarDocentePorNif(nif) != null || g.procurarGestorPorNif(nif) != null;
     }
 }
