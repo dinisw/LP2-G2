@@ -154,9 +154,10 @@ public class GestorView {
                     if (!nifValido) {
                         System.out.println(GetRed() + "NIF deve ser um número inteiro válido e conter 9 dígitos. Tente novamente." + GetReset());
                     }else{
-                        nifValido = BackendUtils.nifExiste(nif);
-                        if(!nifValido)
+                        var nifExiste = BackendUtils.nifExiste(nif);
+                        if(nifExiste)
                             System.out.println(GetRed() + "NIF já existente no sistema. Tente com outro NIF." + GetReset());
+                        nifValido = false;
                     }
                 } catch (NumberFormatException e) {
                     System.out.println(GetRed() + "Aviso: O valor introduzido não é um número. Tente novamente." + GetReset());
@@ -168,7 +169,7 @@ public class GestorView {
                 try {
                     String dataString = BackendUtils.lerInputString(scanner, "Data de Nascimento (AAAA-MM-DD): ");
                     dataNascimento = LocalDate.parse(dataString);
-                    if(dataNascimento.getYear() < dataNascimento.getYear() + 17){
+                    if(Period.between(dataNascimento, LocalDate.now()).getYears() >= 18){
                         System.out.println(GetRed() + "Sistem só permite pessoas maiores de 18 anos. Tente novamente." + GetReset());
                     }else {
                         break;
@@ -483,9 +484,10 @@ public class GestorView {
                     if (!nifValido) {
                         System.out.println(GetRed() + "NIF deve ser um número inteiro válido e conter 9 dígitos. Tente novamente." + GetReset());
                     }else{
-                        nifValido = BackendUtils.nifExiste(nif);
-                        if(!nifValido)
+                        var nifExiste = BackendUtils.nifExiste(nif);
+                        if(nifExiste)
                             System.out.println(GetRed() + "NIF já existente no sistema. Tente com outro NIF." + GetReset());
+                        nifValido = false;
                     }
                 } catch (NumberFormatException e) {
                     System.out.println(GetRed() + "Aviso: O valor introduzido não é um número. Tente novamente." + GetReset());
@@ -796,10 +798,6 @@ public class GestorView {
                     nifValido = BackendUtils.nifEValido(nifString);
                     if (!nifValido) {
                         System.out.println(GetRed() + "NIF deve ser um número inteiro válido e conter 9 dígitos. Tente novamente." + GetReset());
-                    }else{
-                        nifValido = BackendUtils.nifExiste(nif);
-                        if(!nifValido)
-                            System.out.println(GetRed() + "NIF já existente no sistema. Tente com outro NIF." + GetReset());
                     }
                 } catch (NumberFormatException e) {
                     System.out.println(GetRed() + "Aviso: O valor introduzido não é um número. Tente novamente." + GetReset());
@@ -893,9 +891,11 @@ public class GestorView {
                     if (!nifValido) {
                         System.out.println(GetRed() + "NIF deve ser um número inteiro válido e conter 9 dígitos. Tente novamente." + GetReset());
                     }else{
-                        nifValido = BackendUtils.nifExiste(nif);
-                        if(!nifValido)
+                        var nifExiste = BackendUtils.nifExiste(nif);
+                        if(nifExiste) {
                             System.out.println(GetRed() + "NIF já existente no sistema. Tente com outro NIF." + GetReset());
+                            nifValido = false;
+                        }
                     }
                 } catch (NumberFormatException e) {
                     System.out.println(GetRed() + "Aviso: O valor introduzido não é um número. Tente novamente." + GetReset());
@@ -907,7 +907,7 @@ public class GestorView {
                 try {
                     String dataString = BackendUtils.lerInputString(scanner, "Data de Nascimento (AAAA-MM-DD): ");
                     dataNascimento = LocalDate.parse(dataString);
-                    if(dataNascimento.getYear() < dataNascimento.getYear() + 17){
+                    if(Period.between(dataNascimento, LocalDate.now()).getYears() >= 18){
                         System.out.println(GetRed() + "Sistem só permite pessoas maiores de 18 anos. Tente novamente." + GetReset());
                     }else {
                         break;
