@@ -109,20 +109,20 @@ public class GestorCRUD {
     }
 
     public Resultado atualizarSenha(Gestor gestor){
-        Resultado res = new Resultado();
+        Resultado resultado = new Resultado();
         if(gestor != null){
             for (int i = 0; i < gestores.size(); i++) {
                 if (gestores.get(i).getNif() == gestor.getNif()) {
                     gestores.set(i, gestor);
                     guardarTodosNoFicheiro();
-                    res.success = true;
-                    return res;
+                    resultado.success = true;
+                    return resultado;
                 }
             }
         }
-        res.success = false;
-        res.errorMessage = "Erro ao atualizar o ficheiro do gestor";
-        return res;
+        resultado.success = false;
+        resultado.errorMessage = "Erro ao atualizar o ficheiro do gestor";
+        return resultado;
     }
 
     // DELETE

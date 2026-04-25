@@ -41,12 +41,12 @@ public class RecuperarSenhaController {
     }
 
     public Resultado atualizarSenha(Utilizador utilizador, String senhaCruaGerada) {
-        Resultado res = new Resultado();
+        Resultado resultado = new Resultado();
 
         if (utilizador == null || senhaCruaGerada == null || senhaCruaGerada.trim().isEmpty()) {
-            res.success = false;
-            res.errorMessage = "Dados inválidos para atualizar a senha.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "Dados inválidos para atualizar a senha.";
+            return resultado;
         }
 
         SenhaUtils su = new SenhaUtils();
@@ -65,8 +65,8 @@ public class RecuperarSenhaController {
             return gc.alterarPassword(((Gestor) utilizador).getNif(), hash);
         }
 
-        res.success = false;
-        res.errorMessage = "Tipo de utilizador desconhecido. Não foi possível atualizar a senha.";
-        return res;
+        resultado.success = false;
+        resultado.errorMessage = "Tipo de utilizador desconhecido. Não foi possível atualizar a senha.";
+        return resultado;
     }
 }

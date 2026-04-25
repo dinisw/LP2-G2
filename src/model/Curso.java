@@ -7,14 +7,14 @@ public class Curso {
     private String nome;
     private int duracao = 3;
     private Departamento departamento;
-    private List<UnidadeCurricular> uc;
+    private List<UnidadeCurricular> unidadeCurriculars;
     private boolean iniciado;
 
     public Curso(String nome, int duracao, Departamento departamento) {
         this.nome = nome;
         this.duracao = duracao;
         this.departamento = departamento;
-        this.uc = new ArrayList<>();
+        this.unidadeCurriculars = new ArrayList<>();
         this.iniciado = false;
     }
 
@@ -42,8 +42,8 @@ public class Curso {
         this.departamento = departamento;
     }
 
-    public List<UnidadeCurricular> getUc() {
-        return new ArrayList<>(uc);
+    public List<UnidadeCurricular> getUnidadeCurriculars() {
+        return new ArrayList<>(unidadeCurriculars);
     }
 
     public boolean isIniciado() {
@@ -58,15 +58,15 @@ public class Curso {
         int contagemAno = 0;
 
         // Conta quantas UCs já existem no mesmo ano da nova UC
-        for (UnidadeCurricular uc : uc) {
-            if (uc.getAnoCurricular() == novaUc.getAnoCurricular()) {
+        for (UnidadeCurricular unidadeCurricular : unidadeCurriculars) {
+            if (unidadeCurricular.getAnoCurricular() == novaUc.getAnoCurricular()) {
                 contagemAno++;
             }
         }
 
         // Se ainda não chegou às 5, adiciona e devolve sucesso
         if (contagemAno < 5) {
-            this.uc.add(novaUc);
+            this.unidadeCurriculars.add(novaUc);
             return true;
         }
 
@@ -80,6 +80,6 @@ public class Curso {
         String estado = iniciado ? "Em curso (Bloqueado a inscrições)" : "Não iniciado (Inscrições Abertas)";
 
         return String.format("Curso: %s | Duração: %d anos | Departamento: %s | UCs Inseridas: %d | Estado: %s",
-                nome, duracao, nomeDepartamento, uc.size(), estado);
+                nome, duracao, nomeDepartamento, unidadeCurriculars.size(), estado);
     }
 }

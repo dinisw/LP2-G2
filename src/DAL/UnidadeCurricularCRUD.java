@@ -8,10 +8,10 @@ import java.util.List;
 
 public class UnidadeCurricularCRUD {
     private static final String CAMINHO_FICHEIRO = "ucs.csv";
-    private List<UnidadeCurricular> ucs;
+    private List<UnidadeCurricular> unidadeCurriculars;
 
     public UnidadeCurricularCRUD() {
-        this.ucs = new ArrayList<>();
+        this.unidadeCurriculars = new ArrayList<>();
         carregarFicheiro();
     }
 
@@ -25,18 +25,25 @@ public class UnidadeCurricularCRUD {
             String linha;
             while ((linha = reader.readLine()) != null) {
                 String[] dados = linha.split(";");
-                if (dados.length >= 3) {
+                if (dados.length >= 4) {
                     String nome = dados[0];
                     int ano = Integer.parseInt(dados[1]);
                     int semestre = Integer.parseInt(dados[2]);
 
                     Docente docente = null;
-                    if (dados.length >= 4 && !dados[3].equals("SEM REGISTO")) {
+                    if (!dados[3].equals("SEM REGISTO")) {
                         docente = docenteCRUD.procurarPorSigla(dados[3]);
                     }
 
-                    UnidadeCurricular uc = new UnidadeCurricular(nome, ano,semestre, docente);
-                    ucs.add(uc);
+                    UnidadeCurricular unidadeCurricular = new UnidadeCurricular(nome, ano, semestre, docente);
+
+                    if(dados.length >= 5 && !dados[4].trim().isEmpty()) {
+                        String[] momentos = dados[4].split(",");
+                        for (String momento : momentos) {
+                            unidadeCurricular.adicionarMomento(momento);
+                        }
+                    }
+                    unidadeCurriculars.add(unidadeCurricular);
                 }
             }
         } catch (IOException | NumberFormatException e) {
@@ -46,14 +53,18 @@ public class UnidadeCurricularCRUD {
 
     private void guardarTodosNoFicheiro() {
         try (PrintWriter print = new PrintWriter(new FileWriter(CAMINHO_FICHEIRO))) {
-            for (UnidadeCurricular uc : ucs) {
-                String siglaDocente = (uc.getDocente() != null) ? uc.getDocente().getSigla() : "SEM REGISTO";
-
-                String linha = String.format("%s;%s;%s;%s",
-                        safe(uc.getNome()),
-                        uc.getAnoCurricular(),
-                        uc.getSemestre(),
-                        siglaDocente);
+            for (UnidadeCurricular unidadeCurricular : unidadeCurriculars) {
+                String siglaDocente = (unidadeCurricular.getDocente() != null) ? unidadeCurricular.getDocente().getSigla() : "SEM REGISTO";
+                String momentosStr = "";
+                if (unidadeCurricular.getMomentosAvaliacao() != null && !unidadeCurricular.getMomentosAvaliacao().isEmpty()) {
+                    momentosStr = String.join(",", unidadeCurricular.getMomentosAvaliacao());
+                }
+                String linha = String.format("%s;%d;%d;%s;%s",
+                        safe(unidadeCurricular.getNome()),
+                        unidadeCurricular.getAnoCurricular(),
+                        unidadeCurricular.getSemestre(),
+                        siglaDocente,
+                        momentosStr);
                 print.println(linha);
             }
         } catch (IOException e) {
@@ -62,22 +73,22 @@ public class UnidadeCurricularCRUD {
     }
 
     // CREATE
-    public boolean registarUC(UnidadeCurricular uc) {
-        if (uc == null || uc.getNome() == null || uc.getNome().trim().isEmpty()) {
+    public boolean registarUC(UnidadeCurricular unidadeCurricular) {
+        if (unidadeCurricular == null || unidadeCurricular.getNome() == null || unidadeCurricular.getNome().trim().isEmpty()) {
             return false;
         }
 
-        if (procurarPorNome(uc.getNome()) != null) {
+        if (procurarPorNome(unidadeCurricular.getNome()) != null) {
             return false;
         }
 
-        ucs.add(uc);
+        unidadeCurriculars.add(unidadeCurricular);
         guardarTodosNoFicheiro();
         return true;
     }
 
-    public List<UnidadeCurricular> getUcs() {
-        return new ArrayList<>(ucs);
+    public List<UnidadeCurricular> getUnidadeCurriculars() {
+        return new ArrayList<>(unidadeCurriculars);
     }
 
     // READ - Procurar por nome
@@ -85,9 +96,9 @@ public class UnidadeCurricularCRUD {
         if (nome == null || nome.trim().isEmpty()) {
             return null;
         }
-        for (UnidadeCurricular uc : ucs) {
-            if (uc.getNome().equalsIgnoreCase(nome)) {
-                return uc;
+        for (UnidadeCurricular unidadeCurricular : unidadeCurriculars) {
+            if (unidadeCurricular.getNome().equalsIgnoreCase(nome)) {
+                return unidadeCurricular;
             }
         }
         return null;
@@ -99,9 +110,9 @@ public class UnidadeCurricularCRUD {
         if (siglaDocente == null || siglaDocente.trim().isEmpty()) {
             return resultado;
         }
-        for (UnidadeCurricular uc : ucs) {
-            if (uc.getDocente() != null && uc.getDocente().getSigla().equalsIgnoreCase(siglaDocente)) {
-                resultado.add(uc);
+        for (UnidadeCurricular unidadeCurricular : unidadeCurriculars) {
+            if (unidadeCurricular.getDocente() != null && unidadeCurricular.getDocente().getSigla().equalsIgnoreCase(siglaDocente)) {
+                resultado.add(unidadeCurricular);
             }
         }
         return resultado;
@@ -110,9 +121,9 @@ public class UnidadeCurricularCRUD {
     // READ - Procurar UCs por ano curricular
     public List<UnidadeCurricular> procurarPorAno(int ano) {
         List<UnidadeCurricular> resultado = new ArrayList<>();
-        for (UnidadeCurricular uc : ucs) {
-            if (uc.getAnoCurricular() == ano) {
-                resultado.add(uc);
+        for (UnidadeCurricular unidadeCurricular : unidadeCurriculars) {
+            if (unidadeCurricular.getAnoCurricular() == ano) {
+                resultado.add(unidadeCurricular);
             }
         }
         return resultado;
@@ -124,12 +135,12 @@ public class UnidadeCurricularCRUD {
             return false;
         }
 
-        for (int i = 0; i < ucs.size(); i++) {
-            if (ucs.get(i).getNome().equalsIgnoreCase(nomeAtual)) {
+        for (int i = 0; i < unidadeCurriculars.size(); i++) {
+            if (unidadeCurriculars.get(i).getNome().equalsIgnoreCase(nomeAtual)) {
                 if (!nomeAtual.equalsIgnoreCase(ucAtualizada.getNome()) && procurarPorNome(ucAtualizada.getNome()) != null) {
                     return false;
                 }
-                ucs.set(i, ucAtualizada);
+                unidadeCurriculars.set(i, ucAtualizada);
                 guardarTodosNoFicheiro();
                 return true;
             }
@@ -143,9 +154,9 @@ public class UnidadeCurricularCRUD {
             return false;
         }
 
-        for (int i = 0; i < ucs.size(); i++) {
-            if (ucs.get(i).getNome().equalsIgnoreCase(nome)) {
-                ucs.remove(i);
+        for (int i = 0; i < unidadeCurriculars.size(); i++) {
+            if (unidadeCurriculars.get(i).getNome().equalsIgnoreCase(nome)) {
+                unidadeCurriculars.remove(i);
                 guardarTodosNoFicheiro();
                 return true;
             }
@@ -160,9 +171,9 @@ public class UnidadeCurricularCRUD {
         }
 
         boolean encontrou = false;
-        for (int i = ucs.size() - 1; i >= 0; i--) {
-            if (ucs.get(i).getDocente() != null && ucs.get(i).getDocente().getSigla().equalsIgnoreCase(siglaDocente)) {
-                ucs.remove(i);
+        for (int i = unidadeCurriculars.size() - 1; i >= 0; i--) {
+            if (unidadeCurriculars.get(i).getDocente() != null && unidadeCurriculars.get(i).getDocente().getSigla().equalsIgnoreCase(siglaDocente)) {
+                unidadeCurriculars.remove(i);
                 encontrou = true;
             }
         }

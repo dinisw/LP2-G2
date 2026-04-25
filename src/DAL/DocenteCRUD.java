@@ -61,15 +61,15 @@ public class DocenteCRUD {
             carregandoRelacoes = true; // Tranca a porta
 
             UnidadeCurricularCRUD ucCRUD = new UnidadeCurricularCRUD();
-            List<UnidadeCurricular> todasUCs = ucCRUD.getUcs();
+            List<UnidadeCurricular> todasUCs = ucCRUD.getUnidadeCurriculars();
 
             // Sincronização Perfeita: Vamos buscar as UCs à fonte (UnidadeCurricularCRUD)
             // e associá-las aos respetivos docentes.
-            for (Docente d : docentes) {
-                for (UnidadeCurricular uc : todasUCs) {
-                    if (uc.getDocente() != null && uc.getDocente().getSigla().equalsIgnoreCase(d.getSigla())) {
+            for (Docente docente : docentes) {
+                for (UnidadeCurricular unidadeCurricular : todasUCs) {
+                    if (unidadeCurricular.getDocente() != null && unidadeCurricular.getDocente().getSigla().equalsIgnoreCase(docente.getSigla())) {
                         // Se a UC pertence a este docente, adicionamo-la à lista dele
-                        d.adicionarUnidadeCurricular(uc);
+                        docente.adicionarUnidadeCurricular(unidadeCurricular);
                     }
                 }
             }
@@ -140,20 +140,20 @@ public class DocenteCRUD {
 
     // UPDATE SENHA
     public Resultado atualizarSenha(Docente docente){
-        Resultado res = new Resultado();
+        Resultado resultado = new Resultado();
         if(docente != null){
             for (int i = 0; i < docentes.size(); i++) {
                 if (docentes.get(i).getNif() == docente.getNif()) {
                     docentes.set(i, docente);
                     guardarTodosNoFicheiro();
-                    res.success = true;
-                    return res;
+                    resultado.success = true;
+                    return resultado;
                 }
             }
         }
-        res.success = false;
-        res.errorMessage = "Erro ao atualizar o ficheiro do docente";
-        return res;
+        resultado.success = false;
+        resultado.errorMessage = "Erro ao atualizar o ficheiro do docente";
+        return resultado;
     }
 
     // UPDATE
@@ -183,8 +183,8 @@ public class DocenteCRUD {
     // MÉTODO AUXILIAR PARA O CONTROLLER (Verificação de Dependências no Curso)
     public int contarDocentesNoCurso(String nomeCurso) {
         int count = 0;
-        for (Docente d : docentes) {
-            for (UnidadeCurricular uc : d.getUnidadesCurriculares()) {
+        for (Docente docente : docentes) {
+            for (UnidadeCurricular unidadeCurricular : docente.getUnidadesCurriculares()) {
                 // Se a lógica do seu projeto ligar UCs ao Curso, poderá validar aqui
                 // (Por agora retorna 0, pode ser expandido conforme a sua estrutura)
             }

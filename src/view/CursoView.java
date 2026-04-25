@@ -46,7 +46,7 @@ public class CursoView {
 
         do {
             try {
-                MenuUtils.exibirSubTitulo("GESTÃO DE CURSOS", opcoes);
+                MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL > CURSOS", opcoes);
                 System.out.print("\n" + GetWhiteBold() + "Selecione uma opção: " + GetReset());
                 opcao = scanner.nextLine().trim();
 
@@ -81,28 +81,28 @@ public class CursoView {
 
             System.out.println("\n" + GetBlue() + "--- Departamentos Disponíveis ---" + GetReset());
             DepartamentoController departamentoControllerAtualizado = new DepartamentoController();
-            List<Departamento> deps = departamentoControllerAtualizado.listarTodosDepartamentos();
-            if (deps.isEmpty()) {
+            List<Departamento> departamentos = departamentoControllerAtualizado.listarTodosDepartamentos();
+            if (departamentos.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhum departamento registado. Crie um departamento primeiro." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
                 return;
             }
-            for (Departamento d : deps) {
-                System.out.println(d.getSigla() + " - " + d.getNome());
+            for (Departamento departamento : departamentos) {
+                System.out.println(departamento.getSigla() + " - " + departamento.getNome());
             }
 
             String siglaDep = BackendUtils.lerInputString(scanner, "\nSigla do Departamento Associado (ex: EI): ").toUpperCase();
 
             System.out.println("\n" + GetBlue() + "--- Unidades Curriculares Disponíveis ---" + GetReset());
             UnidadeCurricularController unidadeCurricularControllerAtualizado = new UnidadeCurricularController();
-            List<UnidadeCurricular> ucs = unidadeCurricularControllerAtualizado.listarTodasUCs();
+            List<UnidadeCurricular> unidadeCurriculars = unidadeCurricularControllerAtualizado.listarTodasUCs();
             List<String> nomesUC = new ArrayList<>();
 
-            if (ucs.isEmpty()) {
+            if (unidadeCurriculars.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhuma UC registada. O Curso será registado sem UCs associadas." + GetReset());
             } else {
-                for (UnidadeCurricular uc : ucs) {
-                    System.out.println(uc.getNome());
+                for (UnidadeCurricular unidadeCurricular : unidadeCurriculars) {
+                    System.out.println(unidadeCurricular.getNome());
                 }
                 String input = BackendUtils.lerInputString(scanner, "\nDigite os nomes das UCs a associar (separados por vírgula, ou Enter para nenhuma): ");
                 if (!input.isEmpty()) {
@@ -306,15 +306,15 @@ public class CursoView {
             String nomeCurso = BackendUtils.lerInputString(scanner, "\nDigite o nome do Curso: ");
 
             UnidadeCurricularController unidadeCurricularControllerAtualizado = new UnidadeCurricularController();
-            List<UnidadeCurricular> ucs = unidadeCurricularControllerAtualizado.listarTodasUCs();
-            if(ucs.isEmpty()){
+            List<UnidadeCurricular> unidadeCurriculars = unidadeCurricularControllerAtualizado.listarTodasUCs();
+            if(unidadeCurriculars.isEmpty()){
                 System.out.println(GetYellow() + "Não existem UCs registadas no sistema." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
                 return;
             }
             System.out.println("\n" + GetWhiteBold() + "UCs Disponíveis:" + GetReset());
-            for (UnidadeCurricular uc : ucs) {
-                System.out.println("- " + uc.getNome() + " (Ano: " + uc.getAnoCurricular() + " | Sem: " + uc.getSemestre() + ")");
+            for (UnidadeCurricular unidadeCurricular : unidadeCurriculars) {
+                System.out.println("- " + unidadeCurricular.getNome() + " (Ano: " + unidadeCurricular.getAnoCurricular() + " | Sem: " + unidadeCurricular.getSemestre() + ")");
             }
 
             String nomeUC = BackendUtils.lerInputString(scanner, "\nDigite o nome da UC a associar: ");
