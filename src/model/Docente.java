@@ -17,7 +17,6 @@ public class Docente extends Utilizador {
     }
 
     public Docente() {
-        this.listaAvaliacao = new ArrayList<>();
         this.unidadesCurriculares = new ArrayList<>();
         this.sigla = "";
     }
@@ -57,6 +56,9 @@ public class Docente extends Utilizador {
         return listaAvaliacao;
     }
 
+    public void setListaAvaliacao(List<Avaliacao> listaAvaliacao) {
+        this.listaAvaliacao = listaAvaliacao;
+    }
 
     @Override
     public String toString() {

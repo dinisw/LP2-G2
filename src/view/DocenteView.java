@@ -10,6 +10,7 @@ import controller.DocenteController;
 import controller.EstudanteController;
 import controller.UnidadeCurricularController;
 import model.Docente;
+import model.Estudante;
 import model.Resultado;
 import model.UnidadeCurricular;
 import org.jline.reader.LineReader;
@@ -45,6 +46,7 @@ public class DocenteView {
         opcoes.add("4. Consultar ficha docente");
         opcoes.add("5. Consultar Pauta de Alunos (Ordenada)");
         opcoes.add("6. Definir Momentos de Avaliação");
+        opcoes.add("7. Consultar Lista de Alunos");
         opcoes.add("0. Logout");
 
         do {
@@ -71,6 +73,9 @@ public class DocenteView {
                         break;
                     case "6":
                         definirMomentosAvaliacao(docente);
+                        break;
+                    case "7":
+                        consultarListaAlunos(docente);
                         break;
                     case "0":
                         System.out.println(GetYellow() + "\nA efetuar logout..." + GetReset());
@@ -450,5 +455,114 @@ public class DocenteView {
             System.out.println(GetRed() + "Ocorreu um erro: " + e.getMessage() + GetReset());
             MenuUtils.pressionarEnter(scanner);
         }
+    }
+
+    private void consultarListaAlunos(Docente docente) {
+        try {
+            System.out.println(GetBlue() + "\n--- CONSULTAR LISTA DE ALUNOS ---" + GetReset());
+
+            List<UnidadeCurricular> minhasUCs = docente.getUnidadesCurriculares();
+
+            if (minhasUCs == null || minhasUCs.isEmpty()) {
+                System.out.println(GetYellow() + "Não tem Unidades Curriculares atribuídas neste momento." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            // Listar UCs disponíveis — só exibição, sem lógica
+            System.out.println(GetWhiteBold() + "As suas Unidades Curriculares:" + GetReset());
+            for (int i = 0; i < minhasUCs.size(); i++) {
+                UnidadeCurricular uc = minhasUCs.get(i);
+                System.out.println((i + 1) + ". " + uc.getNome()
+                        + " (Ano: " + uc.getAnoCurricular()
+                        + " | Semestre: " + uc.getSemestre() + ")");
+            }
+            System.out.println("0. Ver alunos de TODAS as UCs");
+
+            // Obter escolha do utilizador
+            int escolha = -1;
+            boolean escolhaValida = false;
+            while (!escolhaValida) {
+                try {
+                    String input = BackendUtils.lerInputString(scanner,
+                            "\nSelecione uma UC (0 para todas, ou número da lista): ");
+                    escolha = Integer.parseInt(input);
+                    if (escolha >= 0 && escolha <= minhasUCs.size()) {
+                        escolhaValida = true;
+                    } else {
+                        System.out.println(GetRed() + "Aviso: Escolha inválida." + GetReset());
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println(GetRed() + "Aviso: Introduza um número válido." + GetReset());
+                }
+            }
+
+            // Delegar toda a lógica de negócio ao Controller
+            DocenteController docenteControllerAtualizado = new DocenteController();
+
+            if (escolha == 0) {
+                // Mostrar alunos de todas as UCs, agrupados por UC
+                for (UnidadeCurricular uc : minhasUCs) {
+                    imprimirCabecalhoUC(uc);
+                    List<Estudante> alunos = docenteControllerAtualizado.listarAlunosPorUC(uc.getNome());
+                    imprimirTabelaAlunos(alunos);
+                }
+            } else {
+                // Mostrar alunos da UC escolhida
+                UnidadeCurricular ucSelecionada = minhasUCs.get(escolha - 1);
+                imprimirCabecalhoUC(ucSelecionada);
+                List<Estudante> alunos = docenteControllerAtualizado.listarAlunosPorUC(ucSelecionada.getNome());
+                imprimirTabelaAlunos(alunos);
+            }
+
+            MenuUtils.pressionarEnter(scanner);
+
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Ocorreu um erro inesperado: " + e.getMessage() + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        }
+    }
+
+    // Métodos auxiliares de apresentação (apenas UI, sem lógica de negócio)
+
+    private void imprimirCabecalhoUC(UnidadeCurricular uc) {
+        System.out.println("\n" + GetCyanBold()
+                + "══════════════════════════════════════════════════════════"
+                + GetReset());
+        System.out.println(GetWhiteBold() + "  UC: " + uc.getNome()
+                + "  |  Ano " + uc.getAnoCurricular()
+                + "º  |  Semestre " + uc.getSemestre()
+                + GetReset());
+        System.out.println(GetCyanBold()
+                + "══════════════════════════════════════════════════════════"
+                + GetReset());
+    }
+
+    private void imprimirTabelaAlunos(List<Estudante> alunos) {
+        if (alunos == null || alunos.isEmpty()) {
+            System.out.println(GetYellow() + "  Nenhum aluno inscrito nesta UC." + GetReset());
+            return;
+        }
+
+        System.out.printf(GetWhiteBold() + "  %-5s | %-10s | %-30s | %-30s%n" + GetReset(),
+                "Nº", "Nº MEC", "NOME", "EMAIL");
+        System.out.println(GetCyanBold()
+                + "  ──────────────────────────────────────────────────────────"
+                + GetReset());
+
+        for (int i = 0; i < alunos.size(); i++) {
+            Estudante est = alunos.get(i);
+            System.out.printf("  %-5d | %-10d | %-30s | %-30s%n",
+                    (i + 1),
+                    est.getNumeroMec(),
+                    est.getNome(),
+                    est.getEmail());
+        }
+
+        System.out.println(GetCyanBold()
+                + "  ──────────────────────────────────────────────────────────"
+                + GetReset());
+        System.out.println(GetWhiteBold() + "  Total de alunos inscritos: "
+                + alunos.size() + GetReset());
     }
 }

@@ -9,6 +9,7 @@ import DAL.CursoCRUD;
 import controller.*;
 import model.*;
 import java.time.LocalDate;
+import java.time.Period;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -496,10 +497,11 @@ public class GestorView {
                 try {
                     String dataString = BackendUtils.lerInputString(scanner, "Data de Nascimento (AAAA-MM-DD): ");
                     dataNascimento = LocalDate.parse(dataString);
-                    if(dataNascimento.getYear() < dataNascimento.getYear() + 17){
-                        System.out.println(GetRed() + "Sistem só permite pessoas maiores de 18 anos. Tente novamente." + GetReset());
-                    }else {
+                    int idade = Period.between(dataNascimento, LocalDate.now()).getYears();
+                    if(idade >= 18) {
                         break;
+                    }else {
+                        System.out.println(GetRed() + "Sistema só permite pessoas maiores de 18 anos. Tente novamente." + GetReset());
                     }
                 } catch (DateTimeParseException e) {
                     System.out.println(GetRed() + "Data deve estar no formato AAAA-MM-DD. Tente novamente." + GetReset());
