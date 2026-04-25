@@ -1,9 +1,15 @@
 package common.utils;
 
 import common.exceptions.CancelarRegistoException;
+import controller.DocenteController;
+import controller.EstudanteController;
+import controller.GestorController;
 
 import java.util.Scanner;
 import java.util.regex.Pattern;
+
+import static common.utils.DesignUtils.GetRed;
+import static common.utils.DesignUtils.GetReset;
 
 public class BackendUtils {
     //region Validador de Email
@@ -47,7 +53,13 @@ public class BackendUtils {
     private static final String REGEX_NIF = "^[1235689]\\d{8}$";
     private static final Pattern PATTERN_NIF = Pattern.compile(REGEX_NIF);
 
-    public static boolean nifIsValid(String nif) {
+    public static boolean nifEValido(String nif) {
         return PATTERN_NIF.matcher(nif).matches();
+    }
+    public static boolean nifExiste(int nif) {
+        EstudanteController e = new EstudanteController();
+        DocenteController d = new DocenteController();
+        GestorController g = new GestorController();
+        return e.procurarEstudantePorNif(nif) == null || d.procurarDocentePorNif(nif) == null || g.procurarGestorPorNif(nif) == null;
     }
 }
