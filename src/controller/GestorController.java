@@ -64,6 +64,10 @@ public class GestorController {
         return gestorCRUD.getGestores();
     }
 
+    public Gestor procurarGestorPorID(int id) {
+        return gestorCRUD.getGestorPorID(id);
+    }
+
     public Gestor procurarGestorPorNif(int nif) {
         if (nif <= 0) {
             return null;

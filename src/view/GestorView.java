@@ -226,7 +226,7 @@ public class GestorView {
                 System.out.println(GetYellow() + "Nenhum gestor registado no sistema." + GetReset());
             } else {
                 for (Gestor gestor : gestores) {
-                    System.out.println("NIF: " + gestor.getNif() + " | Nome: " + gestor.getNome() + " | Cargo: " + gestor.getCargo());
+                    System.out.println("ID:" + gestor.getId() + " | NIF: " + gestor.getNif() + " | Nome: " + gestor.getNome() + " | Cargo: " + gestor.getCargo());
                 }
             }
 

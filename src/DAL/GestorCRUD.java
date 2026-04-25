@@ -12,6 +12,7 @@ import java.util.List;
 public class GestorCRUD {
     private static final String CAMINHO_FICHEIRO = "gestores.csv";
     private List<Gestor> gestores;
+    private int proximoID = 0;
 
     public GestorCRUD() {
         this.gestores = new ArrayList<>();
@@ -29,6 +30,7 @@ public class GestorCRUD {
                 String[] dados = linha.split(";");
                 if (dados.length == 7) {
                     Gestor gestor = new Gestor(
+                            proximoID++,//id
                             dados[0],//nome
                             dados[1],//morada
                             Integer.parseInt(dados[2]),//nif
@@ -63,9 +65,18 @@ public class GestorCRUD {
         }
     }
 
+    public Gestor getGestorPorID(int id){
+        for (Gestor g : gestores) {
+            if (g.getId() == id){
+                return g;
+            }
+        }
+        return null;
+    }
     // CREATE
     public boolean registarGestor(Gestor gestor) {
         if (gestor != null && procurarPorNif(gestor.getNif()) == null) {
+            gestor.setId(proximoID++);
             gestores.add(gestor);
             guardarTodosNoFicheiro();
             return true;
