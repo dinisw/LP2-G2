@@ -64,20 +64,20 @@ public class EstudanteCRUD {
     }
 
     public Resultado atualizarSenha(Estudante estudante){
-        Resultado res = new Resultado();
+        Resultado resultado = new Resultado();
         if(estudante != null){
             for (int i = 0; i < estudantes.size(); i++) {
                 if (estudantes.get(i).getNumeroMec() == estudante.getNumeroMec()) {
                     estudantes.set(i, estudante);
                     guardarTodosNoFicheiro();
-                    res.success = true;
-                    return res;
+                    resultado.success = true;
+                    return resultado;
                 }
             }
         }
-        res.success = false;
-        res.errorMessage = "Erro ao atualizar o ficheiro do estudante";
-        return res;
+        resultado.success = false;
+        resultado.errorMessage = "Erro ao atualizar o ficheiro do estudante";
+        return resultado;
     }
 
     private void guardarTodosNoFicheiro() {

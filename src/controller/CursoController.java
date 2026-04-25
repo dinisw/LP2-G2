@@ -2,11 +2,10 @@ package controller;
 
 import DAL.CursoCRUD;
 import DAL.DepartamentoCRUD;
+import DAL.EstudanteCRUD;
 import DAL.UnidadeCurricularCRUD;
-import model.Curso;
-import model.Departamento;
-import model.Resultado;
-import model.UnidadeCurricular;
+import model.*;
+
 import java.util.List;
 
 public class CursoController {
@@ -53,9 +52,9 @@ public class CursoController {
         if (nomesUC != null) {
             for (String nomeUC : nomesUC) {
                 if (nomeUC != null && !nomeUC.trim().isEmpty()) {
-                    UnidadeCurricular uc = ucCRUD.procurarPorNome(nomeUC.trim());
-                    if (uc != null) {
-                        novo.adicionarUnidadeCurricular(uc);
+                    UnidadeCurricular unidadeCurricular = ucCRUD.procurarPorNome(nomeUC.trim());
+                    if (unidadeCurricular != null) {
+                        novo.adicionarUnidadeCurricular(unidadeCurricular);
                     } else {
                         avisos.append("UC '").append(nomeUC.trim()).append("' não encontrada (ignorada). ");
                     }
@@ -112,7 +111,7 @@ public class CursoController {
 
         Curso cursoAtualizado = new Curso(novoNome, curso.getDuracao(), curso.getDepartamento());
         cursoAtualizado.setIniciado(curso.isIniciado());
-        for (UnidadeCurricular unidadeCurricular : curso.getUc()) {
+        for (UnidadeCurricular unidadeCurricular : curso.getUnidadeCurriculars()) {
             cursoAtualizado.adicionarUnidadeCurricular(unidadeCurricular);
         }
         if (cursoCRUD.atualizarCurso(nomeAntigo, cursoAtualizado)) {
@@ -142,6 +141,21 @@ public class CursoController {
 
         if (cursoCRUD.eliminarCurso(nome)) {
             resultado.success = true;
+
+            try {
+                EstudanteCRUD estudanteCRUD = new EstudanteCRUD();
+                EstudanteController estudanteController = new EstudanteController();
+                List<Estudante> todosEstudantes = estudanteController.listarEstudantes();
+
+                for (Estudante estudante : todosEstudantes) {
+                    if (estudante.getNomeCurso() != null && estudante.getNomeCurso().equalsIgnoreCase(nome)) {
+                        estudante.setNomeCurso("SEM REGISTO");
+                        estudanteCRUD.atualizarEstudante(estudante);
+                    }
+                }
+            } catch (Exception e) {
+                System.out.println("Aviso interno: Não foi possível atualizar os perfis dos estudantes afetados.");
+            }
         } else {
             resultado.success = false;
             resultado.errorMessage = "Erro na base de dados ao eliminar o curso (ex: tem alunos alocados).";
@@ -149,6 +163,7 @@ public class CursoController {
 
         return resultado;
     }
+
     public Resultado iniciarCurso(String nome) {
         Resultado resultado = new Resultado();
 
@@ -162,6 +177,36 @@ public class CursoController {
         if (curso.isIniciado()) {
             resultado.success = false;
             resultado.errorMessage = "Este curso já se encontra iniciado.";
+            return resultado;
+        }
+
+        if (!isEstruturaCurricularValida(curso)) {
+            resultado.success = false;
+            resultado.errorMessage = "Estrutura curricular incompleta (é obrigatório ter pelo menos uma UC em cada um dos 3 anos).";
+            return resultado;
+        }
+
+        List<String> unidadesCurricularesSemMomentos = obterUCsSemMomentosDeAvaliacao(curso);
+
+        if (!unidadesCurricularesSemMomentos.isEmpty()) {
+            resultado.success = false;
+            resultado.errorMessage = "Não é possível iniciar o curso. As seguintes UCs não têm Momentos de Avaliação: " + String.join(",", unidadesCurricularesSemMomentos) + ".";
+            return resultado;
+        }
+
+        controller.EstudanteController estudanteController = new controller.EstudanteController();
+        List<model.Estudante> todosEstudantes = estudanteController.listarEstudantes();
+
+        int alunosInscritos = 0;
+        for (model.Estudante estudante : todosEstudantes) {
+            if (estudante.getNomeCurso() != null && estudante.getNomeCurso().equalsIgnoreCase(curso.getNome())) {
+                alunosInscritos++;
+            }
+        }
+
+        if (alunosInscritos < 5) {
+            resultado.success = false;
+            resultado.errorMessage = "O curso não pode ser iniciado. Tem de ter no mínimo 5 alunos inscritos (Atualmente tem: " + alunosInscritos + ").";
             return resultado;
         }
 
@@ -201,7 +246,7 @@ public class CursoController {
             return resultado;
         }
 
-        for (UnidadeCurricular unidadeCurricularExistente : curso.getUc()) {
+        for (UnidadeCurricular unidadeCurricularExistente : curso.getUnidadeCurriculars()) {
             if (unidadeCurricularExistente.getNome().equalsIgnoreCase(nomeUC)) {
                 resultado.success = false;
                 resultado.errorMessage = "A UC '" + nomeUC + "' já está associada a este curso.";
@@ -224,4 +269,54 @@ public class CursoController {
         }
         return resultado;
     }
+
+    private boolean isEstruturaCurricularValida (model.Curso curso) {
+        boolean temAno1 = false;
+        boolean temAno2 = false;
+        boolean temAno3 = false;
+
+        for (model.UnidadeCurricular unidadeCurricular : curso.getUnidadeCurriculars()) {
+            if (unidadeCurricular.getAnoCurricular() == 1) temAno1 = true;
+            if (unidadeCurricular.getAnoCurricular() == 2) temAno2 = true;
+            if (unidadeCurricular.getAnoCurricular() == 3) temAno3 = true;
+        }
+        return temAno1 && temAno2 && temAno3;
+    }
+
+    private java.util.List<String> obterUCsSemMomentosDeAvaliacao(model.Curso curso) {
+        java.util.List<String> unidadesCurricularesEmFalta = new java.util.ArrayList<>();
+
+        for (model.UnidadeCurricular unidadeCurricular : curso.getUnidadeCurriculars()) {
+            if (unidadeCurricular.getMomentosAvaliacao() == null || unidadeCurricular.getMomentosAvaliacao().isEmpty()) {
+                unidadesCurricularesEmFalta.add(unidadeCurricular.getNome());
+            }
+        }
+        return unidadesCurricularesEmFalta;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }

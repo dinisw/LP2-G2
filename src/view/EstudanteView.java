@@ -26,7 +26,7 @@ public class EstudanteView {
         do {
             try {
                 MenuUtils.exibirTitulo();
-                MenuUtils.exibirSubTitulo("OPÇÕES ESTUDANTE: " + estudante.getNome().toUpperCase(), opcoes);
+                MenuUtils.exibirSubTitulo("PORTAL ESTUDANTE > " + estudante.getNome().toUpperCase(), opcoes);
 
                 System.out.print("\n" + GetWhiteBold() + "Selecione uma opção: " + GetReset());
                 opcao = ler.nextLine().trim();
@@ -80,10 +80,10 @@ public class EstudanteView {
 
         int anoDesbloqueado = 1;
 
-        long unidadesCurricularesAno1Total = curso.getUc().stream().filter(u -> u.getAnoCurricular() == 1).count();
+        long unidadesCurricularesAno1Total = curso.getUnidadeCurriculars().stream().filter(u -> u.getAnoCurricular() == 1).count();
         long unidadesCurricularesAno1Aprovadas = avaliacoes.stream().filter(a -> a.getUnidadeCurricular().getAnoCurricular() == 1 && a.getNota() != null && a.getNota() >= 9.5).count();
 
-        long unidadesCurricularesAno2Total = curso.getUc().stream().filter(u -> u.getAnoCurricular() == 2).count();
+        long unidadesCurricularesAno2Total = curso.getUnidadeCurriculars().stream().filter(u -> u.getAnoCurricular() == 2).count();
         long unidadesCurricularesAno2Aprovadas = avaliacoes.stream().filter(a -> a.getUnidadeCurricular().getAnoCurricular() == 2 && a.getNota() != null && a.getNota() >= 9.5).count();
 
         if (unidadesCurricularesAno1Total == 0) unidadesCurricularesAno1Total = 5;
@@ -118,7 +118,7 @@ public class EstudanteView {
         }
 
         List<model.UnidadeCurricular> disponiveis = new ArrayList<>();
-        List<model.UnidadeCurricular> todasUCsCurso = curso.getUc();
+        List<model.UnidadeCurricular> todasUCsCurso = curso.getUnidadeCurriculars();
 
         for (model.UnidadeCurricular unidadeCurricular : todasUCsCurso) {
             // Verificar se o aluno já está inscrito ou já concluiu a UC
@@ -148,8 +148,8 @@ public class EstudanteView {
 
         System.out.println("\nUnidades Curriculares Disponíveis:\n");
         for (int i = 0; i < disponiveis.size(); i++) {
-            model.UnidadeCurricular uc = disponiveis.get(i);
-            System.out.println(GetWhiteBold() + (i + 1) + ". " + GetReset() + uc.getNome() + " (" + uc.getAnoCurricular() + "º Ano, " + uc.getSemestre() + "º Semestre)");
+            model.UnidadeCurricular unidadeCurricular = disponiveis.get(i);
+            System.out.println(GetWhiteBold() + (i + 1) + ". " + GetReset() + unidadeCurricular.getNome() + " (" + unidadeCurricular.getAnoCurricular() + "º Ano, " + unidadeCurricular.getSemestre() + "º Semestre)");
         }
         System.out.println(GetWhiteBold() + "0. " + GetReset() + "Voltar");
 

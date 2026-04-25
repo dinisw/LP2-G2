@@ -45,11 +45,11 @@ public class Docente extends Utilizador {
         this.unidadesCurriculares = unidadesCurriculares;
     }
 
-    public boolean adicionarUnidadeCurricular(UnidadeCurricular uc) {
-        if (unidadesCurriculares.contains(uc)) {
+    public boolean adicionarUnidadeCurricular(UnidadeCurricular unidadeCurricular) {
+        if (unidadesCurriculares.contains(unidadeCurricular)) {
             return false;
         }
-        unidadesCurriculares.add(uc);
+        unidadesCurriculares.add(unidadeCurricular);
         return true;
     }
 

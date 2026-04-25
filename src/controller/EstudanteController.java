@@ -48,25 +48,25 @@ public class EstudanteController {
     }
 
     public Resultado tentarPassarDeAno(Estudante estudante, int totalUCsInscritas) {
-        Resultado res = new Resultado();
+        Resultado resultado = new Resultado();
 
         if (estudante == null) {
-            res.success = false;
-            res.errorMessage = "Estudante inválido para a operação.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "Estudante inválido para a operação.";
+            return resultado;
         }
 
         boolean passou = bll.verificarProgressao(estudante, totalUCsInscritas);
 
         if (passou) {
-            res.success = true;
-            res.object = "Sucesso: O estudante " + estudante.getNome() + " transitou para o " + estudante.getAnoLetivo() + "º ano letivo.";
+            resultado.success = true;
+            resultado.object = "Sucesso: O estudante " + estudante.getNome() + " transitou para o " + estudante.getAnoLetivo() + "º ano letivo.";
         } else {
-            res.success = false;
-            res.errorMessage = "Inscrição no ano seguinte não permitida. Aproveitamento insuficiente (mínimo exigido: >60%).";
+            resultado.success = false;
+            resultado.errorMessage = "Inscrição no ano seguinte não permitida. Aproveitamento insuficiente (mínimo exigido: >60%).";
         }
 
-        return res;
+        return resultado;
     }
 
     public boolean temAproveitamentoSuficiente(Estudante estudante, int totalUCsInscritas) {
@@ -79,25 +79,25 @@ public class EstudanteController {
     }
 
     public Resultado registarEstudante(String nome, String morada, int nif, LocalDate dataNascimento, String curso, String hash) {
-        Resultado res = new Resultado();
+        Resultado resultado = new Resultado();
 
         if (nome == null || nome.trim().isEmpty() || morada == null || morada.trim().isEmpty() ||
                 curso == null || curso.trim().isEmpty() || hash == null || hash.trim().isEmpty()) {
-            res.success = false;
-            res.errorMessage = "Todos os campos de texto (nome, morada, curso, senha) são obrigatórios.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "Todos os campos de texto (nome, morada, curso, senha) são obrigatórios.";
+            return resultado;
         }
 
         if (nif <= 0) {
-            res.success = false;
-            res.errorMessage = "O NIF fornecido é inválido.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "O NIF fornecido é inválido.";
+            return resultado;
         }
 
         if (dataNascimento == null) {
-            res.success = false;
-            res.errorMessage = "A data de nascimento fornecida é inválida.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "A data de nascimento fornecida é inválida.";
+            return resultado;
         }
 
         int numeroMec = estudanteCRUD.gerarNumeroMecanografico();
@@ -106,14 +106,14 @@ public class EstudanteController {
         Estudante estudante = new Estudante(nome, morada, nif, dataNascimento, email, numeroMec, hash, curso,true);
 
         if (estudanteCRUD.registarEstudante(estudante)) {
-            res.success = true;
-            res.object = numeroMec;
+            resultado.success = true;
+            resultado.object = numeroMec;
         } else {
-            res.success = false;
-            res.errorMessage = "Ocorreu um erro na base de dados (verifique se o NIF já existe).";
+            resultado.success = false;
+            resultado.errorMessage = "Ocorreu um erro na base de dados (verifique se o NIF já existe).";
         }
 
-        return res;
+        return resultado;
     }
 
     public List<Estudante> listarEstudantes() {
@@ -126,19 +126,19 @@ public class EstudanteController {
     }
 
     public Resultado atualizarEstudante(int numeroMec, String nome, String morada, String email, String curso) {
-        Resultado res = new Resultado();
+        Resultado resultado = new Resultado();
 
         if (numeroMec <= 0) {
-            res.success = false;
-            res.errorMessage = "Número Mecanográfico inválido.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "Número Mecanográfico inválido.";
+            return resultado;
         }
 
         Estudante estudante = estudanteCRUD.lerEstudante(numeroMec);
         if (estudante == null) {
-            res.success = false;
-            res.errorMessage = "Estudante não encontrado com o Número Mecanográfico informado.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "Estudante não encontrado com o Número Mecanográfico informado.";
+            return resultado;
         }
 
         if (nome != null && !nome.trim().isEmpty()) estudante.setNome(nome);
@@ -147,90 +147,90 @@ public class EstudanteController {
         if (curso != null && !curso.trim().isEmpty()) estudante.setNomeCurso(curso);
 
         if (estudanteCRUD.atualizarEstudante(estudante)) {
-            res.success = true;
+            resultado.success = true;
         } else {
-            res.success = false;
-            res.errorMessage = "Erro ao guardar as alterações na base de dados.";
+            resultado.success = false;
+            resultado.errorMessage = "Erro ao guardar as alterações na base de dados.";
         }
 
-        return res;
+        return resultado;
     }
 
     public Resultado alterarPassword(int numeroMec, String novaSenhaHash) {
-        Resultado res = new Resultado();
+        Resultado resultado = new Resultado();
 
         if (numeroMec <= 0) {
-            res.success = false;
-            res.errorMessage = "Número Mecanográfico inválido.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "Número Mecanográfico inválido.";
+            return resultado;
         }
 
         if (novaSenhaHash == null || novaSenhaHash.trim().isEmpty()) {
-            res.success = false;
-            res.errorMessage = "A nova senha não pode estar vazia.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "A nova senha não pode estar vazia.";
+            return resultado;
         }
 
         Estudante estudante = estudanteCRUD.lerEstudante(numeroMec);
         if (estudante == null) {
-            res.success = false;
-            res.errorMessage = "Estudante não encontrado.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "Estudante não encontrado.";
+            return resultado;
         }
 
         estudante.setHash(novaSenhaHash);
 
         if (estudanteCRUD.atualizarSenha(estudante).success) {
-            res.success = true;
+            resultado.success = true;
         } else {
-            res.success = false;
-            res.errorMessage = "Erro ao atualizar a password na base de dados.";
+            resultado.success = false;
+            resultado.errorMessage = "Erro ao atualizar a password na base de dados.";
         }
 
-        return res;
+        return resultado;
     }
 
     public Resultado eliminarEstudante(int numeroMec) {
-        Resultado res = new Resultado();
+        Resultado resultado = new Resultado();
 
         if (numeroMec <= 0) {
-            res.success = false;
-            res.errorMessage = "Número Mecanográfico inválido.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "Número Mecanográfico inválido.";
+            return resultado;
         }
 
         Estudante estudante = estudanteCRUD.lerEstudante(numeroMec);
 
         if (estudanteCRUD.lerEstudante(numeroMec) == null) {
-            res.success = false;
-            res.errorMessage = "Estudante não encontrado com o Número Mecanográfico informado.";
-            return res;
+            resultado.success = false;
+            resultado.errorMessage = "Estudante não encontrado com o Número Mecanográfico informado.";
+            return resultado;
         }
 
         if (estudante.getNomeCurso() != null && !estudante.getNomeCurso().equals("SEM REGISTO")) {
             if (!estudante.isAtivo()) {
-                res.success = false;
-                res.errorMessage = "O Estudante já se encontra inativo.";
-                return res;
+                resultado.success = false;
+                resultado.errorMessage = "O Estudante já se encontra inativo.";
+                return resultado;
             }
             estudante.setAtivo(false);
 
             if (estudanteCRUD.atualizarEstudante(estudante)) {
-                res.success = true;
-                res.object = "INATIVADO";
+                resultado.success = true;
+                resultado.object = "INATIVADO";
             } else {
-                res.success = false;
-                res.errorMessage = "Erro ao inativar o estudante na base de dados.";
+                resultado.success = false;
+                resultado.errorMessage = "Erro ao inativar o estudante na base de dados.";
             }
         } else {
             if (estudanteCRUD.eliminarEstudante(numeroMec)) {
-                res.success = true;
-                res.object = "ELIMINADO";
+                resultado.success = true;
+                resultado.object = "ELIMINADO";
             } else {
-                res.success = false;
-                res.errorMessage = "Erro na base de dados ao tentar eliminar o estudante.";
+                resultado.success = false;
+                resultado.errorMessage = "Erro na base de dados ao tentar eliminar o estudante.";
             }
         }
-        return res;
+        return resultado;
     }
 }

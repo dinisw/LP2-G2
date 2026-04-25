@@ -1,5 +1,7 @@
 package model;
 
+import java.util.List;
+import java.util.ArrayList;
 import java.time.LocalDate;
 
 public class UnidadeCurricular {
@@ -7,13 +9,16 @@ public class UnidadeCurricular {
     private int anoCurricular;
     private int semestre;
     private Docente docente;
+    private List<String> momentosAvaliacao;
     private final int ects = 6; // Valor fixo conforme requisito
+
 
     public UnidadeCurricular(String nome, int anoCurricular,int semestre, Docente docente) {
         this.nome = nome;
         this.anoCurricular = anoCurricular;
         this.semestre = semestre;
         this.docente = docente;
+        this.momentosAvaliacao = new ArrayList<>();
     }
 
     public String getNome() {
@@ -50,6 +55,20 @@ public class UnidadeCurricular {
 
     public int getEcts() {
         return ects;
+    }
+
+    public List<String> getMomentosAvaliacao() {
+        return momentosAvaliacao;
+    }
+
+    public void adicionarMomento (String momento) {
+        if (momento != null && !momento.trim().isEmpty()) {
+            this.momentosAvaliacao.add(momento.trim());
+        }
+    }
+
+    public void setMomentosAvaliacao(List<String> momentosAvaliacao) {
+        this.momentosAvaliacao = momentosAvaliacao;
     }
 
     @Override
