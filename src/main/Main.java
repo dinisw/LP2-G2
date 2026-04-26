@@ -1,0 +1,10 @@
+package main;
+
+import main.view.LoginView;
+
+public class Main {
+
+    public static void main(String[] args) {
+        LoginView.Login();
+    }
+}
