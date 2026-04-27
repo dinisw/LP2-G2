@@ -151,16 +151,17 @@ public class UnidadeCurricularView {
             if (unidadeCurriculars.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhuma UC registada até ao momento!" + GetReset());
             } else {
-                System.out.println(GetCyanBold() + "-----------------------------------------------------------------" + GetReset());
-                System.out.printf(GetWhiteBold() + " %-25s | %-5s | %-3s | %-15s | %-4s \n" + GetReset(), "NOME DA UC", "ANO", "SEM", "DOCENTE", "ECTS");
-                System.out.println(GetCyanBold() + "-----------------------------------------------------------------" + GetReset());
+                System.out.println(GetCyanBold() + "-----------------------------------------------------------------------" + GetReset());
+                System.out.printf(GetWhiteBold() + " %-4s | %-25s | %-5s | %-3s | %-15s | %-4s \n" + GetReset(), "ID", "NOME DA UC", "ANO", "SEM", "DOCENTE", "ECTS");
+                System.out.println(GetCyanBold() + "-----------------------------------------------------------------------" + GetReset());
 
-                for (UnidadeCurricular unidadeCurricular : unidadeCurriculars) {
+                for (int i = 0; i < unidadeCurriculars.size(); i++) {
+                    UnidadeCurricular unidadeCurricular = unidadeCurriculars.get(i);
                     String docenteNome = (unidadeCurricular.getDocente() != null) ? unidadeCurricular.getDocente().getSigla() : GetYellow() + "N/A" + GetReset();
-                    System.out.printf(" %-25s | %-5d |%-3d | %-15s | %-4d \n",
-                            unidadeCurricular.getNome(), unidadeCurricular.getAnoCurricular(), unidadeCurricular.getSemestre(), docenteNome, unidadeCurricular.getEcts());
+                    System.out.printf(" %-4d | %-25s | %-5d |%-3d | %-15s | %-4d \n",
+                            (i + 1), unidadeCurricular.getNome(), unidadeCurricular.getAnoCurricular(), unidadeCurricular.getSemestre(), docenteNome, unidadeCurricular.getEcts());
                 }
-                System.out.println(GetCyanBold() + "-----------------------------------------------------------------" + GetReset());
+                System.out.println(GetCyanBold() + "-----------------------------------------------------------------------" + GetReset());
             }
 
             MenuUtils.pressionarEnter(scanner);
@@ -332,18 +333,29 @@ public class UnidadeCurricularView {
                 }
             }
 
-            String confirmacao = BackendUtils.lerInputString(scanner, GetYellow() + "Tem a certeza que deseja eliminar a UC '" + nome + "'? (S/N): " + GetReset()).toUpperCase();
+            // Dupla confirmação
+            System.out.println(GetYellow() + "\nTem a certeza que deseja eliminar a UC " + unidadeCurricular.getNome() + "? (s/n)" + GetReset());
+            String confirmacao1 = scanner.nextLine().trim();
+            if (!confirmacao1.equalsIgnoreCase("s")) {
+                System.out.println(GetYellow() + "Operação cancelada." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
 
-            if (confirmacao.equals("S")) {
-                Resultado resultado = unidadeCurricularControllerAtualizado.eliminarUC(nome);
+            System.out.println(GetRed() + "ESTA AÇÃO É IRREVERSÍVEL! Deseja mesmo continuar? (s/n)" + GetReset());
+            String confirmacao2 = scanner.nextLine().trim();
+            if (!confirmacao2.equalsIgnoreCase("s")) {
+                System.out.println(GetYellow() + "Operação cancelada." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
 
-                if (resultado.success) {
-                    System.out.println(GetGreen() + "\nUC eliminada com sucesso!" + GetReset());
-                } else {
-                    System.out.println(GetRed() + "\nErro ao eliminar: " + resultado.errorMessage + GetReset());
-                }
+            Resultado resultado = unidadeCurricularControllerAtualizado.eliminarUC(nome);
+
+            if (resultado.success) {
+                System.out.println(GetGreen() + "\nUC eliminada com sucesso!" + GetReset());
             } else {
-                System.out.println(GetYellow() + "\nEliminação cancelada." + GetReset());
+                System.out.println(GetRed() + "\nErro ao eliminar: " + resultado.errorMessage + GetReset());
             }
 
             MenuUtils.pressionarEnter(scanner);

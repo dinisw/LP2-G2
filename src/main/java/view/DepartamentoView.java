@@ -96,13 +96,14 @@ public class DepartamentoView {
                 System.out.println(GetYellow() + "Nenhum departamento registado no sistema." + GetReset());
             } else {
                 // Tabela bonita e informativa
-                System.out.println(GetCyanBold() + "----------------------------------------------------" + GetReset());
-                System.out.printf(GetWhiteBold() + " %-15s | %-30s \n" + GetReset(), "SIGLA", "NOME DO DEPARTAMENTO");
-                System.out.println(GetCyanBold() + "----------------------------------------------------" + GetReset());
-                for (Departamento departamento : lista) {
-                    System.out.printf(" %-15s | %-30s \n", departamento.getSigla(), departamento.getNome());
+                System.out.println(GetCyanBold() + "----------------------------------------------------------------------" + GetReset());
+                System.out.printf(GetWhiteBold() + " %-5s | %-15s | %-30s \n" + GetReset(), "ID", "SIGLA", "NOME DO DEPARTAMENTO");
+                System.out.println(GetCyanBold() + "----------------------------------------------------------------------" + GetReset());
+                for (int i = 0; i < lista.size(); i++) {
+                    Departamento departamento = lista.get(i);
+                    System.out.printf(" %-5d | %-15s | %-30s \n", (i + 1), departamento.getSigla(), departamento.getNome());
                 }
-                System.out.println(GetCyanBold() + "----------------------------------------------------" + GetReset());
+                System.out.println(GetCyanBold() + "----------------------------------------------------------------------" + GetReset());
             }
 
             MenuUtils.pressionarEnter(scanner);
@@ -215,6 +216,23 @@ public class DepartamentoView {
                 if (departamento == null) {
                     System.out.println(GetRed() + "Erro: Departamento não encontrado. Tente novamente." + GetReset());
                 }
+            }
+
+            // Dupla confirmação
+            System.out.println(GetYellow() + "\nTem a certeza que deseja eliminar o departamento " + departamento.getNome() + "? (s/n)" + GetReset());
+            String confirmacao1 = scanner.nextLine().trim();
+            if (!confirmacao1.equalsIgnoreCase("s")) {
+                System.out.println(GetYellow() + "Operação cancelada." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            System.out.println(GetRed() + "ESTA AÇÃO É IRREVERSÍVEL! Deseja mesmo continuar? (s/n)" + GetReset());
+            String confirmacao2 = scanner.nextLine().trim();
+            if (!confirmacao2.equalsIgnoreCase("s")) {
+                System.out.println(GetYellow() + "Operação cancelada." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
             }
 
             Resultado resultado = departamentoController.eliminarDepartamento(sigla);

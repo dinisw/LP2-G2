@@ -82,7 +82,7 @@ public class GestorController {
         return gestorCRUD.procurarPorEmail(email);
     }
 
-    public Resultado atualizarGestor(int nif, String novoNome, String novaMorada, LocalDate novaDataNascimento, String novoEmail, String novoCargo) {
+    public Resultado atualizarGestor(int nif, String novoNome, String novaMorada, LocalDate novaDataNascimento, String novoCargo) {
         Resultado resultado = new Resultado();
 
         if (nif <= 0) {
@@ -101,7 +101,6 @@ public class GestorController {
         String nomeFinal = (novoNome != null && !novoNome.trim().isEmpty()) ? novoNome : gestorExistente.getNome();
         String moradaFinal = (novaMorada != null && !novaMorada.trim().isEmpty()) ? novaMorada : gestorExistente.getMorada();
         LocalDate dataFinal = (novaDataNascimento != null) ? novaDataNascimento : gestorExistente.getDataNascimento();
-        String emailFinal = (novoEmail != null && !novoEmail.trim().isEmpty()) ? novoEmail : gestorExistente.getEmail();
         String cargoFinal = (novoCargo != null && !novoCargo.trim().isEmpty()) ? novoCargo : gestorExistente.getCargo();
 
         Gestor gestorAtualizado = new Gestor(
@@ -109,7 +108,7 @@ public class GestorController {
                 moradaFinal,
                 gestorExistente.getNif(),
                 dataFinal,
-                emailFinal,
+                gestorExistente.getEmail(),
                 gestorExistente.getHash(),
                 cargoFinal
         );
