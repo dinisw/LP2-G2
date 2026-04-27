@@ -9,6 +9,7 @@ import java.util.List;
 public class UnidadeCurricularCRUD {
     private static final String CAMINHO_FICHEIRO = "ucs.csv";
     private List<UnidadeCurricular> unidadeCurriculars;
+    private int proximoid = 0;
 
     public UnidadeCurricularCRUD() {
         this.unidadeCurriculars = new ArrayList<>();
@@ -26,6 +27,7 @@ public class UnidadeCurricularCRUD {
             while ((linha = reader.readLine()) != null) {
                 String[] dados = linha.split(";");
                 if (dados.length >= 4) {
+                    proximoid++;
                     String nome = dados[0];
                     int ano = Integer.parseInt(dados[1]);
                     int semestre = Integer.parseInt(dados[2]);
