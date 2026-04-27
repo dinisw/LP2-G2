@@ -85,6 +85,95 @@ public class UnidadeCurricularController {
         return ucCRUD.procurarPorNome(nome);
     }
 
+    public UnidadeCurricular procurarUCPorId(int id) {
+        return ucCRUD.procurarPorId(id);
+    }
+
+    public Resultado eliminarUCPorId(int id) {
+        Resultado resultado = new Resultado();
+
+        if (ucCRUD.procurarPorId(id) == null) {
+            resultado.success = false;
+            resultado.errorMessage = "Unidade Curricular não encontrada no sistema.";
+            return resultado;
+        }
+
+        if (ucCRUD.eliminarUCPorId(id)) {
+            resultado.success = true;
+        } else {
+            resultado.success = false;
+            resultado.errorMessage = "Erro na base de dados ao eliminar a UC.";
+        }
+
+        return resultado;
+    }
+
+    public Resultado atualizarUCPorId(int id, String novoNome, int novoAno, int novoSemestre, String novaSiglaDocente) {
+        Resultado resultado = new Resultado();
+
+        UnidadeCurricular ucExistente = ucCRUD.procurarPorId(id);
+        if (ucExistente == null) {
+            resultado.success = false;
+            resultado.errorMessage = "Unidade Curricular não encontrada na base de dados.";
+            return resultado;
+        }
+
+        String nomeAtual = ucExistente.getNome();
+        String novoNomeReal = (novoNome == null || novoNome.trim().isEmpty()) ? nomeAtual : novoNome;
+        int novoAnoReal = (novoAno <= 0) ? ucExistente.getAnoCurricular() : novoAno;
+        int novoSemestreReal = (novoSemestre <= 0) ? ucExistente.getSemestre() : novoSemestre;
+
+        Docente novoDocente = ucExistente.getDocente();
+        if (novaSiglaDocente != null && !novaSiglaDocente.trim().isEmpty()) {
+            DAL.DocenteCRUD docenteCRUD = new DocenteCRUD();
+            Docente docenteEncontrado = docenteCRUD.procurarPorSigla(novaSiglaDocente);
+
+            if (docenteEncontrado != null) {
+                if (ucExistente.getDocente() != null && !ucExistente.getDocente().getSigla().equalsIgnoreCase(novaSiglaDocente)) {
+                    Docente docenteAntigo = docenteCRUD.procurarPorNif(ucExistente.getDocente().getNif());
+                    if (docenteAntigo != null) {
+                        docenteAntigo.getUnidadesCurriculares().removeIf(u -> u.getNome().equalsIgnoreCase(nomeAtual));
+                        docenteCRUD.atualizarDocente(docenteAntigo);
+                    }
+                }
+                if (ucExistente.getDocente() == null || !ucExistente.getDocente().getSigla().equalsIgnoreCase(novaSiglaDocente)) {
+                    UnidadeCurricular temp = new UnidadeCurricular(novoNomeReal, novoAnoReal, novoSemestreReal, docenteEncontrado);
+                    docenteEncontrado.adicionarUnidadeCurricular(temp);
+                    docenteCRUD.atualizarDocente(docenteEncontrado);
+                    novoDocente = docenteEncontrado;
+                }
+            } else {
+                resultado.success = false;
+                resultado.errorMessage = "Novo docente não encontrado com a sigla informada.";
+                return resultado;
+            }
+        }
+
+        UnidadeCurricular ucAtualizada = new UnidadeCurricular(novoNomeReal, novoAnoReal, novoSemestreReal, novoDocente);
+
+        if (ucCRUD.atualizarUCPorId(id, ucAtualizada)) {
+            resultado.success = true;
+
+            if (!novoNomeReal.equals(nomeAtual) && ucAtualizada.getDocente() != null) {
+                DAL.DocenteCRUD docenteCRUD = new DAL.DocenteCRUD();
+                model.Docente docenteAfetado = docenteCRUD.procurarPorNif(ucAtualizada.getDocente().getNif());
+                if (docenteAfetado != null) {
+                    for (model.UnidadeCurricular uc : docenteAfetado.getUnidadesCurriculares()) {
+                        if (uc.getNome().equalsIgnoreCase(nomeAtual)) {
+                            uc.setNome(novoNomeReal);
+                        }
+                    }
+                    docenteCRUD.atualizarDocente(docenteAfetado);
+                }
+            }
+        } else {
+            resultado.success = false;
+            resultado.errorMessage = "Erro na base de dados ao atualizar a UC.";
+        }
+
+        return resultado;
+    }
+
     public Resultado atualizarUC(String nomeAtual, String novoNome, int novoAno, int novoSemestre, String novaSiglaDocente) {
         Resultado resultado = new Resultado();
 
