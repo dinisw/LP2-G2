@@ -14,11 +14,9 @@ import java.util.Scanner;
 import static common.utils.DesignUtils.*;
 
 public class DepartamentoView {
-    private final DepartamentoController departamentoController;
     private final Scanner scanner;
 
     public DepartamentoView() {
-        this.departamentoController = new DepartamentoController();
         this.scanner = new Scanner(System.in);
     }
 
@@ -66,8 +64,8 @@ public class DepartamentoView {
             String nome = BackendUtils.lerInputString(scanner, "Nome do Departamento: ");
             String sigla = BackendUtils.lerInputString(scanner, "Sigla (ex: EI, MAT): ").toUpperCase();
 
-            DepartamentoController departamentoControllerAtualizado = new DepartamentoController();
-            Resultado resultado = departamentoControllerAtualizado.registarDepartamento(nome, sigla);
+            DepartamentoController departamentoController = new DepartamentoController();
+            Resultado resultado = departamentoController.registarDepartamento(nome, sigla);
 
             if (resultado.success) {
                 System.out.println(GetGreen() + "\nDepartamento registado com sucesso!" + GetReset());
@@ -91,16 +89,21 @@ public class DepartamentoView {
         try {
             System.out.println(GetBlue() + "\n--- LISTA DE DEPARTAMENTOS ---" + GetReset());
 
-            DepartamentoController departamentoControllerAtualizado = new DepartamentoController();
-            List<Departamento> lista = departamentoControllerAtualizado.listarTodosDepartamentos();
+            DepartamentoController departamentoController = new DepartamentoController();
+            List<Departamento> lista = departamentoController.listarTodosDepartamentos();
 
             if (lista.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhum departamento registado no sistema." + GetReset());
             } else {
+                // Tabela bonita e informativa
+                System.out.println(GetCyanBold() + "----------------------------------------------------------------------" + GetReset());
+                System.out.printf(GetWhiteBold() + " %-5s | %-15s | %-30s \n" + GetReset(), "ID", "SIGLA", "NOME DO DEPARTAMENTO");
+                System.out.println(GetCyanBold() + "----------------------------------------------------------------------" + GetReset());
                 for (int i = 0; i < lista.size(); i++) {
                     Departamento departamento = lista.get(i);
-                    System.out.println("ID: " + (i + 1) + " | Sigla: " + departamento.getSigla() + " | Nome: " + departamento.getNome());
+                    System.out.printf(" %-5d | %-15s | %-30s \n", (i + 1), departamento.getSigla(), departamento.getNome());
                 }
+                System.out.println(GetCyanBold() + "----------------------------------------------------------------------" + GetReset());
             }
 
             MenuUtils.pressionarEnter(scanner);
@@ -119,9 +122,10 @@ public class DepartamentoView {
             listarDepartamentos();
 
             String sigla = BackendUtils.lerInputString(scanner, "\nDigite a sigla do departamento: ").toUpperCase();
+            if (sigla.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
 
-            DepartamentoController departamentoControllerAtualizado = new DepartamentoController();
-            Departamento departamento = departamentoControllerAtualizado.procurarDepartamento(sigla);
+            DepartamentoController departamentoController = new DepartamentoController();
+            Departamento departamento = departamentoController.procurarDepartamento(sigla);
 
             if (departamento != null) {
                 System.out.println(GetGreen() + "\nDados encontrados:" + GetReset());
@@ -149,29 +153,35 @@ public class DepartamentoView {
 
             listarDepartamentos();
 
-            String sigla = BackendUtils.lerInputString(scanner, "\nDigite a sigla do departamento a atualizar: ").toUpperCase();
+            DepartamentoController departamentoController = new DepartamentoController();
+            Departamento departamento = null;
+            String sigla = "";
 
-            DepartamentoController departamentoControllerAtualizado = new DepartamentoController();
-            Departamento departamento = departamentoControllerAtualizado.procurarDepartamento(sigla);
+            while (departamento == null) {
+                sigla = BackendUtils.lerInputString(scanner, "\nDigite a sigla do departamento a atualizar: ").toUpperCase();
+                if (sigla.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
 
-            if (departamento != null) {
-                System.out.println(GetGreen() + "\nDados atuais:" + GetReset());
-                System.out.println("Nome: " + departamento.getNome());
+                departamento = departamentoController.procurarDepartamento(sigla);
 
-                System.out.println(GetYellow() + "\n[Pressione ENTER para manter o nome igual]" + GetReset());
-                String nome = BackendUtils.lerInputString(scanner, "Novo Nome: ");
-
-                String nomeFinal = nome.isEmpty() ? departamento.getNome() : nome;
-
-                Resultado resultado = departamentoControllerAtualizado.atualizarDepartamento(sigla, nomeFinal);
-
-                if (resultado.success) {
-                    System.out.println(GetGreen() + "\nDepartamento atualizado com sucesso!" + GetReset());
-                } else {
-                    System.out.println(GetRed() + "\nErro ao atualizar: " + resultado.errorMessage + GetReset());
+                if (departamento == null) {
+                    System.out.println(GetRed() + "Erro: Departamento não encontrado. Tente novamente." + GetReset());
                 }
+            }
+
+            System.out.println(GetGreen() + "\nDados atuais:" + GetReset());
+            System.out.println("Nome: " + departamento.getNome());
+
+            System.out.println(GetYellow() + "\n[Pressione ENTER para manter o nome igual]" + GetReset());
+            String nome = BackendUtils.lerInputString(scanner, "Novo Nome: ");
+
+            String nomeFinal = nome.isEmpty() ? departamento.getNome() : nome;
+
+            Resultado resultado = departamentoController.atualizarDepartamento(sigla, nomeFinal);
+
+            if (resultado.success) {
+                System.out.println(GetGreen() + "\nDepartamento atualizado com sucesso!" + GetReset());
             } else {
-                System.out.println(GetYellow() + "\nDepartamento não encontrado com a sigla informada." + GetReset());
+                System.out.println(GetRed() + "\nErro ao atualizar: " + resultado.errorMessage + GetReset());
             }
 
             MenuUtils.pressionarEnter(scanner);
@@ -193,18 +203,23 @@ public class DepartamentoView {
 
             listarDepartamentos();
 
-            String sigla = BackendUtils.lerInputString(scanner, "\nDigite a sigla do departamento a eliminar: ").toUpperCase();
+            DepartamentoController departamentoController = new DepartamentoController();
+            Departamento departamento = null;
+            String sigla = "";
 
-            DepartamentoController departamentoControllerAtualizado = new DepartamentoController();
-            Departamento dep = departamentoControllerAtualizado.procurarDepartamento(sigla);
-            if (dep == null) {
-                System.out.println(GetRed() + "Departamento não encontrado!" + GetReset());
-                MenuUtils.pressionarEnter(scanner);
-                return;
+            while (departamento == null) {
+                sigla = BackendUtils.lerInputString(scanner, "\nDigite a sigla do departamento a eliminar: ").toUpperCase();
+                if (sigla.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
+
+                departamento = departamentoController.procurarDepartamento(sigla);
+
+                if (departamento == null) {
+                    System.out.println(GetRed() + "Erro: Departamento não encontrado. Tente novamente." + GetReset());
+                }
             }
 
             // Dupla confirmação
-            System.out.println(GetYellow() + "\nTem a certeza que deseja eliminar o departamento " + dep.getNome() + "? (s/n)" + GetReset());
+            System.out.println(GetYellow() + "\nTem a certeza que deseja eliminar o departamento " + departamento.getNome() + "? (s/n)" + GetReset());
             String confirmacao1 = scanner.nextLine().trim();
             if (!confirmacao1.equalsIgnoreCase("s")) {
                 System.out.println(GetYellow() + "Operação cancelada." + GetReset());
@@ -220,7 +235,7 @@ public class DepartamentoView {
                 return;
             }
 
-            Resultado resultado = departamentoControllerAtualizado.eliminarDepartamento(sigla);
+            Resultado resultado = departamentoController.eliminarDepartamento(sigla);
 
             if (resultado.success) {
                 System.out.println(GetGreen() + "\nDepartamento eliminado com sucesso!" + GetReset());

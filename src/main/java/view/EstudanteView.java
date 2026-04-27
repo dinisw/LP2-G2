@@ -3,9 +3,9 @@ package view;
 import common.utils.MenuUtils;
 import model.Estudante;
 import model.Avaliacao;
-import model.Propina; // Importação necessária para a Propina
+import model.Propina;
 import controller.EstudanteController;
-import controller.PropinaController; // Importação necessária para o Controller da Propina
+import controller.PropinaController;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +15,7 @@ import static common.utils.DesignUtils.*;
 
 public class EstudanteView {
 
-    public static void exibirMenu(Estudante estudante) {
+    public static void exibirMenu(Estudante estudanteLogado) {
         MenuUtils.limparTela();
         Scanner ler = new Scanner(System.in);
         String opcao;
@@ -23,11 +23,14 @@ public class EstudanteView {
         opcoes.add("1. Inscrever em Unidades Curriculares");
         opcoes.add("2. Consultar Ficha de Estudante");
         opcoes.add("3. Verificar Notas de Avaliação");
-        opcoes.add("4. Consultar e Pagar Propinas"); // NOVA OPÇÃO
+        opcoes.add("4. Consultar e Pagar Propinas");
         opcoes.add("0. Logout");
 
         do {
             try {
+                EstudanteController ec = new EstudanteController();
+                Estudante estudante = ec.procurarEstudantePorNumeroMec(estudanteLogado.getNumeroMec());
+
                 MenuUtils.exibirTitulo();
                 MenuUtils.exibirSubTitulo("PORTAL ESTUDANTE > " + estudante.getNome().toUpperCase(), opcoes);
 
@@ -44,7 +47,7 @@ public class EstudanteView {
                     case "3":
                         consultarNotasEstudante(estudante, ler);
                         break;
-                    case "4": // NOVO CASE
+                    case "4":
                         consultarEPagarPropinas(estudante, ler);
                         break;
                     case "0":
@@ -61,10 +64,13 @@ public class EstudanteView {
         } while (true);
     }
 
-    public static void inscreverEmUC(Estudante estudante, Scanner ler) {
+    public static void inscreverEmUC(Estudante estudanteAtual, Scanner ler) {
         System.out.println(GetCyanBold() + GetBordaSuperior() + GetReset());
         System.out.println(GetCyanBold() + "║" + GetWhiteBold() + "          INSCRIÇÃO EM UNIDADES CURRICULARES        " + GetCyanBold() + "║" + GetReset());
         System.out.println(GetCyanBold() + GetBordaInferior() + GetReset());
+
+        EstudanteController estudanteController = new EstudanteController();
+        Estudante estudante = estudanteController.procurarEstudantePorNumeroMec(estudanteAtual.getNumeroMec());
 
         if (estudante.getNomeCurso() == null || estudante.getNomeCurso().equals("SEM REGISTO")) {
             System.out.println(GetYellow() + "Aviso: Primeiro deve estar inscrito num curso para gerir inscrições em UCs." + GetReset());
@@ -72,7 +78,6 @@ public class EstudanteView {
             return;
         }
 
-        EstudanteController estudanteController = new EstudanteController();
         DAL.CursoCRUD cursoCRUD = new DAL.CursoCRUD();
         model.Curso curso = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
 
@@ -149,7 +154,6 @@ public class EstudanteView {
         controller.AvaliacaoController avaliacaoController = new controller.AvaliacaoController();
 
         if (avaliacaoController.registarAvaliacao(novaInscricao)) {
-            estudante.adicionarAvaliacao(novaInscricao);
             System.out.println(GetGreen() + "\nInscrição na UC '" + ucEscolhida.getNome() + "' realizada com sucesso!" + GetReset());
         } else {
             System.out.println(GetRed() + "\nErro ao registar a inscrição no sistema." + GetReset());
@@ -157,10 +161,13 @@ public class EstudanteView {
         MenuUtils.pressionarEnter(ler);
     }
 
-    public static void inscreverEmCurso(Estudante estudante, Scanner ler) {
+    public static void inscreverEmCurso(Estudante estudanteAtual, Scanner ler) {
         System.out.println(GetCyanBold() + GetBordaSuperior() + GetReset());
         System.out.println(GetCyanBold() + "║" + GetWhiteBold() + "               INSCRIÇÃO EM CURSO               " + GetCyanBold() + "║" + GetReset());
         System.out.println(GetCyanBold() + GetBordaInferior() + GetReset());
+
+        EstudanteController estudanteController = new EstudanteController();
+        Estudante estudante = estudanteController.procurarEstudantePorNumeroMec(estudanteAtual.getNumeroMec());
 
         DAL.CursoCRUD cursoCRUD = new DAL.CursoCRUD();
         List<model.Curso> todosCursos = cursoCRUD.getCursos();
@@ -183,7 +190,7 @@ public class EstudanteView {
         }
 
         if (cursosDisponiveis.isEmpty()) {
-            System.out.println(GetYellow() + "De momento não existem curso com inscrições abertas." + GetReset());
+            System.out.println(GetYellow() + "De momento não existem cursos com inscrições abertas." + GetReset());
             MenuUtils.pressionarEnter(ler);
             return;
         }
@@ -200,7 +207,6 @@ public class EstudanteView {
 
             if (escolha > 0 && escolha <= cursosDisponiveis.size()) {
                 String cursoEscolhido = cursosDisponiveis.get(escolha - 1).getNome();
-                EstudanteController estudanteController = new EstudanteController();
                 if(estudanteController.atualizarEstudante(estudante.getNumeroMec(), null, null, cursoEscolhido).success) {
                     estudante.setNomeCurso(cursoEscolhido);
                     System.out.println(GetGreen() + "\nParabéns! Inscrição no curso de " + cursoEscolhido + " realizada com sucesso!" + GetReset());
@@ -216,13 +222,15 @@ public class EstudanteView {
         MenuUtils.pressionarEnter(ler);
     }
 
-    public static void consultarFichaEstudante(Estudante estudante, Scanner ler) {
+    public static void consultarFichaEstudante(Estudante estudanteAtual, Scanner ler) {
         try {
             System.out.println(GetCyanBold() + GetBordaSuperior() + GetReset());
             System.out.println(GetCyanBold() + "║" + GetWhiteBold() + "            CONSULTAR FICHA DE ESTUDANTE            " + GetCyanBold() + "║" + GetReset());
             System.out.println(GetCyanBold() + GetBordaInferior() + GetReset());
 
             EstudanteController controller = new EstudanteController();
+            Estudante estudante = controller.procurarEstudantePorNumeroMec(estudanteAtual.getNumeroMec());
+
             System.out.println(controller.obterFichaEstudanteFormatada(estudante));
 
             MenuUtils.pressionarEnter(ler);
@@ -233,8 +241,11 @@ public class EstudanteView {
         }
     }
 
-    public static void consultarNotasEstudante(Estudante estudante, Scanner ler) {
+    public static void consultarNotasEstudante(Estudante estudanteAtual, Scanner ler) {
         try {
+            EstudanteController controller = new EstudanteController();
+            Estudante estudante = controller.procurarEstudantePorNumeroMec(estudanteAtual.getNumeroMec());
+
             List<Avaliacao> minhasNotas = estudante.getListaAvaliacoes();
 
             System.out.println("\033[H\033[2J");
@@ -270,8 +281,8 @@ public class EstudanteView {
 
                     if (avaliacao.getUnidadeCurricular() != null) {
                         nomeUc = avaliacao.getUnidadeCurricular().getNome();
-                        anoLetivo = String.valueOf(avaliacao.getUnidadeCurricular().getAnoCurricular()) + "º Ano";
-                        semestre = String.valueOf(avaliacao.getUnidadeCurricular().getSemestre()) + "º Sem";
+                        anoLetivo = avaliacao.getUnidadeCurricular().getAnoCurricular() + "º Ano";
+                        semestre = avaliacao.getUnidadeCurricular().getSemestre() + "º Sem";
                     }
 
                     System.out.printf(GetCyanBold() + "║" + GetReset() + " %-10s | %-10s | %-20s | %-6s | %-34s " + GetCyanBold() + "║\n" + GetReset(),
@@ -294,7 +305,6 @@ public class EstudanteView {
         }
     }
 
-    // NOVO MÉTODO PARA PROPINAS
     public static void consultarEPagarPropinas(Estudante estudante, Scanner ler) {
         try {
             System.out.println(GetCyanBold() + GetBordaSuperior() + GetReset());

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 
 public class UnidadeCurricular {
     private String nome;
+    private int id;
     private int anoCurricular;
     private int semestre;
     private Docente docente;
@@ -18,6 +19,15 @@ public class UnidadeCurricular {
         this.semestre = semestre;
         this.docente = docente;
         this.momentosAvaliacao = new ArrayList<>();
+    }
+
+    public UnidadeCurricular(String nome, int id, int anoCurricular, int semestre, Docente docente, List<String> momentosAvaliacao) {
+        this.nome = nome;
+        this.id = id;
+        this.anoCurricular = anoCurricular;
+        this.semestre = semestre;
+        this.docente = docente;
+        this.momentosAvaliacao = momentosAvaliacao;
     }
 
     public String getNome() {

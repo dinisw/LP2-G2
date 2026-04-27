@@ -18,15 +18,10 @@ import java.util.Scanner;
 import static common.utils.DesignUtils.*;
 
 public class CursoView {
-    private final CursoController cursoController;
-    private final DepartamentoController departamentoController;
-    private final UnidadeCurricularController ucController;
+    // Controllers globais removidos. Memória sempre atualizada agora!
     private final Scanner scanner;
 
     public CursoView() {
-        this.cursoController = new CursoController();
-        this.departamentoController = new DepartamentoController();
-        this.ucController = new UnidadeCurricularController();
         this.scanner = new Scanner(System.in);
     }
 
@@ -67,7 +62,7 @@ public class CursoView {
                 System.out.println("\n" + GetRed() + "Ocorreu um erro na navegação: " + e.getMessage() + GetReset());
                 MenuUtils.pressionarEnter(scanner);
             }
-        } while (true); // Trocado para true, pois o return já resolve a saída
+        } while (true);
     }
 
     private void registarCurso() {
@@ -78,8 +73,9 @@ public class CursoView {
             String nome = BackendUtils.lerInputString(scanner, "Nome do Curso: ");
 
             System.out.println("\n" + GetBlue() + "--- Departamentos Disponíveis ---" + GetReset());
-            DepartamentoController departamentoControllerAtualizado = new DepartamentoController();
-            List<Departamento> departamentos = departamentoControllerAtualizado.listarTodosDepartamentos();
+            DepartamentoController departamentoController = new DepartamentoController();
+            List<Departamento> departamentos = departamentoController.listarTodosDepartamentos();
+
             if (departamentos.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhum departamento registado. Crie um departamento primeiro." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
@@ -89,25 +85,27 @@ public class CursoView {
                 System.out.println(departamento.getSigla() + " - " + departamento.getNome());
             }
 
-            String siglaDep = BackendUtils.lerInputString(scanner, "\nSigla do Departamento Associado (ex: EI): ").toUpperCase();
-
+            String siglaDep = "";
             boolean depExiste = false;
-            for(Departamento departamento : departamentos) {
-                if(departamento.getSigla().equalsIgnoreCase(siglaDep)) {
-                    depExiste = true;
-                    break;
+            while (!depExiste) {
+                siglaDep = BackendUtils.lerInputString(scanner, "\nSigla do Departamento Associado (ex: EI): ").toUpperCase();
+                if (siglaDep.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
+
+                for(Departamento departamento : departamentos) {
+                    if(departamento.getSigla().equalsIgnoreCase(siglaDep)) {
+                        depExiste = true;
+                        break;
+                    }
+                }
+
+                if(!depExiste) {
+                    System.out.println(GetRed() + "Erro: O departamento '" + siglaDep + "' não existe. Tente novamente." + GetReset());
                 }
             }
 
-            if(!depExiste) {
-                System.out.println(GetRed() + "\nErro: O departamento com a sigla '" + siglaDep + "' não existe no sistema." + GetReset());
-                MenuUtils.pressionarEnter(scanner);
-                return;
-            }
-
             System.out.println("\n" + GetBlue() + "--- Unidades Curriculares Disponíveis ---" + GetReset());
-            UnidadeCurricularController unidadeCurricularControllerAtualizado = new UnidadeCurricularController();
-            List<UnidadeCurricular> unidadeCurriculars = unidadeCurricularControllerAtualizado.listarTodasUCs();
+            UnidadeCurricularController ucController = new UnidadeCurricularController();
+            List<UnidadeCurricular> unidadeCurriculars = ucController.listarTodasUCs();
             List<String> nomesUC = new ArrayList<>();
 
             if (unidadeCurriculars.isEmpty()) {
@@ -125,8 +123,8 @@ public class CursoView {
                 }
             }
 
-            CursoController cursoControllerAtualizado = new CursoController();
-            Resultado resultado = cursoControllerAtualizado.registarCurso(nome, siglaDep, nomesUC);
+            CursoController cursoController = new CursoController();
+            Resultado resultado = cursoController.registarCurso(nome, siglaDep, nomesUC);
 
             if (resultado.success) {
                 System.out.println(GetGreen() + "\nCurso registado com sucesso!" + GetReset());
@@ -154,8 +152,8 @@ public class CursoView {
     private void listarCursos() {
         try {
             System.out.println(GetBlue() + "\n--- LISTA DE CURSOS ---" + GetReset());
-            CursoController cursoControllerAtualizado = new CursoController();
-            List<Curso> cursos = cursoControllerAtualizado.listarCursos();
+            CursoController cursoController = new CursoController();
+            List<Curso> cursos = cursoController.listarCursos();
 
             if (cursos.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhum curso registado até ao momento!" + GetReset());
@@ -178,8 +176,8 @@ public class CursoView {
             System.out.println(GetBlue() + "\n--- PROCURAR CURSO ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
-            CursoController controllerAux = new CursoController();
-            List<Curso> listaCursos = controllerAux.listarCursos();
+            CursoController cursoController = new CursoController();
+            List<Curso> listaCursos = cursoController.listarCursos();
             if (listaCursos.isEmpty()) {
                 System.out.println(GetYellow() + "Não há cursos registados no sistema." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
@@ -235,8 +233,8 @@ public class CursoView {
             System.out.println(GetBlue() + "\n--- ATUALIZAR CURSO ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
-            CursoController controllerAux = new CursoController();
-            List<Curso> listaCursos = controllerAux.listarCursos();
+            CursoController cursoController = new CursoController();
+            List<Curso> listaCursos = cursoController.listarCursos();
             if (listaCursos.isEmpty()) {
                 System.out.println(GetYellow() + "Não há cursos registados no sistema." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
@@ -301,8 +299,8 @@ public class CursoView {
             System.out.println(GetBlue() + "\n--- ELIMINAR CURSO ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
-            CursoController controllerAux = new CursoController();
-            List<Curso> listaCursos = controllerAux.listarCursos();
+            CursoController cursoController = new CursoController();
+            List<Curso> listaCursos = cursoController.listarCursos();
             if (listaCursos.isEmpty()) {
                 System.out.println(GetYellow() + "Não há cursos registados no sistema." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
@@ -347,19 +345,18 @@ public class CursoView {
 
             System.out.println(GetRed() + "ESTA AÇÃO É IRREVERSÍVEL! Todos os dados associados podem ser perdidos. Deseja mesmo continuar? (s/n)" + GetReset());
             String confirmacao2 = scanner.nextLine().trim();
-            if (!confirmacao2.equalsIgnoreCase("s")) {
-                System.out.println(GetYellow() + "Operação cancelada." + GetReset());
-                MenuUtils.pressionarEnter(scanner);
-                return;
-            }
+            if (confirmacao2.equalsIgnoreCase("s")) {
+                Resultado resultado = cursoController.eliminarCurso(nomeAtual);
 
-            Resultado resultado = cursoController.eliminarCurso(nomeAtual);
-
-            if (resultado.success) {
-                System.out.println(GetGreen() + "\nCurso eliminado com sucesso!" + GetReset());
+                if (resultado.success) {
+                    System.out.println(GetGreen() + "\nCurso eliminado com sucesso!" + GetReset());
+                } else {
+                    System.out.println(GetRed() + "\nErro ao eliminar: " + resultado.errorMessage + GetReset());
+                }
             } else {
-                System.out.println(GetRed() + "\nErro ao eliminar: " + resultado.errorMessage + GetReset());
+                System.out.println(GetBlue() + "\nOperação cancelada pelo utilizador." + GetReset());
             }
+
             MenuUtils.pressionarEnter(scanner);
 
         } catch (CancelarRegistoException e) {
@@ -377,8 +374,8 @@ public class CursoView {
             System.out.println(GetBlue() + "\n--- INICIAR ANO LETIVO DO CURSO ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
-            CursoController controllerAux = new CursoController();
-            List<Curso> listaCursos = controllerAux.listarCursos();
+            CursoController cursoController = new CursoController();
+            List<Curso> listaCursos = cursoController.listarCursos();
             if (listaCursos.isEmpty()) {
                 System.out.println(GetYellow() + "Não há cursos registados no sistema." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
@@ -420,6 +417,7 @@ public class CursoView {
             while (anoParaIniciar < 1 || anoParaIniciar > 3) {
                 try {
                     String anoParaIniciarString = BackendUtils.lerInputString(scanner, "Opção (1-3): ");
+                    if (anoParaIniciarString.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
                     anoParaIniciar = Integer.parseInt(anoParaIniciarString);
                     if (anoParaIniciar < 1 || anoParaIniciar > 3) {
                         System.out.println(GetRed() + "Opção inválida. Escolha 1, 2 ou 3." + GetReset());
@@ -453,8 +451,8 @@ public class CursoView {
             System.out.println(GetBlue() + "\n--- ASSOCIAR UNIDADE CURRICULAR A UM CURSO ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
-            CursoController controllerAux = new CursoController();
-            List<Curso> listaCursos = controllerAux.listarCursos();
+            CursoController cursoController = new CursoController();
+            List<Curso> listaCursos = cursoController.listarCursos();
             if (listaCursos.isEmpty()) {
                 System.out.println(GetYellow() + "Não há cursos registados no sistema." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
@@ -488,8 +486,8 @@ public class CursoView {
             Curso curso = listaCursos.get(escolha - 1);
             String nomeAtual = curso.getNome();
 
-            UnidadeCurricularController unidadeCurricularControllerAtualizado = new UnidadeCurricularController();
-            List<UnidadeCurricular> unidadeCurriculars = unidadeCurricularControllerAtualizado.listarTodasUCs();
+            UnidadeCurricularController ucController = new UnidadeCurricularController();
+            List<UnidadeCurricular> unidadeCurriculars = ucController.listarTodasUCs();
 
             if(unidadeCurriculars.isEmpty()){
                 System.out.println(GetYellow() + "Não existem UCs registadas no sistema." + GetReset());

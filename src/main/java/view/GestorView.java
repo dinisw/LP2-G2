@@ -21,18 +21,12 @@ import org.jline.terminal.TerminalBuilder;
 import static common.utils.DesignUtils.*;
 
 public class GestorView {
-    private final GestorController gestorController;
-    private final EstudanteController estudanteController;
-    private final DocenteController docenteController;
     private final UnidadeCurricularView unidadeCurricularView;
     private final DepartamentoView departamentoView;
     private final CursoView cursoView;
     private final Scanner scanner;
 
     public GestorView() {
-        this.gestorController = new GestorController();
-        this.estudanteController = new EstudanteController();
-        this.docenteController = new DocenteController();
         this.unidadeCurricularView = new UnidadeCurricularView();
         this.departamentoView = new DepartamentoView();
         this.cursoView = new CursoView();
