@@ -196,6 +196,30 @@ public class DepartamentoView {
             String sigla = BackendUtils.lerInputString(scanner, "\nDigite a sigla do departamento a eliminar: ").toUpperCase();
 
             DepartamentoController departamentoControllerAtualizado = new DepartamentoController();
+            Departamento dep = departamentoControllerAtualizado.procurarDepartamento(sigla);
+            if (dep == null) {
+                System.out.println(GetRed() + "Departamento não encontrado!" + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            // Dupla confirmação
+            System.out.println(GetYellow() + "\nTem a certeza que deseja eliminar o departamento " + dep.getNome() + "? (s/n)" + GetReset());
+            String confirmacao1 = scanner.nextLine().trim();
+            if (!confirmacao1.equalsIgnoreCase("s")) {
+                System.out.println(GetYellow() + "Operação cancelada." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            System.out.println(GetRed() + "ESTA AÇÃO É IRREVERSÍVEL! Deseja mesmo continuar? (s/n)" + GetReset());
+            String confirmacao2 = scanner.nextLine().trim();
+            if (!confirmacao2.equalsIgnoreCase("s")) {
+                System.out.println(GetYellow() + "Operação cancelada." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
             Resultado resultado = departamentoControllerAtualizado.eliminarDepartamento(sigla);
 
             if (resultado.success) {
