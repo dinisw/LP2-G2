@@ -201,7 +201,7 @@ public class EstudanteView {
             if (escolha > 0 && escolha <= cursosDisponiveis.size()) {
                 String cursoEscolhido = cursosDisponiveis.get(escolha - 1).getNome();
                 EstudanteController estudanteController = new EstudanteController();
-                if(estudanteController.atualizarEstudante(estudante.getNumeroMec(), null, null, null, cursoEscolhido).success) {
+                if(estudanteController.atualizarEstudante(estudante.getNumeroMec(), null, null, cursoEscolhido).success) {
                     estudante.setNomeCurso(cursoEscolhido);
                     System.out.println(GetGreen() + "\nParabéns! Inscrição no curso de " + cursoEscolhido + " realizada com sucesso!" + GetReset());
                 } else {

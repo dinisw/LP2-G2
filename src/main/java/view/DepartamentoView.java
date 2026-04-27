@@ -97,8 +97,9 @@ public class DepartamentoView {
             if (lista.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhum departamento registado no sistema." + GetReset());
             } else {
-                for (Departamento departamento : lista) {
-                    System.out.println("Sigla: " + departamento.getSigla() + " | Nome: " + departamento.getNome());
+                for (int i = 0; i < lista.size(); i++) {
+                    Departamento departamento = lista.get(i);
+                    System.out.println("ID: " + (i + 1) + " | Sigla: " + departamento.getSigla() + " | Nome: " + departamento.getNome());
                 }
             }
 

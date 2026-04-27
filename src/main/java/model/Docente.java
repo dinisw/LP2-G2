@@ -63,10 +63,12 @@ public class Docente extends Utilizador {
     @Override
     public String toString() {
         return String.format(
-                "===== FICHA DE DOCENTE =====\n" +
-                        "%s\n" +
-                        "Sigla: %s\n" +
-                        "============================",
+                "\n==============================\n" +
+                "       FICHA DE DOCENTE       \n" +
+                "==============================\n" +
+                "%s\n" +
+                "  Sigla: %s\n" +
+                "==============================",
                 super.toString(),
                 sigla
         );

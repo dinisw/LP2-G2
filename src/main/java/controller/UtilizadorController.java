@@ -20,9 +20,11 @@ public class UtilizadorController {
         return model.getNome();
     }
 
+    /* 
     public void setEmail(String email) {
         model.setEmail(email);
     }
+    */
 
     public String getEmail() {
         return model.getEmail();

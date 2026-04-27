@@ -247,8 +247,9 @@ public class GestorView {
             if (gestores.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhum gestor registado no sistema." + GetReset());
             } else {
-                for (Gestor gestor : gestores) {
-                    System.out.println("ID:" + gestor.getId() + " | NIF: " + gestor.getNif() + " | Nome: " + gestor.getNome() + " | Cargo: " + gestor.getCargo());
+                for (int i = 0; i < gestores.size(); i++) {
+                    Gestor gestor = gestores.get(i);
+                    System.out.println("ID: " + (i + 1) + " | NIF: " + gestor.getNif() + " | Nome: " + gestor.getNome() + " | Cargo: " + gestor.getCargo());
                 }
             }
 
@@ -358,25 +359,10 @@ public class GestorView {
             String morada = BackendUtils.lerInputString(scanner, "Nova Morada: ");
             if (!morada.isEmpty()) gestor.setMorada(morada);
 
-            String email = "";
-            boolean emailValido = false;
-            while (!emailValido) {
-                email = BackendUtils.lerInputString(scanner, "Novo Email: ");
-                if (email.isEmpty()) {
-                    emailValido = true;
-                } else {
-                    emailValido = BackendUtils.emailISSMFGestorValido(email);
-                    if(!emailValido) {
-                        System.out.println(GetRed() + "EMAIL deve ter o formato xxxx.gestor@issmf.ipp.pt. Tente novamente." + GetReset());
-                    }
-                }
-            }
-            if (!email.isEmpty()) gestor.setEmail(email);
-
             String cargo = BackendUtils.lerInputString(scanner, "Novo Cargo: ");
             if (!cargo.isEmpty()) gestor.setCargo(cargo);
 
-            Resultado resultado = gestorControllerAtualizado.atualizarGestor(gestor.getNif(), nome.isEmpty() ? null : nome, morada.isEmpty() ? null : morada, null, email.isEmpty() ? null : email, cargo.isEmpty() ? null : cargo);
+            Resultado resultado = gestorControllerAtualizado.atualizarGestor(gestor.getNif(), nome.isEmpty() ? null : nome, morada.isEmpty() ? null : morada, null, cargo.isEmpty() ? null : cargo);
 
             if (resultado.success) {
                 System.out.println(GetGreen() + "\nGestor atualizado com sucesso!" + GetReset());
@@ -430,6 +416,24 @@ public class GestorView {
             }
 
             Gestor gestor = listaGestores.get(escolha - 1);
+
+            // Dupla confirmação
+            System.out.println(GetYellow() + "\nTem a certeza que deseja eliminar o gestor " + gestor.getNome() + "? (s/n)" + GetReset());
+            String confirmacao1 = scanner.nextLine().trim();
+            if (!confirmacao1.equalsIgnoreCase("s")) {
+                System.out.println(GetYellow() + "Operação cancelada." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            System.out.println(GetRed() + "ESTA AÇÃO É IRREVERSÍVEL! Deseja mesmo continuar? (s/n)" + GetReset());
+            String confirmacao2 = scanner.nextLine().trim();
+            if (!confirmacao2.equalsIgnoreCase("s")) {
+                System.out.println(GetYellow() + "Operação cancelada." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
             Resultado resultado = gestorControllerAtualizado.eliminarGestor(gestor.getNif());
 
             if (resultado.success) {
@@ -644,8 +648,9 @@ public class GestorView {
             if (docentes.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhum docente registado." + GetReset());
             } else {
-                for (model.Docente docente : docentes) {
-                    System.out.println("NIF: " + docente.getNif() + " | Nome: " + docente.getNome() + " | Sigla: " + docente.getSigla());
+                for (int i = 0; i < docentes.size(); i++) {
+                    model.Docente docente = docentes.get(i);
+                    System.out.println("ID: " + (i + 1) + " | NIF: " + docente.getNif() + " | Nome: " + docente.getNome() + " | Sigla: " + docente.getSigla());
                 }
             }
             MenuUtils.pressionarEnter(scanner);
@@ -750,13 +755,10 @@ public class GestorView {
             String morada = BackendUtils.lerInputString(scanner, "Nova Morada: ");
             if (!morada.isEmpty()) docente.setMorada(morada);
 
-            String email = BackendUtils.lerInputString(scanner, "Novo Email: ");
-            if (!email.isEmpty()) docente.setEmail(email);
-
             String sigla = BackendUtils.lerInputString(scanner, "Nova Sigla: ");
             if (!sigla.isEmpty()) docente.setSigla(sigla);
 
-            Resultado resultado = docenteControllerAtualizado.atualizarDocente(docente.getNif(), nome.isEmpty() ? null : nome, morada.isEmpty() ? null : morada, null, email.isEmpty() ? null : email);
+            Resultado resultado = docenteControllerAtualizado.atualizarDocente(docente.getNif(), nome.isEmpty() ? null : nome, morada.isEmpty() ? null : morada, null);
 
             if (resultado.success) {
                 System.out.println(GetGreen() + "\nDocente atualizado com sucesso!" + GetReset());
@@ -1084,10 +1086,11 @@ public class GestorView {
                 System.out.println(GetYellow() + "Nenhum estudante registado no sistema." + GetReset());
             } else {
                 System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
-                System.out.printf(GetWhiteBold() + " %-15s | %-30s | %-25s \n" + GetReset(), "Nº MEC", "NOME", "CURSO");
+                System.out.printf(GetWhiteBold() + " %-5s | %-15s | %-30s | %-25s \n" + GetReset(), "ID", "Nº MEC", "NOME", "CURSO");
                 System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
-                for (model.Estudante e : lista) {
-                    System.out.printf(" %-15d | %-30s | %-25s \n", e.getNumeroMec(), e.getNome(), e.getNomeCurso());
+                for (int i = 0; i < lista.size(); i++) {
+                    model.Estudante e = lista.get(i);
+                    System.out.printf(" %-5d | %-15d | %-30s | %-25s \n", (i + 1), e.getNumeroMec(), e.getNome(), e.getNomeCurso());
                 }
                 System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
             }
@@ -1195,13 +1198,10 @@ public class GestorView {
             String moradaAt = BackendUtils.lerInputString(scanner, "Nova Morada: ");
             if (!moradaAt.isEmpty()) estudante.setMorada(moradaAt);
 
-            String emailAt = BackendUtils.lerInputString(scanner, "Novo Email: ");
-            if (!emailAt.isEmpty()) estudante.setEmail(emailAt);
-
             String cursoAt = BackendUtils.lerInputString(scanner, "Novo Curso: ");
             if (!cursoAt.isEmpty()) estudante.setNomeCurso(cursoAt);
 
-            Resultado resultado = estudanteControllerAtualizado.atualizarEstudante(estudante.getNumeroMec(), nomeAt.isEmpty() ? null : nomeAt, moradaAt.isEmpty() ? null : moradaAt, emailAt.isEmpty() ? null : emailAt, cursoAt.isEmpty() ? null : cursoAt);
+            Resultado resultado = estudanteControllerAtualizado.atualizarEstudante(estudante.getNumeroMec(), nomeAt.isEmpty() ? null : nomeAt, moradaAt.isEmpty() ? null : moradaAt, cursoAt.isEmpty() ? null : cursoAt);
 
             if (resultado.success) {
                 System.out.println(GetGreen() + "\nEstudante atualizado com sucesso!" + GetReset());

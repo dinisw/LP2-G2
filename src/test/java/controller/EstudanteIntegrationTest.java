@@ -19,7 +19,11 @@ public class EstudanteIntegrationTest {
     @Test
     public void testarGeracaoMecanograficaEAtualizacaoCaseSensitive() {
         // 1. Criar um estudante
-        Resultado res = controller.registarEstudante("Aluno Teste", "Morada", 222333444, LocalDate.of(2002, 2, 2), "Engenharia", "Senha123!");
+        int nifAleatorio = (int) (Math.random() * 1000000000);
+        Resultado res = controller.registarEstudante("Aluno Teste", "Morada", nifAleatorio, LocalDate.of(2002, 2, 2), "Engenharia", "Senha123!");
+        if (!res.success) {
+            System.out.println("[DEBUG_LOG] Erro ao registar estudante: " + res.errorMessage);
+        }
         assertTrue(res.success, "Estudante deve ser registado com sucesso.");
 
         // Guardar o Nº gerado para limparmos depois
@@ -27,7 +31,7 @@ public class EstudanteIntegrationTest {
         assertTrue(mecanograficoGerado > 10000, "O número mecanográfico deve ser superior a 10000.");
 
         // 2. Testar Atualização com Case Sensitive ("ENGENHARIA" em minúsculas com espaços extra)
-        Resultado resUpdate = controller.atualizarEstudante(mecanograficoGerado, "aluno teste modificado", " ", " ", "  engenharia  ");
+        Resultado resUpdate = controller.atualizarEstudante(mecanograficoGerado, "aluno teste modificado", " ", "  engenharia  ");
 
         assertTrue(resUpdate.success, "A atualização deve funcionar mesmo com formatações estranhas de texto.");
 

@@ -45,7 +45,7 @@ public abstract class Utilizador {
         return email;
     }
 
-    public void setEmail(String email) {
+    protected void setEmail(String email) {
         this.email = email;
     }
 

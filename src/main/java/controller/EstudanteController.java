@@ -150,7 +150,7 @@ public class EstudanteController {
         return estudanteCRUD.lerEstudante(numeroMec);
     }
 
-    public Resultado atualizarEstudante(int numeroMec, String nome, String morada, String email, String curso) {
+    public Resultado atualizarEstudante(int numeroMec, String nome, String morada, String curso) {
         Resultado resultado = new Resultado();
 
         if (numeroMec <= 0) {
@@ -168,7 +168,7 @@ public class EstudanteController {
 
         if (nome != null && !nome.trim().isEmpty()) estudante.setNome(nome);
         if (morada != null && !morada.trim().isEmpty()) estudante.setMorada(morada);
-        if (email != null && !email.trim().isEmpty()) estudante.setEmail(email);
+        // if (email != null && !email.trim().isEmpty()) estudante.setEmail(email); // Removido: email não pode ser alterado
         if (curso != null && !curso.trim().isEmpty()) estudante.setNomeCurso(curso);
 
         if (estudanteCRUD.atualizarEstudante(estudante)) {
