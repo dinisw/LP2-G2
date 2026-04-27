@@ -38,7 +38,7 @@ public class BackendUtils {
 
     public static String lerInputString(Scanner scanner, String prompt) {
         System.out.print(prompt);
-        String valor = scanner.nextLine();
+        String valor = scanner.nextLine().trim();
 
         if (valor.equals("0")) {
             throw new CancelarRegistoException("Operação cancelada pelo utilizador.");

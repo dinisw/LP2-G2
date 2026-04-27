@@ -16,7 +16,6 @@ import org.jline.reader.LineReaderBuilder;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -24,18 +23,13 @@ import java.util.Scanner;
 import static common.utils.DesignUtils.*;
 
 public class DocenteView {
-    private final DocenteController docenteController;
     private final Scanner scanner;
-    private EstudanteController estudanteController = new EstudanteController();
-    private UnidadeCurricularController ucController = new UnidadeCurricularController();
-    private AvaliacaoController avaliacaoController = new AvaliacaoController();
 
     public DocenteView() {
-        this.docenteController = new DocenteController();
         this.scanner = new Scanner(System.in);
     }
 
-    public void exibirMenuPessoalDocente(Docente docente) {
+    public void exibirMenuPessoalDocente(Docente docenteLogado) {
         String opcao;
         ArrayList<String> opcoes = new ArrayList<>();
         opcoes.add("1. Ver minhas Unidades Curriculares");
@@ -48,29 +42,20 @@ public class DocenteView {
 
         do {
             try {
+                DocenteController dc = new DocenteController();
+                Docente docente = dc.procurarDocentePorNif(docenteLogado.getNif());
+
                 MenuUtils.exibirSubTitulo("PORTAL DOCENTE > " + docente.getNome().toUpperCase(), opcoes);
                 System.out.print("\n" + GetWhiteBold() + "Selecione uma opção: " + GetReset());
                 opcao = scanner.nextLine().trim();
 
                 switch (opcao) {
-                    case "1":
-                        verUC(docente);
-                        break;
-                    case "2":
-                        alterarPasswordPropria(docente);
-                        break;
-                    case "3":
-                        lancarNotaDocente(docente);
-                        break;
-                    case "4":
-                        consultarFichaDocente(docente);
-                        break;
-                    case "5":
-                        consultarPautaOrdenada(docente);
-                        break;
-                    case "6":
-                        definirMomentosAvaliacao(docente);
-                        break;
+                    case "1": verUC(docente); break;
+                    case "2": alterarPasswordPropria(docente); break;
+                    case "3": lancarNotaDocente(docente); break;
+                    case "4": consultarFichaDocente(docente); break;
+                    case "5": consultarPautaOrdenada(docente); break;
+                    case "6": definirMomentosAvaliacao(docente); break;
                     case "0":
                         System.out.println(GetYellow() + "\nA efetuar logout..." + GetReset());
                         return;
@@ -89,13 +74,17 @@ public class DocenteView {
         try {
             System.out.println(GetBlue() + "\n--- MINHAS UNIDADES CURRICULARES ---" + GetReset());
 
-            List<UnidadeCurricular> minhasUcs = docenteAtual.getUnidadesCurriculares();
+            DocenteController dc = new DocenteController();
+            Docente docenteFresco = dc.procurarDocentePorNif(docenteAtual.getNif());
+
+            List<UnidadeCurricular> minhasUcs = docenteFresco.getUnidadesCurriculares();
 
             if (minhasUcs == null || minhasUcs.isEmpty()) {
                 System.out.println(GetYellow() + "Não tem Unidades Curriculares atribuídas neste momento." + GetReset());
             } else {
-                for (UnidadeCurricular unidadeCurricular : minhasUcs) {
-                    System.out.println(unidadeCurricular.getNome() + " (Ano: " + unidadeCurricular.getAnoCurricular() + ")");
+                for (int i = 0; i < minhasUcs.size(); i++) {
+                    UnidadeCurricular uc = minhasUcs.get(i);
+                    System.out.println((i + 1) + ". " + uc.getNome() + " (Ano: " + uc.getAnoCurricular() + ")");
                 }
             }
             MenuUtils.pressionarEnter(scanner);
@@ -156,39 +145,42 @@ public class DocenteView {
         }
     }
 
-    private void lancarNotaDocente(Docente docente) {
+    private void lancarNotaDocente(Docente docenteAtual) {
         try {
             System.out.println(GetBlue() + "\n--- LANÇAR NOTA ---" + GetReset());
-            System.out.println(GetYellow() + "[Digite '0' para cancelar | Dica: Para atribuir nota zero, digite '0.0']" + GetReset());
+            System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar | Dica: Nota zero é '0.0']" + GetReset());
 
-            int numMec = 0;
-            boolean mecValido = false;
-            while (!mecValido) {
+            EstudanteController estudanteController = new EstudanteController();
+            model.Estudante estudante = null;
+
+            while (estudante == null) {
                 try {
-                    String mecStr = BackendUtils.lerInputString(scanner, "Nº Mecanográfico do Estudante: ");
-                    numMec = Integer.parseInt(mecStr);
-                    mecValido = true;
+                    String mecStr = BackendUtils.lerInputString(scanner, "\nNº Mecanográfico do Estudante: ");
+                    if (mecStr.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
+
+                    int numMec = Integer.parseInt(mecStr);
+                    estudante = estudanteController.procurarEstudantePorNumeroMec(numMec);
+
+                    if (estudante == null) {
+                        System.out.println(GetRed() + "Erro: Estudante não encontrado! Verifique o número." + GetReset());
+                    }
                 } catch (NumberFormatException e) {
                     System.out.println(GetRed() + "Aviso: O valor deve ser numérico." + GetReset());
                 }
             }
 
-            EstudanteController estudanteControllerAtualizado = new EstudanteController();
-            model.Estudante estudante = estudanteControllerAtualizado.procurarEstudantePorNumeroMec(numMec);
-            if (estudante == null) {
-                System.out.println(GetYellow() + "\nErro: Estudante não encontrado!" + GetReset());
-                MenuUtils.pressionarEnter(scanner);
-                return;
-            }
+            UnidadeCurricularController ucController = new UnidadeCurricularController();
+            model.UnidadeCurricular unidadeCurricular = null;
 
-            String nomeUC = BackendUtils.lerInputString(scanner, "Nome da Unidade Curricular: ");
-            UnidadeCurricularController unidadeCurricularControllerAtualizado = new UnidadeCurricularController();
-            model.UnidadeCurricular unidadeCurricular = unidadeCurricularControllerAtualizado.procurarUCPorNome(nomeUC);
+            while (unidadeCurricular == null) {
+                String nomeUC = BackendUtils.lerInputString(scanner, "Nome da Unidade Curricular: ");
+                if (nomeUC.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
 
-            if (unidadeCurricular == null) {
-                System.out.println(GetYellow() + "\nErro: Unidade Curricular não encontrada!" + GetReset());
-                MenuUtils.pressionarEnter(scanner);
-                return;
+                unidadeCurricular = ucController.procurarUCPorNome(nomeUC);
+
+                if (unidadeCurricular == null) {
+                    System.out.println(GetRed() + "Erro: Unidade Curricular não encontrada!" + GetReset());
+                }
             }
 
             boolean matriculado = false;
@@ -222,7 +214,7 @@ public class DocenteView {
             while (escolha < 1 || escolha > momentos.size()) {
                 try {
                     String input = BackendUtils.lerInputString(scanner, "Escolha (1-" + momentos.size() + "): ");
-                    if (input.equals("0")) return;
+                    if (input.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
                     escolha = Integer.parseInt(input);
                 } catch (NumberFormatException e) {
                     System.out.println(GetRed() + "Aviso: Escolha um número da lista." + GetReset());
@@ -277,6 +269,7 @@ public class DocenteView {
 
             model.Avaliacao novaAvaliacao = new model.Avaliacao(momentoSelecionado, nota, unidadeCurricular, estudante);
 
+            AvaliacaoController avaliacaoController = new AvaliacaoController();
             if (avaliacaoController.registarAvaliacao(novaAvaliacao)) {
                 System.out.println(GetGreen() + "\nAvaliação registada com sucesso!" + GetReset());
             } else {
@@ -295,14 +288,17 @@ public class DocenteView {
         }
     }
 
-    private void consultarFichaDocente(Docente docente){
+    private void consultarFichaDocente(Docente docenteAtual){
         try {
-            System.out.println(docente.toString());
+            DocenteController dc = new DocenteController();
+            Docente docenteFresco = dc.procurarDocentePorNif(docenteAtual.getNif());
+
+            System.out.println(docenteFresco.toString());
             System.out.println("Unidades Curriculares Atribuídas:");
-            if (docente.getUnidadesCurriculares() == null || docente.getUnidadesCurriculares().isEmpty()) {
+            if (docenteFresco.getUnidadesCurriculares() == null || docenteFresco.getUnidadesCurriculares().isEmpty()) {
                 System.out.println(GetYellow() + "Nenhuma unidade curricular atribuída." + GetReset());
             } else {
-                for (UnidadeCurricular unidadeCurricular : docente.getUnidadesCurriculares()) {
+                for (UnidadeCurricular unidadeCurricular : docenteFresco.getUnidadesCurriculares()) {
                     System.out.println("- " + unidadeCurricular.getNome() + " (Ano: " + unidadeCurricular.getAnoCurricular() + ")");
                 }
             }
@@ -313,11 +309,14 @@ public class DocenteView {
         }
     }
 
-    private void consultarPautaOrdenada(Docente docente) {
+    private void consultarPautaOrdenada(Docente docenteAtual) {
         try {
             System.out.println(GetBlue() + "\n--- CONSULTAR PAUTA DE ALUNOS ---" + GetReset());
 
-            List<UnidadeCurricular> unidadesCurriculares = docente.getUnidadesCurriculares();
+            DocenteController dc = new DocenteController();
+            Docente docenteFresco = dc.procurarDocentePorNif(docenteAtual.getNif());
+
+            List<UnidadeCurricular> unidadesCurriculares = docenteFresco.getUnidadesCurriculares();
 
             if(unidadesCurriculares == null || unidadesCurriculares.isEmpty()) {
                 System.out.println(GetYellow() + "Não tem Unidades Curriculares atribuídas neste momento." + GetReset());
@@ -349,6 +348,8 @@ public class DocenteView {
             }
 
             UnidadeCurricular ucSelecionada = unidadesCurriculares.get(escolhaUC - 1);
+
+            AvaliacaoController avaliacaoController = new AvaliacaoController();
             List<model.Avaliacao> avaliacoesUC = avaliacaoController.listarAvaliacoesPorUC(ucSelecionada.getNome());
 
             if (avaliacoesUC == null || avaliacoesUC.isEmpty()) {
@@ -409,10 +410,13 @@ public class DocenteView {
         }
     }
 
-    private void definirMomentosAvaliacao(Docente docente) {
+    private void definirMomentosAvaliacao(Docente docenteAtual) {
         try {
             System.out.println(GetBlue() + "\n--- DEFINIR MOMENTOS DE AVALIAÇÃO ---" + GetReset());
-            List<UnidadeCurricular> unidadesCurriculares = docente.getUnidadesCurriculares();
+
+            DocenteController dc = new DocenteController();
+            Docente docenteFresco = dc.procurarDocentePorNif(docenteAtual.getNif());
+            List<UnidadeCurricular> unidadesCurriculares = docenteFresco.getUnidadesCurriculares();
 
             if (unidadesCurriculares == null || unidadesCurriculares.isEmpty()) {
                 System.out.println(GetYellow() + "Não tem Unidades Curriculares atribuídas neste momento." + GetReset());
@@ -444,7 +448,7 @@ public class DocenteView {
             }
             UnidadeCurricular unidadeCurricularSelecionada = unidadesCurriculares.get(escolhaUC - 1);
 
-            System.out.printf("\nUC Selecionada: " + unidadeCurricularSelecionada.getNome());
+            System.out.println("\nUC Selecionada: " + unidadeCurricularSelecionada.getNome());
             if (unidadeCurricularSelecionada.getMomentosAvaliacao() != null && !unidadeCurricularSelecionada.getMomentosAvaliacao().isEmpty()) {
                 System.out.println(GetYellow() + "Momentos atuais: " + String.join(", ", unidadeCurricularSelecionada.getMomentosAvaliacao()) + GetReset());
             }
@@ -466,10 +470,6 @@ public class DocenteView {
 
                 if (resultado.success) {
                     System.out.println(GetGreen() + "\nMomentos de Avaliação guardados com sucesso no sistema!" + GetReset());
-                    unidadeCurricularSelecionada.getMomentosAvaliacao().clear();
-                    for (String momento : novosMomentos.split(",")) {
-                        unidadeCurricularSelecionada.adicionarMomento(momento.trim());
-                    }
                 } else {
                     System.out.println(GetRed() + "\nErro ao guardar: " + resultado.errorMessage + GetReset());
                 }

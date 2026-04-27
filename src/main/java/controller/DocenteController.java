@@ -120,7 +120,7 @@ public class DocenteController {
         return docenteCRUD.procurarPorSigla(sigla);
     }
 
-    public Resultado atualizarDocente(int nif, String novoNome, String novaMorada, LocalDate novaDataNascimento, String novoEmail) {
+    public Resultado atualizarDocente(int nif, String novoNome, String novaMorada, LocalDate novaDataNascimento) {
         Resultado resultado = new Resultado();
 
         if (nif <= 0) {
@@ -140,14 +140,13 @@ public class DocenteController {
         String nomeFinal = (novoNome != null && !novoNome.trim().isEmpty()) ? novoNome : docenteExistente.getNome();
         String moradaFinal = (novaMorada != null && !novaMorada.trim().isEmpty()) ? novaMorada : docenteExistente.getMorada();
         LocalDate dataFinal = (novaDataNascimento != null) ? novaDataNascimento : docenteExistente.getDataNascimento();
-        String emailFinal = (novoEmail != null && !novoEmail.trim().isEmpty()) ? novoEmail : docenteExistente.getEmail();
 
         Docente docenteAtualizado = new Docente(
                 nomeFinal,
                 moradaFinal,
                 docenteExistente.getNif(),
                 dataFinal,
-                emailFinal,
+                docenteExistente.getEmail(),
                 docenteExistente.getHash(),
                 docenteExistente.getSigla(),
                 docenteExistente.getListaAvaliacao(),

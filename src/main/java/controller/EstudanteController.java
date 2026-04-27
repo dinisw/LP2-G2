@@ -22,6 +22,9 @@ public class EstudanteController {
         String dataNascimentoStr = (estudante.getDataNascimento() != null) ? estudante.getDataNascimento().toString() : "Não definida";
         String cursoStr = (estudante.getNomeCurso() != null && !estudante.getNomeCurso().trim().isEmpty()) ? estudante.getNomeCurso() : "Sem curso atribuído";
 
+        boolean isConcluido = verificarSeCursoConcluido(estudante);
+        String statusCurso = isConcluido ? "🎓 CONCLUÍDO" : "⏳ EM CURSO";
+
         int anoLetivoAtual = obterAnoDesbloqueado(estudante);
 
         return """
@@ -33,6 +36,7 @@ public class EstudanteController {
         Data Nascimento: %s
         Morada: %s
         Curso (Inscrição): %s
+        Estado do Curso: %s
         Ano Letivo Atual: %dº Ano
         """.formatted(
                 estudante.getNome(),
@@ -42,6 +46,7 @@ public class EstudanteController {
                 dataNascimentoStr,
                 estudante.getMorada(),
                 cursoStr,
+                statusCurso,
                 anoLetivoAtual
         );
     }
@@ -150,7 +155,7 @@ public class EstudanteController {
         return estudanteCRUD.lerEstudante(numeroMec);
     }
 
-    public Resultado atualizarEstudante(int numeroMec, String nome, String morada, String email, String curso) {
+    public Resultado atualizarEstudante(int numeroMec, String nome, String morada, String curso) {
         Resultado resultado = new Resultado();
 
         if (numeroMec <= 0) {
@@ -168,7 +173,7 @@ public class EstudanteController {
 
         if (nome != null && !nome.trim().isEmpty()) estudante.setNome(nome);
         if (morada != null && !morada.trim().isEmpty()) estudante.setMorada(morada);
-        if (email != null && !email.trim().isEmpty()) estudante.setEmail(email);
+        // if (email != null && !email.trim().isEmpty()) estudante.setEmail(email); // Removido: email não pode ser alterado
         if (curso != null && !curso.trim().isEmpty()) estudante.setNomeCurso(curso);
 
         if (estudanteCRUD.atualizarEstudante(estudante)) {

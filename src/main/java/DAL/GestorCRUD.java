@@ -11,7 +11,7 @@ import java.util.List;
 public class GestorCRUD {
     private static final String CAMINHO_FICHEIRO = "gestores.csv";
     private List<Gestor> gestores;
-    private int proximoID = 0;
+    private int proximoID = 1;
 
     public GestorCRUD() {
         this.gestores = new ArrayList<>();
