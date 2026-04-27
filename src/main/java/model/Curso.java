@@ -69,17 +69,26 @@ public class Curso {
     }
 
     public boolean adicionarUnidadeCurricular(UnidadeCurricular novaUc) {
-        int contagemAno = 0;
+        if (novaUc == null) return false;
 
+        for (UnidadeCurricular existente : this.unidadeCurriculars) {
+            if (existente.getNome().equalsIgnoreCase(novaUc.getNome())) {
+                return false;
+            }
+        }
+
+        int contagemAno = 0;
         for (UnidadeCurricular unidadeCurricular : unidadeCurriculars) {
             if (unidadeCurricular.getAnoCurricular() == novaUc.getAnoCurricular()) {
                 contagemAno++;
             }
         }
+
         if (contagemAno < 5) {
             this.unidadeCurriculars.add(novaUc);
             return true;
         }
+
         return false;
     }
 
