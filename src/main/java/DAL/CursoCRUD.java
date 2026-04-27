@@ -28,13 +28,13 @@ public class CursoCRUD {
                 String[] dados = linha.split(";");
 
                 if (dados.length >= 4) {
-                    String nomeCurso = dados[0];
-                    int duracao = Integer.parseInt(dados[1]);
-                    String siglaDep = dados[2];
+                    String nomeCurso = dados[0].trim();
+                    int duracao = Integer.parseInt(dados[1].trim());
+                    String siglaDep = dados[2].trim();
                     Departamento dep = depCRUD.procurarPorSigla(siglaDep);
 
                     Curso curso = new Curso(nomeCurso, duracao, dep);
-                    String anosIniciadosStr = dados[3];
+                    String anosIniciadosStr = dados[3].trim();
                     List<Integer> anosIniciados = new ArrayList<>();
 
                     if (!anosIniciadosStr.equalsIgnoreCase("Nenhum Curso Iniciado") && !anosIniciadosStr.isEmpty()) {
@@ -47,7 +47,7 @@ public class CursoCRUD {
 
                     if (dados.length > 4) {
                         for (int i = 4; i < dados.length; i++) {
-                            UnidadeCurricular unidadeCurricular = ucCRUD.procurarPorNome(dados[i]);
+                            UnidadeCurricular unidadeCurricular = ucCRUD.procurarPorNome(dados[i].trim());
                             if (unidadeCurricular != null) {
                                 curso.adicionarUnidadeCurricular(unidadeCurricular);
                             }
@@ -104,7 +104,7 @@ public class CursoCRUD {
 
     public Curso procurarPorNome(String nome) {
         for (Curso curso : cursos) {
-            if (curso.getNome().equalsIgnoreCase(nome)) {
+            if (curso.getNome().trim().equalsIgnoreCase(nome.trim())) {
                 return curso;
             }
         }
@@ -114,7 +114,7 @@ public class CursoCRUD {
     private boolean temPessoasAlocadas(String nomeCurso) {
         EstudanteCRUD estudanteCRUD = new EstudanteCRUD();
         for (Estudante est : estudanteCRUD.getEstudantes()) {
-            if (est.getNomeCurso() != null && est.getNomeCurso().equalsIgnoreCase(nomeCurso)) {
+            if (est.getNomeCurso() != null && est.getNomeCurso().trim().equalsIgnoreCase(nomeCurso.trim())) {
                 return true;
             }
         }
@@ -131,7 +131,7 @@ public class CursoCRUD {
         }
 
         for (int i = 0; i < cursos.size(); i++) {
-            if (cursos.get(i).getNome().equalsIgnoreCase(nomeAntigo)) {
+            if (cursos.get(i).getNome().trim().equalsIgnoreCase(nomeAntigo)) {
                 cursos.set(i, cursoNovo);
                 guardarTodosNoFicheiro();
                 resultado.success = true;
@@ -153,7 +153,7 @@ public class CursoCRUD {
         }
 
         for (int i = 0; i < cursos.size(); i++) {
-            if (cursos.get(i).getNome().equalsIgnoreCase(nome)) {
+            if (cursos.get(i).getNome().trim().equalsIgnoreCase(nome)) {
                 cursos.remove(i);
                 guardarTodosNoFicheiro();
                 resultado.success = true;
@@ -166,15 +166,31 @@ public class CursoCRUD {
     }
     
     private String safe(Object o) {
-        return (o == null) ? "SEM REGISTO" : o.toString();
+        return (o == null) ? "SEM REGISTO" : o.toString().trim();
     }
 
     public boolean existeCursoComDepartamento(String siglaDepartamento) {
         for (Curso curso : cursos) {
-            if (curso.getDepartamento() != null && curso.getDepartamento().getSigla().equalsIgnoreCase(siglaDepartamento)) {
+            if (curso.getDepartamento() != null && curso.getDepartamento().getSigla().trim().equalsIgnoreCase(siglaDepartamento)) {
                 return true;
             }
         }
         return false;
+    }
+
+    public Resultado registarArranqueAno(String nomeCurso, Curso cursoAtualizado) {
+        Resultado resultado = new Resultado();
+
+        for (int i = 0; i < cursos.size(); i++) {
+            if (cursos.get(i).getNome().equalsIgnoreCase(nomeCurso)) {
+                cursos.set(i, cursoAtualizado);
+                guardarTodosNoFicheiro();
+                resultado.success = true;
+                return resultado;
+            }
+        }
+        resultado.success = false;
+        resultado.errorMessage = "Curso não encontrado.";
+        return resultado;
     }
 }

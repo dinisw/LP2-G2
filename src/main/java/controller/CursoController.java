@@ -233,7 +233,7 @@ public class CursoController {
         }
 
         curso.adicionarAnoIniciado(anoLetivo);
-        Resultado res = cursoCRUD.atualizarCurso(curso.getNome(), curso);
+        Resultado res = cursoCRUD.registarArranqueAno(curso.getNome(), curso);
         if (res.success) {
             resultado.success = true;
         } else {
@@ -274,19 +274,17 @@ public class CursoController {
             }
         }
 
-        boolean adicionadoComSucesso = curso.adicionarUnidadeCurricular(unidadeCurricular);
-
-        if (adicionadoComSucesso) {
-            Resultado res = this.cursoCRUD.atualizarCurso(curso.getNome(), curso);
-            if (res.success) {
+        if (curso.adicionarUnidadeCurricular(unidadeCurricular)) {
+            Resultado resultado1 = this.cursoCRUD.registarArranqueAno(curso.getNome(), curso);
+            if (resultado1.success) {
                 resultado.success = true;
             } else {
                 resultado.success = false;
-                resultado.errorMessage = res.errorMessage;
+                resultado.errorMessage = resultado1.errorMessage;
             }
         } else {
             resultado.success = false;
-            resultado.errorMessage = "Limite Atingido: Não é possível associar a UC! O curso já tem 5 UCs no ano curricular " + unidadeCurricular.getAnoCurricular() + ".";
+            resultado.errorMessage = "Limite de 5 UCs por ano atingido.";
         }
         return resultado;
     }
