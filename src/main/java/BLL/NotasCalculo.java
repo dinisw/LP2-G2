@@ -6,8 +6,12 @@ import java.util.List;
 import java.util.Map;
 
 public class NotasCalculo {
-    public static Double calcularMedia(List<Avaliacao> avaliacoes) {
-        if (avaliacoes == null || avaliacoes.isEmpty()) return null;
+
+    public static double calcularMedia(List<Avaliacao> avaliacoes) {
+
+        if (avaliacoes == null || avaliacoes.isEmpty()) {
+            return 0.0;
+        }
 
         Map<String, Double> melhoresNotas = new HashMap<>();
 
@@ -28,6 +32,7 @@ public class NotasCalculo {
                 count++;
             }
         }
-        return count > 0 ? soma / count : null;
+
+        return count > 0 ? soma / count : 0.0;
     }
 }

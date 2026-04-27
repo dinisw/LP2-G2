@@ -51,4 +51,20 @@ public class EstudanteCalculoTest {
         int ano = EstudanteCalculo.calcularAnoDesbloqueado(aluno, cursoEngenharia);
         assertEquals(2, ano, "Aluno teve 60% de aprovação, devia transitar para o 2º ano.");
     }
+
+    @Test
+    public void testarCursoConcluido() {
+        // Simular que o aluno passou às 5 UCs do curso
+        for (UnidadeCurricular uc : cursoEngenharia.getUnidadeCurriculars()) {
+            aluno.adicionarAvaliacao(new Avaliacao("Época Normal", 10.0, uc, aluno));
+        }
+
+        boolean concluiu = EstudanteCalculo.isCursoConcluido(aluno, cursoEngenharia);
+        assertTrue(concluiu, "O aluno passou a todas as UCs, o curso deve estar concluído.");
+
+        // Simular que uma nota baixou para negativa
+        aluno.getListaAvaliacoes().get(0).setNota(8.0);
+        boolean concluiuComNegativa = EstudanteCalculo.isCursoConcluido(aluno, cursoEngenharia);
+        assertFalse(concluiuComNegativa, "Com uma cadeira em atraso, não pode concluir o curso.");
+    }
 }
