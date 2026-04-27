@@ -1,11 +1,14 @@
-package main.controller;
+package controller;
 
 
-import main.DAL.DocenteCRUD;
-import main.DAL.UnidadeCurricularCRUD;
-import main.model.Docente;
-import main.model.Resultado;
-import main.model.UnidadeCurricular;
+import DAL.DocenteCRUD;
+import DAL.UnidadeCurricularCRUD;
+import DAL.AvaliacaoCRUD;
+import model.Estudante;
+import model.Docente;
+import model.Resultado;
+import model.UnidadeCurricular;
+import model.Avaliacao;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -59,7 +62,7 @@ public class DocenteController {
         Docente docente = new Docente(nome, morada, nif, dataNascimento, email, hash, sigla, new ArrayList<>(), new ArrayList<>());
         StringBuilder avisos = new StringBuilder();
 
-        main.DAL.UnidadeCurricularCRUD unidadeCurricularCRUDAtualizado = new main.DAL.UnidadeCurricularCRUD();
+        DAL.UnidadeCurricularCRUD unidadeCurricularCRUDAtualizado = new DAL.UnidadeCurricularCRUD();
 
         if (nomesUC != null) {
             for ( String nomeUC : nomesUC) {
@@ -67,8 +70,8 @@ public class DocenteController {
                     UnidadeCurricular unidadeCurricular = unidadeCurricularCRUDAtualizado.procurarPorNome(nomeUC.trim());
                     if (unidadeCurricular != null) {
                         if (unidadeCurricular.getDocente() != null && !unidadeCurricular.getDocente().getSigla().equals(docente.getSigla())) {
-                            main.DAL.DocenteCRUD docenteCRUDParaRemover = new main.DAL.DocenteCRUD();
-                            main.model.Docente docenteAntigo = docenteCRUDParaRemover.procurarPorNif(unidadeCurricular.getDocente().getNif());
+                            DAL.DocenteCRUD docenteCRUDParaRemover = new DAL.DocenteCRUD();
+                            model.Docente docenteAntigo = docenteCRUDParaRemover.procurarPorNif(unidadeCurricular.getDocente().getNif());
 
                             if (docenteAntigo != null) {
                                 docenteAntigo.getUnidadesCurriculares().removeIf(u -> u.getNome().equalsIgnoreCase(unidadeCurricular.getNome()));

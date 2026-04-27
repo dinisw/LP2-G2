@@ -1,7 +1,7 @@
-package main.DAL;
+package DAL;
 
-import main.model.UnidadeCurricular;
-import main.model.Docente;
+import model.UnidadeCurricular;
+import model.Docente;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +19,7 @@ public class UnidadeCurricularCRUD {
         File ficheiro = new File(CAMINHO_FICHEIRO);
         if (!ficheiro.exists()) return;
 
-        main.DAL.DocenteCRUD docenteCRUD = new main.DAL.DocenteCRUD();
+        DAL.DocenteCRUD docenteCRUD = new DAL.DocenteCRUD();
 
         try (BufferedReader reader = new BufferedReader(new FileReader(CAMINHO_FICHEIRO))) {
             String linha;

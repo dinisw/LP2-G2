@@ -1,21 +1,21 @@
-package main.view;
+package view;
 
-import main.common.exceptions.CancelarRegistoException;
-import main.common.utils.BackendUtils;
-import main.common.utils.MenuUtils;
-import main.controller.CursoController;
-import main.controller.DepartamentoController;
-import main.controller.UnidadeCurricularController;
-import main.model.Curso;
-import main.model.Departamento;
-import main.model.Resultado;
-import main.model.UnidadeCurricular;
+import common.exceptions.CancelarRegistoException;
+import common.utils.BackendUtils;
+import common.utils.MenuUtils;
+import controller.CursoController;
+import controller.DepartamentoController;
+import controller.UnidadeCurricularController;
+import model.Curso;
+import model.Departamento;
+import model.Resultado;
+import model.UnidadeCurricular;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-import static main.common.utils.DesignUtils.*;
+import static common.utils.DesignUtils.*;
 
 public class CursoView {
     private final CursoController cursoController;
@@ -90,6 +90,20 @@ public class CursoView {
             }
 
             String siglaDep = BackendUtils.lerInputString(scanner, "\nSigla do Departamento Associado (ex: EI): ").toUpperCase();
+
+            boolean depExiste = false;
+            for(Departamento departamento : departamentos) {
+                if(departamento.getSigla().equalsIgnoreCase(siglaDep)) {
+                    depExiste = true;
+                    break;
+                }
+            }
+
+            if(!depExiste) {
+                System.out.println(GetRed() + "\nErro: O departamento com a sigla '" + siglaDep + "' não existe no sistema." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
 
             System.out.println("\n" + GetBlue() + "--- Unidades Curriculares Disponíveis ---" + GetReset());
             UnidadeCurricularController unidadeCurricularControllerAtualizado = new UnidadeCurricularController();
@@ -341,6 +355,7 @@ public class CursoView {
             MenuUtils.pressionarEnter(scanner);
         }
     }
+
     private void iniciarAnoLetivoCurso() {
         try {
             System.out.println(GetBlue() + "\n--- INICIAR ANO LETIVO DO CURSO ---" + GetReset());
@@ -384,8 +399,19 @@ public class CursoView {
             System.out.println("1. Primeiro Ano (Exige 5 alunos)");
             System.out.println("2. Segundo Ano (Exige 1 aluno)");
             System.out.println("3. Terceiro Ano (Exige 1 aluno)");
-            String anoParaIniciarString = BackendUtils.lerInputString(scanner, "Opção: ");
-            int anoParaIniciar = Integer.parseInt(anoParaIniciarString);
+
+            int anoParaIniciar = -1;
+            while (anoParaIniciar < 1 || anoParaIniciar > 3) {
+                try {
+                    String anoParaIniciarString = BackendUtils.lerInputString(scanner, "Opção (1-3): ");
+                    anoParaIniciar = Integer.parseInt(anoParaIniciarString);
+                    if (anoParaIniciar < 1 || anoParaIniciar > 3) {
+                        System.out.println(GetRed() + "Opção inválida. Escolha 1, 2 ou 3." + GetReset());
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println(GetRed() + "Por favor, digite apenas números." + GetReset());
+                }
+            }
 
             Resultado resultado = cursoController.iniciarAnoLetivo(curso.getNome(), anoParaIniciar);
 

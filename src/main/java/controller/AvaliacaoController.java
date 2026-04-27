@@ -1,17 +1,17 @@
-package main.controller;
+package controller;
 
-import main.model.Avaliacao;
+import model.Avaliacao;
 import java.util.List;
 
 public class AvaliacaoController {
 
-    private main.DAL.AvaliacaoCRUD avaliacaoCRUD;
+    private DAL.AvaliacaoCRUD avaliacaoCRUD;
 
     public AvaliacaoController() {
-        this.avaliacaoCRUD = new main.DAL.AvaliacaoCRUD();
+        this.avaliacaoCRUD = new DAL.AvaliacaoCRUD();
     }
 
-    public boolean registarAvaliacao(main.model.Avaliacao avaliacao) {
+    public boolean registarAvaliacao(model.Avaliacao avaliacao) {
         if (avaliacao == null || avaliacao.getEstudante() == null || avaliacao.getUnidadeCurricular() == null) {
             return false;
         }

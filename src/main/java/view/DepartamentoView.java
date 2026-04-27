@@ -1,17 +1,17 @@
-package main.view;
+package view;
 
-import main.common.exceptions.CancelarRegistoException;
-import main.common.utils.BackendUtils;
-import main.common.utils.MenuUtils;
-import main.controller.DepartamentoController;
-import main.model.Departamento;
-import main.model.Resultado;
+import common.exceptions.CancelarRegistoException;
+import common.utils.BackendUtils;
+import common.utils.MenuUtils;
+import controller.DepartamentoController;
+import model.Departamento;
+import model.Resultado;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-import static main.common.utils.DesignUtils.*;
+import static common.utils.DesignUtils.*;
 
 public class DepartamentoView {
     private final DepartamentoController departamentoController;

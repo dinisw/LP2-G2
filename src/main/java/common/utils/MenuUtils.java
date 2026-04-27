@@ -1,11 +1,11 @@
-package main.common.utils;
+package common.utils;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-import static main.common.utils.DesignUtils.*;
+import static common.utils.DesignUtils.*;
 
 public class MenuUtils {
     //region MENU

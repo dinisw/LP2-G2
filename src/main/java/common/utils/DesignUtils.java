@@ -1,4 +1,4 @@
-package main.common.utils;
+package common.utils;
 
 public class DesignUtils {
     //region Design

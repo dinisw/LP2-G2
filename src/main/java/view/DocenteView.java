@@ -1,19 +1,7 @@
-package main.view;
+package view;
 
-import main.common.exceptions.CancelarRegistoException;
-import main.common.utils.BackendUtils;
-import main.common.utils.MenuUtils;
-import main.common.utils.SenhaUtils;
-import main.controller.AvaliacaoController;
-import main.controller.DocenteController;
-import main.controller.EstudanteController;
-import main.controller.UnidadeCurricularController;
-import main.model.Docente;
-import main.model.Resultado;
-import main.model.UnidadeCurricular;
 import common.exceptions.CancelarRegistoException;
 import common.utils.BackendUtils;
-import common.utils.DesignUtils;
 import common.utils.MenuUtils;
 import common.utils.SenhaUtils;
 import controller.AvaliacaoController;
@@ -21,7 +9,6 @@ import controller.DocenteController;
 import controller.EstudanteController;
 import controller.UnidadeCurricularController;
 import model.Docente;
-import model.Estudante;
 import model.Resultado;
 import model.UnidadeCurricular;
 import org.jline.reader.LineReader;
@@ -204,6 +191,20 @@ public class DocenteView {
                 return;
             }
 
+            boolean matriculado = false;
+            for (model.Avaliacao inscricao : estudante.getListaAvaliacoes()) {
+                if (inscricao.getUnidadeCurricular().getNome().equalsIgnoreCase(unidadeCurricular.getNome())) {
+                    matriculado = true;
+                    break;
+                }
+            }
+
+            if (!matriculado) {
+                System.out.println(GetRed() + "\nErro: O estudante " + estudante.getNome() + " não se encontra inscrito na UC de " + unidadeCurricular.getNome() + "." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
             List<String> momentos = unidadeCurricular.getMomentosAvaliacao();
             if (momentos == null || momentos.isEmpty()) {
                 System.out.println(GetRed() + "\nErro: Esta UC ainda não tem momentos de avaliação definidos." + GetReset());
@@ -256,6 +257,22 @@ public class DocenteView {
                 } catch (NumberFormatException e) {
                     System.out.println(GetRed() + "Aviso: Formato de nota inválido (use números)." + GetReset());
                 }
+            }
+
+            boolean notaJaExiste = false;
+            for(model.Avaliacao avaliacao : estudante.getListaAvaliacoes()) {
+                if(avaliacao.getUnidadeCurricular().getNome().equalsIgnoreCase(unidadeCurricular.getNome())
+                        && avaliacao.getMomento().equalsIgnoreCase(momentoSelecionado)) {
+                    notaJaExiste = true;
+                    break;
+                }
+            }
+
+            if(notaJaExiste) {
+                System.out.println(GetRed() + "\nErro: O aluno já tem uma nota lançada para o momento '" + momentoSelecionado + "'." + GetReset());
+                System.out.println(GetYellow() + "A edição de notas não é permitida por esta via." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
             }
 
             model.Avaliacao novaAvaliacao = new model.Avaliacao(momentoSelecionado, nota, unidadeCurricular, estudante);

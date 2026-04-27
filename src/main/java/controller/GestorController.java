@@ -1,8 +1,8 @@
-package main.controller;
+package controller;
 
-import main.DAL.GestorCRUD;
-import main.model.Gestor;
-import main.model.Resultado;
+import DAL.GestorCRUD;
+import model.Gestor;
+import model.Resultado;
 import java.time.LocalDate;
 import java.util.List;
 

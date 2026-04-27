@@ -1,6 +1,6 @@
-package main.DAL;
+package DAL;
 
-import main.model.Propina;
+import model.Propina;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;

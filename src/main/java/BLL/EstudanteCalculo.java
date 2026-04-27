@@ -1,8 +1,8 @@
-package main.BLL;
+package BLL;
 
-import main.model.Avaliacao;
-import main.model.Curso;
-import main.model.Estudante;
+import model.Avaliacao;
+import model.Curso;
+import model.Estudante;
 
 import java.util.List;
 

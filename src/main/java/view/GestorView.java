@@ -1,13 +1,13 @@
-package main.view;
+package view;
 
-import main.common.exceptions.CancelarRegistoException;
-import main.common.utils.BackendUtils;
-import main.common.utils.DesignUtils;
-import main.common.utils.MenuUtils;
-import main.common.utils.SenhaUtils;
-import main.DAL.CursoCRUD;
-import main.controller.*;
-import main.model.*;
+import common.exceptions.CancelarRegistoException;
+import common.utils.BackendUtils;
+import common.utils.DesignUtils;
+import common.utils.MenuUtils;
+import common.utils.SenhaUtils;
+import DAL.CursoCRUD;
+import controller.*;
+import model.*;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeParseException;
@@ -18,7 +18,7 @@ import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
-import static main.common.utils.DesignUtils.*;
+import static common.utils.DesignUtils.*;
 
 public class GestorView {
     private final GestorController gestorController;
@@ -106,31 +106,36 @@ public class GestorView {
         opcoes.add("0. Voltar ao Menu Principal");
 
         do {
-            MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL > GESTORES", opcoes);
-            System.out.print("\n" + DesignUtils.GetWhiteBold() + "Selecione uma opção: " + DesignUtils.GetReset());
-            opcao = scanner.nextLine().trim();
+            try {
+                MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL > GESTORES", opcoes);
+                System.out.print("\n" + DesignUtils.GetWhiteBold() + "Selecione uma opção: " + DesignUtils.GetReset());
+                opcao = scanner.nextLine().trim();
 
-            switch (opcao) {
-                case "1":
-                    registarGestor();
-                    break;
-                case "2":
-                    listarGestores();
-                    break;
-                case "3":
-                    procurarGestor();
-                    break;
-                case "4":
-                    atualizarGestor();
-                    break;
-                case "5":
-                    eliminarGestor();
-                    break;
-                case "0":
-                    return;
-                default:
-                    System.out.println("Opção inválida!");
-                    MenuUtils.pressionarEnter(scanner);
+                switch (opcao) {
+                    case "1":
+                        registarGestor();
+                        break;
+                    case "2":
+                        listarGestores();
+                        break;
+                    case "3":
+                        procurarGestor();
+                        break;
+                    case "4":
+                        atualizarGestor();
+                        break;
+                    case "5":
+                        eliminarGestor();
+                        break;
+                    case "0":
+                        return;
+                    default:
+                        System.out.println("Opção inválida!");
+                        MenuUtils.pressionarEnter(scanner);
+                }
+            } catch (Exception e) {
+                System.out.println("\n" + GetRed() + "Ocorreu um erro na navegação: " + e.getMessage() + GetReset());
+                MenuUtils.pressionarEnter(scanner);
             }
         } while (true);
     }
@@ -159,9 +164,10 @@ public class GestorView {
                         System.out.println(GetRed() + "NIF deve ser um número inteiro válido e conter 9 dígitos. Tente novamente." + GetReset());
                     }else{
                         var nifExiste = BackendUtils.nifExiste(nif);
-                        if(nifExiste)
+                        if(nifExiste) {
                             System.out.println(GetRed() + "NIF já existente no sistema. Tente com outro NIF." + GetReset());
-                        nifValido = false;
+                            nifValido = false;
+                        }
                     }
                 } catch (NumberFormatException e) {
                     System.out.println(GetRed() + "Aviso: O valor introduzido não é um número. Tente novamente." + GetReset());
@@ -173,10 +179,11 @@ public class GestorView {
                 try {
                     String dataString = BackendUtils.lerInputString(scanner, "Data de Nascimento (AAAA-MM-DD): ");
                     dataNascimento = LocalDate.parse(dataString);
-                    if(Period.between(dataNascimento, LocalDate.now()).getYears() >= 18){
-                        System.out.println(GetRed() + "Sistem só permite pessoas maiores de 18 anos. Tente novamente." + GetReset());
-                    }else {
+                    int idade = Period.between(dataNascimento, LocalDate.now()).getYears();
+                    if (idade >= 18) {
                         break;
+                    }else {
+                        System.out.println(GetRed() + "Sistem só permite pessoas maiores de 18 anos. Tente novamente." + GetReset());
                     }
                 } catch (DateTimeParseException e) {
                     System.out.println(GetRed() + "Data deve estar no formato AAAA-MM-DD. Tente novamente." + GetReset());
@@ -514,9 +521,10 @@ public class GestorView {
                         System.out.println(GetRed() + "NIF deve ser um número inteiro válido e conter 9 dígitos. Tente novamente." + GetReset());
                     }else{
                         var nifExiste = BackendUtils.nifExiste(nif);
-                        if(nifExiste)
+                        if(nifExiste) {
                             System.out.println(GetRed() + "NIF já existente no sistema. Tente com outro NIF." + GetReset());
-                        nifValido = false;
+                            nifValido = false;
+                        }
                     }
                 } catch (NumberFormatException e) {
                     System.out.println(GetRed() + "Aviso: O valor introduzido não é um número. Tente novamente." + GetReset());
@@ -631,12 +639,12 @@ public class GestorView {
             System.out.println(GetBlue() + "\n--- LISTA DE DOCENTES ---" + GetReset());
 
             DocenteController docenteControllerAtualizado = new DocenteController();
-            List<main.model.Docente> docentes = docenteControllerAtualizado.listarDocentes();
+            List<model.Docente> docentes = docenteControllerAtualizado.listarDocentes();
 
             if (docentes.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhum docente registado." + GetReset());
             } else {
-                for (main.model.Docente docente : docentes) {
+                for (model.Docente docente : docentes) {
                     System.out.println("NIF: " + docente.getNif() + " | Nome: " + docente.getNome() + " | Sigla: " + docente.getSigla());
                 }
             }
@@ -653,7 +661,7 @@ public class GestorView {
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
             DocenteController docenteControllerAtualizado = new DocenteController();
-            List<main.model.Docente> listaDocentes = docenteControllerAtualizado.listarDocentes();
+            List<model.Docente> listaDocentes = docenteControllerAtualizado.listarDocentes();
             if (listaDocentes.isEmpty()) {
                 System.out.println(GetYellow() + "Não há docentes registados no sistema." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
@@ -662,7 +670,7 @@ public class GestorView {
 
             System.out.println("\n" + GetWhiteBold() + "Docentes Disponíveis:" + GetReset());
             for (int i = 0; i < listaDocentes.size(); i++) {
-                main.model.Docente d = listaDocentes.get(i);
+                model.Docente d = listaDocentes.get(i);
                 System.out.printf("%d - %s (Sigla: %s | NIF: %d)\n", i + 1, d.getNome(), d.getSigla(), d.getNif());
             }
 
@@ -681,7 +689,7 @@ public class GestorView {
                 }
             }
 
-            main.model.Docente docente = listaDocentes.get(escolha - 1);
+            model.Docente docente = listaDocentes.get(escolha - 1);
             System.out.println(GetGreen() + "\nDados encontrados:" + GetReset());
             System.out.println(docente.toString());
             MenuUtils.pressionarEnter(scanner);
@@ -702,7 +710,7 @@ public class GestorView {
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
             DocenteController docenteControllerAtualizado = new DocenteController();
-            List<main.model.Docente> listaDocentes = docenteControllerAtualizado.listarDocentes();
+            List<model.Docente> listaDocentes = docenteControllerAtualizado.listarDocentes();
             if (listaDocentes.isEmpty()) {
                 System.out.println(GetYellow() + "Não há docentes registados no sistema." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
@@ -711,7 +719,7 @@ public class GestorView {
 
             System.out.println("\n" + GetWhiteBold() + "Docentes Disponíveis:" + GetReset());
             for (int i = 0; i < listaDocentes.size(); i++) {
-                main.model.Docente d = listaDocentes.get(i);
+                model.Docente d = listaDocentes.get(i);
                 System.out.printf("%d - %s (Sigla: %s | NIF: %d)\n", i + 1, d.getNome(), d.getSigla(), d.getNif());
             }
 
@@ -730,7 +738,7 @@ public class GestorView {
                 }
             }
 
-            main.model.Docente docente = listaDocentes.get(escolha - 1);
+            model.Docente docente = listaDocentes.get(escolha - 1);
 
             System.out.println(GetGreen() + "\nDados atuais:" + GetReset());
             System.out.println(docente.toString());
@@ -773,7 +781,7 @@ public class GestorView {
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
             DocenteController docenteControllerAtualizado = new DocenteController();
-            List<main.model.Docente> listaDocentes = docenteControllerAtualizado.listarDocentes();
+            List<model.Docente> listaDocentes = docenteControllerAtualizado.listarDocentes();
             if (listaDocentes.isEmpty()) {
                 System.out.println(GetYellow() + "Não há docentes registados no sistema." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
@@ -782,7 +790,7 @@ public class GestorView {
 
             System.out.println("\n" + GetWhiteBold() + "Docentes Disponíveis:" + GetReset());
             for (int i = 0; i < listaDocentes.size(); i++) {
-                main.model.Docente d = listaDocentes.get(i);
+                model.Docente d = listaDocentes.get(i);
                 System.out.printf("%d - %s (Sigla: %s | NIF: %d)\n", i + 1, d.getNome(), d.getSigla(), d.getNif());
             }
 
@@ -801,7 +809,7 @@ public class GestorView {
                 }
             }
 
-            main.model.Docente docente = listaDocentes.get(escolha - 1);
+            model.Docente docente = listaDocentes.get(escolha - 1);
 
             Terminal terminal = TerminalBuilder.terminal();
             LineReader reader = LineReaderBuilder.builder().terminal(terminal).build();
@@ -845,7 +853,7 @@ public class GestorView {
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
             DocenteController docenteControllerAtualizado = new DocenteController();
-            List<main.model.Docente> listaDocentes = docenteControllerAtualizado.listarDocentes();
+            List<model.Docente> listaDocentes = docenteControllerAtualizado.listarDocentes();
             if (listaDocentes.isEmpty()) {
                 System.out.println(GetYellow() + "Não há docentes registados no sistema." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
@@ -854,7 +862,7 @@ public class GestorView {
 
             System.out.println("\n" + GetWhiteBold() + "Docentes Disponíveis:" + GetReset());
             for (int i = 0; i < listaDocentes.size(); i++) {
-                main.model.Docente d = listaDocentes.get(i);
+                model.Docente d = listaDocentes.get(i);
                 System.out.printf("%d - %s (Sigla: %s | NIF: %d)\n", i + 1, d.getNome(), d.getSigla(), d.getNif());
             }
 
@@ -873,7 +881,7 @@ public class GestorView {
                 }
             }
 
-            main.model.Docente docente = listaDocentes.get(escolha - 1);
+            model.Docente docente = listaDocentes.get(escolha - 1);
             Resultado resultado = docenteControllerAtualizado.eliminarDocente(docente.getNif());
 
             if (resultado.success) {
@@ -976,10 +984,11 @@ public class GestorView {
                 try {
                     String dataString = BackendUtils.lerInputString(scanner, "Data de Nascimento (AAAA-MM-DD): ");
                     dataNascimento = LocalDate.parse(dataString);
-                    if(Period.between(dataNascimento, LocalDate.now()).getYears() >= 18){
-                        System.out.println(GetRed() + "Sistem só permite pessoas maiores de 18 anos. Tente novamente." + GetReset());
-                    }else {
+                    int idade = Period.between(dataNascimento, LocalDate.now()).getYears();
+                    if(idade >= 18){
                         break;
+                    }else {
+                        System.out.println(GetRed() + "Sistem só permite pessoas maiores de 18 anos. Tente novamente." + GetReset());
                     }
                 } catch (DateTimeParseException e) {
                     System.out.println(GetRed() + "Data deve estar no formato AAAA-MM-DD. Tente novamente." + GetReset());
@@ -1069,7 +1078,7 @@ public class GestorView {
             System.out.println(GetBlue() + "\n--- LISTA DE ESTUDANTES ---" + GetReset());
 
             EstudanteController estudanteControllerAtualizado = new EstudanteController();
-            List<main.model.Estudante> lista = estudanteControllerAtualizado.listarEstudantes();
+            List<model.Estudante> lista = estudanteControllerAtualizado.listarEstudantes();
 
             if (lista.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhum estudante registado no sistema." + GetReset());
@@ -1077,7 +1086,7 @@ public class GestorView {
                 System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
                 System.out.printf(GetWhiteBold() + " %-15s | %-30s | %-25s \n" + GetReset(), "Nº MEC", "NOME", "CURSO");
                 System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
-                for (main.model.Estudante e : lista) {
+                for (model.Estudante e : lista) {
                     System.out.printf(" %-15d | %-30s | %-25s \n", e.getNumeroMec(), e.getNome(), e.getNomeCurso());
                 }
                 System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
@@ -1097,7 +1106,7 @@ public class GestorView {
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
             EstudanteController estudanteControllerAtualizado = new EstudanteController();
-            List<main.model.Estudante> listaEstudantes = estudanteControllerAtualizado.listarEstudantes();
+            List<model.Estudante> listaEstudantes = estudanteControllerAtualizado.listarEstudantes();
             if (listaEstudantes.isEmpty()) {
                 System.out.println(GetYellow() + "Não há estudantes registados no sistema." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
@@ -1106,7 +1115,7 @@ public class GestorView {
 
             System.out.println("\n" + GetWhiteBold() + "Estudantes Disponíveis:" + GetReset());
             for (int i = 0; i < listaEstudantes.size(); i++) {
-                main.model.Estudante e = listaEstudantes.get(i);
+                model.Estudante e = listaEstudantes.get(i);
                 System.out.printf("%d - %s (Nº Mec: %d | Curso: %s)\n", i + 1, e.getNome(), e.getNumeroMec(), e.getNomeCurso());
             }
 
@@ -1125,7 +1134,7 @@ public class GestorView {
                 }
             }
 
-            main.model.Estudante estudante = listaEstudantes.get(escolha - 1);
+            model.Estudante estudante = listaEstudantes.get(escolha - 1);
             System.out.println(GetGreen() + "\nDados encontrados:" + GetReset());
             System.out.println(estudante.toString());
             MenuUtils.pressionarEnter(scanner);
@@ -1146,7 +1155,7 @@ public class GestorView {
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
             EstudanteController estudanteControllerAtualizado = new EstudanteController();
-            List<main.model.Estudante> listaEstudantes = estudanteControllerAtualizado.listarEstudantes();
+            List<model.Estudante> listaEstudantes = estudanteControllerAtualizado.listarEstudantes();
             if (listaEstudantes.isEmpty()) {
                 System.out.println(GetYellow() + "Não há estudantes registados no sistema." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
@@ -1155,7 +1164,7 @@ public class GestorView {
 
             System.out.println("\n" + GetWhiteBold() + "Estudantes Disponíveis:" + GetReset());
             for (int i = 0; i < listaEstudantes.size(); i++) {
-                main.model.Estudante e = listaEstudantes.get(i);
+                model.Estudante e = listaEstudantes.get(i);
                 System.out.printf("%d - %s (Nº Mec: %d | Curso: %s)\n", i + 1, e.getNome(), e.getNumeroMec(), e.getNomeCurso());
             }
 
@@ -1174,7 +1183,7 @@ public class GestorView {
                 }
             }
 
-            main.model.Estudante estudante = listaEstudantes.get(escolha - 1);
+            model.Estudante estudante = listaEstudantes.get(escolha - 1);
 
             System.out.println(GetGreen() + "\nDados atuais:" + GetReset());
             System.out.println(estudante.toString());
@@ -1217,7 +1226,7 @@ public class GestorView {
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
             EstudanteController estudanteControllerAtualizado = new EstudanteController();
-            List<main.model.Estudante> listaEstudantes = estudanteControllerAtualizado.listarEstudantes();
+            List<model.Estudante> listaEstudantes = estudanteControllerAtualizado.listarEstudantes();
             if (listaEstudantes.isEmpty()) {
                 System.out.println(GetYellow() + "Não há estudantes registados no sistema." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
@@ -1226,7 +1235,7 @@ public class GestorView {
 
             System.out.println("\n" + GetWhiteBold() + "Estudantes Disponíveis:" + GetReset());
             for (int i = 0; i < listaEstudantes.size(); i++) {
-                main.model.Estudante e = listaEstudantes.get(i);
+                model.Estudante e = listaEstudantes.get(i);
                 System.out.printf("%d - %s (Nº Mec: %d | Curso: %s)\n", i + 1, e.getNome(), e.getNumeroMec(), e.getNomeCurso());
             }
 
@@ -1245,7 +1254,7 @@ public class GestorView {
                 }
             }
 
-            main.model.Estudante estudanteAapagar = listaEstudantes.get(escolha - 1);
+            model.Estudante estudanteAapagar = listaEstudantes.get(escolha - 1);
 
             System.out.print(GetYellow() + "\nAVISO: Tem a certeza que deseja eliminar o estudante " + estudanteAapagar.getNome() + "? (S/N): " + GetReset());
             String confirmacao = scanner.nextLine().trim();

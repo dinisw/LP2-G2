@@ -1,9 +1,9 @@
-package main.DAL;
+package DAL;
 
-import main.model.Curso;
-import main.model.Docente;
-import main.model.Resultado;
-import main.model.UnidadeCurricular;
+import model.Curso;
+import model.Docente;
+import model.Resultado;
+import model.UnidadeCurricular;
 
 import java.io.*;
 import java.time.LocalDate;

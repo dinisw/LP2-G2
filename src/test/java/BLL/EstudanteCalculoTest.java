@@ -1,5 +1,6 @@
 package test.BLL;
 
+import BLL.EstudanteCalculo;
 import model.Avaliacao;
 import model.Curso;
 import model.Estudante;

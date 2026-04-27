@@ -1,7 +1,7 @@
-package main.controller;
+package controller;
 
-import main.model.Utilizador;
-import main.view.UtilizadorView;
+import model.Utilizador;
+import view.UtilizadorView;
 
 public class UtilizadorController {
     private Utilizador model;

@@ -1,4 +1,4 @@
-package main.model;
+package model;
 
 public class Avaliacao {
     private String momento;

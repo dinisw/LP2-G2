@@ -1,6 +1,6 @@
-package main.DAL;
+package DAL;
 
-import main.model.*;
+import model.*;
 
 import java.io.*;
 import java.util.ArrayList;

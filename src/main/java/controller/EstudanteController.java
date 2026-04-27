@@ -1,8 +1,8 @@
-package main.controller;
+package controller;
 
-import main.DAL.EstudanteCRUD;
-import main.model.Estudante;
-import main.model.Resultado;
+import DAL.EstudanteCRUD;
+import model.Estudante;
+import model.Resultado;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -48,13 +48,13 @@ public class EstudanteController {
 
     // 2. NOVO MÉTODO PRINCIPAL DE PROGRESSÃO (COM BLOQUEIO FINANCEIRO)
     public int obterAnoDesbloqueado(Estudante estudante) {
-        main.DAL.CursoCRUD cursoCRUD = new main.DAL.CursoCRUD();
-        main.model.Curso curso = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
+        DAL.CursoCRUD cursoCRUD = new DAL.CursoCRUD();
+        model.Curso curso = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
 
         if (curso == null) return 1;
 
         // 1º Passo: Saber para que ano ele passa baseado NAS NOTAS (>60%)
-        int anoPorNotas = main.BLL.EstudanteCalculo.calcularAnoDesbloqueado(estudante, curso);
+        int anoPorNotas = BLL.EstudanteCalculo.calcularAnoDesbloqueado(estudante, curso);
 
         PropinaController propinaController = new PropinaController();
         int anoReal = anoPorNotas;
@@ -74,12 +74,12 @@ public class EstudanteController {
 
     // 3. NOVO MÉTODO DE CONCLUSÃO (COM BLOQUEIO FINANCEIRO)
     public boolean verificarSeCursoConcluido(Estudante estudante) {
-        main.DAL.CursoCRUD cursoCRUD = new main.DAL.CursoCRUD();
-        main.model.Curso curso = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
+        DAL.CursoCRUD cursoCRUD = new DAL.CursoCRUD();
+        model.Curso curso = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
 
         if (curso == null) return false;
 
-        boolean concluiuNotas = main.BLL.EstudanteCalculo.isCursoConcluido(estudante, curso);
+        boolean concluiuNotas = BLL.EstudanteCalculo.isCursoConcluido(estudante, curso);
 
         if (concluiuNotas) {
             // Se as notas estão feitas, verifica se a propina do último ano está paga!

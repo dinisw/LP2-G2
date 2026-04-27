@@ -1,11 +1,11 @@
-package main.controller;
+package controller;
 
-import main.DAL.DocenteCRUD;
-import main.DAL.EstudanteCRUD;
-import main.DAL.GestorCRUD;
-import main.model.Docente;
-import main.model.Estudante;
-import main.model.Utilizador;
+import DAL.DocenteCRUD;
+import DAL.EstudanteCRUD;
+import DAL.GestorCRUD;
+import model.Docente;
+import model.Estudante;
+import model.Utilizador;
 
 public class LoginController {
 

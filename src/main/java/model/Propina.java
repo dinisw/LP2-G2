@@ -1,4 +1,4 @@
-package main.model;
+package model;
 
 public class Propina {
     private int numeroMecEstudante; // A quem pertence a propina

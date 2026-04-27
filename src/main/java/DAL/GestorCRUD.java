@@ -1,7 +1,7 @@
-package main.DAL;
+package DAL;
 
-import main.model.Gestor;
-import main.model.Resultado;
+import model.Gestor;
+import model.Resultado;
 
 import java.io.*;
 import java.time.LocalDate;

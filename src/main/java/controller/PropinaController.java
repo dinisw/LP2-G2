@@ -1,10 +1,10 @@
-package main.controller;
+package controller;
 
-import main.DAL.PropinaCRUD;
-import main.DAL.EstudanteCRUD;
-import main.model.Estudante;
-import main.model.Propina;
-import main.model.Resultado;
+import DAL.PropinaCRUD;
+import DAL.EstudanteCRUD;
+import model.Estudante;
+import model.Propina;
+import model.Resultado;
 
 import java.util.ArrayList;
 import java.util.List;

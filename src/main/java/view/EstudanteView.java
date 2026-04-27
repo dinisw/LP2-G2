@@ -1,17 +1,17 @@
-package main.view;
+package view;
 
-import main.common.utils.MenuUtils;
-import main.model.Estudante;
-import main.model.Avaliacao;
-import main.model.Propina; // Importação necessária para a Propina
-import main.controller.EstudanteController;
-import main.controller.PropinaController; // Importação necessária para o Controller da Propina
+import common.utils.MenuUtils;
+import model.Estudante;
+import model.Avaliacao;
+import model.Propina; // Importação necessária para a Propina
+import controller.EstudanteController;
+import controller.PropinaController; // Importação necessária para o Controller da Propina
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-import static main.common.utils.DesignUtils.*;
+import static common.utils.DesignUtils.*;
 
 public class EstudanteView {
 
@@ -73,8 +73,8 @@ public class EstudanteView {
         }
 
         EstudanteController estudanteController = new EstudanteController();
-        main.DAL.CursoCRUD cursoCRUD = new main.DAL.CursoCRUD();
-        main.model.Curso curso = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
+        DAL.CursoCRUD cursoCRUD = new DAL.CursoCRUD();
+        model.Curso curso = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
 
         if (curso == null) {
             System.out.println(GetRed() + "Erro: Curso '" + estudante.getNomeCurso() + "' não encontrado no sistema." + GetReset());
@@ -82,29 +82,27 @@ public class EstudanteView {
             return;
         }
 
-        // --- A MAGIA DO MVC: Substituímos dezenas de linhas por apenas uma chamada! ---
         int anoDesbloqueado = estudanteController.obterAnoDesbloqueado(estudante);
-        // -------------------------------------------------------------------------------
 
-        List<main.model.Avaliacao> avaliacoes = estudante.getListaAvaliacoes();
+        List<model.Avaliacao> avaliacoes = estudante.getListaAvaliacoes();
 
-        // Um pequeno aviso simpático caso ele não tenha avançado de ano
         long inscritasNoAnoAtual = avaliacoes.stream().filter(a -> a.getUnidadeCurricular().getAnoCurricular() == anoDesbloqueado).count();
         if (inscritasNoAnoAtual > 0) {
             System.out.println(GetYellow() + "\nInscrição no ano seguinte não permitida (Aproveitamento insuficiente ou propina em atraso)." + GetReset());
             System.out.println(GetYellow() + "Apenas estão disponíveis disciplinas em atraso ou do seu nível atual (" + anoDesbloqueado + "º Ano)." + GetReset());
         }
 
-        List<main.model.UnidadeCurricular> disponiveis = new ArrayList<>();
-        List<main.model.UnidadeCurricular> todasUCsCurso = curso.getUnidadeCurriculars();
+        List<model.UnidadeCurricular> disponiveis = new ArrayList<>();
+        List<model.UnidadeCurricular> todasUCsCurso = curso.getUnidadeCurriculars();
 
-        for (main.model.UnidadeCurricular unidadeCurricular : todasUCsCurso) {
+        for (model.UnidadeCurricular unidadeCurricular : todasUCsCurso) {
             boolean aAguardarNota = false;
             boolean aprovado = false;
-            for (main.model.Avaliacao a : avaliacoes) {
-                if (a.getUnidadeCurricular().getNome().equalsIgnoreCase(unidadeCurricular.getNome())) {
-                    aAguardarNota = true;
-                    if (a.getNota() != null && a.getNota() >= 9.5) {
+            for (model.Avaliacao avaliacao : avaliacoes) {
+                if (avaliacao.getUnidadeCurricular().getNome().equalsIgnoreCase(unidadeCurricular.getNome())) {
+                    if (avaliacao.getNota() == null) {
+                        aAguardarNota = true;
+                    } else if (avaliacao.getNota() >= 9.5) {
                         aprovado = true;
                     }
                 }
@@ -112,7 +110,6 @@ public class EstudanteView {
 
             if (aprovado || aAguardarNota) continue;
 
-            // Só permite inscrever em UCs até ao ano que tem desbloqueado!
             if (unidadeCurricular.getAnoCurricular() <= anoDesbloqueado) {
                 disponiveis.add(unidadeCurricular);
             }
@@ -126,7 +123,7 @@ public class EstudanteView {
 
         System.out.println("\nUnidades Curriculares Disponíveis:\n");
         for (int i = 0; i < disponiveis.size(); i++) {
-            main.model.UnidadeCurricular uc = disponiveis.get(i);
+            model.UnidadeCurricular uc = disponiveis.get(i);
             System.out.println(GetWhiteBold() + (i + 1) + ". " + GetReset() + uc.getNome() + " (" + uc.getAnoCurricular() + "º Ano, " + uc.getSemestre() + "º Semestre)");
         }
         System.out.println(GetWhiteBold() + "0. " + GetReset() + "Voltar");
@@ -134,7 +131,7 @@ public class EstudanteView {
         int escolha = -1;
         while (escolha < 0 || escolha > disponiveis.size()) {
             try {
-                String op = main.common.utils.BackendUtils.lerInputString(ler, "\nEscolha o número da UC para se inscrever: ");
+                String op = common.utils.BackendUtils.lerInputString(ler, "\nEscolha o número da UC para se inscrever: ");
                 escolha = Integer.parseInt(op);
                 if (escolha == 0) return;
 
@@ -147,9 +144,9 @@ public class EstudanteView {
             }
         }
 
-        main.model.UnidadeCurricular ucEscolhida = disponiveis.get(escolha - 1);
-        main.model.Avaliacao novaInscricao = new main.model.Avaliacao("A Definir", null, ucEscolhida, estudante);
-        main.controller.AvaliacaoController avaliacaoController = new main.controller.AvaliacaoController();
+        model.UnidadeCurricular ucEscolhida = disponiveis.get(escolha - 1);
+        model.Avaliacao novaInscricao = new model.Avaliacao("A Definir", null, ucEscolhida, estudante);
+        controller.AvaliacaoController avaliacaoController = new controller.AvaliacaoController();
 
         if (avaliacaoController.registarAvaliacao(novaInscricao)) {
             estudante.adicionarAvaliacao(novaInscricao);
@@ -165,18 +162,18 @@ public class EstudanteView {
         System.out.println(GetCyanBold() + "║" + GetWhiteBold() + "               INSCRIÇÃO EM CURSO               " + GetCyanBold() + "║" + GetReset());
         System.out.println(GetCyanBold() + GetBordaInferior() + GetReset());
 
-        main.DAL.CursoCRUD cursoCRUD = new main.DAL.CursoCRUD();
-        List<main.model.Curso> todosCursos = cursoCRUD.getCursos();
-        List<main.model.Curso> cursosDisponiveis = new java.util.ArrayList<>();
+        DAL.CursoCRUD cursoCRUD = new DAL.CursoCRUD();
+        List<model.Curso> todosCursos = cursoCRUD.getCursos();
+        List<model.Curso> cursosDisponiveis = new java.util.ArrayList<>();
 
-        for (main.model.Curso curso : todosCursos) {
+        for (model.Curso curso : todosCursos) {
             if(!curso.isIniciado()) {
                 cursosDisponiveis.add(curso);
             }
         }
 
         if (estudante.getNomeCurso() != null && !estudante.getNomeCurso().equals("SEM REGISTO")) {
-            main.model.Curso cursoAtual = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
+            model.Curso cursoAtual = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
             if (cursoAtual != null && cursoAtual.isIniciado()) {
                 System.out.println(GetRed() + "O seu curso atual ('" + cursoAtual.getNome() + "') já iniciou o ano letivo." + GetReset());
                 System.out.println(GetYellow() + "As transferências de curso encontram-se bloqueadas." + GetReset());
@@ -283,7 +280,7 @@ public class EstudanteView {
 
                 System.out.println(GetCyanBold() + GetBordaMeio() + GetReset());
 
-                double media = main.BLL.NotasCalculo.calcularMedia(minhasNotas);
+                double media = BLL.NotasCalculo.calcularMedia(minhasNotas);
                 if (media > 0) {
                     System.out.printf(GetCyanBold() + "║" + GetWhiteBold() + " MÉDIA ATUAL DO CURSO: %-46.2f" + GetCyanBold() + "║\n" + GetReset(), media);
                 }
@@ -325,7 +322,7 @@ public class EstudanteView {
             int escolha = -1;
             while (escolha < 0 || escolha > propinas.size()) {
                 try {
-                    String op = main.common.utils.BackendUtils.lerInputString(ler, "\nEscolha o número da propina que deseja pagar (ou 0 para voltar): ");
+                    String op = common.utils.BackendUtils.lerInputString(ler, "\nEscolha o número da propina que deseja pagar (ou 0 para voltar): ");
                     escolha = Integer.parseInt(op);
                     if (escolha == 0) return;
 
@@ -351,7 +348,7 @@ public class EstudanteView {
 
             while (valorPagamento <= 0) {
                 try {
-                    String valorStr = main.common.utils.BackendUtils.lerInputString(ler, "Introduza o valor a pagar agora (ex: 250.50): ");
+                    String valorStr = common.utils.BackendUtils.lerInputString(ler, "Introduza o valor a pagar agora (ex: 250.50): ");
                     valorPagamento = Double.parseDouble(valorStr.replace(",", "."));
 
                     if (valorPagamento <= 0) {
@@ -363,7 +360,7 @@ public class EstudanteView {
                 }
             }
 
-            main.model.Resultado resultado = propinaController.pagarPropina(estudante.getNumeroMec(), propinaSelecionada.getAnoLetivo(), valorPagamento);
+            model.Resultado resultado = propinaController.pagarPropina(estudante.getNumeroMec(), propinaSelecionada.getAnoLetivo(), valorPagamento);
 
             if (resultado.success) {
                 System.out.println(GetGreen() + "\nPagamento de " + String.format("%.2f€", valorPagamento) + " processado com sucesso!" + GetReset());

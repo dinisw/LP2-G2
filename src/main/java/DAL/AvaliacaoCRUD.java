@@ -1,8 +1,8 @@
-package main.DAL;
+package DAL;
 
-import main.model.Avaliacao;
-import main.model.Estudante;
-import main.model.UnidadeCurricular;
+import model.Avaliacao;
+import model.Estudante;
+import model.UnidadeCurricular;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;

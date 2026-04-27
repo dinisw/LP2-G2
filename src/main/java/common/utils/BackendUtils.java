@@ -1,9 +1,9 @@
-package main.common.utils;
+package common.utils;
 
-import main.common.exceptions.CancelarRegistoException;
-import main.controller.DocenteController;
-import main.controller.EstudanteController;
-import main.controller.GestorController;
+import common.exceptions.CancelarRegistoException;
+import controller.DocenteController;
+import controller.EstudanteController;
+import controller.GestorController;
 
 import java.util.Scanner;
 import java.util.regex.Pattern;

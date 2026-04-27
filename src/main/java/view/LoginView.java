@@ -1,19 +1,19 @@
-package main.view;
+package view;
 
-import main.common.utils.BackendUtils;
-import main.common.utils.MenuUtils;
-import main.common.utils.SenhaUtils;
-import main.controller.LoginController;
-import main.model.Docente;
-import main.model.Estudante;
-import main.model.Gestor;
-import main.model.Utilizador;
+import common.utils.BackendUtils;
+import common.utils.MenuUtils;
+import common.utils.SenhaUtils;
+import controller.LoginController;
+import model.Docente;
+import model.Estudante;
+import model.Gestor;
+import model.Utilizador;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 import java.util.Scanner;
-import static main.common.utils.DesignUtils.*;
+import static common.utils.DesignUtils.*;
 
 public class LoginView {
     public static final String RESET = "\033[0m";

@@ -1,10 +1,10 @@
-package main.controller;
+package controller;
 
-import main.DAL.DocenteCRUD;
-import main.DAL.UnidadeCurricularCRUD;
-import main.model.Docente;
-import main.model.Resultado;
-import main.model.UnidadeCurricular;
+import DAL.DocenteCRUD;
+import DAL.UnidadeCurricularCRUD;
+import model.Docente;
+import model.Resultado;
+import model.UnidadeCurricular;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -108,7 +108,7 @@ public class UnidadeCurricularController {
 
         Docente novoDocente = ucExistente.getDocente();
         if (novaSiglaDocente != null && !novaSiglaDocente.trim().isEmpty()) {
-            main.DAL.DocenteCRUD docenteCRUD = new DocenteCRUD();
+            DAL.DocenteCRUD docenteCRUD = new DocenteCRUD();
             Docente docenteEncontrado = docenteCRUD.procurarPorSigla(novaSiglaDocente);
 
             if (docenteEncontrado != null) {
@@ -142,11 +142,11 @@ public class UnidadeCurricularController {
 
             if (novoNome != null && !novoNome.equals(nomeAtual)) {
                 if (ucAtualizada.getDocente() != null) {
-                    main.DAL.DocenteCRUD docenteCRUD = new main.DAL.DocenteCRUD();
-                    main.model.Docente docenteAfetado = docenteCRUD.procurarPorNif(ucAtualizada.getDocente().getNif());
+                    DAL.DocenteCRUD docenteCRUD = new DAL.DocenteCRUD();
+                    model.Docente docenteAfetado = docenteCRUD.procurarPorNif(ucAtualizada.getDocente().getNif());
 
                     if (docenteAfetado != null) {
-                        for (main.model.UnidadeCurricular unidadeCurricular : docenteAfetado.getUnidadesCurriculares()) {
+                        for (model.UnidadeCurricular unidadeCurricular : docenteAfetado.getUnidadesCurriculares()) {
                             if (unidadeCurricular.getNome().equalsIgnoreCase(nomeAtual)) {
                                 unidadeCurricular.setNome(novoNome);
                             }
@@ -201,8 +201,8 @@ public class UnidadeCurricularController {
 
     public Resultado definirMomentos(String nomeUnidadeCurricular, String momentosSeparadosPorVirgula) {
         Resultado resultado = new Resultado();
-        main.DAL.UnidadeCurricularCRUD unidadeCurricularCRUDAtualizado = new main.DAL.UnidadeCurricularCRUD();
-        main.model.UnidadeCurricular unidadeCurricular = unidadeCurricularCRUDAtualizado.procurarPorNome(nomeUnidadeCurricular);
+        DAL.UnidadeCurricularCRUD unidadeCurricularCRUDAtualizado = new DAL.UnidadeCurricularCRUD();
+        model.UnidadeCurricular unidadeCurricular = unidadeCurricularCRUDAtualizado.procurarPorNome(nomeUnidadeCurricular);
 
         if (unidadeCurricular != null) {
             unidadeCurricular.setMomentosAvaliacao(new ArrayList<>());

@@ -1,7 +1,7 @@
-package main.controller;
+package controller;
 
-import main.common.utils.SenhaUtils;
-import main.model.*;
+import common.utils.SenhaUtils;
+import model.*;
 
 public class RecuperarSenhaController {
 

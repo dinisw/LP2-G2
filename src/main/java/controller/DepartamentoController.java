@@ -1,9 +1,9 @@
-package main.controller;
+package controller;
 
-import main.DAL.DepartamentoCRUD;
-import main.DAL.CursoCRUD;
-import main.model.Departamento;
-import main.model.Resultado;
+import DAL.DepartamentoCRUD;
+import DAL.CursoCRUD;
+import model.Departamento;
+import model.Resultado;
 import java.util.List;
 
 public class DepartamentoController {

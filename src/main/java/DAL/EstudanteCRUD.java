@@ -1,7 +1,7 @@
-package main.DAL;
+package DAL;
 
-import main.model.Estudante;
-import main.model.Resultado;
+import model.Estudante;
+import model.Resultado;
 import java.io.*;
 import java.time.LocalDate;
 import java.util.List;

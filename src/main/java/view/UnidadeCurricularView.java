@@ -1,19 +1,19 @@
-package main.view;
+package view;
 
-import main.common.exceptions.CancelarRegistoException;
-import main.common.utils.BackendUtils;
-import main.common.utils.MenuUtils;
-import main.controller.DocenteController;
-import main.controller.UnidadeCurricularController;
-import main.model.Docente;
-import main.model.Resultado;
-import main.model.UnidadeCurricular;
+import common.exceptions.CancelarRegistoException;
+import common.utils.BackendUtils;
+import common.utils.MenuUtils;
+import controller.DocenteController;
+import controller.UnidadeCurricularController;
+import model.Docente;
+import model.Resultado;
+import model.UnidadeCurricular;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-import static main.common.utils.DesignUtils.*;
+import static common.utils.DesignUtils.*;
 
 public class UnidadeCurricularView {
     private final UnidadeCurricularController ucController;
@@ -183,12 +183,12 @@ public class UnidadeCurricularView {
                 System.out.println(GetGreen() + "\nUC Encontrada:" + GetReset());
                 imprimirDadosUnidadeCurricular(unidadeCurricular);
 
-                main.DAL.CursoCRUD cursoCRUD = new main.DAL.CursoCRUD();
+                DAL.CursoCRUD cursoCRUD = new DAL.CursoCRUD();
                 List<String> cursosAssociados = new ArrayList<>();
 
-                for (main.model.Curso curso : cursoCRUD.getCursos()) {
+                for (model.Curso curso : cursoCRUD.getCursos()) {
                     if (curso.getUnidadeCurriculars() != null) {
-                        for (main.model.UnidadeCurricular unidadeCurricularDoCurso : curso.getUnidadeCurriculars()) {
+                        for (model.UnidadeCurricular unidadeCurricularDoCurso : curso.getUnidadeCurriculars()) {
                             if (unidadeCurricularDoCurso.getNome().equalsIgnoreCase(unidadeCurricular.getNome())) {
                                 cursosAssociados.add(curso.getNome());
                                 break;
@@ -274,8 +274,6 @@ public class UnidadeCurricularView {
             System.out.println(GetYellow() + "\n AVISO DE IMPACTO GLOBAL ");
             System.out.println("A Unidade Curricular que está a editar pode estar a ser partilhada por múltiplos cursos.");
             System.out.println("Qualquer alteração que faça agora irá refletir-se automaticamente no plano de estudos de TODOS os cursos que a incluem." + GetReset());
-            System.out.print(GetWhiteBold() + "\nTem a certeza que deseja guardar estas alterações? (S/N): " + GetReset());
-
             String confirmacao = BackendUtils.lerInputString(scanner, GetWhiteBold() + "\nTem a certeza que deseja guardar estas alterações? (S/N): " + GetReset());
             if (!confirmacao.equalsIgnoreCase("S")) {
                 System.out.println(GetBlue() + "\nOperação de atualização cancelada pelo utilizador." + GetReset());

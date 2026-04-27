@@ -1,13 +1,13 @@
-package main.view;
+package view;
 
-import main.common.utils.BackendUtils;
-import main.common.utils.MenuUtils;
-import main.controller.LoginController;
-import main.controller.RecuperarSenhaController;
-import main.model.Utilizador;
+import common.utils.BackendUtils;
+import common.utils.MenuUtils;
+import controller.LoginController;
+import controller.RecuperarSenhaController;
+import model.Utilizador;
 
 import java.util.Scanner;
-import static main.common.utils.DesignUtils.*;
+import static common.utils.DesignUtils.*;
 
 public class RecuperarSenhaView {
 

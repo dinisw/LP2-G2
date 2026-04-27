@@ -1,4 +1,4 @@
-package main.view;
+package view;
 
 public class UtilizadorView {
     public void imprimirDadosPessoa(String nome, String email) {
