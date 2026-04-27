@@ -20,10 +20,11 @@ public class EstudanteView {
         Scanner ler = new Scanner(System.in);
         String opcao;
         ArrayList<String> opcoes = new ArrayList<>();
-        opcoes.add("1. Inscrever em Unidades Curriculares");
-        opcoes.add("2. Consultar Ficha de Estudante");
-        opcoes.add("3. Verificar Notas de Avaliação");
-        opcoes.add("4. Consultar e Pagar Propinas");
+        opcoes.add("1. Inscrever em Curso");
+        opcoes.add("2. Inscrever em Unidades Curriculares");
+        opcoes.add("3. Consultar Ficha de Estudante");
+        opcoes.add("4. Verificar Notas de Avaliação");
+        opcoes.add("5. Consultar e Pagar Propinas");
         opcoes.add("0. Logout");
 
         do {
@@ -39,15 +40,18 @@ public class EstudanteView {
 
                 switch (opcao) {
                     case "1":
-                        inscreverEmUC(estudante, ler);
+                        inscreverEmCurso(estudante, ler);
                         break;
                     case "2":
-                        consultarFichaEstudante(estudante, ler);
+                        inscreverEmUC(estudante, ler);
                         break;
                     case "3":
-                        consultarNotasEstudante(estudante, ler);
+                        consultarFichaEstudante(estudante, ler);
                         break;
                     case "4":
+                        consultarNotasEstudante(estudante, ler);
+                        break;
+                    case "5":
                         consultarEPagarPropinas(estudante, ler);
                         break;
                     case "0":
@@ -72,8 +76,16 @@ public class EstudanteView {
         EstudanteController estudanteController = new EstudanteController();
         Estudante estudante = estudanteController.procurarEstudantePorNumeroMec(estudanteAtual.getNumeroMec());
 
+        if (estudanteController.verificarSeCursoConcluido(estudante)) {
+            System.out.println(GetGreen() + "🎓 PARABÉNS! Já concluiu o seu curso com sucesso e tem as propinas regularizadas!" + GetReset());
+            System.out.println(GetYellow() + "Não é possível inscrever-se em mais Unidades Curriculares." + GetReset());
+            MenuUtils.pressionarEnter(ler);
+            return;
+        }
+
         if (estudante.getNomeCurso() == null || estudante.getNomeCurso().equals("SEM REGISTO")) {
             System.out.println(GetYellow() + "Aviso: Primeiro deve estar inscrito num curso para gerir inscrições em UCs." + GetReset());
+            System.out.println("Utilize a opção 1 do menu principal.");
             MenuUtils.pressionarEnter(ler);
             return;
         }
@@ -305,11 +317,14 @@ public class EstudanteView {
         }
     }
 
-    public static void consultarEPagarPropinas(Estudante estudante, Scanner ler) {
+    public static void consultarEPagarPropinas(Estudante estudanteAtual, Scanner ler) {
         try {
             System.out.println(GetCyanBold() + GetBordaSuperior() + GetReset());
             System.out.println(GetCyanBold() + "║" + GetWhiteBold() + "           CONSULTAR E PAGAR PROPINAS         " + GetCyanBold() + "║" + GetReset());
             System.out.println(GetCyanBold() + GetBordaInferior() + GetReset());
+
+            EstudanteController estudanteController = new EstudanteController();
+            Estudante estudante = estudanteController.procurarEstudantePorNumeroMec(estudanteAtual.getNumeroMec());
 
             PropinaController propinaController = new PropinaController();
             List<Propina> propinas = propinaController.consultarPropinasEstudante(estudante.getNumeroMec());
