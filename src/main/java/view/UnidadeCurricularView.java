@@ -39,11 +39,21 @@ public class UnidadeCurricularView {
                 opcao = scanner.nextLine().trim();
 
                 switch (opcao) {
-                    case "1": registarUnidadeCurricular(); break;
-                    case "2": listarUnidadesCurriculares(); break;
-                    case "3": procurarUnidadeCurricular(); break;
-                    case "4": atualizarUnidadeCurricular(); break;
-                    case "5": eliminarUnidadeCurricular(); break;
+                    case "1":
+                        registarUnidadeCurricular();
+                        break;
+                    case "2":
+                        listarUnidadesCurriculares();
+                        break;
+                    case "3":
+                        procurarUnidadeCurricular();
+                        break;
+                    case "4":
+                        atualizarUnidadeCurricular();
+                        break;
+                    case "5":
+                        eliminarUnidadeCurricular();
+                        break;
                     case "0":
                         System.out.println(GetYellow() + "\nA voltar ao menu de gestão..." + GetReset());
                         return;
@@ -248,6 +258,7 @@ public class UnidadeCurricularView {
             UnidadeCurricularController unidadeCurricularControllerAtualizado = new UnidadeCurricularController();
             UnidadeCurricular ucExistente = unidadeCurricularControllerAtualizado.procurarUCPorId(id);
 
+            String nomeAtual;
             while (ucExistente == null) {
                 nomeAtual = BackendUtils.lerInputString(scanner, "\nDigite o nome da UC a atualizar: ");
                 if (nomeAtual.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
@@ -270,8 +281,11 @@ public class UnidadeCurricularView {
                 if (anoInput.isEmpty()) break;
                 try {
                     int anoTmp = Integer.parseInt(anoInput);
-                    if (anoTmp >= 1 && anoTmp <= 3) { novoAno = anoTmp; break; }
-                    else System.out.println(GetRed() + "Erro: O ano curricular deve ser 1, 2 ou 3. Tente novamente ou pressione Enter para manter." + GetReset());
+                    if (anoTmp >= 1 && anoTmp <= 3) {
+                        novoAno = anoTmp;
+                        break;
+                    } else
+                        System.out.println(GetRed() + "Erro: O ano curricular deve ser 1, 2 ou 3. Tente novamente ou pressione Enter para manter." + GetReset());
                 } catch (NumberFormatException e) {
                     System.out.println(GetRed() + "Erro: Valor inválido. Introduza um número entre 1 e 3, ou pressione Enter para manter." + GetReset());
                 }
@@ -283,8 +297,11 @@ public class UnidadeCurricularView {
                 if (!semInput.isEmpty()) {
                     try {
                         int semestre = Integer.parseInt(semInput);
-                        if (semestre >= 1 && semestre <= 2) { novoSemestre = semestre; break; }
-                        else System.out.println(GetYellow() + "Aviso: Semestre inválido. Mantendo o semestre original." + GetReset());
+                        if (semestre >= 1 && semestre <= 2) {
+                            novoSemestre = semestre;
+                            break;
+                        } else
+                            System.out.println(GetYellow() + "Aviso: Semestre inválido. Mantendo o semestre original." + GetReset());
                     } catch (NumberFormatException e) {
                         System.out.println(GetYellow() + "Aviso: Formato inválido. Mantendo o semestre original." + GetReset());
                     }
@@ -349,30 +366,27 @@ public class UnidadeCurricularView {
             UnidadeCurricularController unidadeCurricularControllerAtualizado = new UnidadeCurricularController();
             UnidadeCurricular unidadeCurricular = unidadeCurricularControllerAtualizado.procurarUCPorId(id);
 
-                unidadeCurricular = unidadeCurricularControllerAtualizado.procurarUCPorNome(nome);
-                if (unidadeCurricular == null) {
-                    System.out.println(GetRed() + "Erro: UC não encontrada. Verifique a lista e tente novamente." + GetReset());
-                }
-            }
-
-            // Dupla confirmação
-            System.out.println(GetYellow() + "\nTem a certeza que deseja eliminar a UC " + unidadeCurricular.getNome() + "? (s/n)" + GetReset());
-            String confirmacao1 = scanner.nextLine().trim();
-            if (!confirmacao1.equalsIgnoreCase("s")) {
-                System.out.println(GetYellow() + "Operação cancelada." + GetReset());
+            // CORREÇÃO: Validar se a UC existe para não dar erro
+            if (unidadeCurricular == null) {
+                System.out.println(GetRed() + "Erro: UC não encontrada com o ID informado." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
                 return;
             }
 
+            // CORREÇÃO: Confirmação única e limpa
             String confirmacao = BackendUtils.lerInputString(scanner, GetYellow() + "Tem a certeza que deseja eliminar a UC '" + unidadeCurricular.getNome() + "' (ID: " + id + ")? (S/N): " + GetReset()).toUpperCase();
 
+            // CORREÇÃO: Chavetas devidamente abertas e fechadas
             if (confirmacao.equals("S")) {
                 Resultado resultado = unidadeCurricularControllerAtualizado.eliminarUCPorId(id);
 
-            if (resultado.success) {
-                System.out.println(GetGreen() + "\nUC eliminada com sucesso!" + GetReset());
+                if (resultado.success) {
+                    System.out.println(GetGreen() + "\nUC eliminada com sucesso!" + GetReset());
+                } else {
+                    System.out.println(GetRed() + "\nErro ao eliminar: " + resultado.errorMessage + GetReset());
+                }
             } else {
-                System.out.println(GetRed() + "\nErro ao eliminar: " + resultado.errorMessage + GetReset());
+                System.out.println(GetYellow() + "Operação cancelada." + GetReset());
             }
 
             MenuUtils.pressionarEnter(scanner);
