@@ -27,6 +27,9 @@ public class EstudanteController {
 
         int anoLetivoAtual = obterAnoDesbloqueado(estudante);
 
+        boolean isConcluido = verificarSeCursoConcluido(estudante);
+        String statusCurso = isConcluido ? "🎓 CONCLUÍDO" : "⏳ EM CURSO";
+
         return """
         --- FICHA DE ESTUDANTE ---
         Nome: %s

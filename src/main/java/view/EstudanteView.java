@@ -202,7 +202,7 @@ public class EstudanteView {
         }
 
         if (cursosDisponiveis.isEmpty()) {
-            System.out.println(GetYellow() + "De momento não existem cursos com inscrições abertas." + GetReset());
+            System.out.println(GetYellow() + "De momento não existem curso com inscrições abertas." + GetReset());
             MenuUtils.pressionarEnter(ler);
             return;
         }
