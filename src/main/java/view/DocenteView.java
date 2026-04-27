@@ -94,8 +94,9 @@ public class DocenteView {
             if (minhasUcs == null || minhasUcs.isEmpty()) {
                 System.out.println(GetYellow() + "Não tem Unidades Curriculares atribuídas neste momento." + GetReset());
             } else {
-                for (UnidadeCurricular unidadeCurricular : minhasUcs) {
-                    System.out.println(unidadeCurricular.getNome() + " (Ano: " + unidadeCurricular.getAnoCurricular() + ")");
+                for (int i = 0; i < minhasUcs.size(); i++) {
+                    UnidadeCurricular uc = minhasUcs.get(i);
+                    System.out.println((i + 1) + ". " + uc.getNome() + " (Ano: " + uc.getAnoCurricular() + ")");
                 }
             }
             MenuUtils.pressionarEnter(scanner);
