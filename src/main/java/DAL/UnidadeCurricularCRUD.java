@@ -25,28 +25,52 @@ public class UnidadeCurricularCRUD {
         try (BufferedReader reader = new BufferedReader(new FileReader(CAMINHO_FICHEIRO))) {
             String linha;
             while ((linha = reader.readLine()) != null) {
-                String[] dados = linha.split(";");
-                if (dados.length >= 4) {
+                String[] dados = linha.split(";", -1);
+                if (dados.length < 4) continue;
+
+                // Detectar formato: novo (id;nome;ano;sem;docente;momentos) vs antigo (nome;ano;sem;docente;momentos)
+                boolean formatoNovo = false;
+                try {
+                    Integer.parseInt(dados[0].trim());
+                    formatoNovo = true;
+                } catch (NumberFormatException ignored) {}
+
+                int id, ano, semestre;
+                String nome, siglaDocente, momentosStr;
+
+                if (formatoNovo && dados.length >= 5) {
+                    id = Integer.parseInt(dados[0].trim());
+                    nome = dados[1];
+                    ano = Integer.parseInt(dados[2]);
+                    semestre = Integer.parseInt(dados[3]);
+                    siglaDocente = dados[4];
+                    momentosStr = dados.length >= 6 ? dados[5] : "";
+                } else {
                     proximoid++;
-                    String nome = dados[0];
-                    int ano = Integer.parseInt(dados[1]);
-                    int semestre = Integer.parseInt(dados[2]);
-
-                    Docente docente = null;
-                    if (!dados[3].equals("SEM REGISTO")) {
-                        docente = docenteCRUD.procurarPorSigla(dados[3]);
-                    }
-
-                    UnidadeCurricular unidadeCurricular = new UnidadeCurricular(nome, ano, semestre, docente);
-
-                    if(dados.length >= 5 && !dados[4].trim().isEmpty()) {
-                        String[] momentos = dados[4].split(",");
-                        for (String momento : momentos) {
-                            unidadeCurricular.adicionarMomento(momento);
-                        }
-                    }
-                    unidadeCurriculars.add(unidadeCurricular);
+                    id = proximoid;
+                    nome = dados[0];
+                    ano = Integer.parseInt(dados[1]);
+                    semestre = Integer.parseInt(dados[2]);
+                    siglaDocente = dados[3];
+                    momentosStr = dados.length >= 5 ? dados[4] : "";
                 }
+
+                if (id > proximoid) proximoid = id;
+
+                Docente docente = null;
+                if (!siglaDocente.equals("SEM REGISTO")) {
+                    docente = docenteCRUD.procurarPorSigla(siglaDocente);
+                }
+
+                UnidadeCurricular unidadeCurricular = new UnidadeCurricular(nome, id, ano, semestre, docente, new java.util.ArrayList<>());
+
+                if (!momentosStr.trim().isEmpty()) {
+                    String[] momentos = momentosStr.split(",");
+                    for (String momento : momentos) {
+                        unidadeCurricular.adicionarMomento(momento);
+                    }
+                }
+                unidadeCurriculars.add(unidadeCurricular);
             }
         } catch (IOException | NumberFormatException e) {
             throw new RuntimeException("Erro interno ao carregar o ficheiro de UCs.", e);
@@ -61,7 +85,8 @@ public class UnidadeCurricularCRUD {
                 if (unidadeCurricular.getMomentosAvaliacao() != null && !unidadeCurricular.getMomentosAvaliacao().isEmpty()) {
                     momentosStr = String.join(",", unidadeCurricular.getMomentosAvaliacao());
                 }
-                String linha = String.format("%s;%d;%d;%s;%s",
+                String linha = String.format("%d;%s;%d;%d;%s;%s",
+                        unidadeCurricular.getId(),
                         safe(unidadeCurricular.getNome()),
                         unidadeCurricular.getAnoCurricular(),
                         unidadeCurricular.getSemestre(),
@@ -84,6 +109,8 @@ public class UnidadeCurricularCRUD {
             return false;
         }
 
+        proximoid++;
+        unidadeCurricular.setId(proximoid);
         unidadeCurriculars.add(unidadeCurricular);
         guardarTodosNoFicheiro();
         return true;
@@ -91,6 +118,16 @@ public class UnidadeCurricularCRUD {
 
     public List<UnidadeCurricular> getUnidadeCurriculars() {
         return new ArrayList<>(unidadeCurriculars);
+    }
+
+    // READ - Procurar por ID
+    public UnidadeCurricular procurarPorId(int id) {
+        for (UnidadeCurricular uc : unidadeCurriculars) {
+            if (uc.getId() == id) {
+                return uc;
+            }
+        }
+        return null;
     }
 
     // READ - Procurar por nome
@@ -142,6 +179,26 @@ public class UnidadeCurricularCRUD {
                 if (!nomeAtual.equalsIgnoreCase(ucAtualizada.getNome()) && procurarPorNome(ucAtualizada.getNome()) != null) {
                     return false;
                 }
+                ucAtualizada.setId(unidadeCurriculars.get(i).getId());
+                unidadeCurriculars.set(i, ucAtualizada);
+                guardarTodosNoFicheiro();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // UPDATE por ID
+    public boolean atualizarUCPorId(int id, UnidadeCurricular ucAtualizada) {
+        if (ucAtualizada == null) return false;
+
+        for (int i = 0; i < unidadeCurriculars.size(); i++) {
+            if (unidadeCurriculars.get(i).getId() == id) {
+                String nomeAtual = unidadeCurriculars.get(i).getNome();
+                if (!nomeAtual.equalsIgnoreCase(ucAtualizada.getNome()) && procurarPorNome(ucAtualizada.getNome()) != null) {
+                    return false;
+                }
+                ucAtualizada.setId(id);
                 unidadeCurriculars.set(i, ucAtualizada);
                 guardarTodosNoFicheiro();
                 return true;
@@ -158,6 +215,18 @@ public class UnidadeCurricularCRUD {
 
         for (int i = 0; i < unidadeCurriculars.size(); i++) {
             if (unidadeCurriculars.get(i).getNome().equalsIgnoreCase(nome)) {
+                unidadeCurriculars.remove(i);
+                guardarTodosNoFicheiro();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // DELETE - Eliminar UC por ID
+    public boolean eliminarUCPorId(int id) {
+        for (int i = 0; i < unidadeCurriculars.size(); i++) {
+            if (unidadeCurriculars.get(i).getId() == id) {
                 unidadeCurriculars.remove(i);
                 guardarTodosNoFicheiro();
                 return true;

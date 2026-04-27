@@ -97,7 +97,7 @@ public class UnidadeCurricularView {
                         System.out.println(GetRed() + "Aviso: O Semestre deve ser 1 ou 2." + GetReset());
                     }
                 } catch (NumberFormatException e) {
-                System.out.println(GetRed() + "Aviso: O valor introduzido não é um número válido." + GetReset());
+                    System.out.println(GetRed() + "Aviso: O valor introduzido não é um número válido." + GetReset());
                 }
             }
 
@@ -149,16 +149,17 @@ public class UnidadeCurricularView {
             if (unidadeCurriculars.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhuma UC registada até ao momento!" + GetReset());
             } else {
-                System.out.println(GetCyanBold() + "-----------------------------------------------------------------" + GetReset());
-                System.out.printf(GetWhiteBold() + " %-25s | %-5s | %-3s | %-15s | %-4s \n" + GetReset(), "NOME DA UC", "ANO", "SEM", "DOCENTE", "ECTS");
-                System.out.println(GetCyanBold() + "-----------------------------------------------------------------" + GetReset());
+                System.out.println(GetCyanBold() + "-------------------------------------------------------------------------" + GetReset());
+                System.out.printf(GetWhiteBold() + " %-4s | %-25s | %-5s | %-3s | %-15s | %-4s \n" + GetReset(), "ID", "NOME DA UC", "ANO", "SEM", "DOCENTE", "ECTS");
+                System.out.println(GetCyanBold() + "-------------------------------------------------------------------------" + GetReset());
 
                 for (UnidadeCurricular unidadeCurricular : unidadeCurriculars) {
                     String docenteNome = (unidadeCurricular.getDocente() != null) ? unidadeCurricular.getDocente().getSigla() : GetYellow() + "N/A" + GetReset();
-                    System.out.printf(" %-25s | %-5d |%-3d | %-15s | %-4d \n",
-                            unidadeCurricular.getNome(), unidadeCurricular.getAnoCurricular(),unidadeCurricular.getSemestre(), docenteNome, unidadeCurricular.getEcts());
+                    System.out.printf(" %-4d | %-25s | %-5d |%-3d | %-15s | %-4d \n",
+                            unidadeCurricular.getId(),
+                            unidadeCurricular.getNome(), unidadeCurricular.getAnoCurricular(), unidadeCurricular.getSemestre(), docenteNome, unidadeCurricular.getEcts());
                 }
-                System.out.println(GetCyanBold() + "-----------------------------------------------------------------" + GetReset());
+                System.out.println(GetCyanBold() + "-------------------------------------------------------------------------" + GetReset());
             }
 
             MenuUtils.pressionarEnter(scanner);
@@ -174,10 +175,20 @@ public class UnidadeCurricularView {
             System.out.println(GetBlue() + "\n--- PROCURAR UNIDADE CURRICULAR ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
-            String nome = BackendUtils.lerInputString(scanner, "Digite o nome da UC a procurar: ");
+            listarUCsSemPausa();
+
+            String idStr = BackendUtils.lerInputString(scanner, "Digite o ID da UC a procurar: ");
+            int id;
+            try {
+                id = Integer.parseInt(idStr);
+            } catch (NumberFormatException e) {
+                System.out.println(GetRed() + "ID inválido. Por favor introduza um número." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
 
             UnidadeCurricularController unidadeCurricularControllerAtualizado = new UnidadeCurricularController();
-            UnidadeCurricular unidadeCurricular = unidadeCurricularControllerAtualizado.procurarUCPorNome(nome);
+            UnidadeCurricular unidadeCurricular = unidadeCurricularControllerAtualizado.procurarUCPorId(id);
 
             if (unidadeCurricular != null) {
                 System.out.println(GetGreen() + "\nUC Encontrada:" + GetReset());
@@ -199,7 +210,7 @@ public class UnidadeCurricularView {
                 System.out.println(GetWhiteBold() + "Cursos a que pertence: " + GetReset() +
                         (cursosAssociados.isEmpty() ? GetYellow() + "Nenhum curso associado" + GetReset() : String.join(" | ", cursosAssociados)));
             } else {
-                System.out.println(GetYellow() + "\nUnidade Curricular não encontrada com o nome informado." + GetReset());
+                System.out.println(GetYellow() + "\nUnidade Curricular não encontrada com o ID informado." + GetReset());
             }
 
             MenuUtils.pressionarEnter(scanner);
@@ -219,12 +230,20 @@ public class UnidadeCurricularView {
             System.out.println(GetBlue() + "\n--- ATUALIZAR UNIDADE CURRICULAR ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
-            listarUnidadesCurriculares();
+            listarUCsSemPausa();
 
-            String nomeAtual = BackendUtils.lerInputString(scanner, "\nDigite o nome da UC a atualizar: ");
+            String idStr = BackendUtils.lerInputString(scanner, "\nDigite o ID da UC a atualizar: ");
+            int id;
+            try {
+                id = Integer.parseInt(idStr);
+            } catch (NumberFormatException e) {
+                System.out.println(GetRed() + "ID inválido. Por favor introduza um número." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
 
             UnidadeCurricularController unidadeCurricularControllerAtualizado = new UnidadeCurricularController();
-            UnidadeCurricular ucExistente = unidadeCurricularControllerAtualizado.procurarUCPorNome(nomeAtual);
+            UnidadeCurricular ucExistente = unidadeCurricularControllerAtualizado.procurarUCPorId(id);
 
             if (ucExistente == null) {
                 System.out.println(GetYellow() + "\nUnidade Curricular não encontrada." + GetReset());
@@ -232,38 +251,36 @@ public class UnidadeCurricularView {
                 return;
             }
 
-            System.out.println(GetGreen() + "\nDados atuais: " + ucExistente.getNome() + GetReset());
+            System.out.println(GetGreen() + "\nDados atuais: [ID: " + ucExistente.getId() + "] " + ucExistente.getNome() + GetReset());
             System.out.println(GetYellow() + "[Pressione ENTER nos campos que deseja manter iguais]" + GetReset());
 
             String novoNome = BackendUtils.lerInputString(scanner, "Novo nome: ");
             String nomeFinal = novoNome.isEmpty() ? null : novoNome;
 
             int novoAno = 0;
-            String anoInput = BackendUtils.lerInputString(scanner, "Novo ano curricular (1, 2 ou 3): ");
-            if (!anoInput.isEmpty()) {
+            while (true) {
+                String anoInput = BackendUtils.lerInputString(scanner, "Novo ano curricular (1, 2 ou 3): ");
+                if (anoInput.isEmpty()) break;
                 try {
-                    novoAno = Integer.parseInt(anoInput);
-                    if (novoAno < 1 || novoAno > 3) {
-                        System.out.println(GetYellow() + "Aviso: Ano inválido. Mantendo o original." + GetReset());
-                        novoAno = 0;
-                    }
+                    int anoTmp = Integer.parseInt(anoInput);
+                    if (anoTmp >= 1 && anoTmp <= 3) { novoAno = anoTmp; break; }
+                    else System.out.println(GetRed() + "Erro: O ano curricular deve ser 1, 2 ou 3. Tente novamente ou pressione Enter para manter." + GetReset());
                 } catch (NumberFormatException e) {
-                    System.out.println(GetYellow() + "Aviso: Formato inválido. Mantendo o original." + GetReset());
-                    novoAno = 0;
+                    System.out.println(GetRed() + "Erro: Valor inválido. Introduza um número entre 1 e 3, ou pressione Enter para manter." + GetReset());
                 }
             }
 
             int novoSemestre = 0;
-            String semInput = BackendUtils.lerInputString(scanner, "Novo semestre (1 ou 2): ");
-            if (!semInput.isEmpty()) {
-                try {
-                    novoSemestre = Integer.parseInt(semInput);
-                    if (novoSemestre < 1 || novoSemestre > 2) {
-                        System.out.println(GetYellow() + "Aviso: Semestre inválido. Mantendo o semestre original." + GetReset());
-                        novoSemestre = 0;
+            while (true) {
+                String semInput = BackendUtils.lerInputString(scanner, "Novo semestre (1 ou 2): ");
+                if (!semInput.isEmpty()) {
+                    try {
+                        int semestre = Integer.parseInt(semInput);
+                        if (semestre >= 1 && semestre <= 2) { novoSemestre = semestre; break; }
+                        else System.out.println(GetYellow() + "Aviso: Semestre inválido. Mantendo o semestre original." + GetReset());
+                    } catch (NumberFormatException e) {
+                        System.out.println(GetYellow() + "Aviso: Formato inválido. Mantendo o semestre original." + GetReset());
                     }
-                } catch (NumberFormatException e) {
-                    System.out.println(GetYellow() + "Aviso: Formato inválido. Mantendo o semestre original." + GetReset());
                 }
             }
 
@@ -281,11 +298,11 @@ public class UnidadeCurricularView {
                 return;
             }
 
-            Resultado resultado = unidadeCurricularControllerAtualizado.atualizarUC(nomeAtual, nomeFinal, novoAno,novoSemestre, siglaFinal);
+            Resultado resultado = unidadeCurricularControllerAtualizado.atualizarUCPorId(id, nomeFinal, novoAno, novoSemestre, siglaFinal);
 
             if (resultado.success) {
                 System.out.println(GetGreen() + "\nUC atualizada com sucesso!" + GetReset());
-                UnidadeCurricular ucAtualizada = unidadeCurricularControllerAtualizado.procurarUCPorNome(nomeFinal != null ? nomeFinal : nomeAtual);
+                UnidadeCurricular ucAtualizada = unidadeCurricularControllerAtualizado.procurarUCPorId(id);
                 if (ucAtualizada != null) {
                     imprimirDadosUnidadeCurricular(ucAtualizada);
                 }
@@ -310,12 +327,20 @@ public class UnidadeCurricularView {
             System.out.println(GetBlue() + "\n--- ELIMINAR UNIDADE CURRICULAR ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
-            listarUnidadesCurriculares();
+            listarUCsSemPausa();
 
-            String nome = BackendUtils.lerInputString(scanner, "\nDigite o nome da UC a eliminar: ");
+            String idStr = BackendUtils.lerInputString(scanner, "\nDigite o ID da UC a eliminar: ");
+            int id;
+            try {
+                id = Integer.parseInt(idStr);
+            } catch (NumberFormatException e) {
+                System.out.println(GetRed() + "ID inválido. Por favor introduza um número." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
 
             UnidadeCurricularController unidadeCurricularControllerAtualizado = new UnidadeCurricularController();
-            UnidadeCurricular unidadeCurricular = unidadeCurricularControllerAtualizado.procurarUCPorNome(nome);
+            UnidadeCurricular unidadeCurricular = unidadeCurricularControllerAtualizado.procurarUCPorId(id);
 
             if (unidadeCurricular == null) {
                 System.out.println(GetYellow() + "\nUnidade Curricular não encontrada." + GetReset());
@@ -323,10 +348,10 @@ public class UnidadeCurricularView {
                 return;
             }
 
-            String confirmacao = BackendUtils.lerInputString(scanner, GetYellow() + "Tem a certeza que deseja eliminar a UC '" + nome + "'? (S/N): " + GetReset()).toUpperCase();
+            String confirmacao = BackendUtils.lerInputString(scanner, GetYellow() + "Tem a certeza que deseja eliminar a UC '" + unidadeCurricular.getNome() + "' (ID: " + id + ")? (S/N): " + GetReset()).toUpperCase();
 
             if (confirmacao.equals("S")) {
-                Resultado resultado = unidadeCurricularControllerAtualizado.eliminarUC(nome);
+                Resultado resultado = unidadeCurricularControllerAtualizado.eliminarUCPorId(id);
 
                 if (resultado.success) {
                     System.out.println(GetGreen() + "\nUC eliminada com sucesso!" + GetReset());
@@ -349,6 +374,25 @@ public class UnidadeCurricularView {
         }
     }
 
+    private void listarUCsSemPausa() {
+        UnidadeCurricularController ctrl = new UnidadeCurricularController();
+        List<UnidadeCurricular> ucs = ctrl.listarTodasUCs();
+
+        if (ucs.isEmpty()) {
+            System.out.println(GetYellow() + "Nenhuma UC registada até ao momento!" + GetReset());
+        } else {
+            System.out.println(GetCyanBold() + "-------------------------------------------------------------------------" + GetReset());
+            System.out.printf(GetWhiteBold() + " %-4s | %-25s | %-5s | %-3s | %-15s | %-4s \n" + GetReset(), "ID", "NOME DA UC", "ANO", "SEM", "DOCENTE", "ECTS");
+            System.out.println(GetCyanBold() + "-------------------------------------------------------------------------" + GetReset());
+            for (UnidadeCurricular uc : ucs) {
+                String docenteNome = (uc.getDocente() != null) ? uc.getDocente().getSigla() : GetYellow() + "N/A" + GetReset();
+                System.out.printf(" %-4d | %-25s | %-5d |%-3d | %-15s | %-4d \n",
+                        uc.getId(), uc.getNome(), uc.getAnoCurricular(), uc.getSemestre(), docenteNome, uc.getEcts());
+            }
+            System.out.println(GetCyanBold() + "-------------------------------------------------------------------------" + GetReset());
+        }
+    }
+
     private void listarDocentesDisponiveis() {
         System.out.println("\n" + GetBlue() + "--- Docentes Disponíveis ---" + GetReset());
         DocenteController docenteControllerAtualizado = new DocenteController();
@@ -364,6 +408,7 @@ public class UnidadeCurricularView {
 
     private void imprimirDadosUnidadeCurricular(UnidadeCurricular unidadeCurricular) {
         System.out.println("\n" + GetWhiteBold() + "--- Dados da Unidade Curricular ---" + GetReset());
+        System.out.println("ID: " + unidadeCurricular.getId());
         System.out.println("Nome: " + unidadeCurricular.getNome());
         System.out.println("Ano Curricular: " + unidadeCurricular.getAnoCurricular());
         System.out.println("Semestre: " + unidadeCurricular.getSemestre());
