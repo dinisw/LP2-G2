@@ -100,9 +100,9 @@ public class GestorView {
         ArrayList<String> opcoes = new ArrayList<>();
         opcoes.add("1. Registar Gestor");
         opcoes.add("2. Listar Gestores");
-        opcoes.add("3. Procurar Gestor");
-        opcoes.add("4. Atualizar Gestor");
-        opcoes.add("5. Eliminar Gestor");
+        opcoes.add("3. Procurar Gestor (NIF)");
+        opcoes.add("4. Atualizar Gestor (NIF)");
+        opcoes.add("5. Eliminar Gestor (NIF)");
         opcoes.add("0. Voltar ao Menu Principal");
 
         do {
@@ -461,10 +461,10 @@ public class GestorView {
         ArrayList<String> opcoes = new ArrayList<>();
         opcoes.add("1. Registar Docente");
         opcoes.add("2. Listar Docentes");
-        opcoes.add("3. Procurar Docente");
-        opcoes.add("4. Atualizar Docente");
-        opcoes.add("5. Alterar Password");
-        opcoes.add("6. Eliminar Docente");
+        opcoes.add("3. Procurar Docente (NIF)");
+        opcoes.add("4. Atualizar Docente (NIF)");
+        opcoes.add("5. Alterar Password (NIF)");
+        opcoes.add("6. Eliminar Docente (NIF)");
         opcoes.add("0. Voltar ao Menu Principal");
 
         do {
@@ -511,15 +511,7 @@ public class GestorView {
             System.out.println(GetBlue() + "\n--- REGISTO DE DOCENTE ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
-            String nome = "";
-            while (true) {
-                nome = BackendUtils.lerInputString(scanner, "Nome: ");
-                if (nome.trim().split("\\s+").length >= 2) {
-                    break;
-                }
-                System.out.println(GetRed() + "Deve introduzir pelo menos nome e sobrenome. Tente novamente." + GetReset());
-            }
-
+            String nome = BackendUtils.lerInputString(scanner, "Nome: ");
             String morada = BackendUtils.lerInputString(scanner, "Morada: ");
 
             int nif = 0;
@@ -563,25 +555,7 @@ public class GestorView {
             String passDigitada = SenhaUtils.gerarPalavraPasseAleatoria();
             SenhaUtils su = new SenhaUtils();
             String hash = su.gerarHashComSalt(passDigitada);
-
-            // Geração de sigla melhorada
-            String[] partesNome = nome.trim().split("\\s+");
-            String primeiroNome = partesNome[0];
-            String ultimoNome = partesNome[partesNome.length - 1];
-
             String sigla = nome.length() >= 3 ? nome.substring(0, 3).toUpperCase() : nome.toUpperCase();
-
-            DocenteController docenteControllerAtualizado = new DocenteController();
-            if (docenteControllerAtualizado.procurarDocentePorSigla(sigla) != null) {
-                // Se a sigla padrão já existir, usa a última letra do sobrenome
-                String ultimaLetraSobrenome = ultimoNome.substring(ultimoNome.length() - 1).toUpperCase();
-                if (sigla.length() >= 3) {
-                    sigla = sigla.substring(0, 2) + ultimaLetraSobrenome;
-                } else {
-                    sigla = sigla + ultimaLetraSobrenome;
-                }
-            }
-
             String email = sigla.toLowerCase() + "@issmf.ipp.pt";
 
             EmailService es = new EmailService();
@@ -638,6 +612,7 @@ public class GestorView {
                 }
             }
 
+            DocenteController docenteControllerAtualizado = new DocenteController();
             Resultado res = docenteControllerAtualizado.registarDocente(nome, morada, nif, dataNascimento, email, hash, sigla, nomesUC);
 
             if (res.success) {
@@ -701,13 +676,13 @@ public class GestorView {
             System.out.println("\n" + GetWhiteBold() + "Docentes Disponíveis:" + GetReset());
             for (int i = 0; i < listaDocentes.size(); i++) {
                 model.Docente d = listaDocentes.get(i);
-                System.out.printf("%d - %s (Sigla: %s)\n", i + 1, d.getNome(), d.getSigla());
+                System.out.printf("%d - %s (Sigla: %s | NIF: %d)\n", i + 1, d.getNome(), d.getSigla(), d.getNif());
             }
 
             int escolha = -1;
             while (escolha < 0 || escolha > listaDocentes.size()) {
                 try {
-                    String op = BackendUtils.lerInputString(scanner, "\nDigite o ID do docente: ");
+                    String op = BackendUtils.lerInputString(scanner, "\nDigite a opção desejada: ");
                     escolha = Integer.parseInt(op);
                     if (escolha == 0) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
                     if (escolha < 1 || escolha > listaDocentes.size()) {
@@ -750,13 +725,13 @@ public class GestorView {
             System.out.println("\n" + GetWhiteBold() + "Docentes Disponíveis:" + GetReset());
             for (int i = 0; i < listaDocentes.size(); i++) {
                 model.Docente d = listaDocentes.get(i);
-                System.out.printf("%d - %s (Sigla: %s)\n", i + 1, d.getNome(), d.getSigla());
+                System.out.printf("%d - %s (Sigla: %s | NIF: %d)\n", i + 1, d.getNome(), d.getSigla(), d.getNif());
             }
 
             int escolha = -1;
             while (escolha < 0 || escolha > listaDocentes.size()) {
                 try {
-                    String op = BackendUtils.lerInputString(scanner, "\nDigite o ID do docente a atualizar: ");
+                    String op = BackendUtils.lerInputString(scanner, "\nDigite a opção do docente a atualizar: ");
                     escolha = Integer.parseInt(op);
                     if (escolha == 0) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
                     if (escolha < 1 || escolha > listaDocentes.size()) {
@@ -818,13 +793,13 @@ public class GestorView {
             System.out.println("\n" + GetWhiteBold() + "Docentes Disponíveis:" + GetReset());
             for (int i = 0; i < listaDocentes.size(); i++) {
                 model.Docente d = listaDocentes.get(i);
-                System.out.printf("%d - %s (Sigla: %s)\n", i + 1, d.getNome(), d.getSigla());
+                System.out.printf("%d - %s (Sigla: %s | NIF: %d)\n", i + 1, d.getNome(), d.getSigla(), d.getNif());
             }
 
             int escolha = -1;
             while (escolha < 0 || escolha > listaDocentes.size()) {
                 try {
-                    String op = BackendUtils.lerInputString(scanner, "\nDigite o ID do docente: ");
+                    String op = BackendUtils.lerInputString(scanner, "\nDigite a opção do docente: ");
                     escolha = Integer.parseInt(op);
                     if (escolha == 0) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
                     if (escolha < 1 || escolha > listaDocentes.size()) {
@@ -890,13 +865,13 @@ public class GestorView {
             System.out.println("\n" + GetWhiteBold() + "Docentes Disponíveis:" + GetReset());
             for (int i = 0; i < listaDocentes.size(); i++) {
                 model.Docente d = listaDocentes.get(i);
-                System.out.printf("%d - %s (Sigla: %s)\n", i + 1, d.getNome(), d.getSigla());
+                System.out.printf("%d - %s (Sigla: %s | NIF: %d)\n", i + 1, d.getNome(), d.getSigla(), d.getNif());
             }
 
             int escolha = -1;
             while (escolha < 0 || escolha > listaDocentes.size()) {
                 try {
-                    String op = BackendUtils.lerInputString(scanner, "\nDigite o ID do docente a eliminar: ");
+                    String op = BackendUtils.lerInputString(scanner, "\nDigite a opção do docente a eliminar: ");
                     escolha = Integer.parseInt(op);
                     if (escolha == 0) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
                     if (escolha < 1 || escolha > listaDocentes.size()) {
@@ -909,24 +884,6 @@ public class GestorView {
             }
 
             model.Docente docente = listaDocentes.get(escolha - 1);
-
-            // Dupla confirmação
-            System.out.println(GetYellow() + "\nTem a certeza que deseja eliminar o docente " + docente.getNome() + "? (s/n)" + GetReset());
-            String confirmacao1 = scanner.nextLine().trim();
-            if (!confirmacao1.equalsIgnoreCase("s")) {
-                System.out.println(GetYellow() + "Operação cancelada." + GetReset());
-                MenuUtils.pressionarEnter(scanner);
-                return;
-            }
-
-            System.out.println(GetRed() + "ESTA AÇÃO É IRREVERSÍVEL! Deseja mesmo continuar? (s/n)" + GetReset());
-            String confirmacao2 = scanner.nextLine().trim();
-            if (!confirmacao2.equalsIgnoreCase("s")) {
-                System.out.println(GetYellow() + "Operação cancelada." + GetReset());
-                MenuUtils.pressionarEnter(scanner);
-                return;
-            }
-
             Resultado resultado = docenteControllerAtualizado.eliminarDocente(docente.getNif());
 
             if (resultado.success) {
@@ -1299,31 +1256,20 @@ public class GestorView {
 
             model.Estudante estudanteAapagar = listaEstudantes.get(escolha - 1);
 
-            // Dupla confirmação
-            System.out.println(GetYellow() + "\nTem a certeza que deseja eliminar o estudante " + estudanteAapagar.getNome() + "? (s/n)" + GetReset());
-            String confirmacao1 = scanner.nextLine().trim();
-            if (!confirmacao1.equalsIgnoreCase("s")) {
-                System.out.println(GetYellow() + "Operação cancelada." + GetReset());
-                MenuUtils.pressionarEnter(scanner);
-                return;
-            }
+            System.out.print(GetYellow() + "\nAVISO: Tem a certeza que deseja eliminar o estudante " + estudanteAapagar.getNome() + "? (S/N): " + GetReset());
+            String confirmacao = scanner.nextLine().trim();
 
-            System.out.println(GetRed() + "ESTA AÇÃO É IRREVERSÍVEL! Deseja mesmo continuar? (s/n)" + GetReset());
-            String confirmacao2 = scanner.nextLine().trim();
-            if (!confirmacao2.equalsIgnoreCase("s")) {
-                System.out.println(GetYellow() + "Operação cancelada." + GetReset());
-                MenuUtils.pressionarEnter(scanner);
-                return;
-            }
+            if (confirmacao.equalsIgnoreCase("S")) {
+                Resultado resultado = estudanteControllerAtualizado.eliminarEstudante(estudanteAapagar.getNumeroMec());
 
-            Resultado resultado = estudanteControllerAtualizado.eliminarEstudante(estudanteAapagar.getNumeroMec());
-
-            if (resultado.success) {
-                System.out.println(GetGreen() + "\nEstudante eliminado com sucesso!" + GetReset());
+                if (resultado.success) {
+                    System.out.println(GetGreen() + "\nEstudante eliminado com sucesso!" + GetReset());
+                } else {
+                    System.out.println(GetRed() + "\nErro ao eliminar: " + resultado.errorMessage + GetReset());
+                }
             } else {
-                System.out.println(GetRed() + "\nErro ao eliminar: " + resultado.errorMessage + GetReset());
+                System.out.println(GetBlue() + "\nOperação de eliminação cancelada pelo utilizador." + GetReset());
             }
-            MenuUtils.pressionarEnter(scanner);
 
         } catch (CancelarRegistoException e) {
             System.out.println("\n" + GetYellow() + "Aviso: " + e.getMessage() + GetReset());

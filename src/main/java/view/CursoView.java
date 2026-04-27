@@ -335,25 +335,9 @@ public class CursoView {
 
             Curso curso = listaCursos.get(escolha - 1);
             String nomeAtual = curso.getNome();
+            Resultado resultado = new Resultado();
 
-            // Dupla confirmação
-            System.out.println(GetYellow() + "\nTem a certeza que deseja eliminar o curso " + nomeAtual + "? (s/n)" + GetReset());
-            String confirmacao1 = scanner.nextLine().trim();
-            if (!confirmacao1.equalsIgnoreCase("s")) {
-                System.out.println(GetYellow() + "Operação cancelada." + GetReset());
-                MenuUtils.pressionarEnter(scanner);
-                return;
-            }
-
-            System.out.println(GetRed() + "ESTA AÇÃO É IRREVERSÍVEL! Todos os dados associados podem ser perdidos. Deseja mesmo continuar? (s/n)" + GetReset());
-            String confirmacao2 = scanner.nextLine().trim();
-            if (!confirmacao2.equalsIgnoreCase("s")) {
-                System.out.println(GetYellow() + "Operação cancelada." + GetReset());
-                MenuUtils.pressionarEnter(scanner);
-                return;
-            }
-
-            Resultado resultado = cursoController.eliminarCurso(nomeAtual);
+            resultado = cursoController.eliminarCurso(nomeAtual);
 
             if (resultado.success) {
                 System.out.println(GetGreen() + "\nCurso eliminado com sucesso!" + GetReset());
