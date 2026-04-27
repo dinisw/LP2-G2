@@ -22,6 +22,9 @@ public class EstudanteController {
         String dataNascimentoStr = (estudante.getDataNascimento() != null) ? estudante.getDataNascimento().toString() : "Não definida";
         String cursoStr = (estudante.getNomeCurso() != null && !estudante.getNomeCurso().trim().isEmpty()) ? estudante.getNomeCurso() : "Sem curso atribuído";
 
+        boolean isConcluido = verificarSeCursoConcluido(estudante);
+        String statusCurso = isConcluido ? "🎓 CONCLUÍDO" : "⏳ EM CURSO";
+
         int anoLetivoAtual = obterAnoDesbloqueado(estudante);
 
         return """
@@ -33,6 +36,7 @@ public class EstudanteController {
         Data Nascimento: %s
         Morada: %s
         Curso (Inscrição): %s
+        Estado do Curso: %s
         Ano Letivo Atual: %dº Ano
         """.formatted(
                 estudante.getNome(),
@@ -42,6 +46,7 @@ public class EstudanteController {
                 dataNascimentoStr,
                 estudante.getMorada(),
                 cursoStr,
+                statusCurso,
                 anoLetivoAtual
         );
     }
