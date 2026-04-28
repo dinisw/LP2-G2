@@ -186,7 +186,7 @@ public class EstudanteView {
         List<model.Curso> cursosDisponiveis = new java.util.ArrayList<>();
 
         for (model.Curso curso : todosCursos) {
-            if(!curso.isIniciado()) {
+            if(!curso.isIniciado() && !curso.getUnidadeCurriculars().isEmpty()) {
                 cursosDisponiveis.add(curso);
             }
         }
@@ -338,10 +338,16 @@ public class EstudanteView {
 
             System.out.println("\n" + GetWhiteBold() + "O seu Histórico Financeiro:" + GetReset());
             for (int i = 0; i < propinas.size(); i++) {
-                Propina p = propinas.get(i);
-                String estado = p.isTotalmentePaga() ? GetGreen() + "PAGO" + GetReset() : GetRed() + "EM DÍVIDA" + GetReset();
+                Propina propina = propinas.get(i);
+                String estado = propina.isTotalmentePaga() ? GetGreen() + "PAGO" + GetReset() : GetRed() + "EM DÍVIDA" + GetReset();
                 System.out.printf("%d. %dº Ano | Total: %.2f€ | Pago: %.2f€ | Em Falta: %.2f€ [%s]\n",
-                        i + 1, p.getAnoLetivo(), p.getValorTotal(), p.getValorPago(), p.getValorEmDivida(), estado);
+                        i + 1, propina.getAnoLetivo(), propina.getValorTotal(), propina.getValorPago(), propina.getValorEmDivida(), estado);
+                if (!propina.getHistoricoPagamentos().isEmpty()) {
+                    System.out.println("   Histórico de Pagamentos");
+                    for (String registo : propina.getHistoricoPagamentos()) {
+                        System.out.printf("   - " + registo);
+                    }
+                }
             }
 
             int escolha = -1;

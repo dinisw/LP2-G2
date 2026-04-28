@@ -389,7 +389,7 @@ public class DocenteView {
                     break;
             }
             System.out.println("\n" + GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
-            System.out.printf(GetWhiteBold() + " %-30s | %-15s | %-15s | %-10s\n" + GetReset(), "NOME DO ESTUDANTE", "Nº MEC", "ÉPOCA", "NOTA");
+            System.out.printf(GetWhiteBold() + " %-30s | %-15s | %-15s | %-10s | %-10s\n" + GetReset(), "NOME DO ESTUDANTE", "Nº MEC", "ÉPOCA", "NOTA", "ESTADO");
             System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
 
             for (model.Avaliacao avaliacao : avaliacoesUC) {
@@ -397,11 +397,12 @@ public class DocenteView {
                 int mec = avaliacao.getEstudante().getNumeroMec();
                 String epoca = avaliacao.getMomento();
                 String notaStr = (avaliacao.getNota() == null) ? GetYellow() + "A Aguardar" + GetReset() : String.format("%.2f", avaliacao.getNota());
+                String estadoInscricao = GetGreen() + "Ativo" + GetReset();
 
                 System.out.printf(" %-30s | %-15d | %-15s | %-10s\n", nomeEstudante, mec, epoca, notaStr);
             }
             System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
-
+            System.out.println(GetWhiteBold() + "Total de estudantes inscritos na pauta: " + avaliacoesUC.size() + GetReset());
             MenuUtils.pressionarEnter(scanner);
         }
         catch (Exception e) {

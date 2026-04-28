@@ -991,6 +991,25 @@ public class GestorView {
     private void registarEstudante() {
         try {
             System.out.println(GetBlue() + "\n--- REGISTO DE ESTUDANTE ---" + GetReset());
+
+            DAL.DepartamentoCRUD departamentoCRUD = new DAL.DepartamentoCRUD();
+            if (departamentoCRUD.getDepartamentos().isEmpty()) {
+                System.out.println(GetYellow() + "\nAviso: Não existem Departamentos registados no sistema." + GetReset());
+                System.out.println(GetRed() + "Por favor, vá a 'Gerir Departamentos' e crie um antes de registar estudantes." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            DAL.CursoCRUD cc = new DAL.CursoCRUD();
+            List<Curso> cursos = cc.getCursos();
+
+            if (cursos.isEmpty()) {
+                System.out.println(GetYellow() + "\nAviso: Não existem Cursos registados no sistema." + GetReset());
+                System.out.println(GetRed() + "Por favor, vá a 'Gerir Cursos' e crie um antes de registar estudantes." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
             String nome = BackendUtils.lerInputString(scanner, "Nome: ");
@@ -1006,9 +1025,9 @@ public class GestorView {
                     nifValido = BackendUtils.nifEValido(nifString);
                     if (!nifValido) {
                         System.out.println(GetRed() + "NIF deve ser um número inteiro válido e conter 9 dígitos. Tente novamente." + GetReset());
-                    }else{
+                    } else {
                         var nifExiste = BackendUtils.nifExiste(nif);
-                        if(nifExiste) {
+                        if (nifExiste) {
                             System.out.println(GetRed() + "NIF já existente no sistema. Tente com outro NIF." + GetReset());
                             nifValido = false;
                         }
@@ -1024,23 +1043,14 @@ public class GestorView {
                     String dataString = BackendUtils.lerInputString(scanner, "Data de Nascimento (AAAA-MM-DD): ");
                     dataNascimento = LocalDate.parse(dataString);
                     int idade = Period.between(dataNascimento, LocalDate.now()).getYears();
-                    if(idade >= 18){
+                    if (idade >= 18) {
                         break;
-                    }else {
+                    } else {
                         System.out.println(GetRed() + "Sistem só permite pessoas maiores de 18 anos. Tente novamente." + GetReset());
                     }
                 } catch (DateTimeParseException e) {
                     System.out.println(GetRed() + "Data deve estar no formato AAAA-MM-DD. Tente novamente." + GetReset());
                 }
-            }
-
-            CursoCRUD cc = new CursoCRUD();
-            List<Curso> cursos = cc.getCursos();
-
-            if (cursos.isEmpty()) {
-                System.out.println(GetYellow() + "\nAviso: Não existem cursos registados no sistema. Crie um curso primeiro." + GetReset());
-                MenuUtils.pressionarEnter(scanner);
-                return;
             }
 
             System.out.println("\n" + GetBlue() + "Cursos Disponíveis:" + GetReset());

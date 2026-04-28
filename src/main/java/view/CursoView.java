@@ -18,7 +18,6 @@ import java.util.Scanner;
 import static common.utils.DesignUtils.*;
 
 public class CursoView {
-    // Controllers globais removidos. Memória sempre atualizada agora!
     private final Scanner scanner;
 
     public CursoView() {
@@ -72,6 +71,17 @@ public class CursoView {
 
             String nome = BackendUtils.lerInputString(scanner, "Nome do Curso: ");
 
+            int duracao = -1;
+            while (duracao <= 0) {
+                try {
+                    String duracaoStr = BackendUtils.lerInputString(scanner, "Duração do Curso (em anos): ");
+                    if (duracaoStr.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
+                    duracao = Integer.parseInt(duracaoStr);
+                } catch (NumberFormatException e) {
+                    System.out.println(GetRed() + "Formato inválido. Insira um número inteiro." + GetReset());
+                }
+            }
+
             System.out.println("\n" + GetBlue() + "--- Departamentos Disponíveis ---" + GetReset());
             DepartamentoController departamentoController = new DepartamentoController();
             List<Departamento> departamentos = departamentoController.listarTodosDepartamentos();
@@ -86,13 +96,16 @@ public class CursoView {
             }
 
             String siglaDep = "";
+            Departamento departamentoSelecionado = null;
             boolean depExiste = false;
+
             while (!depExiste) {
                 siglaDep = BackendUtils.lerInputString(scanner, "\nSigla do Departamento Associado (ex: EI): ").toUpperCase();
                 if (siglaDep.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
 
                 for(Departamento departamento : departamentos) {
                     if(departamento.getSigla().equalsIgnoreCase(siglaDep)) {
+                        departamentoSelecionado = departamento;
                         depExiste = true;
                         break;
                     }
@@ -103,36 +116,52 @@ public class CursoView {
                 }
             }
 
+            double preco = -1;
+            while (preco < 0) {
+                try {
+                    String precoStr = BackendUtils.lerInputString(scanner, "Preço Anual do Curso (€): ");
+                    if (precoStr.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
+                    preco = Double.parseDouble(precoStr.replace(",", "."));
+                    if (preco < 0) System.out.println(GetRed() + "O preço não pode ser negativo." + GetReset());
+                } catch (NumberFormatException e) {
+                    System.out.println(GetRed() + "Formato inválido. Insira um número (ex: 1000.50)." + GetReset());
+                }
+            }
+
+            Curso novoCurso = new Curso(nome, duracao, departamentoSelecionado);
+            novoCurso.setPrecoAnual(preco);
+
             System.out.println("\n" + GetBlue() + "--- Unidades Curriculares Disponíveis ---" + GetReset());
             UnidadeCurricularController ucController = new UnidadeCurricularController();
             List<UnidadeCurricular> unidadeCurriculars = ucController.listarTodasUCs();
-            List<String> nomesUC = new ArrayList<>();
 
             if (unidadeCurriculars.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhuma UC registada. O Curso será registado sem UCs associadas." + GetReset());
             } else {
-                for (UnidadeCurricular unidadeCurricular : unidadeCurriculars) {
-                    System.out.println(unidadeCurricular.getNome());
+                for (UnidadeCurricular uc : unidadeCurriculars) {
+                    System.out.println("- " + uc.getNome());
                 }
                 String input = BackendUtils.lerInputString(scanner, "\nDigite os nomes das UCs a associar (separados por vírgula, ou Enter para nenhuma): ");
                 if (!input.isEmpty()) {
                     String[] parts = input.split(",");
                     for (String part : parts) {
-                        nomesUC.add(part.trim());
+                        String nomeUC = part.trim();
+                        UnidadeCurricular ucEncontrada = ucController.procurarUCPorNome(nomeUC);
+                        if (ucEncontrada != null) {
+                            novoCurso.adicionarUnidadeCurricular(ucEncontrada);
+                        } else {
+                            System.out.println(GetYellow() + "Aviso: A UC '" + nomeUC + "' não foi encontrada e será ignorada." + GetReset());
+                        }
                     }
                 }
             }
 
             CursoController cursoController = new CursoController();
-            Resultado resultado = cursoController.registarCurso(nome, siglaDep, nomesUC);
+
+            Resultado resultado = cursoController.registarCurso(novoCurso);
 
             if (resultado.success) {
                 System.out.println(GetGreen() + "\nCurso registado com sucesso!" + GetReset());
-
-                String avisos = (String) resultado.object;
-                if (avisos != null && !avisos.isEmpty()) {
-                    System.out.println(GetYellow() + "Notas: " + avisos + GetReset());
-                }
             } else {
                 System.out.println(GetRed() + "\nErro ao registar: " + resultado.errorMessage + GetReset());
             }
@@ -160,7 +189,7 @@ public class CursoView {
             } else {
                 int count = 1;
                 for (Curso c : cursos) {
-                    System.out.printf("%d - %s\n", count, c.toString());
+                    System.out.printf("%d - %s | Preço: %.2f€\n", count, c.toString(), c.getPrecoAnual());
                     count++;
                 }
             }
@@ -213,6 +242,7 @@ public class CursoView {
             if (curso != null) {
                 System.out.println(GetGreen() + "\nDados encontrados:" + GetReset());
                 System.out.println(curso.toString());
+                System.out.println("Preço Anual: " + String.format("%.2f€", curso.getPrecoAnual()));
             } else {
                 System.out.println(GetYellow() + "\nCurso não encontrado." + GetReset());
             }
@@ -270,12 +300,28 @@ public class CursoView {
 
             System.out.println(GetGreen() + "\nDados atuais:" + GetReset());
             System.out.println(curso.toString());
+            System.out.println("Preço Anual: " + String.format("%.2f€", curso.getPrecoAnual()));
 
             System.out.println(GetYellow() + "\n[Pressione ENTER nos campos que deseja manter iguais]" + GetReset());
 
             String novoNome = BackendUtils.lerInputString(scanner, "Novo Nome: ");
+            if (!novoNome.isEmpty()) curso.setNome(novoNome);
 
-            Resultado resultado = cursoController.atualizarCurso(nomeAtual, novoNome.isEmpty() ? nomeAtual : novoNome);
+            String precoNovoStr = BackendUtils.lerInputString(scanner, "Novo Preço Anual (deixe em branco para manter): ");
+            if (!precoNovoStr.isEmpty()) {
+                try {
+                    double preco = Double.parseDouble(precoNovoStr.replace(",", "."));
+                    if(preco >= 0) {
+                        curso.setPrecoAnual(preco);
+                    } else {
+                        System.out.println(GetRed() + "Preço ignorado (não pode ser negativo)." + GetReset());
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println(GetRed() + "Formato inválido. Preço não alterado." + GetReset());
+                }
+            }
+
+            Resultado resultado = cursoController.atualizarCurso(nomeAtual, curso);
 
             if (resultado.success) {
                 System.out.println(GetGreen() + "\nCurso atualizado com sucesso!" + GetReset());

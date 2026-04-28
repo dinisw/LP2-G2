@@ -9,6 +9,7 @@ public class Curso {
     private Departamento departamento;
     private final List<UnidadeCurricular> unidadeCurriculars;
     private List<Integer> anosIniciados;
+    private double precoAnual = 1000.0;
 
     public Curso(String nome, int duracao, Departamento departamento) {
         this.nome = nome;
@@ -52,6 +53,14 @@ public class Curso {
 
     public boolean isAnoIniciado(int ano) {
         return anosIniciados.contains(ano);
+    }
+
+    public double getPrecoAnual() {
+        return precoAnual;
+    }
+
+    public void setPrecoAnual(double precoAnual) {
+        this.precoAnual = precoAnual;
     }
 
     public void adicionarAnoIniciado(int ano) {

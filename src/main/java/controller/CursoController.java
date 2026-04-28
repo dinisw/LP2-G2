@@ -20,50 +20,27 @@ public class CursoController {
         this.ucCRUD = new UnidadeCurricularCRUD();
     }
 
-    public Resultado registarCurso(String nome, String siglaDep, List<String> nomesUC) {
+    // NOVA ASSINATURA: Recebe diretamente o objeto Curso montado pela View
+    public Resultado registarCurso(Curso curso) {
         Resultado resultado = new Resultado();
 
-        if (nome == null || nome.trim().isEmpty()) {
+        if (curso == null || curso.getNome() == null || curso.getNome().trim().isEmpty()) {
             resultado.success = false;
             resultado.errorMessage = "O nome do curso é obrigatório.";
             return resultado;
         }
 
-        if (siglaDep == null || siglaDep.trim().isEmpty()) {
+        if (curso.getDepartamento() == null) {
             resultado.success = false;
-            resultado.errorMessage = "A sigla do departamento associado é obrigatória.";
+            resultado.errorMessage = "O departamento associado é obrigatório.";
             return resultado;
         }
 
-        Departamento dep = depCRUD.procurarPorSigla(siglaDep);
-        if (dep == null) {
-            resultado.success = false;
-            resultado.errorMessage = "O Departamento com a sigla '" + siglaDep + "' não existe! Registe-o primeiro.";
-            return resultado;
-        }
-
-        Curso novo = new Curso(nome, 3, dep);
-        StringBuilder avisos = new StringBuilder();
-
-        if (nomesUC != null) {
-            for (String nomeUC : nomesUC) {
-                if (nomeUC != null && !nomeUC.trim().isEmpty()) {
-                    UnidadeCurricular unidadeCurricular = ucCRUD.procurarPorNome(nomeUC.trim());
-                    if (unidadeCurricular != null) {
-                        novo.adicionarUnidadeCurricular(unidadeCurricular);
-                    } else {
-                        avisos.append("UC '").append(nomeUC.trim()).append("' não encontrada (ignorada). ");
-                    }
-                }
-            }
-        }
-
-        if (cursoCRUD.registarCurso(novo)) {
+        if (cursoCRUD.registarCurso(curso)) {
             resultado.success = true;
-            resultado.object = avisos.toString();
         } else {
             resultado.success = false;
-            resultado.errorMessage = "Já existe um curso com o nome '" + nome + "' no sistema.";
+            resultado.errorMessage = "Já existe um curso com o nome '" + curso.getNome() + "' no sistema.";
         }
 
         return resultado;
@@ -80,7 +57,8 @@ public class CursoController {
         return cursoCRUD.procurarPorNome(nome);
     }
 
-    public Resultado atualizarCurso(String nomeAntigo, String novoNome) {
+    // NOVA ASSINATURA: Recebe o nome antigo (para o procurar) e o objeto Curso atualizado
+    public Resultado atualizarCurso(String nomeAntigo, Curso cursoNovo) {
         Resultado resultado = new Resultado();
 
         if (nomeAntigo == null || nomeAntigo.trim().isEmpty()) {
@@ -89,41 +67,42 @@ public class CursoController {
             return resultado;
         }
 
-        if (novoNome == null || novoNome.trim().isEmpty()) {
+        if (cursoNovo == null || cursoNovo.getNome() == null || cursoNovo.getNome().trim().isEmpty()) {
             resultado.success = false;
             resultado.errorMessage = "O novo nome do curso não pode estar vazio.";
             return resultado;
         }
 
-        Curso curso = cursoCRUD.procurarPorNome(nomeAntigo);
+        Curso cursoOriginal = cursoCRUD.procurarPorNome(nomeAntigo);
 
-        if (curso == null) {
+        if (cursoOriginal == null) {
             resultado.success = false;
             resultado.errorMessage = "O curso original não foi encontrado na base de dados.";
             return resultado;
         }
 
-        Curso cursoAtualizado = new Curso(novoNome, curso.getDuracao(), curso.getDepartamento());
-        cursoAtualizado.setAnosIniciados(curso.getAnosIniciados());
-        for (UnidadeCurricular unidadeCurricular : curso.getUnidadeCurriculars()) {
-            cursoAtualizado.adicionarUnidadeCurricular(unidadeCurricular);
-        }
-        Resultado res = cursoCRUD.atualizarCurso(nomeAntigo, cursoAtualizado);
+        // Atualizar na base de dados
+        Resultado res = cursoCRUD.atualizarCurso(nomeAntigo, cursoNovo);
+
         if (res.success) {
             resultado.success = true;
-            try {
-                EstudanteCRUD estudanteCRUD = new EstudanteCRUD();
-                EstudanteController estudanteController = new EstudanteController();
-                List<Estudante> todosEstudantes = estudanteController.listarEstudantes();
 
-                for (Estudante estudante : todosEstudantes) {
-                    if (estudante.getNomeCurso() != null && estudante.getNomeCurso().equalsIgnoreCase(nomeAntigo)) {
-                        estudante.setNomeCurso(novoNome);
-                        estudanteCRUD.atualizarEstudante(estudante);
+            // Se o nome do curso mudou, precisamos de atualizar o campo 'nomeCurso' dos Estudantes inscritos
+            if (!nomeAntigo.equalsIgnoreCase(cursoNovo.getNome())) {
+                try {
+                    EstudanteCRUD estudanteCRUD = new EstudanteCRUD();
+                    EstudanteController estudanteController = new EstudanteController();
+                    List<Estudante> todosEstudantes = estudanteController.listarEstudantes();
+
+                    for (Estudante estudante : todosEstudantes) {
+                        if (estudante.getNomeCurso() != null && estudante.getNomeCurso().equalsIgnoreCase(nomeAntigo)) {
+                            estudante.setNomeCurso(cursoNovo.getNome());
+                            estudanteCRUD.atualizarEstudante(estudante);
+                        }
                     }
+                } catch (Exception e) {
+                    System.out.println("Aviso: Não foi possível sincronizar o novo nome nos perfis dos estudantes.");
                 }
-            } catch (Exception e) {
-                System.out.println("Aviso: Não foi possível sincronizar o novo nome nos perfis dos estudantes.");
             }
         } else {
             resultado.success = false;

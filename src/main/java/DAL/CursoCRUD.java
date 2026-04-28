@@ -27,14 +27,15 @@ public class CursoCRUD {
             while ((linha = reader.readLine()) != null) {
                 String[] dados = linha.split(";");
 
-                if (dados.length >= 4) {
+                if (dados.length >= 5) {
                     String nomeCurso = dados[0].trim();
                     int duracao = Integer.parseInt(dados[1].trim());
                     String siglaDep = dados[2].trim();
+                    double precoAnual = Double.parseDouble(dados[3].replace(",","."));
                     Departamento dep = depCRUD.procurarPorSigla(siglaDep);
 
                     Curso curso = new Curso(nomeCurso, duracao, dep);
-                    String anosIniciadosStr = dados[3].trim();
+                    String anosIniciadosStr = dados[4].trim();
                     List<Integer> anosIniciados = new ArrayList<>();
 
                     if (!anosIniciadosStr.equalsIgnoreCase("Nenhum Curso Iniciado") && !anosIniciadosStr.isEmpty()) {
@@ -45,8 +46,8 @@ public class CursoCRUD {
                     }
                     curso.setAnosIniciados(anosIniciados);
 
-                    if (dados.length > 4) {
-                        for (int i = 4; i < dados.length; i++) {
+                    if (dados.length > 5) {
+                        for (int i = 5; i < dados.length; i++) {
                             UnidadeCurricular unidadeCurricular = ucCRUD.procurarPorNome(dados[i].trim());
                             if (unidadeCurricular != null) {
                                 curso.adicionarUnidadeCurricular(unidadeCurricular);
@@ -76,6 +77,7 @@ public class CursoCRUD {
                 linha.append(safe(curso.getNome())).append(";");
                 linha.append(curso.getDuracao()).append(";");
                 linha.append(safe(curso.getDepartamento() != null ? curso.getDepartamento().getSigla() : null)).append(";");
+                linha.append(String.format("%.2f", curso.getPrecoAnual()).replace(",", ".")).append(";");
                 linha.append(anosStr);
 
                 for (UnidadeCurricular uc : curso.getUnidadeCurriculars()) {
