@@ -398,8 +398,7 @@ public class DocenteView {
                 String epoca = avaliacao.getMomento();
                 String notaStr = (avaliacao.getNota() == null) ? GetYellow() + "A Aguardar" + GetReset() : String.format("%.2f", avaliacao.getNota());
                 String estadoInscricao = GetGreen() + "Ativo" + GetReset();
-
-                System.out.printf(" %-30s | %-15d | %-15s | %-10s\n", nomeEstudante, mec, epoca, notaStr);
+                System.out.printf(" %-30s | %-15d | %-15s | %-10s | %-10s\n", nomeEstudante, mec, epoca, notaStr, estadoInscricao);
             }
             System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
             System.out.println(GetWhiteBold() + "Total de estudantes inscritos na pauta: " + avaliacoesUC.size() + GetReset());
@@ -465,9 +464,15 @@ public class DocenteView {
                     MenuUtils.pressionarEnter(scanner);
                     return;
                 }
+                List<String> listaMomentos = new ArrayList<>();
+                for (String m : momentosArray) {
+                    if (!m.trim().isEmpty()) {
+                        listaMomentos.add(m.trim());
+                    }
+                }
 
                 UnidadeCurricularController unidadeCurricularControllerAtualizado = new UnidadeCurricularController();
-                Resultado resultado = unidadeCurricularControllerAtualizado.definirMomentos(unidadeCurricularSelecionada.getNome(), novosMomentos);
+                Resultado resultado = unidadeCurricularControllerAtualizado.definirMomentosAvaliacao(unidadeCurricularSelecionada.getId(), listaMomentos);
 
                 if (resultado.success) {
                     System.out.println(GetGreen() + "\nMomentos de Avaliação guardados com sucesso no sistema!" + GetReset());

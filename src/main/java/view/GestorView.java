@@ -91,41 +91,34 @@ public class GestorView {
     //region Gestor
     public void exibirMenuGestores() {
         String opcao;
-        ArrayList<String> opcoes = new ArrayList<>();
-        opcoes.add("1. Registar Gestor");
-        opcoes.add("2. Listar Gestores");
-        opcoes.add("3. Procurar Gestor");
-        opcoes.add("4. Atualizar Gestor");
-        opcoes.add("5. Eliminar Gestor");
-        opcoes.add("0. Voltar ao Menu Principal");
-
         do {
             try {
+                GestorController gestorController = new GestorController();
+                boolean temGestores = !gestorController.listarGestores().isEmpty();
+
+                ArrayList<String> opcoes = new ArrayList<>();
+                opcoes.add("1. Registar Gestor");
+                if (temGestores) {
+                    opcoes.add("2. Listar Gestores");
+                    opcoes.add("3. Procurar Gestor");
+                    opcoes.add("4. Atualizar Gestor");
+                    opcoes.add("5. Eliminar Gestor");
+                }
+                opcoes.add("0. Voltar ao Menu Principal");
+
+                MenuUtils.limparTela();
                 MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL > GESTORES", opcoes);
-                System.out.print("\n" + DesignUtils.GetWhiteBold() + "Selecione uma opção: " + DesignUtils.GetReset());
+                System.out.print("\n" + GetWhiteBold() + "Selecione uma opção: " + GetReset());
                 opcao = scanner.nextLine().trim();
 
                 switch (opcao) {
-                    case "1":
-                        registarGestor();
-                        break;
-                    case "2":
-                        listarGestores();
-                        break;
-                    case "3":
-                        procurarGestor();
-                        break;
-                    case "4":
-                        atualizarGestor();
-                        break;
-                    case "5":
-                        eliminarGestor();
-                        break;
-                    case "0":
-                        return;
-                    default:
-                        System.out.println("Opção inválida!");
-                        MenuUtils.pressionarEnter(scanner);
+                    case "1": registarGestor(); break;
+                    case "2": if (temGestores) listarGestores(); else mostrarErroMenu(); break;
+                    case "3": if (temGestores) procurarGestor(); else mostrarErroMenu(); break;
+                    case "4": if (temGestores) atualizarGestor(); else mostrarErroMenu(); break;
+                    case "5": if (temGestores) eliminarGestor(); else mostrarErroMenu(); break;
+                    case "0": return;
+                    default: mostrarErroMenu();
                 }
             } catch (Exception e) {
                 System.out.println("\n" + GetRed() + "Ocorreu um erro na navegação: " + e.getMessage() + GetReset());
@@ -452,46 +445,38 @@ public class GestorView {
     //region Docente
     private void exibirMenuDocentes() {
         String opcao;
-        ArrayList<String> opcoes = new ArrayList<>();
-        opcoes.add("1. Registar Docente");
-        opcoes.add("2. Listar Docentes");
-        opcoes.add("3. Procurar Docente");
-        opcoes.add("4. Atualizar Docente");
-        opcoes.add("5. Alterar Password");
-        opcoes.add("6. Eliminar Docente");
-        opcoes.add("0. Voltar ao Menu Principal");
-
         do {
             try {
+                DocenteController docenteController = new DocenteController();
+                boolean temDocentes = !docenteController.listarDocentes().isEmpty();
+
+                ArrayList<String> opcoes = new ArrayList<>();
+                opcoes.add("1. Registar Docente");
+                if (temDocentes) {
+                    opcoes.add("2. Listar Docentes");
+                    opcoes.add("3. Procurar Docente");
+                    opcoes.add("4. Atualizar Docente");
+                    opcoes.add("5. Alterar Password");
+                    opcoes.add("6. Eliminar Docente");
+                }
+                opcoes.add("0. Voltar ao Menu Principal");
+
+                MenuUtils.limparTela();
                 MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL > DOCENTES", opcoes);
                 System.out.print("\n" + GetWhiteBold() + "Selecione uma opção: " + GetReset());
                 opcao = scanner.nextLine().trim();
 
                 switch (opcao) {
-                    case "1":
-                        registarDocente();
-                        break;
-                    case "2":
-                        listarDocentes();
-                        break;
-                    case "3":
-                        procurarDocente();
-                        break;
-                    case "4":
-                        atualizarDocente();
-                        break;
-                    case "5":
-                        alterarPasswordDocente();
-                        break;
-                    case "6":
-                        eliminarDocente();
-                        break;
+                    case "1": registarDocente(); break;
+                    case "2": if (temDocentes) listarDocentes(); else mostrarErroMenu(); break;
+                    case "3": if (temDocentes) procurarDocente(); else mostrarErroMenu(); break;
+                    case "4": if (temDocentes) atualizarDocente(); else mostrarErroMenu(); break;
+                    case "5": if (temDocentes) alterarPasswordDocente(); else mostrarErroMenu(); break;
+                    case "6": if (temDocentes) eliminarDocente(); else mostrarErroMenu(); break;
                     case "0":
                         System.out.println(GetYellow() + "\nA voltar ao menu principal..." + GetReset());
                         return;
-                    default:
-                        System.out.println(GetRed() + "Opção inválida! Por favor, escolha uma opção da lista." + GetReset());
-                        MenuUtils.pressionarEnter(scanner);
+                    default: mostrarErroMenu();
                 }
             } catch (Exception e) {
                 System.out.println("\n" + GetRed() + "Ocorreu um erro na navegação: " + e.getMessage() + GetReset());
@@ -944,42 +929,36 @@ public class GestorView {
     //region Estudante
     private void exibirMenuEstudantes() {
         String opcao;
-        ArrayList<String> opcoes = new ArrayList<>();
-        opcoes.add("1. Registar Estudante");
-        opcoes.add("2. Listar Estudantes");
-        opcoes.add("3. Procurar Estudante (Número Mec)");
-        opcoes.add("4. Atualizar Estudante (Número Mec)");
-        opcoes.add("5. Eliminar Estudante (Número Mec)");
-        opcoes.add("0. Voltar");
-
         do {
             try {
+                EstudanteController estudanteController = new EstudanteController();
+                boolean temEstudantes = !estudanteController.listarEstudantes().isEmpty();
+
+                ArrayList<String> opcoes = new ArrayList<>();
+                opcoes.add("1. Registar Estudante");
+                if (temEstudantes) {
+                    opcoes.add("2. Listar Estudantes");
+                    opcoes.add("3. Procurar Estudante (Número Mec)");
+                    opcoes.add("4. Atualizar Estudante (Número Mec)");
+                    opcoes.add("5. Eliminar Estudante (Número Mec)");
+                }
+                opcoes.add("0. Voltar");
+
+                MenuUtils.limparTela();
                 MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL > ESTUDANTES", opcoes);
                 System.out.print("\n" + GetWhiteBold() + "Selecione uma opção: " + GetReset());
                 opcao = scanner.nextLine().trim();
 
                 switch (opcao) {
-                    case "1":
-                        registarEstudante();
-                        break;
-                    case "2":
-                        listarEstudantes();
-                        break;
-                    case "3":
-                        procurarEstudante();
-                        break;
-                    case "4":
-                        atualizarEstudante();
-                        break;
-                    case "5":
-                        eliminarEstudante();
-                        break;
+                    case "1": registarEstudante(); break;
+                    case "2": if (temEstudantes) listarEstudantes(); else mostrarErroMenu(); break;
+                    case "3": if (temEstudantes) procurarEstudante(); else mostrarErroMenu(); break;
+                    case "4": if (temEstudantes) atualizarEstudante(); else mostrarErroMenu(); break;
+                    case "5": if (temEstudantes) eliminarEstudante(); else mostrarErroMenu(); break;
                     case "0":
                         System.out.println(GetYellow() + "\nA voltar ao menu principal..." + GetReset());
                         return;
-                    default:
-                        System.out.println(GetRed() + "Opção inválida! Por favor, escolha uma opção da lista." + GetReset());
-                        MenuUtils.pressionarEnter(scanner);
+                    default: mostrarErroMenu();
                 }
             } catch (Exception e) {
                 System.out.println("\n" + GetRed() + "Ocorreu um erro na navegação: " + e.getMessage() + GetReset());
@@ -1368,5 +1347,9 @@ public class GestorView {
             System.out.println(GetRed() + "Ocorreu um erro ao carregar a lista de tesouraria: " + e.getMessage() + GetReset());
             MenuUtils.pressionarEnter(scanner);
         }
+    }
+    private void mostrarErroMenu() {
+        System.out.println(GetRed() + "Opção inválida ou indisponível de momento. Por favor, escolha uma opção visível na lista." + GetReset());
+        MenuUtils.pressionarEnter(scanner);
     }
 }

@@ -288,29 +288,40 @@ public class UnidadeCurricularController {
         return ucCRUD.procurarPorAno(ano);
     }
 
-    public Resultado definirMomentos(String nomeUnidadeCurricular, String momentosSeparadosPorVirgula) {
+    public Resultado definirMomentosAvaliacao(int idUc, List<String> momentos) {
         Resultado resultado = new Resultado();
-        DAL.UnidadeCurricularCRUD unidadeCurricularCRUDAtualizado = new DAL.UnidadeCurricularCRUD();
-        model.UnidadeCurricular unidadeCurricular = unidadeCurricularCRUDAtualizado.procurarPorNome(nomeUnidadeCurricular);
 
-        if (unidadeCurricular != null) {
-            unidadeCurricular.setMomentosAvaliacao(new ArrayList<>());
-            String[] momentos = momentosSeparadosPorVirgula.split(",");
-            for (String momento : momentos) {
-                if (!momento.trim().isEmpty()) {
-                    unidadeCurricular.adicionarMomento(momento.trim());
-                }
-            }
-            if (unidadeCurricularCRUDAtualizado.atualizarUC(unidadeCurricular.getNome(), unidadeCurricular)) {
-                resultado.success = true;
-            } else {
-                resultado.success = false;
-                resultado.errorMessage = "Erro na base de dados ao guardar os momentos.";
-            }
-        } else {
+        UnidadeCurricular unidadeCurricular = ucCRUD.procurarPorId(idUc);
+
+        if (unidadeCurricular == null) {
             resultado.success = false;
             resultado.errorMessage = "Unidade Curricular não encontrada.";
+            return resultado;
         }
+        unidadeCurricular.setMomentosAvaliacao(momentos);
+
+        if (ucCRUD.atualizarUCPorId(idUc, unidadeCurricular)) {
+            resultado.success = true;
+
+            if (unidadeCurricular.getDocente() != null) {
+                Docente docenteAfetado = docenteCRUD.procurarPorNif(unidadeCurricular.getDocente().getNif());
+
+                if (docenteAfetado != null) {
+                    for (UnidadeCurricular ucDoDocente : docenteAfetado.getUnidadesCurriculares()) {
+                        if (ucDoDocente.getId() == idUc) {
+                            ucDoDocente.setMomentosAvaliacao(momentos);
+                            break;
+                        }
+                    }
+                    docenteCRUD.atualizarDocente(docenteAfetado);
+                }
+            }
+
+        } else {
+            resultado.success = false;
+            resultado.errorMessage = "Erro ao guardar as alterações na base de dados.";
+        }
+
         return resultado;
     }
 }

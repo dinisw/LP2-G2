@@ -24,48 +24,52 @@ public class UnidadeCurricularView {
 
     public void exibirMenuUnidadesCurriculares() {
         String opcao;
-        ArrayList<String> opcoes = new ArrayList<>();
-        opcoes.add("1. Registar Unidade Curricular");
-        opcoes.add("2. Listar Unidades Curriculares");
-        opcoes.add("3. Procurar Unidade Curricular");
-        opcoes.add("4. Atualizar Unidade Curricular");
-        opcoes.add("5. Eliminar Unidade Curricular");
-        opcoes.add("0. Voltar ao Menu de Gestão");
 
         do {
             try {
+                UnidadeCurricularController ucc = new UnidadeCurricularController();
+                boolean temUCs = !ucc.listarTodasUCs().isEmpty();
+
+                ArrayList<String> opcoes = new ArrayList<>();
+                opcoes.add("1. Registar Unidade Curricular");
+
+                if (temUCs) {
+                    opcoes.add("2. Listar Unidades Curriculares");
+                    opcoes.add("3. Procurar Unidade Curricular");
+                    opcoes.add("4. Atualizar Unidade Curricular");
+                    opcoes.add("5. Eliminar Unidade Curricular");
+                    opcoes.add("6. Definir Momentos de Avaliação");
+                }
+                opcoes.add("0. Voltar ao Menu de Gestão");
+
+                MenuUtils.limparTela();
                 MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL > UNIDADES CURRICULARES", opcoes);
                 System.out.print("\n" + GetWhiteBold() + "Selecione uma opção: " + GetReset());
                 opcao = scanner.nextLine().trim();
 
                 switch (opcao) {
-                    case "1":
-                        registarUnidadeCurricular();
-                        break;
-                    case "2":
-                        listarUnidadesCurriculares();
-                        break;
-                    case "3":
-                        procurarUnidadeCurricular();
-                        break;
-                    case "4":
-                        atualizarUnidadeCurricular();
-                        break;
-                    case "5":
-                        eliminarUnidadeCurricular();
-                        break;
+                    case "1": registarUnidadeCurricular(); break;
+                    case "2": if (temUCs) listarUnidadesCurriculares(); else mostrarErroOpcao(); break;
+                    case "3": if (temUCs) procurarUnidadeCurricular(); else mostrarErroOpcao(); break;
+                    case "4": if (temUCs) atualizarUnidadeCurricular(); else mostrarErroOpcao(); break;
+                    case "5": if (temUCs) eliminarUnidadeCurricular(); else mostrarErroOpcao(); break;
+                    case "6": if (temUCs) definirMomentosAvaliacao(); else mostrarErroOpcao(); break;
                     case "0":
                         System.out.println(GetYellow() + "\nA voltar ao menu de gestão..." + GetReset());
                         return;
                     default:
-                        System.out.println(GetRed() + "Opção inválida! Por favor, escolha uma opção da lista." + GetReset());
-                        MenuUtils.pressionarEnter(scanner);
+                        mostrarErroOpcao();
                 }
             } catch (Exception e) {
                 System.out.println("\n" + GetRed() + "Ocorreu um erro na navegação: " + e.getMessage() + GetReset());
                 MenuUtils.pressionarEnter(scanner);
             }
         } while (true);
+    }
+
+    private void mostrarErroOpcao() {
+        System.out.println(GetRed() + "Opção inválida! Por favor, escolha uma opção visível na lista." + GetReset());
+        MenuUtils.pressionarEnter(scanner);
     }
 
     private void registarUnidadeCurricular() {
@@ -305,6 +309,8 @@ public class UnidadeCurricularView {
                     } catch (NumberFormatException e) {
                         System.out.println(GetYellow() + "Aviso: Formato inválido. Mantendo o semestre original." + GetReset());
                     }
+                } else {
+                    break;
                 }
             }
 
@@ -395,6 +401,75 @@ public class UnidadeCurricularView {
             System.out.println("\n" + GetYellow() + "Aviso: " + e.getMessage() + GetReset());
             System.out.println(GetRed() + "Operação interrompida!" + GetReset());
             MenuUtils.pressionarEnter(scanner);
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Ocorreu um erro inesperado: " + e.getMessage() + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        }
+    }
+
+    private void definirMomentosAvaliacao() {
+        try {
+            System.out.println(GetBlue() + "\n--- DEFINIR MOMENTOS DE AVALIAÇÃO ---" + GetReset());
+            System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
+
+            listarUCsSemPausa();
+
+            String idStr = BackendUtils.lerInputString(scanner, "\nDigite o ID da UC: ");
+            if (idStr.equals("0")) return;
+
+            int id;
+            try {
+                id = Integer.parseInt(idStr);
+            } catch (NumberFormatException e) {
+                System.out.println(GetRed() + "ID inválido. Por favor introduza um número." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            UnidadeCurricularController ucc = new UnidadeCurricularController();
+            UnidadeCurricular uc = ucc.procurarUCPorId(id);
+
+            if (uc == null) {
+                System.out.println(GetRed() + "Erro: UC não encontrada com o ID informado." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            System.out.println(GetGreen() + "\nUC Selecionada: " + uc.getNome() + GetReset());
+            List<String> momentosAtuais = uc.getMomentosAvaliacao();
+            if (momentosAtuais == null || momentosAtuais.isEmpty()) {
+                System.out.println("Momentos atuais: " + GetYellow() + "Nenhum momento definido." + GetReset());
+            } else {
+                System.out.println("Momentos atuais: " + String.join(" | ", momentosAtuais));
+            }
+
+            System.out.println("\n" + GetWhiteBold() + "Exemplo de formato: " + GetReset() + "Teste 1 | Teste 2 | Exame Final");
+            String novosMomentos = BackendUtils.lerInputString(scanner, "Introduza os momentos separados por '|' (ou Enter para cancelar): ");
+
+            if(novosMomentos.trim().isEmpty()) {
+                System.out.println(GetYellow() + "Operação cancelada. Não foram feitas alterações." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            List<String> listaMomentos = new ArrayList<>();
+            String[] particoes = novosMomentos.split("\\|");
+            for (String p : particoes) {
+                if (!p.trim().isEmpty()) {
+                    listaMomentos.add(p.trim());
+                }
+            }
+
+            Resultado resultado = ucc.definirMomentosAvaliacao(id, listaMomentos);
+
+            if (resultado.success) {
+                System.out.println(GetGreen() + "\nMomentos de avaliação atualizados com sucesso!" + GetReset());
+            } else {
+                System.out.println(GetRed() + "\nErro ao atualizar momentos: " + resultado.errorMessage + GetReset());
+            }
+
+            MenuUtils.pressionarEnter(scanner);
+
         } catch (Exception e) {
             System.out.println(GetRed() + "Ocorreu um erro inesperado: " + e.getMessage() + GetReset());
             MenuUtils.pressionarEnter(scanner);
