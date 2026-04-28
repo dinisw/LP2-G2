@@ -6,6 +6,7 @@ import model.Estudante;
 import model.Propina;
 import model.Resultado;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,14 +23,25 @@ public class PropinaController {
     public Resultado gerarPropinaAnual(int numeroMec, int anoLetivo) {
         Resultado resultado = new Resultado();
 
-        // Verifica se a propina já existe para não duplicar dívidas
         if (propinaCRUD.procurarPropina(numeroMec, anoLetivo) != null) {
             resultado.success = false;
             resultado.errorMessage = "A propina para o " + anoLetivo + "º ano já foi gerada.";
             return resultado;
         }
 
-        Propina novaPropina = new Propina(numeroMec, anoLetivo, VALOR_PROPINA_PADRAO, 0.0);
+    double precoAConfigurar = VALOR_PROPINA_PADRAO;
+        EstudanteCRUD estudanteCRUD = new EstudanteCRUD();
+        Estudante estudante = estudanteCRUD.lerEstudante(numeroMec);
+
+        if (estudante != null && estudante.getNomeCurso() != null) {
+            DAL.CursoCRUD cursoCRUD = new DAL.CursoCRUD();
+            model.Curso curso = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
+            if (curso != null) {
+                precoAConfigurar = curso.getPrecoAnual();
+            }
+        }
+
+        Propina novaPropina = new Propina(numeroMec, anoLetivo, precoAConfigurar, 0.0);
         if (propinaCRUD.registarPropina(novaPropina)) {
             resultado.success = true;
         } else {
