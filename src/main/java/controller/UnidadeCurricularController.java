@@ -166,6 +166,23 @@ public class UnidadeCurricularController {
                     docenteCRUD.atualizarDocente(docenteAfetado);
                 }
             }
+
+            if (!novoNomeReal.equals(nomeAtual)) {
+                DAL.CursoCRUD cursoCRUD = new DAL.CursoCRUD();
+                for (model.Curso curso : cursoCRUD.getCursos()) {
+                    boolean modificado = false;
+                    for (model.UnidadeCurricular ucDoCurso : curso.getUnidadeCurriculars()) {
+                        if (ucDoCurso.getId() == id) {
+                            ucDoCurso.setNome(novoNomeReal);
+                            modificado = true;
+                        }
+                    }
+                    if (modificado) {
+                        cursoCRUD.atualizarCurso(curso.getNome(), curso); // Força a atualização na DB do Curso
+                    }
+                }
+            }
+
         } else {
             resultado.success = false;
             resultado.errorMessage = "Erro na base de dados ao atualizar a UC.";
@@ -173,7 +190,6 @@ public class UnidadeCurricularController {
 
         return resultado;
     }
-
     public Resultado atualizarUC(String nomeAtual, String novoNome, int novoAno, int novoSemestre, String novaSiglaDocente) {
         Resultado resultado = new Resultado();
 
@@ -223,7 +239,6 @@ public class UnidadeCurricularController {
             }
         }
 
-
         UnidadeCurricular ucAtualizada = new UnidadeCurricular(novoNomeReal, novoAnoReal, novoSemestreReal, novoDocente);
 
         if (ucCRUD.atualizarUC(nomeAtual, ucAtualizada)) {
@@ -241,6 +256,20 @@ public class UnidadeCurricularController {
                             }
                         }
                         docenteCRUD.atualizarDocente(docenteAfetado);
+                    }
+                }
+
+                DAL.CursoCRUD cursoCRUD = new DAL.CursoCRUD();
+                for (model.Curso curso : cursoCRUD.getCursos()) {
+                    boolean modificado = false;
+                    for (model.UnidadeCurricular ucDoCurso : curso.getUnidadeCurriculars()) {
+                        if (ucDoCurso.getNome().equalsIgnoreCase(nomeAtual)) {
+                            ucDoCurso.setNome(novoNome);
+                            modificado = true;
+                        }
+                    }
+                    if (modificado) {
+                        cursoCRUD.atualizarCurso(curso.getNome(), curso);
                     }
                 }
             }

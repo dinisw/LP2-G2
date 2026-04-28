@@ -371,8 +371,11 @@ public class DocenteView {
 
             switch (ordem) {
                 case "1":
-                    avaliacoesUC.sort((a1, a2) -> a1.getEstudante().getNome().compareToIgnoreCase(a2.getEstudante().getNome()));
-                    break;
+                    avaliacoesUC.sort((a1, a2) -> {
+                        String n1 = a1.getEstudante() != null ? a1.getEstudante().getNome() : "";
+                        String n2 = a2.getEstudante() != null ? a2.getEstudante().getNome() : "";
+                        return n1.compareToIgnoreCase(n2);
+                    });                    break;
                 case "2":
                     avaliacoesUC.sort((a1, a2) -> {
                         Double nota1 = (a1.getNota() != null) ? a1.getNota() : -1.0;

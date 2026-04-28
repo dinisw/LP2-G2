@@ -336,23 +336,28 @@ public class CursoView {
             System.out.println(GetYellow() + "\n[Pressione ENTER nos campos que deseja manter iguais]" + GetReset());
 
             String novoNome = BackendUtils.lerInputString(scanner, "Novo Nome: ");
-            if (!novoNome.isEmpty()) curso.setNome(novoNome);
+            String nomeFinal = novoNome.isEmpty() ? nomeAtual : novoNome;
 
             String precoNovoStr = BackendUtils.lerInputString(scanner, "Novo Preço Anual (deixe em branco para manter): ");
+            double precoFinal = curso.getPrecoAnual(); // Valor por defeito
             if (!precoNovoStr.isEmpty()) {
                 try {
                     double preco = Double.parseDouble(precoNovoStr.replace(",", "."));
-                    if(preco >= 0) {
-                        curso.setPrecoAnual(preco);
-                    } else {
-                        System.out.println(GetRed() + "Preço ignorado (não pode ser negativo)." + GetReset());
-                    }
+                    if(preco >= 0) precoFinal = preco;
                 } catch (NumberFormatException e) {
                     System.out.println(GetRed() + "Formato inválido. Preço não alterado." + GetReset());
                 }
             }
 
-            Resultado resultado = cursoController.atualizarCurso(nomeAtual, curso);
+            Curso cursoAtualizado = new Curso(nomeFinal, curso.getDuracao(), curso.getDepartamento());
+            cursoAtualizado.setPrecoAnual(precoFinal);
+
+            cursoAtualizado.setAnosIniciados(curso.getAnosIniciados());
+            for(UnidadeCurricular uc : curso.getUnidadeCurriculars()) {
+                cursoAtualizado.adicionarUnidadeCurricular(uc);
+            }
+
+            Resultado resultado = cursoController.atualizarCurso(nomeAtual, cursoAtualizado);
 
             if (resultado.success) {
                 System.out.println(GetGreen() + "\nCurso atualizado com sucesso!" + GetReset());
