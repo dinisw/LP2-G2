@@ -166,6 +166,23 @@ public class UnidadeCurricularController {
                     docenteCRUD.atualizarDocente(docenteAfetado);
                 }
             }
+
+            if (!novoNomeReal.equals(nomeAtual)) {
+                DAL.CursoCRUD cursoCRUD = new DAL.CursoCRUD();
+                for (model.Curso curso : cursoCRUD.getCursos()) {
+                    boolean modificado = false;
+                    for (model.UnidadeCurricular ucDoCurso : curso.getUnidadeCurriculars()) {
+                        if (ucDoCurso.getId() == id) {
+                            ucDoCurso.setNome(novoNomeReal);
+                            modificado = true;
+                        }
+                    }
+                    if (modificado) {
+                        cursoCRUD.atualizarCurso(curso.getNome(), curso); // Força a atualização na DB do Curso
+                    }
+                }
+            }
+
         } else {
             resultado.success = false;
             resultado.errorMessage = "Erro na base de dados ao atualizar a UC.";
@@ -173,7 +190,6 @@ public class UnidadeCurricularController {
 
         return resultado;
     }
-
     public Resultado atualizarUC(String nomeAtual, String novoNome, int novoAno, int novoSemestre, String novaSiglaDocente) {
         Resultado resultado = new Resultado();
 
@@ -223,7 +239,6 @@ public class UnidadeCurricularController {
             }
         }
 
-
         UnidadeCurricular ucAtualizada = new UnidadeCurricular(novoNomeReal, novoAnoReal, novoSemestreReal, novoDocente);
 
         if (ucCRUD.atualizarUC(nomeAtual, ucAtualizada)) {
@@ -241,6 +256,20 @@ public class UnidadeCurricularController {
                             }
                         }
                         docenteCRUD.atualizarDocente(docenteAfetado);
+                    }
+                }
+
+                DAL.CursoCRUD cursoCRUD = new DAL.CursoCRUD();
+                for (model.Curso curso : cursoCRUD.getCursos()) {
+                    boolean modificado = false;
+                    for (model.UnidadeCurricular ucDoCurso : curso.getUnidadeCurriculars()) {
+                        if (ucDoCurso.getNome().equalsIgnoreCase(nomeAtual)) {
+                            ucDoCurso.setNome(novoNome);
+                            modificado = true;
+                        }
+                    }
+                    if (modificado) {
+                        cursoCRUD.atualizarCurso(curso.getNome(), curso);
                     }
                 }
             }
@@ -288,29 +317,40 @@ public class UnidadeCurricularController {
         return ucCRUD.procurarPorAno(ano);
     }
 
-    public Resultado definirMomentos(String nomeUnidadeCurricular, String momentosSeparadosPorVirgula) {
+    public Resultado definirMomentosAvaliacao(int idUc, List<String> momentos) {
         Resultado resultado = new Resultado();
-        DAL.UnidadeCurricularCRUD unidadeCurricularCRUDAtualizado = new DAL.UnidadeCurricularCRUD();
-        model.UnidadeCurricular unidadeCurricular = unidadeCurricularCRUDAtualizado.procurarPorNome(nomeUnidadeCurricular);
 
-        if (unidadeCurricular != null) {
-            unidadeCurricular.setMomentosAvaliacao(new ArrayList<>());
-            String[] momentos = momentosSeparadosPorVirgula.split(",");
-            for (String momento : momentos) {
-                if (!momento.trim().isEmpty()) {
-                    unidadeCurricular.adicionarMomento(momento.trim());
-                }
-            }
-            if (unidadeCurricularCRUDAtualizado.atualizarUC(unidadeCurricular.getNome(), unidadeCurricular)) {
-                resultado.success = true;
-            } else {
-                resultado.success = false;
-                resultado.errorMessage = "Erro na base de dados ao guardar os momentos.";
-            }
-        } else {
+        UnidadeCurricular unidadeCurricular = ucCRUD.procurarPorId(idUc);
+
+        if (unidadeCurricular == null) {
             resultado.success = false;
             resultado.errorMessage = "Unidade Curricular não encontrada.";
+            return resultado;
         }
+        unidadeCurricular.setMomentosAvaliacao(momentos);
+
+        if (ucCRUD.atualizarUCPorId(idUc, unidadeCurricular)) {
+            resultado.success = true;
+
+            if (unidadeCurricular.getDocente() != null) {
+                Docente docenteAfetado = docenteCRUD.procurarPorNif(unidadeCurricular.getDocente().getNif());
+
+                if (docenteAfetado != null) {
+                    for (UnidadeCurricular ucDoDocente : docenteAfetado.getUnidadesCurriculares()) {
+                        if (ucDoDocente.getId() == idUc) {
+                            ucDoDocente.setMomentosAvaliacao(momentos);
+                            break;
+                        }
+                    }
+                    docenteCRUD.atualizarDocente(docenteAfetado);
+                }
+            }
+
+        } else {
+            resultado.success = false;
+            resultado.errorMessage = "Erro ao guardar as alterações na base de dados.";
+        }
+
         return resultado;
     }
 }

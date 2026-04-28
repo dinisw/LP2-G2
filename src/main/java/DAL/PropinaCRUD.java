@@ -27,8 +27,16 @@ public class PropinaCRUD {
                             Integer.parseInt(dados[0]), // Nº Mec
                             Integer.parseInt(dados[1]), // Ano Letivo
                             Double.parseDouble(dados[2]), // Valor Total
-                            Double.parseDouble(dados[3])  // Valor Pago
+                            Double.parseDouble(dados[3])// Valor Pago
                     );
+                    if (dados.length >= 5) {
+                        String[] hist = dados[4].split("\\|");
+                        List<String> historico = new ArrayList<>();
+                        for (String string : hist) {
+                            if (!string.trim().isEmpty()) historico.add(string);
+                        }
+                        propina.setHistoricoPagamentos(historico);
+                    }
                     propinas.add(propina);
                 }
             }
@@ -40,11 +48,17 @@ public class PropinaCRUD {
     private void guardarTodosNoFicheiro() {
         try (PrintWriter print = new PrintWriter(new FileWriter(CAMINHO_FICHEIRO))) {
             for (Propina propina : propinas) {
-                String linha = String.format("%d;%d;%.2f;%.2f",
+
+                String histStr = "";
+                if (propina.getHistoricoPagamentos() != null && !propina.getHistoricoPagamentos().isEmpty()) {
+                    histStr = String.join("|", propina.getHistoricoPagamentos());
+                }
+                String linha = String.format("%d;%d;%.2f;%.2f;%s",
                         propina.getNumeroMecEstudante(),
                         propina.getAnoLetivo(),
                         propina.getValorTotal(),
-                        propina.getValorPago()).replace(",", "."); // Garantir ponto nas decimais
+                        propina.getValorPago(),
+                        histStr).replace(",", "."); // Garantir ponto nas decimais
                 print.println(linha);
             }
         } catch (IOException e) {
