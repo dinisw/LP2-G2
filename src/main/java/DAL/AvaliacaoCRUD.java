@@ -28,7 +28,14 @@ public class AvaliacaoCRUD {
                 String[] dados = linha.split(";");
                 if (dados.length >= 4) {
                     String momento = dados[0];
-                    Double nota = dados[1].equals("null") ? null : Double.parseDouble(dados[1]);
+                    Double nota = null;
+                    if(dados[1].trim().equalsIgnoreCase("null")) {
+                        try {
+                            nota = Double.parseDouble(dados[1].replace(",", "."));
+                        } catch (NumberFormatException ex) {
+                            nota = null;
+                        }
+                    }
                     String nomeUnidadeCurricular = dados[2];
                     int numMec = Integer.parseInt(dados[3]);
 
