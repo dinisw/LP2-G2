@@ -17,38 +17,29 @@ public class EstudanteController {
 
     // 1. FICHA DE ESTUDANTE ATUALIZADA (Usa o novo cálculo dinâmico do ano)
     public String obterFichaEstudanteFormatada(Estudante estudante) {
-        if (estudante == null) return "Erro: Estudante não encontrado.";
+        if (estudante == null) return "Erro: Estudante nao encontrado.";
 
-        String dataNascimentoStr = (estudante.getDataNascimento() != null) ? estudante.getDataNascimento().toString() : "Não definida";
-        String cursoStr = (estudante.getNomeCurso() != null && !estudante.getNomeCurso().trim().isEmpty()) ? estudante.getNomeCurso() : "Sem curso atribuído";
+        String dataNascimentoStr = (estudante.getDataNascimento() != null) ? estudante.getDataNascimento().toString() : "Nao definida";
+        String cursoStr = (estudante.getNomeCurso() != null && !estudante.getNomeCurso().trim().isEmpty()) ? estudante.getNomeCurso() : "Sem curso atribuido";
 
         boolean isConcluido = verificarSeCursoConcluido(estudante);
-        String statusCurso = isConcluido ? "🎓 CONCLUÍDO" : "⏳ EM CURSO";
+        String statusCurso = isConcluido ? "CONCLUIDO" : "EM CURSO";
 
         int anoLetivoAtual = obterAnoDesbloqueado(estudante);
 
         return """
         --- FICHA DE ESTUDANTE ---
         Nome: %s
-        Nº Mecanográfico: %s
+        N. Mecanografico: %s
         Email: %s
         NIF: %d
         Data Nascimento: %s
         Morada: %s
-        Curso (Inscrição): %s
+        Curso (Inscricao): %s
         Estado do Curso: %s
-        Ano Letivo Atual: %dº Ano
-        """.formatted(
-                estudante.getNome(),
-                estudante.getNumeroMec(),
-                estudante.getEmail(),
-                estudante.getNif(),
-                dataNascimentoStr,
-                estudante.getMorada(),
-                cursoStr,
-                statusCurso,
-                anoLetivoAtual
-        );
+        Ano Letivo Atual: %do Ano
+        """.formatted(estudante.getNome(), estudante.getNumeroMec(), estudante.getEmail(),
+                estudante.getNif(), dataNascimentoStr, estudante.getMorada(), cursoStr, statusCurso, anoLetivoAtual);
     }
 
     // 2. NOVO MÉTODO PRINCIPAL DE PROGRESSÃO (COM BLOQUEIO FINANCEIRO)
