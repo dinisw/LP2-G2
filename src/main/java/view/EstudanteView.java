@@ -400,4 +400,29 @@ public class EstudanteView {
             MenuUtils.pressionarEnter(ler);
         }
     }
+    // --- MENU DE CONSULTAR PROPINAS (Na EstudanteView) ---
+    private void consultarPropinas(model.Estudante estudanteLogado) {
+        System.out.println("\n--- Historico de Propinas ---");
+        java.util.List<model.Propina> propinas = propinaController.consultarPropinasEstudante(estudanteLogado.getNumeroMec());
+        
+        if (propinas.isEmpty()) {
+            System.out.println("Sem registos de propinas. (Ainda nao foi gerado o 1o Ano).");
+            return;
+        }
+
+        double dividaTotal = 0.0;
+        
+        for (model.Propina p : propinas) {
+            String estado = p.isTotalmentePaga() ? "[PAGA]" : "[EM DIVIDA]";
+            System.out.printf("Ano Letivo: %do | Valor Total: %.2f EUR | Falta Pagar: %.2f EUR %s\n",
+                    p.getAnoLetivo(), p.getValorAnual(), p.getValorEmDivida(), estado);
+            dividaTotal += p.getValorEmDivida();
+        }
+        
+        System.out.printf("\nDivida Total Atual: %.2f EUR\n", dividaTotal);
+        
+        if (dividaTotal > 0) {
+            System.out.println("Aviso: Dividas ativas impedem a progressao de ano e a conclusao do curso!");
+        }
+    }
 }
