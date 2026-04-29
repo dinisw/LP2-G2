@@ -1,185 +1,132 @@
 package DAL;
 
+import DAL.core.CsvRepositorio;
 import model.Estudante;
 import model.Resultado;
-import java.io.*;
+
 import java.time.LocalDate;
 import java.util.List;
 
-public class EstudanteCRUD {
-    private static final String CAMINHO_FICHEIRO = "estudantes.csv";
+public class EstudanteCRUD extends CsvRepositorio<Estudante> {
     private final List<Estudante> estudantes;
-    private int numeroMecCounter;
+    private int numeroMecCounter = 10000;
 
     public EstudanteCRUD() {
-        this.estudantes = new java.util.ArrayList<>();
-        this.numeroMecCounter = 10000;
-        carregarFicheiro();
-    }
-
-    private void carregarFicheiro(){
-        File ficheiro = new File(CAMINHO_FICHEIRO);
-        if(!ficheiro.exists()){
-            return;
-        }
-        try(BufferedReader reader = new BufferedReader(new FileReader(CAMINHO_FICHEIRO))){
-            String linha;
-            while((linha = reader.readLine()) != null){
-                String[] dados = linha.split(";");
-                if(dados.length >= 9){
-                    String hash = dados[6];
-                    boolean ativo = Boolean.parseBoolean(dados[8]);
-
-                    Estudante estudante = new Estudante(
-                            dados[0], // nome
-                            dados[1], // morada
-                            Integer.parseInt(dados[2]), // nif
-                            LocalDate.parse(dados[3]), // dataNascimento
-                            dados[4], // email
-                            Integer.parseInt(dados[5]), // numeroMec
-                            hash, // hash
-                            dados[7],
-                            ativo
-                    );
-
-                    estudantes.add(estudante);
-                    if(estudante.getNumeroMec() >= numeroMecCounter) {
-                        numeroMecCounter = estudante.getNumeroMec() + 1;
-                    }
-                }
-            }
-        } catch (IOException | NumberFormatException e) {
-            throw new RuntimeException("Erro interno ao carregar o ficheiro de estudantes.", e);
-        }
-    }
-
-    //CREATE
-    public boolean registarEstudante(Estudante estudante){
-        if (estudante != null && procurarPorNif(estudante.getNif()) == null) {
-            estudantes.add(estudante);
-            guardarTodosNoFicheiro();
-            return true;
-        }
-        return false;
-    }
-
-    public Resultado atualizarSenha(Estudante estudante){
-        Resultado resultado = new Resultado();
-        if(estudante != null){
-            for (int i = 0; i < estudantes.size(); i++) {
-                if (estudantes.get(i).getNumeroMec() == estudante.getNumeroMec()) {
-                    estudantes.set(i, estudante);
-                    guardarTodosNoFicheiro();
-                    resultado.success = true;
-                    return resultado;
-                }
+        super("estudantes.csv");
+        this.estudantes = carregarTodos();
+        
+        for (Estudante e : estudantes) {
+            if (e.getNumeroMec() >= numeroMecCounter) {
+                numeroMecCounter = e.getNumeroMec() + 1;
             }
         }
-        resultado.success = false;
-        resultado.errorMessage = "Erro ao atualizar o ficheiro do estudante";
-        return resultado;
     }
 
-    private void guardarTodosNoFicheiro() {
-        try (PrintWriter print = new PrintWriter(new FileWriter(CAMINHO_FICHEIRO))) {
-            for (Estudante estudante : estudantes) {
-                String linha = String.format("%s;%s;%s;%s;%s;%s;%s;%s;%s",
-                        safe(estudante.getNome()),
-                        safe(estudante.getMorada()),
-                        safe(estudante.getNif()),
-                        safe(estudante.getDataNascimento()),
-                        safe(estudante.getEmail()),
-                        safe(estudante.getNumeroMec()),
-                        safe(estudante.getHash()),
-                        safe(estudante.getNomeCurso()),
-                        estudante.isAtivo());
-                print.println(linha);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Erro interno ao carregar o ficheiro de estudantes.", e);
+    // --- IMPLEMENTAÇÃO OBRIGATÓRIA DO CSV REPOSITORIO ---
+    
+    @Override
+    protected Estudante mapearLinhaParaEntidade(String[] dados) {
+        if (dados.length < 9) return null;
+        try {
+            return new Estudante(
+                    dados[0], // nome
+                    dados[1], // morada
+                    Integer.parseInt(dados[2]), // nif
+                    LocalDate.parse(dados[3]), // dataNascimento
+                    dados[4], // email
+                    Integer.parseInt(dados[5]), // numeroMec
+                    dados[6], // hash
+                    dados[7], // nomeCurso
+                    Boolean.parseBoolean(dados[8]) // ativo
+            );
+        } catch (Exception e) {
+            return null; // Ignora linhas mal formatadas
         }
     }
+
+    @Override
+    protected String mapearEntidadeParaLinha(Estudante estudante) {
+        return String.join(DELIMITADOR,
+                safe(estudante.getNome()),
+                safe(estudante.getMorada()),
+                safe(estudante.getNif()),
+                safe(estudante.getDataNascimento()),
+                safe(estudante.getEmail()),
+                safe(estudante.getNumeroMec()),
+                safe(estudante.getHash()),
+                safe(estudante.getNomeCurso()),
+                String.valueOf(estudante.isAtivo())
+        );
+    }
+
+    // --- OPERAÇÕES CRUD COM 'RESULTADO<T>' ---
+
+    public Resultado<Estudante> registarEstudante(Estudante estudante) {
+        if (estudante == null) {
+            return new Resultado<>(false, "Dados do estudante são inválidos.");
+        }
+        if (procurarPorNif(estudante.getNif()) != null) {
+            return new Resultado<>(false, "Já existe um estudante registado com o NIF: " + estudante.getNif());
+        }
+        
+        estudantes.add(estudante);
+        boolean sucesso = guardarTodos(estudantes);
+        
+        return sucesso ? new Resultado<>(estudante, true) : new Resultado<>(false, "Erro ao gravar no ficheiro CSV.");
+    }
+
+    public Resultado<Estudante> atualizarEstudante(Estudante estudante) {
+        if (estudante == null) return new Resultado<>(false, "Estudante inválido.");
+        
+        for (int i = 0; i < estudantes.size(); i++) {
+            if (estudantes.get(i).getNumeroMec() == estudante.getNumeroMec()) {
+                estudantes.set(i, estudante);
+                boolean sucesso = guardarTodos(estudantes);
+                return sucesso ? new Resultado<>(estudante, true) : new Resultado<>(false, "Erro ao atualizar ficheiro.");
+            }
+        }
+        return new Resultado<>(false, "Estudante não encontrado.");
+    }
+
+    public Resultado<Estudante> atualizarSenha(Estudante estudante) {
+        // Aproveitamos o mesmo método de atualização
+        return atualizarEstudante(estudante);
+    }
+
+    public Resultado<Estudante> eliminarEstudante(int numeroMec) {
+        for (int i = 0; i < estudantes.size(); i++) {
+            if (estudantes.get(i).getNumeroMec() == numeroMec) {
+                Estudante removido = estudantes.remove(i);
+                boolean sucesso = guardarTodos(estudantes);
+                return sucesso ? new Resultado<>(removido, true) : new Resultado<>(false, "Erro ao remover ficheiro.");
+            }
+        }
+        return new Resultado<>(false, "Estudante não encontrado.");
+    }
+
+    // --- LEITURAS (READ) ---
 
     public List<Estudante> getEstudantes() {
-            return estudantes;
+        return estudantes;
     }
 
-    //READ
     public Estudante lerEstudante(int numeroMec) {
-        for (Estudante estudante : estudantes) {
-            if (estudante.getNumeroMec() == numeroMec) {
-                return estudante;
-            }
-        }
-        return null;
+        return estudantes.stream().filter(e -> e.getNumeroMec() == numeroMec).findFirst().orElse(null);
     }
 
     public Estudante procurarPorNif(int nif) {
-        for (Estudante estudante : estudantes) {
-            if (estudante.getNif() == nif) {
-                return estudante;
-            }
-        }
-        return null;
-    }
-    //UPDATE
-    public boolean atualizarEstudante(Estudante estudante) {
-        if(estudante != null){
-            for (int i = 0; i < estudantes.size(); i++) {
-                if (estudantes.get(i).getNumeroMec() == estudante.getNumeroMec()) {
-                    estudantes.set(i, estudante);
-                    guardarTodosNoFicheiro();
-                    return true;
-                }
-            }
-        }
-        return false;
-        }
-
-    //DELETE
-    public boolean eliminarEstudante(int numeroMec) {
-        for(int i = 0; i < estudantes.size(); i++){
-            if(estudantes.get(i).getNumeroMec() == numeroMec){
-                estudantes.remove(i);
-                guardarTodosNoFicheiro();
-                return true;
-            }
-        }
-        return false;
+        return estudantes.stream().filter(e -> e.getNif() == nif).findFirst().orElse(null);
     }
 
     public int gerarNumeroMecanografico() {
-        int anoAtual = java.time.LocalDate.now().getYear() % 100; // mudar quando for criado opção para avançar o tempo manualmento
+        int anoAtual = LocalDate.now().getYear() % 100;
         int prefixo = 100 + anoAtual;
-
-        int maxSequencia = 0;
-
-        for (Estudante estudante : estudantes) {
-            int mec = estudante.getNumeroMec();
-            int anoMec = (mec / 10000) % 100;
-
-            if (anoMec == anoAtual) {
-                int sequencia = mec % 10000;
-                if (sequencia > maxSequencia) {
-                    maxSequencia = sequencia;
-                }
-            }
-        }
-        int novaSequencia = maxSequencia + 1;
-
-        return (prefixo * 10000) + novaSequencia;
-    }
-
-    public Estudante procurarNumeroMec(int numeroMecanografico) {
-        for (Estudante estudante : estudantes) {
-            if (estudante.getNumeroMec() == numeroMecanografico) {
-                return estudante;
-            }
-        }
-        return null;
-    }
-
-    private String safe(Object o){
-        return (o == null) ? "SEM REGISTO" : o.toString();
+        int maxSequencia = estudantes.stream()
+                .map(Estudante::getNumeroMec)
+                .filter(mec -> (mec / 10000) % 100 == anoAtual)
+                .map(mec -> mec % 10000)
+                .max(Integer::compareTo)
+                .orElse(0);
+        return (prefixo * 10000) + maxSequencia + 1;
     }
 }
