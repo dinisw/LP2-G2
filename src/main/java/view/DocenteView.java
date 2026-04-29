@@ -410,74 +410,55 @@ public class DocenteView {
         }
     }
 
-    private void definirMomentosAvaliacao(Docente docenteAtual) {
-        try {
-            System.out.println(GetBlue() + "\n--- DEFINIR MOMENTOS DE AVALIAÇÃO ---" + GetReset());
+    // --- MENU DE DEFINIR MOMENTOS DE AVALIAÇÃO (Na DocenteView) ---
+    private void definirMomentosAvaliacao(model.Docente docenteLogado) {
+        System.out.println("\n--- Definir Momentos de Avaliacao ---");
+        
+        List<model.UnidadeCurricular> ucsDoDocente = docenteLogado.getUnidadesCurriculares();
+        if (ucsDoDocente.isEmpty()) {
+            System.out.println("Nao tem Unidades Curriculares atribuidas.");
+            return;
+        }
 
-            DocenteController dc = new DocenteController();
-            Docente docenteFresco = dc.procurarDocentePorNif(docenteAtual.getNif());
-            List<UnidadeCurricular> unidadesCurriculares = docenteFresco.getUnidadesCurriculares();
+        System.out.println("As suas UCs:");
+        for (model.UnidadeCurricular uc : ucsDoDocente) {
+            System.out.println("- ID: " + uc.getId() + " | Nome: " + uc.getNome());
+        }
 
-            if (unidadesCurriculares == null || unidadesCurriculares.isEmpty()) {
-                System.out.println(GetYellow() + "Não tem Unidades Curriculares atribuídas neste momento." + GetReset());
-                MenuUtils.pressionarEnter(scanner);
-                return;
+        int idUc = lerInteiroSeguro("Digite o ID da UC que pretende configurar: ");
+
+        System.out.print("Digite os momentos de avaliacao separados por virgula (ex: Frequencia, Trabalho Pratico): ");
+        String inputMomentos = scanner.nextLine();
+        java.util.List<String> momentos = java.util.Arrays.asList(inputMomentos.split(","));
+        
+        // Limpar espaços em branco
+        momentos.replaceAll(String::trim);
+
+        model.Resultado<model.UnidadeCurricular> res = docenteController.definirMomentosAvaliacao(docenteLogado.getSigla(), idUc, momentos);
+
+        if (res.sucesso) {
+            System.out.println("Sucesso! Momentos atualizados para a UC: " + res.dados.getNome());
+        } else {
+            System.out.println("Erro: " + res.mensagemErro);
+        }
+    }
+
+    // --- MENU DE LISTAR ALUNOS POR UC (Na DocenteView) ---
+    private void listarAlunosDaMinhaUC(model.Docente docenteLogado) {
+        System.out.print("Digite o nome da sua UC para ver os alunos inscritos: ");
+        String nomeUc = scanner.nextLine();
+
+        java.util.List<model.Estudante> alunos = docenteController.listarAlunosPorUC(nomeUc);
+
+        if (alunos.isEmpty()) {
+            System.out.println("Nao ha alunos com avaliacoes registadas nesta UC.");
+        } else {
+            System.out.println("\n--- Alunos na UC " + nomeUc + " ---");
+            for (model.Estudante est : alunos) {
+                model.Resultado<String> status = avaliacaoController.obterStatusAprovacao(est.getNumeroMec(), nomeUc);
+                
+                System.out.println("Mec: " + est.getNumeroMec() + " | Nome: " + est.getNome() + " | " + status.dados);
             }
-
-            System.out.println(GetWhiteBold() + "As suas Unidades Curriculares:" + GetReset());
-            for (int i = 0; i < unidadesCurriculares.size(); i++) {
-                System.out.println((i + 1) + ". " + unidadesCurriculares.get(i).getNome());
-            }
-
-            int escolhaUC = -1;
-            boolean ucValida = false;
-            while (!ucValida) {
-                try {
-                    String ucStr = BackendUtils.lerInputString(scanner, "\nSelecione o número da UC (ou 0 para cancelar): ");
-                    escolhaUC = Integer.parseInt(ucStr);
-                    if (escolhaUC == 0) return;
-
-                    if (escolhaUC >= 1 && escolhaUC <= unidadesCurriculares.size()) {
-                        ucValida = true;
-                    } else {
-                        System.out.println(GetRed() + "Aviso: Escolha inválida." + GetReset());
-                    }
-                } catch (NumberFormatException e) {
-                    System.out.println(GetRed() + "Aviso: O valor deve ser um número." + GetReset());
-                }
-            }
-            UnidadeCurricular unidadeCurricularSelecionada = unidadesCurriculares.get(escolhaUC - 1);
-
-            System.out.println("\nUC Selecionada: " + unidadeCurricularSelecionada.getNome());
-            if (unidadeCurricularSelecionada.getMomentosAvaliacao() != null && !unidadeCurricularSelecionada.getMomentosAvaliacao().isEmpty()) {
-                System.out.println(GetYellow() + "Momentos atuais: " + String.join(", ", unidadeCurricularSelecionada.getMomentosAvaliacao()) + GetReset());
-            }
-
-            String novosMomentos = BackendUtils.lerInputString(scanner, "Digite os momentos separados por vírgula (ex: Teste 1, Exame): ");
-
-            if (!novosMomentos.isEmpty()) {
-
-                String[] momentosArray = novosMomentos.split(",");
-                if (momentosArray.length > 3) {
-                    System.out.println(GetRed() + "\nErro: O regulamento permite um máximo de 3 avaliações por UC." + GetReset());
-                    System.out.println(GetYellow() + "Tentou registar " + momentosArray.length + " momentos. Operação cancelada." + GetReset());
-                    MenuUtils.pressionarEnter(scanner);
-                    return;
-                }
-
-                UnidadeCurricularController unidadeCurricularControllerAtualizado = new UnidadeCurricularController();
-                Resultado resultado = unidadeCurricularControllerAtualizado.definirMomentos(unidadeCurricularSelecionada.getNome(), novosMomentos);
-
-                if (resultado.success) {
-                    System.out.println(GetGreen() + "\nMomentos de Avaliação guardados com sucesso no sistema!" + GetReset());
-                } else {
-                    System.out.println(GetRed() + "\nErro ao guardar: " + resultado.errorMessage + GetReset());
-                }
-            }
-            MenuUtils.pressionarEnter(scanner);
-        } catch (Exception e) {
-            System.out.println(GetRed() + "Ocorreu um erro: " + e.getMessage() + GetReset());
-            MenuUtils.pressionarEnter(scanner);
         }
     }
 }
