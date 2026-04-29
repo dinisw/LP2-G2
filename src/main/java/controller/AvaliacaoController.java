@@ -1,29 +1,29 @@
 package controller;
 
+import DAL.AvaliacaoCRUD;
 import model.Avaliacao;
+import model.Resultado;
+
 import java.util.List;
 
 public class AvaliacaoController {
-
-    private DAL.AvaliacaoCRUD avaliacaoCRUD;
+    private final AvaliacaoCRUD avaliacaoCRUD;
 
     public AvaliacaoController() {
-        this.avaliacaoCRUD = new DAL.AvaliacaoCRUD();
+        this.avaliacaoCRUD = new AvaliacaoCRUD();
     }
 
-    public boolean registarAvaliacao(model.Avaliacao avaliacao) {
+    public Resultado<Avaliacao> registarAvaliacao(Avaliacao avaliacao) {
         if (avaliacao == null || avaliacao.getEstudante() == null || avaliacao.getUnidadeCurricular() == null) {
-            return false;
+            return new Resultado<>(false, "Dados da avaliação incompletos.");
         }
 
-        if (avaliacao.getNota() != null) {
-            if (avaliacao.getNota() < 0.0 || avaliacao.getNota() > 20.0) {
-                return false;
-            }
+        if (avaliacao.getNota() != null && (avaliacao.getNota() < 0.0 || avaliacao.getNota() > 20.0)) {
+            return new Resultado<>(false, "A nota deve estar entre 0.0 e 20.0 valores.");
         }
 
         if (avaliacao.getMomento() == null || avaliacao.getMomento().trim().isEmpty()) {
-            return false;
+            return new Resultado<>(false, "O momento de avaliação é obrigatório.");
         }
 
         List<Avaliacao> avaliacoesExistentes = avaliacaoCRUD.listarPorUnidadeCurricular(avaliacao.getUnidadeCurricular().getNome());
@@ -34,18 +34,44 @@ public class AvaliacaoController {
                     .count();
 
             if (contagem >= 3) {
-                System.out.println("Erro: O estudante já atingiu o limite máximo de 3 avaliações para esta UC.");
-                return false;
+                return new Resultado<>(false, "O estudante já atingiu o limite máximo de 3 avaliações para esta UC.");
             }
         }
 
         return avaliacaoCRUD.registarAvaliacao(avaliacao);
     }
 
-    public List<Avaliacao> listarAvaliacoesPorUC(String nomeUC) {
-        if (nomeUC == null || nomeUC.trim().isEmpty()) {
-            return null;
+    // --- NOVO: Cálculo rigoroso da Média e Estado de Aprovação ---
+    public Resultado<String> obterStatusAprovacao(int numeroMec, String nomeUC) {
+        List<Avaliacao> avaliacoesAluno = avaliacaoCRUD.listarPorEstudante(numeroMec);
+        
+        double somaNotas = 0.0;
+        int contagemNotas = 0;
+
+        for (Avaliacao av : avaliacoesAluno) {
+            if (av.getUnidadeCurricular().getNome().equalsIgnoreCase(nomeUC) && av.getNota() != null) {
+                somaNotas += av.getNota();
+                contagemNotas++;
+            }
         }
-        return avaliacaoCRUD.listarPorUnidadeCurricular(nomeUC);
+
+        if (contagemNotas == 0) {
+            return new Resultado<>("Sem classificação atribuída", true);
+        }
+
+        double media = somaNotas / contagemNotas;
+        
+        // Arredondamento a 2 casas decimais (ex: 10.66)
+        media = Math.round(media * 100.0) / 100.0;
+
+        // Regras de negócio da instituição: Média >= 9.5 é Aprovado
+        String estado = (media >= 9.5) ? "APROVADO" : "REPROVADO";
+
+        String mensagemFinal = String.format("Média: %.2f valores - %s", media, estado);
+        return new Resultado<>(mensagemFinal, true);
+    }
+
+    public List<Avaliacao> listarAvaliacoesPorUC(String nomeUC) {
+        return (nomeUC == null || nomeUC.trim().isEmpty()) ? null : avaliacaoCRUD.listarPorUnidadeCurricular(nomeUC);
     }
 }
