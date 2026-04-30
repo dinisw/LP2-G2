@@ -1,6 +1,5 @@
 package DAL;
 
-import DAL.core.CsvRepositorio;
 import model.Curso;
 import model.Departamento;
 import model.Resultado;
@@ -32,10 +31,7 @@ public class CursoCRUD extends CsvRepositorio<Curso> {
             DepartamentoCRUD depCRUD = new DepartamentoCRUD();
             Departamento dep = depCRUD.procurarPorSigla(siglaDep);
 
-            Curso curso = new Curso(nomeCurso, duracao, dep);
-            // NOTA: Certifica-te que a classe Curso tem este setter (curso.setPrecoAnual)
-            // Se não tiver, adiciona-o no model.Curso
-            curso.setPrecoAnual(precoAnual); 
+            Curso curso = new Curso(nomeCurso, duracao, dep, precoAnual);
 
             String anosIniciadosStr = dados[4].trim();
             List<Integer> anosIniciados = new ArrayList<>();
