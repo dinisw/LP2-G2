@@ -9,7 +9,7 @@ import model.Resultado;
 import java.time.LocalDate;
 import java.util.List;
 
-public class CursoController {
+public class EstudanteController {
     private final EstudanteCRUD estudanteCRUD;
     private final CursoCRUD cursoCRUD; // Injetado para validar regras de negócio transversais
 

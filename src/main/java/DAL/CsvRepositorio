@@ -1,4 +1,4 @@
-package DAL;
+package DAL.core; 
 
 import java.io.*;
 import java.util.ArrayList;
@@ -26,7 +26,7 @@ public abstract class CsvRepositorio<T> {
             String linha;
             while ((linha = reader.readLine()) != null) {
                 if (linha.trim().isEmpty()) continue;
-
+                
                 String[] dados = linha.split(DELIMITADOR);
                 T entidade = mapearLinhaParaEntidade(dados);
                 if (entidade != null) {

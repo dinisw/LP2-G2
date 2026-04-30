@@ -9,23 +9,13 @@ public class Curso {
     private Departamento departamento;
     private final List<UnidadeCurricular> unidadeCurriculars;
     private List<Integer> anosIniciados;
-    private double precoAnual;
 
-    public Curso(String nome, int duracao, Departamento departamento, double precoAnual) {
+    public Curso(String nome, int duracao, Departamento departamento) {
         this.nome = nome;
         this.duracao = duracao;
         this.departamento = departamento;
-        this.precoAnual = precoAnual;
         this.unidadeCurriculars = new ArrayList<>();
         this.anosIniciados = new ArrayList<>();
-    }
-
-    public double getPrecoAnual() {
-        return precoAnual;
-    }
-
-    public void setPrecoAnual(double precoAnual) {
-        this.precoAnual = precoAnual;
     }
 
     public String getNome() {
