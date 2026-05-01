@@ -1,6 +1,5 @@
 package DAL;
 
-import DAL.core.CsvRepositorio;
 import model.Docente;
 import model.Resultado;
 import model.UnidadeCurricular;

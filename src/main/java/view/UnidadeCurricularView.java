@@ -128,16 +128,16 @@ public class UnidadeCurricularView {
             }
 
             UnidadeCurricularController unidadeCurricularControllerAtualizado = new UnidadeCurricularController();
-            Resultado resultado = unidadeCurricularControllerAtualizado.registarUC(nome, ano, semestre, siglaDocente);
+            Resultado <UnidadeCurricular> resultado = unidadeCurricularControllerAtualizado.registarUC(nome, ano, semestre, siglaDocente);
 
-            if (resultado.success) {
+            if (resultado.sucesso) {
                 System.out.println(GetGreen() + "\nUC registada com sucesso!" + GetReset());
                 UnidadeCurricular novaUC = unidadeCurricularControllerAtualizado.procurarUCPorNome(nome);
                 if (novaUC != null) {
                     imprimirDadosUnidadeCurricular(novaUC);
                 }
             } else {
-                System.out.println(GetRed() + "\nErro ao registar: " + resultado.errorMessage + GetReset());
+                System.out.println(GetRed() + "\nErro ao registar: " + resultado.mensagemErro + GetReset());
             }
 
             MenuUtils.pressionarEnter(scanner);
@@ -322,16 +322,16 @@ public class UnidadeCurricularView {
                 return;
             }
 
-            Resultado resultado = unidadeCurricularControllerAtualizado.atualizarUCPorId(id, nomeFinal, novoAno, novoSemestre, siglaFinal);
+            Resultado <UnidadeCurricular> resultado = unidadeCurricularControllerAtualizado.atualizarUC(id, nomeFinal, novoAno, novoSemestre, siglaFinal);
 
-            if (resultado.success) {
+            if (resultado.sucesso) {
                 System.out.println(GetGreen() + "\nUC atualizada com sucesso!" + GetReset());
                 UnidadeCurricular ucAtualizada = unidadeCurricularControllerAtualizado.procurarUCPorId(id);
                 if (ucAtualizada != null) {
                     imprimirDadosUnidadeCurricular(ucAtualizada);
                 }
             } else {
-                System.out.println(GetRed() + "\nErro ao atualizar: " + resultado.errorMessage + GetReset());
+                System.out.println(GetRed() + "\nErro ao atualizar: " + resultado.mensagemErro + GetReset());
             }
 
             MenuUtils.pressionarEnter(scanner);
@@ -378,12 +378,12 @@ public class UnidadeCurricularView {
 
             // CORREÇÃO: Chavetas devidamente abertas e fechadas
             if (confirmacao.equals("S")) {
-                Resultado resultado = unidadeCurricularControllerAtualizado.eliminarUCPorId(id);
+                Resultado <UnidadeCurricular> resultado = unidadeCurricularControllerAtualizado.eliminarUCPorId(id);
 
-                if (resultado.success) {
+                if (resultado.sucesso) {
                     System.out.println(GetGreen() + "\nUC eliminada com sucesso!" + GetReset());
                 } else {
-                    System.out.println(GetRed() + "\nErro ao eliminar: " + resultado.errorMessage + GetReset());
+                    System.out.println(GetRed() + "\nErro ao eliminar: " + resultado.mensagemErro + GetReset());
                 }
             } else {
                 System.out.println(GetYellow() + "Operação cancelada." + GetReset());

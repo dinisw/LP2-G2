@@ -1,5 +1,6 @@
 package view;
 
+import DAL.AvaliacaoCRUD;
 import common.exceptions.CancelarRegistoException;
 import common.utils.BackendUtils;
 import common.utils.MenuUtils;
@@ -16,6 +17,7 @@ import org.jline.reader.LineReaderBuilder;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 
+import javax.print.Doc;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -125,12 +127,12 @@ public class DocenteView {
             String passHash = su.gerarHashComSalt(novaPass);
 
             DocenteController docenteControllerAtualizado = new DocenteController();
-            Resultado resultado = docenteControllerAtualizado.alterarPassword(docente.getNif(), passHash);
+            Resultado <Docente> resultado = docenteControllerAtualizado.alterarPassword(docente.getNif(), passHash);
 
-            if (resultado.success) {
+            if (resultado.sucesso) {
                 System.out.println(GetGreen() + "\nPassword alterada com sucesso!" + GetReset());
             } else {
-                System.out.println(GetRed() + "\nErro ao guardar alteração da password: " + resultado.errorMessage + GetReset());
+                System.out.println(GetRed() + "\nErro ao guardar alteração da password: " + resultado.mensagemErro + GetReset());
             }
 
             MenuUtils.pressionarEnter(scanner);
@@ -270,7 +272,7 @@ public class DocenteView {
             model.Avaliacao novaAvaliacao = new model.Avaliacao(momentoSelecionado, nota, unidadeCurricular, estudante);
 
             AvaliacaoController avaliacaoController = new AvaliacaoController();
-            if (avaliacaoController.registarAvaliacao(novaAvaliacao)) {
+            if (avaliacaoController.registarAvaliacao(novaAvaliacao) != null) {
                 System.out.println(GetGreen() + "\nAvaliação registada com sucesso!" + GetReset());
             } else {
                 System.out.println(GetRed() + "\nErro ao registar avaliação na base de dados." + GetReset());
@@ -412,6 +414,7 @@ public class DocenteView {
 
     // --- MENU DE DEFINIR MOMENTOS DE AVALIAÇÃO (Na DocenteView) ---
     private void definirMomentosAvaliacao(model.Docente docenteLogado) {
+        DocenteController docenteController = new DocenteController();
         System.out.println("\n--- Definir Momentos de Avaliacao ---");
 
         List<model.UnidadeCurricular> ucsDoDocente = docenteLogado.getUnidadesCurriculares();
@@ -445,6 +448,8 @@ public class DocenteView {
 
     // --- MENU DE LISTAR ALUNOS POR UC (Na DocenteView) ---
     private void listarAlunosDaMinhaUC(model.Docente docenteLogado) {
+        DocenteController docenteController = new DocenteController();
+        AvaliacaoController avaliacaoController = new AvaliacaoController();
         System.out.print("Digite o nome da sua UC para ver os alunos inscritos: ");
         String nomeUc = scanner.nextLine();
 

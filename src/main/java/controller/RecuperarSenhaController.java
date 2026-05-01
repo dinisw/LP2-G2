@@ -11,41 +11,42 @@ public class RecuperarSenhaController {
         this.emailService = new EmailService();
     }
 
-    public Resultado iniciarProcessoRecuperacao(String email) {
-        Resultado resRecuperacao = new Resultado();
+    // CORREÇÃO: Alterado de Resultado<EmailService> para Resultado<String>
+    public Resultado<String> iniciarProcessoRecuperacao(String email) {
+        Resultado<String> resRecuperacao = new Resultado<>();
 
         if (email == null || email.trim().isEmpty()) {
-            resRecuperacao.success = false;
-            resRecuperacao.errorMessage = "O email não pode estar vazio.";
+            resRecuperacao.sucesso = false;
+            resRecuperacao.mensagemErro = "O email não pode estar vazio.";
             return resRecuperacao;
         }
 
         try {
             String token = SenhaUtils.gerarPalavraPasseAleatoria();
 
-            Resultado resEmail = emailService.enviarEmailRecuperacaoDeSenha(email, token);
+            Resultado<String> resEmail = emailService.enviarEmailRecuperacaoDeSenha(email, token);
 
-            if (resEmail.success) {
-                resRecuperacao.success = true;
-                resRecuperacao.object = token;
+            if (resEmail.sucesso) {
+                resRecuperacao.sucesso = true;
+                resRecuperacao.dados = token;
             } else {
-                resRecuperacao.success = false;
-                resRecuperacao.errorMessage = "Falha no servidor de email: " + resEmail.errorMessage;
+                resRecuperacao.sucesso = false;
+                resRecuperacao.mensagemErro = "Falha no servidor de email: " + resEmail.mensagemErro;
             }
         } catch (Exception e) {
-            resRecuperacao.success = false;
-            resRecuperacao.errorMessage = "Erro inesperado ao iniciar a recuperação: " + e.getMessage();
+            resRecuperacao.sucesso = false;
+            resRecuperacao.mensagemErro = "Erro inesperado ao iniciar a recuperação: " + e.getMessage();
         }
 
         return resRecuperacao;
     }
 
-    public Resultado atualizarSenha(Utilizador utilizador, String senhaCruaGerada) {
-        Resultado resultado = new Resultado();
+    public Resultado<? extends Utilizador> atualizarSenha(Utilizador utilizador, String senhaCruaGerada) {
+        Resultado<Utilizador> resultado = new Resultado<>();
 
         if (utilizador == null || senhaCruaGerada == null || senhaCruaGerada.trim().isEmpty()) {
-            resultado.success = false;
-            resultado.errorMessage = "Dados inválidos para atualizar a senha.";
+            resultado.sucesso = false;
+            resultado.mensagemErro = "Dados inválidos para atualizar a senha.";
             return resultado;
         }
 
@@ -65,8 +66,8 @@ public class RecuperarSenhaController {
             return gc.alterarPassword(((Gestor) utilizador).getNif(), hash);
         }
 
-        resultado.success = false;
-        resultado.errorMessage = "Tipo de utilizador desconhecido. Não foi possível atualizar a senha.";
+        resultado.sucesso = false;
+        resultado.mensagemErro = "Tipo de utilizador desconhecido. Não foi possível atualizar a senha.";
         return resultado;
     }
 }

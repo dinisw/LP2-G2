@@ -62,18 +62,17 @@ public class GestorController {
                 : new Resultado<>(false, "Ocorreu um erro na base de dados ao registar.");
     }
 
-    public Resultado<Gestor> atualizarGestor(int nif, String novoNome, String novaMorada, LocalDate novaDataNascimento, String novoCargo) {
+    public Resultado<Gestor> atualizarGestor(int nif, String novaMorada, LocalDate novaDataNascimento, String novoCargo) {
         if (nif <= 0) return new Resultado<>(false, "NIF inválido.");
 
         Gestor existente = gestorCRUD.procurarPorNif(nif);
         if (existente == null) return new Resultado<>(false, "Gestor não encontrado.");
 
-        String nomeFinal = (novoNome != null && !novoNome.trim().isEmpty()) ? novoNome : existente.getNome();
         String moradaFinal = (novaMorada != null && !novaMorada.trim().isEmpty()) ? novaMorada : existente.getMorada();
         LocalDate dataFinal = (novaDataNascimento != null) ? novaDataNascimento : existente.getDataNascimento();
         String cargoFinal = (novoCargo != null && !novoCargo.trim().isEmpty()) ? novoCargo : existente.getCargo();
 
-        Gestor atualizado = new Gestor(nomeFinal, moradaFinal, existente.getNif(), dataFinal, existente.getEmail(), existente.getHash(), cargoFinal);
+        Gestor atualizado = new Gestor(existente.getNome(), moradaFinal, existente.getNif(), dataFinal, existente.getEmail(), existente.getHash(), cargoFinal);
 
         return gestorCRUD.atualizarGestor(atualizado) ? new Resultado<>(atualizado, true)
                 : new Resultado<>(false, "Erro ao guardar alterações.");
@@ -101,4 +100,7 @@ public class GestorController {
     public List<Gestor> listarGestores() { return gestorCRUD.getGestores(); }
     public Gestor procurarGestorPorID(int id) { return gestorCRUD.getGestorPorID(id); }
     public Gestor procurarGestorPorEmail(String email) { return gestorCRUD.procurarPorEmail(email); }
+    public Gestor procurarGestorPorNif(int nif) {
+        return gestorCRUD.procurarPorNif(nif);
+    }
 }

@@ -10,6 +10,7 @@ import model.Resultado;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.zip.DeflaterOutputStream;
 
 import static common.utils.DesignUtils.*;
 
@@ -65,12 +66,12 @@ public class DepartamentoView {
             String sigla = BackendUtils.lerInputString(scanner, "Sigla (ex: EI, MAT): ").toUpperCase();
 
             DepartamentoController departamentoController = new DepartamentoController();
-            Resultado resultado = departamentoController.registarDepartamento(nome, sigla);
+            Resultado <Departamento> resultado = departamentoController.registarDepartamento(nome, sigla);
 
-            if (resultado.success) {
+            if (resultado.sucesso) {
                 System.out.println(GetGreen() + "\nDepartamento registado com sucesso!" + GetReset());
             } else {
-                System.out.println(GetRed() + "\nErro ao registar: " + resultado.errorMessage + GetReset());
+                System.out.println(GetRed() + "\nErro ao registar: " + resultado.mensagemErro + GetReset());
             }
 
             MenuUtils.pressionarEnter(scanner);
@@ -176,12 +177,12 @@ public class DepartamentoView {
 
             String nomeFinal = nome.isEmpty() ? departamento.getNome() : nome;
 
-            Resultado resultado = departamentoController.atualizarDepartamento(sigla, nomeFinal);
+            Resultado <Departamento> resultado = departamentoController.atualizarDepartamento(sigla, nomeFinal);
 
-            if (resultado.success) {
+            if (resultado.sucesso) {
                 System.out.println(GetGreen() + "\nDepartamento atualizado com sucesso!" + GetReset());
             } else {
-                System.out.println(GetRed() + "\nErro ao atualizar: " + resultado.errorMessage + GetReset());
+                System.out.println(GetRed() + "\nErro ao atualizar: " + resultado.mensagemErro + GetReset());
             }
 
             MenuUtils.pressionarEnter(scanner);
@@ -235,12 +236,12 @@ public class DepartamentoView {
                 return;
             }
 
-            Resultado resultado = departamentoController.eliminarDepartamento(sigla);
+            Resultado <Departamento> resultado = departamentoController.eliminarDepartamento(sigla);
 
-            if (resultado.success) {
+            if (resultado.sucesso) {
                 System.out.println(GetGreen() + "\nDepartamento eliminado com sucesso!" + GetReset());
             } else {
-                System.out.println(GetRed() + "\nErro ao eliminar: " + resultado.errorMessage + GetReset());
+                System.out.println(GetRed() + "\nErro ao eliminar: " + resultado.mensagemErro + GetReset());
             }
 
             MenuUtils.pressionarEnter(scanner);

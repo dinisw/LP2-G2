@@ -9,6 +9,7 @@ import model.Estudante;
 import model.Resultado;
 import model.UnidadeCurricular;
 
+import javax.print.Doc;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;

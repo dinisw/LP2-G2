@@ -21,26 +21,26 @@ public class CursoController {
     }
 
     // NOVA ASSINATURA: Recebe diretamente o objeto Curso montado pela View
-    public Resultado registarCurso(Curso curso) {
-        Resultado resultado = new Resultado();
+    public Resultado <Curso> registarCurso(Curso curso) {
+        Resultado <Curso> resultado = new Resultado();
 
         if (curso == null || curso.getNome() == null || curso.getNome().trim().isEmpty()) {
-            resultado.success = false;
-            resultado.errorMessage = "O nome do curso é obrigatório.";
+            resultado.sucesso = false;
+            resultado.mensagemErro = "O nome do curso é obrigatório.";
             return resultado;
         }
 
         if (curso.getDepartamento() == null) {
-            resultado.success = false;
-            resultado.errorMessage = "O departamento associado é obrigatório.";
+            resultado.sucesso = false;
+            resultado.mensagemErro = "O departamento associado é obrigatório.";
             return resultado;
         }
 
-        if (cursoCRUD.registarCurso(curso)) {
-            resultado.success = true;
+        if (cursoCRUD.registarCurso(curso) != null) {
+            resultado.sucesso = true;
         } else {
-            resultado.success = false;
-            resultado.errorMessage = "Já existe um curso com o nome '" + curso.getNome() + "' no sistema.";
+            resultado.sucesso = false;
+            resultado.mensagemErro = "Já existe um curso com o nome '" + curso.getNome() + "' no sistema.";
         }
 
         return resultado;
@@ -62,30 +62,30 @@ public class CursoController {
         Resultado resultado = new Resultado();
 
         if (nomeAntigo == null || nomeAntigo.trim().isEmpty()) {
-            resultado.success = false;
-            resultado.errorMessage = "O nome do curso a atualizar é obrigatório.";
+            resultado.sucesso = false;
+            resultado.mensagemErro = "O nome do curso a atualizar é obrigatório.";
             return resultado;
         }
 
         if (cursoNovo == null || cursoNovo.getNome() == null || cursoNovo.getNome().trim().isEmpty()) {
-            resultado.success = false;
-            resultado.errorMessage = "O novo nome do curso não pode estar vazio.";
+            resultado.sucesso = false;
+            resultado.mensagemErro = "O novo nome do curso não pode estar vazio.";
             return resultado;
         }
 
         Curso cursoOriginal = cursoCRUD.procurarPorNome(nomeAntigo);
 
         if (cursoOriginal == null) {
-            resultado.success = false;
-            resultado.errorMessage = "O curso original não foi encontrado na base de dados.";
+            resultado.sucesso = false;
+            resultado.mensagemErro = "O curso original não foi encontrado na base de dados.";
             return resultado;
         }
 
         // Atualizar na base de dados
         Resultado res = cursoCRUD.atualizarCurso(nomeAntigo, cursoNovo);
 
-        if (res.success) {
-            resultado.success = true;
+        if (res.sucesso) {
+            resultado.sucesso = true;
 
             // Se o nome do curso mudou, precisamos de atualizar o campo 'nomeCurso' dos Estudantes inscritos
             if (!nomeAntigo.equalsIgnoreCase(cursoNovo.getNome())) {
@@ -105,8 +105,8 @@ public class CursoController {
                 }
             }
         } else {
-            resultado.success = false;
-            resultado.errorMessage = res.errorMessage;
+            resultado.sucesso = false;
+            resultado.mensagemErro = res.mensagemErro;
         }
 
         return resultado;
@@ -116,21 +116,21 @@ public class CursoController {
         Resultado resultado = new Resultado();
 
         if (nomeAntigo == null || nomeAntigo.trim().isEmpty()) {
-            resultado.success = false;
-            resultado.errorMessage = "O nome do curso a eliminar é obrigatório.";
+            resultado.sucesso = false;
+            resultado.mensagemErro = "O nome do curso a eliminar é obrigatório.";
             return resultado;
         }
 
         if (cursoCRUD.procurarPorNome(nomeAntigo) == null) {
-            resultado.success = false;
-            resultado.errorMessage = "O curso especificado não foi encontrado no sistema.";
+            resultado.sucesso = false;
+            resultado.mensagemErro = "O curso especificado não foi encontrado no sistema.";
             return resultado;
         }
 
-        Resultado res = cursoCRUD.eliminarCurso(nomeAntigo);
+        Resultado <Curso> res = cursoCRUD.eliminarCurso(nomeAntigo);
 
-        if (res.success) {
-            resultado.success = true;
+        if (res.sucesso) {
+            resultado.sucesso = true;
             try {
                 EstudanteCRUD estudanteCRUD = new EstudanteCRUD();
                 EstudanteController estudanteController = new EstudanteController();
@@ -147,44 +147,44 @@ public class CursoController {
             }
 
         } else {
-            resultado.success = false;
-            resultado.errorMessage = res.errorMessage;
+            resultado.sucesso = false;
+            resultado.mensagemErro = res.mensagemErro;
         }
         return resultado;
     }
 
-    public Resultado iniciarAnoLetivo(String nome, int anoLetivo) {
-        Resultado resultado = new Resultado();
+    public Resultado <Curso> iniciarAnoLetivo(String nome, int anoLetivo) {
+        Resultado <Curso> resultado = new Resultado<>();
 
         if (anoLetivo < 1 || anoLetivo > 3) {
-            resultado.success = false;
-            resultado.errorMessage = "Ano letivo inválido. Os cursos têm 3 anos curriculares.";
+            resultado.sucesso = false;
+            resultado.mensagemErro = "Ano letivo inválido. Os cursos têm 3 anos curriculares.";
             return resultado;
         }
 
         Curso curso = cursoCRUD.procurarPorNome(nome);
         if (curso == null) {
-            resultado.success = false;
-            resultado.errorMessage = "Curso não encontrado.";
+            resultado.sucesso = false;
+            resultado.mensagemErro = "Curso não encontrado.";
             return resultado;
         }
 
         if (curso.isAnoIniciado(anoLetivo)) {
-            resultado.success = false;
-            resultado.errorMessage = "O " + anoLetivo + "º ano deste curso já se encontra iniciado.";
+            resultado.sucesso = false;
+            resultado.mensagemErro = "O " + anoLetivo + "º ano deste curso já se encontra iniciado.";
             return resultado;
         }
 
         if (!isEstruturaCurricularValida(curso)) {
-            resultado.success = false;
-            resultado.errorMessage = "Estrutura curricular incompleta (é obrigatório ter pelo menos uma UC em cada um dos 3 anos).";
+            resultado.sucesso = false;
+            resultado.mensagemErro = "Estrutura curricular incompleta (é obrigatório ter pelo menos uma UC em cada um dos 3 anos).";
             return resultado;
         }
 
         List<String> unidadesCurricularesSemMomentos = obterUCsSemMomentosDeAvaliacao(curso);
         if (!unidadesCurricularesSemMomentos.isEmpty()) {
-            resultado.success = false;
-            resultado.errorMessage = "As seguintes UCs não têm Momentos de Avaliação: " + String.join(",", unidadesCurricularesSemMomentos) + ".";
+            resultado.sucesso = false;
+            resultado.mensagemErro = "As seguintes UCs não têm Momentos de Avaliação: " + String.join(",", unidadesCurricularesSemMomentos) + ".";
             return resultado;
         }
 
@@ -206,64 +206,64 @@ public class CursoController {
         int minimoExigido = (anoLetivo == 1) ? 5 : 1;
 
         if (alunosNesteAno < minimoExigido) {
-            resultado.success = false;
-            resultado.errorMessage = "O " + anoLetivo + "º ano exige no mínimo " + minimoExigido + " aluno(s). Atualmente tem " + alunosNesteAno + " aluno(s) apto(s).";
+            resultado.sucesso = false;
+            resultado.mensagemErro = "O " + anoLetivo + "º ano exige no mínimo " + minimoExigido + " aluno(s). Atualmente tem " + alunosNesteAno + " aluno(s) apto(s).";
             return resultado;
         }
 
         curso.adicionarAnoIniciado(anoLetivo);
-        Resultado res = cursoCRUD.registarArranqueAno(curso.getNome(), curso);
-        if (res.success) {
-            resultado.success = true;
+        Resultado <Curso> res = cursoCRUD.registarArranqueAno(curso.getNome(), curso);
+        if (res.sucesso) {
+            resultado.sucesso = true;
         } else {
-            resultado.success = false;
-            resultado.errorMessage = res.errorMessage;
+            resultado.sucesso = false;
+            resultado.mensagemErro = res.mensagemErro;
         }
         return resultado;
     }
 
-    public Resultado associarUCAoCurso (String nomeCurso, String nomeUC) {
-        Resultado resultado = new Resultado();
+    public Resultado<Curso> associarUCAoCurso (String nomeCurso, String nomeUC) {
+        Resultado <Curso> resultado = new Resultado<>();
 
         if (nomeCurso == null || nomeCurso.trim().isEmpty() || nomeUC == null || nomeUC.trim().isEmpty()) {
-            resultado.success = false;
-            resultado.errorMessage = "O nome do curso e da UC são obrigatórios.";
+            resultado.sucesso = false;
+            resultado.mensagemErro = "O nome do curso e da UC são obrigatórios.";
             return resultado;
         }
 
         Curso curso = this.cursoCRUD.procurarPorNome(nomeCurso);
         if (curso == null) {
-            resultado.success = false;
-            resultado.errorMessage = "Curso não encontrado.";
+            resultado.sucesso = false;
+            resultado.mensagemErro = "Curso não encontrado.";
             return resultado;
         }
 
         UnidadeCurricular unidadeCurricular = this.ucCRUD.procurarPorNome(nomeUC);
         if (unidadeCurricular == null) {
-            resultado.success = false;
-            resultado.errorMessage = "Unidade Curricular não encontrada.";
+            resultado.sucesso = false;
+            resultado.mensagemErro = "Unidade Curricular não encontrada.";
             return resultado;
         }
 
         for (UnidadeCurricular unidadeCurricularExistente : curso.getUnidadeCurriculars()) {
             if (unidadeCurricularExistente.getNome().equalsIgnoreCase(nomeUC)) {
-                resultado.success = false;
-                resultado.errorMessage = "A UC '" + nomeUC + "' já está associada a este curso.";
+                resultado.sucesso = false;
+                resultado.mensagemErro = "A UC '" + nomeUC + "' já está associada a este curso.";
                 return resultado;
             }
         }
 
         if (curso.adicionarUnidadeCurricular(unidadeCurricular)) {
-            Resultado resultado1 = this.cursoCRUD.registarArranqueAno(curso.getNome(), curso);
-            if (resultado1.success) {
-                resultado.success = true;
+            Resultado <Curso> resultado1 = this.cursoCRUD.registarArranqueAno(curso.getNome(), curso);
+            if (resultado1.sucesso) {
+                resultado.sucesso = true;
             } else {
-                resultado.success = false;
-                resultado.errorMessage = resultado1.errorMessage;
+                resultado.sucesso = false;
+                resultado.mensagemErro = resultado1.mensagemErro;
             }
         } else {
-            resultado.success = false;
-            resultado.errorMessage = "Limite de 5 UCs por ano atingido.";
+            resultado.sucesso = false;
+            resultado.mensagemErro = "Limite de 5 UCs por ano atingido.";
         }
         return resultado;
     }

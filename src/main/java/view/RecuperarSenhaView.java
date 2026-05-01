@@ -46,23 +46,23 @@ public class RecuperarSenhaView {
 
             var resultado = recuperarSenhaController.iniciarProcessoRecuperacao(email);
 
-            if (resultado.success) {
+            if (resultado.sucesso) {
 
                 Utilizador utilizador = loginController.login(email);
 
                 if (utilizador != null) {
-                    var resAtualizarSenha = recuperarSenhaController.atualizarSenha(utilizador, resultado.object.toString());
+                    var resAtualizarSenha = recuperarSenhaController.atualizarSenha(utilizador, resultado.dados.toString());
 
-                    if (resAtualizarSenha.success) {
+                    if (resAtualizarSenha.sucesso) {
                         System.out.println(GetGreen() + "\nEmail enviado com sucesso! Verifique a sua caixa de entrada com a nova senha e tente fazer login." + GetReset());
                     } else {
-                        System.out.println(GetRed() + "\nErro ao atualizar a nova senha no sistema: " + resAtualizarSenha.errorMessage + GetReset());
+                        System.out.println(GetRed() + "\nErro ao atualizar a nova senha no sistema: " + resAtualizarSenha.mensagemErro + GetReset());
                     }
                 } else {
                     System.out.println(GetRed() + "\nErro crítico: Utilizador não encontrado na base de dados após a validação do email." + GetReset());
                 }
             } else {
-                System.out.println(GetRed() + "\nFalha na recuperação de senha: " + resultado.errorMessage + GetReset());
+                System.out.println(GetRed() + "\nFalha na recuperação de senha: " + resultado.mensagemErro + GetReset());
             }
 
             MenuUtils.pressionarEnter(ler);

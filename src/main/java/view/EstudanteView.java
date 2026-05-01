@@ -6,6 +6,7 @@ import model.Avaliacao;
 import model.Propina;
 import controller.EstudanteController;
 import controller.PropinaController;
+import model.Resultado;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -165,7 +166,7 @@ public class EstudanteView {
         model.Avaliacao novaInscricao = new model.Avaliacao("A Definir", null, ucEscolhida, estudante);
         controller.AvaliacaoController avaliacaoController = new controller.AvaliacaoController();
 
-        if (avaliacaoController.registarAvaliacao(novaInscricao)) {
+        if (avaliacaoController.registarAvaliacao(novaInscricao) != null) {
             System.out.println(GetGreen() + "\nInscrição na UC '" + ucEscolhida.getNome() + "' realizada com sucesso!" + GetReset());
         } else {
             System.out.println(GetRed() + "\nErro ao registar a inscrição no sistema." + GetReset());
@@ -219,7 +220,7 @@ public class EstudanteView {
 
             if (escolha > 0 && escolha <= cursosDisponiveis.size()) {
                 String cursoEscolhido = cursosDisponiveis.get(escolha - 1).getNome();
-                if(estudanteController.atualizarEstudante(estudante.getNumeroMec(), null, null, cursoEscolhido).success) {
+                if(estudanteController.atualizarEstudante(estudante.getNumeroMec(), null, null, cursoEscolhido).sucesso) {
                     estudante.setNomeCurso(cursoEscolhido);
                     System.out.println(GetGreen() + "\nParabéns! Inscrição no curso de " + cursoEscolhido + " realizada com sucesso!" + GetReset());
                 } else {
@@ -385,12 +386,12 @@ public class EstudanteView {
                 }
             }
 
-            model.Resultado resultado = propinaController.pagarPropina(estudante.getNumeroMec(), propinaSelecionada.getAnoLetivo(), valorPagamento);
+            Resultado<Propina> resultado = propinaController.pagarPropina(estudante.getNumeroMec(), propinaSelecionada.getAnoLetivo(), valorPagamento);
 
-            if (resultado.success) {
+            if (resultado.sucesso) {
                 System.out.println(GetGreen() + "\nPagamento de " + String.format("%.2f€", valorPagamento) + " processado com sucesso!" + GetReset());
             } else {
-                System.out.println(GetRed() + "\nErro: " + resultado.errorMessage + GetReset());
+                System.out.println(GetRed() + "\nErro: " + resultado.mensagemErro + GetReset());
             }
 
             MenuUtils.pressionarEnter(ler);
@@ -402,6 +403,7 @@ public class EstudanteView {
     }
     // --- MENU DE CONSULTAR PROPINAS (Na EstudanteView) ---
     private void consultarPropinas(model.Estudante estudanteLogado) {
+        PropinaController propinaController = new PropinaController();
         System.out.println("\n--- Historico de Propinas ---");
         java.util.List<model.Propina> propinas = propinaController.consultarPropinasEstudante(estudanteLogado.getNumeroMec());
 
@@ -415,7 +417,7 @@ public class EstudanteView {
         for (model.Propina p : propinas) {
             String estado = p.isTotalmentePaga() ? "[PAGA]" : "[EM DIVIDA]";
             System.out.printf("Ano Letivo: %do | Valor Total: %.2f EUR | Falta Pagar: %.2f EUR %s\n",
-                    p.getAnoLetivo(), p.getValorAnual(), p.getValorEmDivida(), estado);
+                    p.getAnoLetivo(), p.getValorTotal(), p.getValorEmDivida(), estado);
             dividaTotal += p.getValorEmDivida();
         }
 
