@@ -35,8 +35,8 @@ public class PropinaController {
         }
 
         Propina novaPropina = new Propina(numeroMec, anoLetivo, precoAConfigurar, 0.0);
-        
-        return propinaCRUD.registarPropina(novaPropina) ? new Resultado<>(novaPropina, true) 
+
+        return propinaCRUD.registarPropina(novaPropina) ? new Resultado<>(novaPropina, true)
                 : new Resultado<>(false, "Erro ao gerar a propina na base de dados.");
     }
 
@@ -53,7 +53,7 @@ public class PropinaController {
 
         propina.registarPagamento(valorPagamento);
 
-        return propinaCRUD.atualizarPropina(propina) ? new Resultado<>(propina, true) 
+        return propinaCRUD.atualizarPropina(propina) ? new Resultado<>(propina, true)
                 : new Resultado<>(false, "Erro ao guardar o pagamento no sistema.");
     }
 

@@ -28,7 +28,7 @@ public class DocenteController {
         UnidadeCurricular uc = ucCRUD.procurarPorId(idUc);
 
         if (uc == null) return new Resultado<>(false, "Unidade Curricular não encontrada.");
-        
+
         // Validação de Segurança: O docente só pode alterar a sua própria UC
         if (uc.getDocente() == null || !uc.getDocente().getSigla().equalsIgnoreCase(siglaDocente)) {
             return new Resultado<>(false, "Acesso Negado: Não é o docente responsável por esta Unidade Curricular.");
@@ -36,7 +36,7 @@ public class DocenteController {
 
         uc.setMomentosAvaliacao(momentos);
         boolean sucesso = ucCRUD.atualizarUCPorId(idUc, uc);
-        
+
         return sucesso ? new Resultado<>(uc, true) : new Resultado<>(false, "Erro ao gravar momentos de avaliação.");
     }
 
@@ -50,7 +50,7 @@ public class DocenteController {
         if (docenteCRUD.procurarPorSigla(sigla) != null) return new Resultado<>(false, "Já existe um docente com esta sigla.");
 
         Docente docente = new Docente(nome, morada, nif, dataNascimento, email, hash, sigla, new ArrayList<>(), new ArrayList<>());
-        
+
         // A associação de UCs foi simplificada, o Gestor orquestra isto melhor pelo UnidadeCurricularController
         return docenteCRUD.registarDocente(docente);
     }

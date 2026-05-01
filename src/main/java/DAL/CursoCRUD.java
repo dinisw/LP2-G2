@@ -1,6 +1,5 @@
 package DAL;
 
-import DAL.core.CsvRepositorio;
 import model.Curso;
 import model.Departamento;
 import model.Resultado;
@@ -29,13 +28,14 @@ public class CursoCRUD extends CsvRepositorio<Curso> {
             String siglaDep = dados[2].trim();
             double precoAnual = Double.parseDouble(dados[3].replace(",", "."));
 
+            // Aceder aos outros CRUDs para reconstruir o objeto
             DepartamentoCRUD depCRUD = new DepartamentoCRUD();
             Departamento dep = depCRUD.procurarPorSigla(siglaDep);
 
             Curso curso = new Curso(nomeCurso, duracao, dep);
             // NOTA: Certifica-te que a classe Curso tem este setter (curso.setPrecoAnual)
             // Se não tiver, adiciona-o no model.Curso
-            curso.setPrecoAnual(precoAnual); 
+            curso.setPrecoAnual(precoAnual);
 
             String anosIniciadosStr = dados[4].trim();
             List<Integer> anosIniciados = new ArrayList<>();
@@ -63,7 +63,7 @@ public class CursoCRUD extends CsvRepositorio<Curso> {
 
     @Override
     protected String mapearEntidadeParaLinha(Curso curso) {
-        String anosStr = curso.getAnosIniciados().isEmpty() ? "Nenhum Curso Iniciado" : 
+        String anosStr = curso.getAnosIniciados().isEmpty() ? "Nenhum Curso Iniciado" :
                 curso.getAnosIniciados().stream().map(String::valueOf).collect(Collectors.joining(","));
 
         StringBuilder linha = new StringBuilder();
@@ -83,12 +83,12 @@ public class CursoCRUD extends CsvRepositorio<Curso> {
 
     public Resultado<Curso> registarCurso(Curso curso) {
         if (curso == null) return new Resultado<>(false, "Dados de curso inválidos.");
-        
+
         // Regra de Negócio do Gestor: Valida a existência de Departamento
         if (curso.getDepartamento() == null) {
             return new Resultado<>(false, "É obrigatório associar um Departamento existente para criar um Curso.");
         }
-        
+
         if (procurarPorNome(curso.getNome()) != null) {
             return new Resultado<>(false, "Já existe um curso com esse nome.");
         }

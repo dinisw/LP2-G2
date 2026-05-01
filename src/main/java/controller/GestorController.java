@@ -21,7 +21,7 @@ public class GestorController {
     public Resultado<Curso> arrancarAnoLetivo(String nomeCurso, int anoAlvo) {
         CursoCRUD cursoCRUD = new CursoCRUD();
         Curso curso = cursoCRUD.procurarPorNome(nomeCurso);
-        
+
         if (curso == null) return new Resultado<>(false, "Curso não encontrado.");
         if (curso.getAnosIniciados().contains(anoAlvo)) {
             return new Resultado<>(false, "O " + anoAlvo + "º ano deste curso já foi iniciado anteriormente.");
@@ -58,7 +58,7 @@ public class GestorController {
 
         Gestor gestor = new Gestor(nome, morada, nif, dataNascimento, email, hash, cargo);
 
-        return gestorCRUD.registarGestor(gestor) ? new Resultado<>(gestor, true) 
+        return gestorCRUD.registarGestor(gestor) ? new Resultado<>(gestor, true)
                 : new Resultado<>(false, "Ocorreu um erro na base de dados ao registar.");
     }
 
@@ -75,26 +75,26 @@ public class GestorController {
 
         Gestor atualizado = new Gestor(nomeFinal, moradaFinal, existente.getNif(), dataFinal, existente.getEmail(), existente.getHash(), cargoFinal);
 
-        return gestorCRUD.atualizarGestor(atualizado) ? new Resultado<>(atualizado, true) 
+        return gestorCRUD.atualizarGestor(atualizado) ? new Resultado<>(atualizado, true)
                 : new Resultado<>(false, "Erro ao guardar alterações.");
     }
 
     public Resultado<Gestor> alterarPassword(int nif, String novoHash) {
         if (novoHash == null || novoHash.trim().isEmpty()) return new Resultado<>(false, "A nova senha não pode estar vazia.");
-        
+
         Gestor existente = gestorCRUD.procurarPorNif(nif);
         if (existente == null) return new Resultado<>(false, "Gestor não encontrado.");
 
         Gestor atualizado = new Gestor(existente.getNome(), existente.getMorada(), existente.getNif(), existente.getDataNascimento(), existente.getEmail(), novoHash, existente.getCargo());
 
-        return gestorCRUD.atualizarGestor(atualizado) ? new Resultado<>(atualizado, true) 
+        return gestorCRUD.atualizarGestor(atualizado) ? new Resultado<>(atualizado, true)
                 : new Resultado<>(false, "Erro ao atualizar a password.");
     }
 
     public Resultado<Gestor> eliminarGestor(int nif) {
         if (gestorCRUD.procurarPorNif(nif) == null) return new Resultado<>(false, "Gestor não encontrado.");
-        
-        return gestorCRUD.eliminarGestor(nif) ? new Resultado<>(null, true) 
+
+        return gestorCRUD.eliminarGestor(nif) ? new Resultado<>(null, true)
                 : new Resultado<>(false, "Erro ao tentar eliminar o gestor.");
     }
 

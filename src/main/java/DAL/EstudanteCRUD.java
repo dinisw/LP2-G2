@@ -1,6 +1,5 @@
 package DAL;
 
-import DAL.core.CsvRepositorio;
 import model.Estudante;
 import model.Resultado;
 
@@ -13,8 +12,9 @@ public class EstudanteCRUD extends CsvRepositorio<Estudante> {
 
     public EstudanteCRUD() {
         super("estudantes.csv");
-        this.estudantes = carregarTodos();
-        
+        this.estudantes = carregarTodos(); // Herda do CsvRepositorio
+
+        // Atualizar o counter com base na lista carregada
         for (Estudante e : estudantes) {
             if (e.getNumeroMec() >= numeroMecCounter) {
                 numeroMecCounter = e.getNumeroMec() + 1;
@@ -23,7 +23,7 @@ public class EstudanteCRUD extends CsvRepositorio<Estudante> {
     }
 
     // --- IMPLEMENTAÇÃO OBRIGATÓRIA DO CSV REPOSITORIO ---
-    
+
     @Override
     protected Estudante mapearLinhaParaEntidade(String[] dados) {
         if (dados.length < 9) return null;
@@ -68,16 +68,16 @@ public class EstudanteCRUD extends CsvRepositorio<Estudante> {
         if (procurarPorNif(estudante.getNif()) != null) {
             return new Resultado<>(false, "Já existe um estudante registado com o NIF: " + estudante.getNif());
         }
-        
+
         estudantes.add(estudante);
         boolean sucesso = guardarTodos(estudantes);
-        
+
         return sucesso ? new Resultado<>(estudante, true) : new Resultado<>(false, "Erro ao gravar no ficheiro CSV.");
     }
 
     public Resultado<Estudante> atualizarEstudante(Estudante estudante) {
         if (estudante == null) return new Resultado<>(false, "Estudante inválido.");
-        
+
         for (int i = 0; i < estudantes.size(); i++) {
             if (estudantes.get(i).getNumeroMec() == estudante.getNumeroMec()) {
                 estudantes.set(i, estudante);

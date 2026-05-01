@@ -1,6 +1,4 @@
 package DAL;
-
-import DAL.core.CsvRepositorio;
 import model.Avaliacao;
 import model.Estudante;
 import model.Resultado;
@@ -51,7 +49,7 @@ public class AvaliacaoCRUD extends CsvRepositorio<Avaliacao> {
 
     public Resultado<Avaliacao> registarAvaliacao(Avaliacao avaliacao) {
         if (avaliacao == null) return new Resultado<>(false, "Avaliação inválida.");
-        
+
         avaliacoes.add(avaliacao);
         return guardarTodos(avaliacoes) ? new Resultado<>(avaliacao, true) : new Resultado<>(false, "Erro ao guardar avaliação no CSV.");
     }

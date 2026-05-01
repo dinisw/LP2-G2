@@ -72,7 +72,7 @@ public class DocenteCRUD extends CsvRepositorio<Docente> {
     public Resultado<Docente> registarDocente(Docente docente) {
         if (docente == null) return new Resultado<>(false, "Dados inválidos.");
         if (procurarPorNif(docente.getNif()) != null) return new Resultado<>(false, "NIF já existe.");
-        
+
         docentes.add(docente);
         return guardarTodos(docentes) ? new Resultado<>(docente, true) : new Resultado<>(false, "Erro ao gravar CSV.");
     }

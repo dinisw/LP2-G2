@@ -413,7 +413,7 @@ public class DocenteView {
     // --- MENU DE DEFINIR MOMENTOS DE AVALIAÇÃO (Na DocenteView) ---
     private void definirMomentosAvaliacao(model.Docente docenteLogado) {
         System.out.println("\n--- Definir Momentos de Avaliacao ---");
-        
+
         List<model.UnidadeCurricular> ucsDoDocente = docenteLogado.getUnidadesCurriculares();
         if (ucsDoDocente.isEmpty()) {
             System.out.println("Nao tem Unidades Curriculares atribuidas.");
@@ -430,7 +430,7 @@ public class DocenteView {
         System.out.print("Digite os momentos de avaliacao separados por virgula (ex: Frequencia, Trabalho Pratico): ");
         String inputMomentos = scanner.nextLine();
         java.util.List<String> momentos = java.util.Arrays.asList(inputMomentos.split(","));
-        
+
         // Limpar espaços em branco
         momentos.replaceAll(String::trim);
 
@@ -456,8 +456,20 @@ public class DocenteView {
             System.out.println("\n--- Alunos na UC " + nomeUc + " ---");
             for (model.Estudante est : alunos) {
                 model.Resultado<String> status = avaliacaoController.obterStatusAprovacao(est.getNumeroMec(), nomeUc);
-                
+
                 System.out.println("Mec: " + est.getNumeroMec() + " | Nome: " + est.getNome() + " | " + status.dados);
+            }
+        }
+    }
+
+    // Método utilitário para as Views
+    private int lerInteiroSeguro(String mensagem) {
+        while (true) {
+            System.out.print(mensagem);
+            try {
+                return Integer.parseInt(scanner.nextLine().trim());
+            } catch (NumberFormatException e) {
+                System.out.println("Entrada inválida. Por favor, introduza um número.");
             }
         }
     }

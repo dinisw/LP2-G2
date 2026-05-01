@@ -27,15 +27,15 @@ public class UnidadeCurricularController {
         if (siglaDocente == null || siglaDocente.trim().isEmpty()) {
             return new Resultado<>(false, "Bloqueado: É obrigatório associar um docente à Unidade Curricular.");
         }
-        
+
         Docente docente = docenteCRUD.procurarPorSigla(siglaDocente);
         if (docente == null) {
             return new Resultado<>(false, "Bloqueado: Docente com a sigla '" + siglaDocente + "' não existe no sistema. Crie o docente primeiro.");
         }
 
         UnidadeCurricular novaUC = new UnidadeCurricular(nome, ano, semestre, docente);
-        
-        return ucCRUD.registarUC(novaUC) ? new Resultado<>(novaUC, true) 
+
+        return ucCRUD.registarUC(novaUC) ? new Resultado<>(novaUC, true)
                 : new Resultado<>(false, "Ocorreu um erro na base de dados ao registar a UC.");
     }
 
@@ -45,7 +45,7 @@ public class UnidadeCurricularController {
     public UnidadeCurricular procurarUCPorId(int id) { return ucCRUD.procurarPorId(id); }
 
     public Resultado<UnidadeCurricular> eliminarUCPorId(int id) {
-        return ucCRUD.eliminarUCPorId(id) ? new Resultado<>(null, true) 
+        return ucCRUD.eliminarUCPorId(id) ? new Resultado<>(null, true)
                 : new Resultado<>(false, "Erro ao eliminar UC.");
     }
 }
