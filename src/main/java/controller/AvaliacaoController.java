@@ -44,6 +44,9 @@ public class AvaliacaoController {
     // --- NOVO: Cálculo rigoroso da Média e Estado de Aprovação ---
     public Resultado<String> obterStatusAprovacao(int numeroMec, String nomeUC) {
         List<Avaliacao> avaliacoesAluno = avaliacaoCRUD.listarPorEstudante(numeroMec);
+        if(avaliacoesAluno == null || avaliacoesAluno.isEmpty()) {
+            return new Resultado<>("Sem classificação atribuída", true);
+        }
 
         double somaNotas = 0.0;
         int contagemNotas = 0;
@@ -60,14 +63,11 @@ public class AvaliacaoController {
         }
 
         double media = somaNotas / contagemNotas;
-
-        // Arredondamento a 2 casas decimais (ex: 10.66)
         media = Math.round(media * 100.0) / 100.0;
 
-        // Regras de negócio da instituição: Média >= 9.5 é Aprovado
         String estado = (media >= 9.5) ? "APROVADO" : "REPROVADO";
-
         String mensagemFinal = String.format("Média: %.2f valores - %s", media, estado);
+
         return new Resultado<>(mensagemFinal, true);
     }
 

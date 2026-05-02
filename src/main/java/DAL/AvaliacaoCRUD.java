@@ -1,73 +1,85 @@
 package DAL;
+
 import model.Avaliacao;
 import model.Estudante;
 import model.Resultado;
 import model.UnidadeCurricular;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
-public class AvaliacaoCRUD extends CsvRepositorio<Avaliacao> {
-    private final List<Avaliacao> avaliacoes;
+public class AvaliacaoCRUD extends AbstractCsvCRUD<Avaliacao> {
 
     public AvaliacaoCRUD() {
-        super("avaliacoes.csv");
-        this.avaliacoes = carregarTodos();
+        super("avaliacoes.csv"); // O construtor pai trata de criar a lista 'dados' e carregar o ficheiro
     }
 
     @Override
-    protected Avaliacao mapearLinhaParaEntidade(String[] dados) {
-        if (dados.length < 4) return null;
+    protected Avaliacao mapearLinhaParaEntidade(String[] colunas) {
         try {
-            String momento = dados[0];
-            Double nota = dados[1].trim().equalsIgnoreCase("null") ? null : Double.parseDouble(dados[1].replace(",", "."));
-            String nomeUC = dados[2];
-            int numMec = Integer.parseInt(dados[3]);
+            String momento = colunas[0];
+            Double nota = colunas[1].equalsIgnoreCase("null") ? null : Double.parseDouble(colunas[1]);
+            String nomeUC = colunas[2];
+            int numMec = Integer.parseInt(colunas[3]);
 
-            UnidadeCurricular uc = new UnidadeCurricularCRUD().procurarPorNome(nomeUC);
-            Estudante estudante = new EstudanteCRUD().lerEstudante(numMec);
+            UnidadeCurricularCRUD ucCRUD = new UnidadeCurricularCRUD();
+            UnidadeCurricular uc = ucCRUD.procurarPorNome(nomeUC);
+
+            EstudanteCRUD estudanteCRUD = new EstudanteCRUD();
+            Estudante estudante = estudanteCRUD.lerEstudante(numMec);
 
             if (uc != null && estudante != null) {
                 return new Avaliacao(momento, nota, uc, estudante);
             }
         } catch (Exception e) {
-            return null; // Ignora linhas corrompidas
+
         }
         return null;
     }
 
     @Override
-    protected String mapearEntidadeParaLinha(Avaliacao avaliacao) {
-        String notaStr = (avaliacao.getNota() == null) ? "null" : String.format(java.util.Locale.US, "%.2f", avaliacao.getNota());
-        return String.join(DELIMITADOR,
-                safe(avaliacao.getMomento()),
+    protected String mapearEntidadeParaLinha(Avaliacao a) {
+        String notaStr = a.getNota() == null ? "null" : String.valueOf(a.getNota());
+        return String.format("%s;%s;%s;%d",
+                a.getMomento(),
                 notaStr,
-                safe(avaliacao.getUnidadeCurricular().getNome()),
-                String.valueOf(avaliacao.getEstudante().getNumeroMec())
-        );
+                a.getUnidadeCurricular().getNome(),
+                a.getEstudante().getNumeroMec());
     }
+
+    // --- REGRAS DE NEGÓCIO ---
 
     public Resultado<Avaliacao> registarAvaliacao(Avaliacao avaliacao) {
-        if (avaliacao == null) return new Resultado<>(false, "Avaliação inválida.");
+        boolean atualizado = false;
 
-        avaliacoes.add(avaliacao);
-        return guardarTodos(avaliacoes) ? new Resultado<>(avaliacao, true) : new Resultado<>(false, "Erro ao guardar avaliação no CSV.");
+        for (Avaliacao av : dados) {
+            if (av.getEstudante().getNumeroMec() == avaliacao.getEstudante().getNumeroMec() &&
+                    av.getUnidadeCurricular().getNome().equalsIgnoreCase(avaliacao.getUnidadeCurricular().getNome()) &&
+                    av.getMomento().equalsIgnoreCase(avaliacao.getMomento())) {
+
+                av.setNota(avaliacao.getNota());
+                atualizado = true;
+                break;
+            }
+        }
+
+        if (!atualizado) {
+            dados.add(avaliacao);
+        }
+
+        guardarTodosNoFicheiro();
+        return new Resultado<>(avaliacao, true);
     }
 
-    // --- LEITURAS ---
-    public List<Avaliacao> listarPorEstudante(int numMec) {
-        List<Avaliacao> resultado = new ArrayList<>();
-        for (Avaliacao a : avaliacoes) {
-            if (a.getEstudante().getNumeroMec() == numMec) resultado.add(a);
-        }
-        return resultado;
+    public List<Avaliacao> listarPorEstudante(int numeroMec) {
+        return dados.stream()
+                .filter(a -> a.getEstudante().getNumeroMec() == numeroMec)
+                .collect(Collectors.toList());
     }
 
     public List<Avaliacao> listarPorUnidadeCurricular(String nomeUC) {
-        List<Avaliacao> resultado = new ArrayList<>();
-        for (Avaliacao a : avaliacoes) {
-            if (a.getUnidadeCurricular().getNome().equalsIgnoreCase(nomeUC)) resultado.add(a);
-        }
-        return resultado;
+        return dados.stream()
+                .filter(a -> a.getUnidadeCurricular().getNome().equalsIgnoreCase(nomeUC))
+                .collect(Collectors.toList());
     }
 }

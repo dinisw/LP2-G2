@@ -51,16 +51,18 @@ public class EstudanteController {
         Curso curso = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
         if (curso == null) return 1;
 
+        DAL.AvaliacaoCRUD avaliacaoCRUD = new DAL.AvaliacaoCRUD();
+        estudante.setListaAvaliacoes(avaliacaoCRUD.listarPorEstudante(estudante.getNumeroMec()));
+
         int anoPorNotas = BLL.EstudanteCalculo.calcularAnoDesbloqueado(estudante, curso);
+
         PropinaController propinaController = new PropinaController();
         int anoReal = anoPorNotas;
-
         if (anoPorNotas >= 2 && !propinaController.isPropinaPaga(estudante.getNumeroMec(), 1)) {
             anoReal = 1;
         } else if (anoPorNotas == 3 && !propinaController.isPropinaPaga(estudante.getNumeroMec(), 2)) {
             anoReal = 2;
         }
-
         propinaController.gerarPropinaAnual(estudante.getNumeroMec(), anoReal);
         return anoReal;
     }
@@ -68,6 +70,9 @@ public class EstudanteController {
     public boolean verificarSeCursoConcluido(Estudante estudante) {
         Curso curso = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
         if (curso == null) return false;
+
+        DAL.AvaliacaoCRUD avaliacaoCRUD = new DAL.AvaliacaoCRUD();
+        estudante.setListaAvaliacoes(avaliacaoCRUD.listarPorEstudante(estudante.getNumeroMec()));
 
         if (BLL.EstudanteCalculo.isCursoConcluido(estudante, curso)) {
             PropinaController propinaController = new PropinaController();
