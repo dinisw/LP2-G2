@@ -1,11 +1,11 @@
 package view;
 
+import common.utils.BackendUtils;
 import common.utils.MenuUtils;
 import model.Estudante;
 import model.Avaliacao;
-import model.Propina;
 import controller.EstudanteController;
-import controller.PropinaController;
+import common.exceptions.CancelarRegistoException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +24,8 @@ public class EstudanteView {
         opcoes.add("2. Inscrever em Unidades Curriculares");
         opcoes.add("3. Consultar Ficha de Estudante");
         opcoes.add("4. Verificar Notas de Avaliação");
-        opcoes.add("5. Consultar e Pagar Propinas");
+        opcoes.add("5. Consultar Propinas");
+        opcoes.add("6. Pagar Propinas");
         opcoes.add("0. Logout");
 
         do {
@@ -52,7 +53,10 @@ public class EstudanteView {
                         consultarNotasEstudante(estudante, ler);
                         break;
                     case "5":
-                        consultarEPagarPropinas(estudante, ler);
+                        consultarPropinas(estudante, ler);
+                        break;
+                    case "6":
+                        pagarPropinas(estudante, ler);
                         break;
                     case "0":
                         System.out.println(GetYellow() + "\nA efetuar logout..." + GetReset());
@@ -165,7 +169,7 @@ public class EstudanteView {
         model.Avaliacao novaInscricao = new model.Avaliacao("A Definir", null, ucEscolhida, estudante);
         controller.AvaliacaoController avaliacaoController = new controller.AvaliacaoController();
 
-        if (avaliacaoController.registarAvaliacao(novaInscricao)) {
+        if (avaliacaoController.registarAvaliacao(novaInscricao) != null) {
             System.out.println(GetGreen() + "\nInscrição na UC '" + ucEscolhida.getNome() + "' realizada com sucesso!" + GetReset());
         } else {
             System.out.println(GetRed() + "\nErro ao registar a inscrição no sistema." + GetReset());
@@ -219,7 +223,7 @@ public class EstudanteView {
 
             if (escolha > 0 && escolha <= cursosDisponiveis.size()) {
                 String cursoEscolhido = cursosDisponiveis.get(escolha - 1).getNome();
-                if(estudanteController.atualizarEstudante(estudante.getNumeroMec(), null, null, cursoEscolhido).success) {
+                if(estudanteController.atualizarEstudante(estudante.getNumeroMec(), null, null, cursoEscolhido).sucesso) {
                     estudante.setNomeCurso(cursoEscolhido);
                     System.out.println(GetGreen() + "\nParabéns! Inscrição no curso de " + cursoEscolhido + " realizada com sucesso!" + GetReset());
                 } else {
@@ -317,93 +321,101 @@ public class EstudanteView {
         }
     }
 
-    public static void consultarEPagarPropinas(Estudante estudanteAtual, Scanner ler) {
-        try {
-            System.out.println(GetCyanBold() + GetBordaSuperior() + GetReset());
-            System.out.println(GetCyanBold() + "║" + GetWhiteBold() + "           CONSULTAR E PAGAR PROPINAS         " + GetCyanBold() + "║" + GetReset());
-            System.out.println(GetCyanBold() + GetBordaInferior() + GetReset());
+    private static void consultarPropinas(Estudante estudante, Scanner ler) {
+        System.out.println(GetBlue() + "\n--- CONSULTAR PROPINAS ---" + GetReset());
+        controller.PropinaController propinaController = new controller.PropinaController();
+        java.util.List<model.Propina> propinas = propinaController.consultarPropinasEstudante(estudante.getNumeroMec());
 
-            EstudanteController estudanteController = new EstudanteController();
-            Estudante estudante = estudanteController.procurarEstudantePorNumeroMec(estudanteAtual.getNumeroMec());
-
-            PropinaController propinaController = new PropinaController();
-            List<Propina> propinas = propinaController.consultarPropinasEstudante(estudante.getNumeroMec());
-
-            if (propinas == null || propinas.isEmpty()) {
-                System.out.println(GetYellow() + "\nNão tem nenhuma propina gerada neste momento." + GetReset());
-                System.out.println("A sua propina será gerada automaticamente ao ser aprovado e inscrito num ano letivo.");
-                MenuUtils.pressionarEnter(ler);
-                return;
-            }
-
-            System.out.println("\n" + GetWhiteBold() + "O seu Histórico Financeiro:" + GetReset());
-            for (int i = 0; i < propinas.size(); i++) {
-                Propina propina = propinas.get(i);
-                String estado = propina.isTotalmentePaga() ? GetGreen() + "PAGO" + GetReset() : GetRed() + "EM DÍVIDA" + GetReset();
-                System.out.printf("%d. %dº Ano | Total: %.2f€ | Pago: %.2f€ | Em Falta: %.2f€ [%s]\n",
-                        i + 1, propina.getAnoLetivo(), propina.getValorTotal(), propina.getValorPago(), propina.getValorEmDivida(), estado);
-                if (!propina.getHistoricoPagamentos().isEmpty()) {
-                    System.out.println("   Histórico de Pagamentos");
-                    for (String registo : propina.getHistoricoPagamentos()) {
-                        System.out.printf("   - " + registo);
-                    }
-                }
-            }
-
-            int escolha = -1;
-            while (escolha < 0 || escolha > propinas.size()) {
-                try {
-                    String op = common.utils.BackendUtils.lerInputString(ler, "\nEscolha o número da propina que deseja pagar (ou 0 para voltar): ");
-                    escolha = Integer.parseInt(op);
-                    if (escolha == 0) return;
-
-                    if (escolha < 1 || escolha > propinas.size()) {
-                        System.out.println(GetRed() + "Opção inválida. Escolha um número da lista." + GetReset());
-                    }
-                } catch (NumberFormatException e) {
-                    System.out.println(GetRed() + "Por favor, digite apenas números." + GetReset());
-                    escolha = -1;
-                }
-            }
-
-            Propina propinaSelecionada = propinas.get(escolha - 1);
-
-            if (propinaSelecionada.isTotalmentePaga()) {
-                System.out.println(GetGreen() + "\nEsta propina já se encontra totalmente paga. Não são necessários mais pagamentos." + GetReset());
-                MenuUtils.pressionarEnter(ler);
-                return;
-            }
-
-            System.out.println("\nValor em dívida: " + GetRed() + String.format("%.2f€", propinaSelecionada.getValorEmDivida()) + GetReset());
-            double valorPagamento = -1;
-
-            while (valorPagamento <= 0) {
-                try {
-                    String valorStr = common.utils.BackendUtils.lerInputString(ler, "Introduza o valor a pagar agora (ex: 250.50): ");
-                    valorPagamento = Double.parseDouble(valorStr.replace(",", "."));
-
-                    if (valorPagamento <= 0) {
-                        System.out.println(GetRed() + "O valor deve ser superior a zero." + GetReset());
-                    }
-                } catch (NumberFormatException e) {
-                    System.out.println(GetRed() + "Formato inválido. Use números e ponto/vírgula para decimais." + GetReset());
-                    valorPagamento = -1;
-                }
-            }
-
-            model.Resultado resultado = propinaController.pagarPropina(estudante.getNumeroMec(), propinaSelecionada.getAnoLetivo(), valorPagamento);
-
-            if (resultado.success) {
-                System.out.println(GetGreen() + "\nPagamento de " + String.format("%.2f€", valorPagamento) + " processado com sucesso!" + GetReset());
-            } else {
-                System.out.println(GetRed() + "\nErro: " + resultado.errorMessage + GetReset());
-            }
-
+        if (propinas == null || propinas.isEmpty()) {
+            System.out.println(GetYellow() + "Não tem nenhuma propina gerada neste momento." + GetReset());
             MenuUtils.pressionarEnter(ler);
-
-        } catch (Exception e) {
-            System.out.println(GetRed() + "Ocorreu um erro: " + e.getMessage() + GetReset());
-            MenuUtils.pressionarEnter(ler);
+            return;
         }
+
+        System.out.println("O seu Histórico Financeiro:\n");
+        for (int i = 0; i < propinas.size(); i++) {
+            model.Propina p = propinas.get(i);
+            String estado = p.isTotalmentePaga() ? GetGreen() + "[PAGO]" + GetReset() : GetRed() + "[EM DÍVIDA]" + GetReset();
+            System.out.println("--------------------------------------------------");
+            System.out.printf("  %d. %dº Ano\n  Total: %.2f EUR | Pago: %.2f EUR | Em Falta: %.2f EUR  %s\n",
+                    i + 1, p.getAnoLetivo(), p.getValorTotal(), p.getValorPago(), p.getValorEmDivida(), estado);
+        }
+        System.out.println("--------------------------------------------------");
+        MenuUtils.pressionarEnter(ler);
+    }
+
+    private static void pagarPropinas(Estudante estudante, Scanner ler) {
+        System.out.println(GetBlue() + "\n--- PAGAR PROPINAS ---" + GetReset());
+        System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
+
+        controller.PropinaController propinaController = new controller.PropinaController();
+        java.util.List<model.Propina> propinas = propinaController.consultarPropinasEstudante(estudante.getNumeroMec());
+
+        if (propinas == null || propinas.isEmpty()) {
+            System.out.println(GetYellow() + "Não tem nenhuma propina gerada neste momento." + GetReset());
+            MenuUtils.pressionarEnter(ler);
+            return;
+        }
+
+        System.out.println();
+        for (int i = 0; i < propinas.size(); i++) {
+            model.Propina p = propinas.get(i);
+            String estado = p.isTotalmentePaga() ? GetGreen() + "[PAGO]" + GetReset() : GetRed() + "[EM DÍVIDA]" + GetReset();
+            System.out.printf("  %d. %dº Ano | Em Falta: %.2f EUR  %s\n", i + 1, p.getAnoLetivo(), p.getValorEmDivida(), estado);
+        }
+
+        int escolha = -1;
+        while (escolha < 0 || escolha > propinas.size()) {
+            try {
+                String op = BackendUtils.lerInputString(ler, "\nEscolha o número da propina que deseja pagar: ");
+                escolha = Integer.parseInt(op);
+                if (escolha == 0)
+                    throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
+                if (escolha < 1 || escolha > propinas.size()) {
+                    System.out.println(GetRed() + "Opção inválida. Escolha um número da lista." + GetReset());
+                }
+            } catch (NumberFormatException e) {
+                System.out.println(GetRed() + "Entrada inválida. Digite apenas números." + GetReset());
+                escolha = -1;
+            }
+        }
+
+        model.Propina propinaSelecionada = propinas.get(escolha - 1);
+
+        if (propinaSelecionada.isTotalmentePaga()) {
+            System.out.println(GetYellow() + "Esta propina já se encontra totalmente paga. Não são necessários mais pagamentos." + GetReset());
+            MenuUtils.pressionarEnter(ler);
+            return;
+        }
+
+        double valorPagamento = -1;
+        while (valorPagamento <= 0) {
+            String inputValor = BackendUtils.lerInputString(ler, "\nIntroduza o valor a pagar agora (ex: 250.50) ou '0' para cancelar: ");
+
+            if (inputValor.equals("0")) {
+                System.out.println(GetYellow() + "Operação de pagamento cancelada." + GetReset());
+                MenuUtils.pressionarEnter(ler);
+                return;
+            }
+
+            try {
+                valorPagamento = Double.parseDouble(inputValor.replace(",", "."));
+                if (valorPagamento <= 0) {
+                    System.out.println(GetRed() + "O valor deve ser superior a zero." + GetReset());
+                }
+            } catch (NumberFormatException e) {
+                System.out.println(GetRed() + "Formato inválido. Use números e ponto/vírgula para decimais." + GetReset());
+                valorPagamento = -1;
+            }
+        }
+
+        model.Resultado<model.Propina> resultado = propinaController.pagarPropina(estudante.getNumeroMec(), propinaSelecionada.getAnoLetivo(), valorPagamento);
+
+        if (resultado.sucesso) {
+            System.out.println(GetGreen() + "\nPagamento de " + String.format("%.2f", valorPagamento) + " EUR processado com sucesso!" + GetReset());
+        } else {
+            System.out.println(GetRed() + "\nErro: " + resultado.mensagemErro + GetReset());
+        }
+        MenuUtils.pressionarEnter(ler);
     }
 }

@@ -2,100 +2,70 @@ package DAL;
 
 import model.Avaliacao;
 import model.Estudante;
+import model.Resultado;
 import model.UnidadeCurricular;
-import java.io.*;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
-public class AvaliacaoCRUD {
-    public static final String CAMINHO_FICHEIRO = "avaliacoes.csv";
-    private List<Avaliacao> avaliacoes;
+public class AvaliacaoCRUD extends AbstractCsvCRUD<Avaliacao> {
 
     public AvaliacaoCRUD() {
-        this.avaliacoes = new ArrayList<>();
-        carregarFicheiro();
+        super("avaliacoes.csv");
     }
-    private void carregarFicheiro() {
-        File ficheiro = new File(CAMINHO_FICHEIRO);
-        if (!ficheiro.exists()) return;
 
-        EstudanteCRUD estudanteCRUD = new EstudanteCRUD();
-        UnidadeCurricularCRUD unidadeCurricularCRUD = new UnidadeCurricularCRUD();
+    @Override
+    protected Avaliacao mapearLinhaParaEntidade(String[] colunas) {
+        try {
+            String momento = colunas[0];
+            Double nota = colunas[1].equalsIgnoreCase("null") ? null : Double.parseDouble(colunas[1].replace(",", "."));
+            String nomeUC = colunas[2];
+            int numMec = Integer.parseInt(colunas[3]);
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(CAMINHO_FICHEIRO))){
-            String linha;
-            while ((linha = reader.readLine()) != null) {
-                String[] dados = linha.split(";");
-                if (dados.length >= 4) {
-                    String momento = dados[0];
-                    Double nota = null;
-                    if(dados[1].trim().equalsIgnoreCase("null")) {
-                        try {
-                            nota = Double.parseDouble(dados[1].replace(",", "."));
-                        } catch (NumberFormatException ex) {
-                            nota = null;
-                        }
-                    }
-                    String nomeUnidadeCurricular = dados[2];
-                    int numMec = Integer.parseInt(dados[3]);
+            UnidadeCurricularCRUD ucCRUD = new UnidadeCurricularCRUD();
+            UnidadeCurricular uc = ucCRUD.procurarPorNome(nomeUC);
 
-                    UnidadeCurricular unidadeCurricular = unidadeCurricularCRUD.procurarPorNome(nomeUnidadeCurricular);
-                    Estudante estudante = estudanteCRUD.lerEstudante(numMec);
+            EstudanteCRUD estudanteCRUD = new EstudanteCRUD();
+            Estudante estudante = estudanteCRUD.lerEstudante(numMec);
 
-                    if(unidadeCurricular != null && estudante != null) {
-                        Avaliacao avalicao = new Avaliacao(momento, nota, unidadeCurricular, estudante);
-                        avaliacoes.add(avalicao);
-                    }
-                }
+            if (uc != null && estudante != null) {
+                return new Avaliacao(momento, nota, uc, estudante);
             }
-        } catch (IOException | NumberFormatException e) {
-            throw new RuntimeException("Erro interno ao carregar o ficheiro de avaliações.", e);
+        } catch (Exception e) {
+            return null;
         }
+        return null;
     }
 
-    public void guardarTodosNoFicheiro() {
-        try (PrintWriter printWriter = new PrintWriter(new FileWriter(CAMINHO_FICHEIRO))) {
-            for (Avaliacao avaliacao : avaliacoes) {
-                String notaStr = (avaliacao.getNota() == null) ? "null" : String.valueOf(avaliacao.getNota());
-                String linha = String.format("%s;%s;%s;%d",
-                        avaliacao.getMomento(),
-                        notaStr,
-                        avaliacao.getUnidadeCurricular().getNome(),
-                        avaliacao.getEstudante().getNumeroMec());
-                printWriter.println(linha);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Erro interno ao guardar o ficheiro de avaliações.", e);
-        }
+    @Override
+    protected String mapearEntidadeParaLinha(Avaliacao a) {
+        String notaStr = a.getNota() == null ? "null" : String.valueOf(a.getNota()).replace(",", ".");
+        return String.format("%s;%s;%s;%d",
+                a.getMomento(), notaStr, a.getUnidadeCurricular().getNome(), a.getEstudante().getNumeroMec());
     }
 
-    public boolean registarAvaliacao(Avaliacao avaliacao) {
-        if (avaliacao != null) {
-            avaliacoes.add(avaliacao);
-            guardarTodosNoFicheiro();
-            return true;
-        }
-        return false;
-    }
+    public Resultado<Avaliacao> registarAvaliacao(Avaliacao avaliacao) {
+        boolean atualizado = false;
 
-    public List<Avaliacao> listarPorEstudante(int numMec) {
-        List<Avaliacao> notaEstudante = new ArrayList<>();
-        for (Avaliacao avaliacao : avaliacoes) {
-            if (avaliacao.getEstudante().getNumeroMec() == numMec) {
-                notaEstudante.add(avaliacao);
+        for (Avaliacao av : dados) {
+            if (av.getEstudante().getNumeroMec() == avaliacao.getEstudante().getNumeroMec() &&
+                    av.getUnidadeCurricular().getNome().equalsIgnoreCase(avaliacao.getUnidadeCurricular().getNome()) &&
+                    av.getMomento().equalsIgnoreCase(avaliacao.getMomento())) {
+
+                av.setNota(avaliacao.getNota());
+                atualizado = true;
+                break;
             }
         }
-        return notaEstudante;
+        if (!atualizado) dados.add(avaliacao);
+        guardarTodosNoFicheiro();
+        return new Resultado<>(avaliacao, true);
+    }
+
+    public List<Avaliacao> listarPorEstudante(int numeroMec) {
+        return dados.stream().filter(a -> a.getEstudante().getNumeroMec() == numeroMec).collect(Collectors.toList());
     }
 
     public List<Avaliacao> listarPorUnidadeCurricular(String nomeUC) {
-        List<Avaliacao> avaliacoesUC = new ArrayList<>();
-        for (Avaliacao avaliacao : avaliacoes) {
-            if (avaliacao.getUnidadeCurricular() != null && 
-                avaliacao.getUnidadeCurricular().getNome().equalsIgnoreCase(nomeUC)) {
-                avaliacoesUC.add(avaliacao);
-            }
-        }
-        return avaliacoesUC;
+        return dados.stream().filter(a -> a.getUnidadeCurricular().getNome().equalsIgnoreCase(nomeUC)).collect(Collectors.toList());
     }
 }

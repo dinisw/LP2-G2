@@ -1,205 +1,80 @@
 package DAL;
 
-import model.Curso;
 import model.Docente;
 import model.Resultado;
-import model.UnidadeCurricular;
-
-import java.io.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-public class DocenteCRUD {
-    private static final String CAMINHO_FICHEIRO = "docentes.csv";
-    private List<Docente> docentes;
-
-    private static boolean carregandoRelacoes = false;
+public class DocenteCRUD extends AbstractCsvCRUD<Docente> {
 
     public DocenteCRUD() {
-        this.docentes = new ArrayList<>();
-        carregarFicheiro();
+        super("docentes.csv");
     }
 
-    private void carregarFicheiro() {
-        File ficheiro = new File(CAMINHO_FICHEIRO);
-        if (!ficheiro.exists()) {
-            return;
-        }
+    @Override
+    protected Docente mapearLinhaParaEntidade(String[] colunas) {
+        try {
+            String nome = colunas[0];
+            String morada = colunas[1];
+            int nif = Integer.parseInt(colunas[2]);
+            LocalDate dataNascimento = LocalDate.parse(colunas[3]);
+            String email = colunas[4];
+            String hash = colunas[5];
+            String sigla = colunas[6];
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(CAMINHO_FICHEIRO))) {
-            String linha;
-            while ((linha = reader.readLine()) != null) {
-                String[] dados = linha.split(";");
-
-                // O formato base tem pelo menos 7 campos fixos (índices 0 a 6)
-                if (dados.length >= 7) {
-                    Docente docente = new Docente(
-                            dados[0], // nome
-                            dados[1], // morada
-                            Integer.parseInt(dados[2]), // nif
-                            LocalDate.parse(dados[3]), // dataNascimento
-                            dados[4], // email
-                            dados[5], // hash
-                            dados[6], // sigla
-                            new ArrayList<>(), // listaAvaliacao
-                            new ArrayList<>()  // unidadesCurriculares
-                    );
-                    docentes.add(docente);
-                }
-            }
-        } catch (IOException | NumberFormatException e) {
-            throw new RuntimeException("Erro interno ao carregar o ficheiro de docentes.", e);
-        }
-
-        if (!carregandoRelacoes) {
-            carregandoRelacoes = true;
-
-            UnidadeCurricularCRUD ucCRUD = new UnidadeCurricularCRUD();
-            List<UnidadeCurricular> todasUCs = ucCRUD.getUnidadeCurriculars();
-
-            for (Docente docente : docentes) {
-                for (UnidadeCurricular unidadeCurricular : todasUCs) {
-                    if (unidadeCurricular.getDocente() != null && unidadeCurricular.getDocente().getSigla().equalsIgnoreCase(docente.getSigla())) {
-                       docente.adicionarUnidadeCurricular(unidadeCurricular);
-                    }
-                }
-            }
-            carregandoRelacoes = false;
+            return new Docente(nome, morada, nif, dataNascimento, email, hash, sigla, new ArrayList<>(), new ArrayList<>());
+        } catch (Exception e) {
+            return null;
         }
     }
 
-    private void guardarTodosNoFicheiro() {
-        try (PrintWriter print = new PrintWriter(new FileWriter(CAMINHO_FICHEIRO))) {
-            for (Docente docente : docentes) {
-
-                String ucNames = docente.getUnidadesCurriculares().stream()
-                        .map(UnidadeCurricular::getNome)
-                        .collect(Collectors.joining(","));
-
-                String linha = String.format("%s;%s;%s;%s;%s;%s;%s;%s",
-                        safe(docente.getNome()),
-                        safe(docente.getMorada()),
-                        safe(docente.getNif()),
-                        safe(docente.getDataNascimento()),
-                        safe(docente.getEmail()),
-                        safe(docente.getHash()),
-                        safe(docente.getSigla()),
-                        safe(ucNames.isEmpty() ? null : ucNames));
-                print.println(linha);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Erro interno ao carregar o ficheiro de docentes.", e);
-        }
+    @Override
+    protected String mapearEntidadeParaLinha(Docente d) {
+        return String.format("%s;%s;%d;%s;%s;%s;%s",
+                d.getNome(), d.getMorada(), d.getNif(),
+                d.getDataNascimento().toString(), d.getEmail(), d.getHash(), d.getSigla());
     }
 
-    // CREATE
-    public boolean registarDocente(Docente docente) {
-        if (docente != null && procurarPorNif(docente.getNif()) == null) {
-            docentes.add(docente);
+    public Resultado<Docente> registarDocente(Docente docente) {
+        if (procurarPorNif(docente.getNif()) != null) {
+            return new Resultado<>(false, "NIF já existe.");
+        }
+        dados.add(docente);
+        guardarTodosNoFicheiro();
+        return new Resultado<>(docente, true);
+    }
+
+    public Resultado<Docente> atualizarDocente(Docente docente) {
+        for (int i = 0; i < dados.size(); i++) {
+            if (dados.get(i).getNif() == docente.getNif()) {
+                dados.set(i, docente);
+                guardarTodosNoFicheiro();
+                return new Resultado<>(docente, true);
+            }
+        }
+        return new Resultado<>(false, "Docente não encontrado.");
+    }
+
+    public Resultado<Docente> eliminarDocente(int nif) {
+        Docente remover = procurarPorNif(nif);
+        if (remover != null) {
+            dados.remove(remover);
             guardarTodosNoFicheiro();
-            return true;
+            return new Resultado<>(remover, true);
         }
-        return false;
+        return new Resultado<>(false, "Docente não encontrado.");
     }
 
-    // READ
     public List<Docente> getDocentes() {
-        return new ArrayList<>(docentes);
-    }
-
-    public Docente procurarPorNif(int nif) {
-        for (Docente docente : docentes) {
-            if (docente.getNif() == nif) {
-                return docente;
-            }
-        }
-        return null;
+        return dados;
     }
 
     public Docente procurarPorSigla(String sigla) {
-        if (sigla == null || sigla.trim().isEmpty()) return null;
-        for (Docente docente : docentes) {
-            if (docente.getSigla().equalsIgnoreCase(sigla)) {
-                return docente;
-            }
-        }
-        return null;
+        return dados.stream().filter(d -> d.getSigla().equalsIgnoreCase(sigla)).findFirst().orElse(null);
     }
 
-    // UPDATE SENHA
-    public Resultado atualizarSenha(Docente docente){
-        Resultado resultado = new Resultado();
-        if(docente != null){
-            for (int i = 0; i < docentes.size(); i++) {
-                if (docentes.get(i).getNif() == docente.getNif()) {
-                    docentes.set(i, docente);
-                    guardarTodosNoFicheiro();
-                    resultado.success = true;
-                    return resultado;
-                }
-            }
-        }
-        resultado.success = false;
-        resultado.errorMessage = "Erro ao atualizar o ficheiro do docente";
-        return resultado;
-    }
-
-    // UPDATE
-    public boolean atualizarDocente(Docente docenteAtualizado) {
-        for (int i = 0; i < docentes.size(); i++) {
-            if (docentes.get(i).getNif() == docenteAtualizado.getNif()) {
-                docentes.set(i, docenteAtualizado);
-                guardarTodosNoFicheiro();
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // DELETE
-    public boolean eliminarDocente(int nif) {
-        for (int i = 0; i < docentes.size(); i++) {
-            if (docentes.get(i).getNif() == nif) {
-                docentes.remove(i);
-                guardarTodosNoFicheiro();
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public int contarDocentesNoCurso(String nomeCurso) {
-        CursoCRUD cursoCRUD = new CursoCRUD();
-        Curso curso = cursoCRUD.procurarPorNome(nomeCurso);
-
-        if (curso == null) return 0;
-
-        int count = 0;
-
-        for (Docente docente : docentes) {
-            boolean lecionaNesteCurso = false;
-
-            for (UnidadeCurricular ucDocente : docente.getUnidadesCurriculares()) {
-                for (UnidadeCurricular ucCurso : curso.getUnidadeCurriculars()) {
-                    if (ucDocente.getNome().equalsIgnoreCase(ucCurso.getNome())) {
-                        lecionaNesteCurso = true;
-                        break;
-                    }
-                }
-                if (lecionaNesteCurso) break;
-            }
-
-            if (lecionaNesteCurso) {
-                count++;
-            }
-        }
-
-        return count;
-    }
-
-    private String safe(Object o){
-        return (o == null || o.toString().trim().isEmpty()) ? "SEM REGISTO" : o.toString();
+    public Docente procurarPorNif(int nif) {
+        return dados.stream().filter(d -> d.getNif() == nif).findFirst().orElse(null);
     }
 }

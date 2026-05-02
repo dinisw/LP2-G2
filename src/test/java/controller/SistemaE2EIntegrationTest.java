@@ -48,8 +48,8 @@ public class SistemaE2EIntegrationTest {
     @Test
     @Order(1)
     public void passo1_FluxoDoGestor_CriarEstruturaBase() {
-        Resultado resGestor = gestorController.registarGestor("Gestor E2E", "Sede", nifGestor, LocalDate.of(1980, 1, 1), "e2e.gestor@issmf.ipp.pt", "Hash123!", "Diretor");
-        assertTrue(resGestor.success, "Erro ao criar Gestor: " + resGestor.errorMessage);
+        Resultado <Gestor> resGestor = gestorController.registarGestor("Gestor E2E", "Sede", nifGestor, LocalDate.of(1980, 1, 1), "e2e.gestor@issmf.ipp.pt", "Hash123!", "Diretor");
+        assertTrue(resGestor.sucesso, "Erro ao criar Gestor: " + resGestor.mensagemErro);
 
         Departamento dep = new Departamento("Departamento de Testes", "DPT");
         depCRUD.registarDepartamento(dep); // Pode falhar se já existir, ignoramos para avançar
@@ -62,8 +62,8 @@ public class SistemaE2EIntegrationTest {
         ucCRUD.registarUC(uc);
 
         curso.adicionarUnidadeCurricular(uc);
-        Resultado resCurso = cursoCRUD.atualizarCurso(nomeCurso, curso);
-        assertTrue(resCurso.success, "Erro ao associar UC ao curso: " + resCurso.errorMessage);
+        Resultado <Curso> resCurso = cursoCRUD.atualizarCurso(nomeCurso, curso);
+        assertTrue(resCurso.sucesso, "Erro ao associar UC ao curso: " + resCurso.mensagemErro);
     }
 
     @Test
@@ -72,8 +72,8 @@ public class SistemaE2EIntegrationTest {
         List<String> ucsParaAssociar = new ArrayList<>();
         ucsParaAssociar.add(nomeUC);
 
-        Resultado resDocente = docenteController.registarDocente("Docente E2E", "Gabinete 1", nifDocente, LocalDate.of(1975, 5, 5), "docente.e2e@issmf.ipp.pt", "Hash123!", siglaDocente, ucsParaAssociar);
-        assertTrue(resDocente.success, "Erro ao criar Docente: " + resDocente.errorMessage);
+        Resultado <Docente> resDocente = docenteController.registarDocente("Docente E2E", "Gabinete 1", nifDocente, LocalDate.of(1975, 5, 5), "docente.e2e@issmf.ipp.pt", "Hash123!", siglaDocente, ucsParaAssociar);
+        assertTrue(resDocente.sucesso, "Erro ao criar Docente: " + resDocente.mensagemErro);
 
         UnidadeCurricular ucAtualizada = ucCRUD.procurarPorNome(nomeUC);
         assertNotNull(ucAtualizada, "A UC devia ter sido criada no passo 1.");
@@ -89,17 +89,17 @@ public class SistemaE2EIntegrationTest {
     @Test
     @Order(3)
     public void passo3_FluxoDoEstudante_Inscricao() {
-        Resultado resEstudante = estudanteController.registarEstudante("Estudante E2E", "Rua do Teste", nifEstudante, LocalDate.of(2000, 10, 10), nomeCurso, "Hash123!");
-        assertTrue(resEstudante.success, "Erro ao registar Estudante: " + resEstudante.errorMessage);
+        Resultado<Integer> resEstudante = estudanteController.registarEstudante("Estudante E2E", "Rua do Teste", nifEstudante, LocalDate.of(2000, 10, 10), nomeCurso, "Hash123!");
+        assertTrue(resEstudante.sucesso, "Erro ao registar Estudante: " + resEstudante.mensagemErro);
 
-        numeroMecGerado = (int) resEstudante.object;
+        numeroMecGerado = (int )resEstudante.dados;
         assertTrue(numeroMecGerado > 0);
 
         Estudante estudante = estudanteController.procurarEstudantePorNumeroMec(numeroMecGerado);
         UnidadeCurricular uc = ucCRUD.procurarPorNome(nomeUC);
 
         Avaliacao inscricao = new Avaliacao("Frequência", null, uc, estudante);
-        assertTrue(avaliacaoCRUD.registarAvaliacao(inscricao), "Estudante inscrito na UC (A aguardar nota).");
+        assertTrue(avaliacaoCRUD.registarAvaliacao(inscricao).sucesso, "Estudante inscrito na UC (A aguardar nota).");
     }
 
     @Test
@@ -110,7 +110,7 @@ public class SistemaE2EIntegrationTest {
         assertNotNull(uc, "A UC não foi encontrada na hora de lançar notas!");
 
         Avaliacao notaLancada = new Avaliacao("Frequência", 18.5, uc, estudante);
-        assertTrue(avaliacaoCRUD.registarAvaliacao(notaLancada), "Docente lança nota de 18.5 com sucesso.");
+        assertTrue(avaliacaoCRUD.registarAvaliacao(notaLancada).sucesso, "Docente lança nota de 18.5 com sucesso.");
     }
 
     @Test
@@ -128,8 +128,8 @@ public class SistemaE2EIntegrationTest {
         assertFalse(propinas.isEmpty(), "A propina devia ter sido gerada!");
 
         Propina fatura = propinas.get(0);
-        Resultado resPagamento = propinaControllerFresco.pagarPropina(numeroMecGerado, fatura.getAnoLetivo(), 1000.0);
-        assertTrue(resPagamento.success, "Erro a pagar propina: " + resPagamento.errorMessage);
+        Resultado <Propina> resPagamento = propinaControllerFresco.pagarPropina(numeroMecGerado, fatura.getAnoLetivo(), 1000.0);
+        assertTrue(resPagamento.sucesso, "Erro a pagar propina: " + resPagamento.mensagemErro);
     }
 
     @Test

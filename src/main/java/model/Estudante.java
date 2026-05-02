@@ -24,10 +24,6 @@ public class Estudante extends Utilizador {
         return numeroMec;
     }
 
-    public void setNumeroMec(int numeroMec) {
-        this.numeroMec = numeroMec;
-    }
-
     public void setListaAvaliacoes(List<Avaliacao> listaAvaliacoes) {
         this.listaAvaliacoes = listaAvaliacoes;
     }
@@ -40,14 +36,6 @@ public class Estudante extends Utilizador {
         this.nomeCurso = nomeCurso;
     }
 
-    public int getAnoLetivo() {
-        return anoLetivo;
-    }
-
-    public void setAnoLetivo(int anoLetivo) {
-        this.anoLetivo = anoLetivo;
-    }
-
     public List<Avaliacao> getListaAvaliacoes() {
         return listaAvaliacoes;
     }
@@ -56,11 +44,4 @@ public class Estudante extends Utilizador {
         this.listaAvaliacoes.add(avaliacao);
     }
 
-    public Curso getCurso() {
-        return curso;
-    }
-
-    public void setCurso(Curso curso) {
-        this.curso = curso;
-    }
 }

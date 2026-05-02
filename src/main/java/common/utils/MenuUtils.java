@@ -1,7 +1,9 @@
 package common.utils;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -63,4 +65,41 @@ public class MenuUtils {
         System.out.flush();
     }
     //endregion
+
+    public static int lerInteiroSeguro(Scanner scanner, String mensagem) {
+        while (true) {
+            System.out.print(mensagem);
+            try {
+                return Integer.parseInt(scanner.nextLine().trim());
+            } catch (NumberFormatException e) {
+                System.out.println("Entrada invalida. Por favor, introduza um numero inteiro.");
+            }
+        }
+    }
+    // --- LEITURA SEGURA DE DECIMAIS (Notas, Propinas, Precos) ---
+    public static double lerDoubleSeguro(Scanner scanner, String mensagem) {
+        while (true) {
+            System.out.print(mensagem);
+            try {
+                // Substitui virgula por ponto para evitar erros regionais comuns em Portugal
+                String input = scanner.nextLine().trim().replace(",", ".");
+                return Double.parseDouble(input);
+            } catch (NumberFormatException e) {
+                System.out.println("Entrada invalida. Por favor, introduza um valor decimal (ex: 10.5 ou 10,5).");
+            }
+        }
+    }
+
+    // --- LEITURA SEGURA DE DATAS (Datas de Nascimento) ---
+    public static LocalDate lerDataSegura(Scanner scanner, String mensagem) {
+        while (true) {
+            System.out.print(mensagem);
+            try {
+                String input = scanner.nextLine().trim();
+                return LocalDate.parse(input);
+            } catch (DateTimeParseException e) {
+                System.out.println("Formato de data invalido. Por favor, use o formato AAAA-MM-DD (ex: 2000-12-31).");
+            }
+        }
+    }
 }

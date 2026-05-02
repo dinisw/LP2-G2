@@ -20,20 +20,20 @@ public class EstudanteIntegrationTest {
     public void testarGeracaoMecanograficaEAtualizacaoCaseSensitive() {
         // 1. Criar um estudante
         int nifAleatorio = (int) (Math.random() * 1000000000);
-        Resultado res = controller.registarEstudante("Aluno Teste", "Morada", nifAleatorio, LocalDate.of(2002, 2, 2), "Engenharia", "Senha123!");
-        if (!res.success) {
-            System.out.println("[DEBUG_LOG] Erro ao registar estudante: " + res.errorMessage);
+        Resultado <Integer> res = controller.registarEstudante("Aluno Teste", "Morada", nifAleatorio, LocalDate.of(2002, 2, 2), "Engenharia", "Senha123!");
+        if (!res.sucesso) {
+            System.out.println("[DEBUG_LOG] Erro ao registar estudante: " + res.mensagemErro);
         }
-        assertTrue(res.success, "Estudante deve ser registado com sucesso.");
+        assertTrue(res.sucesso, "Estudante deve ser registado com sucesso.");
 
         // Guardar o Nº gerado para limparmos depois
-        mecanograficoGerado = (int) res.object;
+        mecanograficoGerado = (int) res.dados;
         assertTrue(mecanograficoGerado > 10000, "O número mecanográfico deve ser superior a 10000.");
 
         // 2. Testar Atualização com Case Sensitive ("ENGENHARIA" em minúsculas com espaços extra)
-        Resultado resUpdate = controller.atualizarEstudante(mecanograficoGerado, "aluno teste modificado", " ", "  engenharia  ");
+        Resultado <Estudante> resUpdate = controller.atualizarEstudante(mecanograficoGerado, "aluno teste modificado", " ", "  engenharia  ");
 
-        assertTrue(resUpdate.success, "A atualização deve funcionar mesmo com formatações estranhas de texto.");
+        assertTrue(resUpdate.sucesso, "A atualização deve funcionar mesmo com formatações estranhas de texto.");
 
         Estudante atualizado = controller.procurarEstudantePorNumeroMec(mecanograficoGerado);
         assertEquals("aluno teste modificado", atualizado.getNome(), "O nome devia ter sido atualizado.");
@@ -42,10 +42,10 @@ public class EstudanteIntegrationTest {
     @Test
     public void testarNifNegativoOuZero() {
         // Tentar enviar um NIF 0 ou negativo
-        Resultado res = controller.registarEstudante("Aluno Nif Mau", "Morada", -500, LocalDate.of(2000, 1, 1), "Curso", "Senha");
+        Resultado <Integer> res = controller.registarEstudante("Aluno Nif Mau", "Morada", -500, LocalDate.of(2000, 1, 1), "Curso", "Senha");
 
-        assertFalse(res.success, "O sistema deve bloquear NIFs menores ou iguais a zero.");
-        assertTrue(res.errorMessage.contains("inválido") || res.errorMessage.contains("NIF"), "A mensagem de erro deve referir o NIF.");
+        assertFalse(res.sucesso, "O sistema deve bloquear NIFs menores ou iguais a zero.");
+        assertTrue(res.mensagemErro.contains("inválido") || res.mensagemErro.contains("NIF"), "A mensagem de erro deve referir o NIF.");
     }
 
     @AfterEach

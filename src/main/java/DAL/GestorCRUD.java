@@ -2,152 +2,83 @@ package DAL;
 
 import model.Gestor;
 import model.Resultado;
-
-import java.io.*;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
-public class GestorCRUD {
-    private static final String CAMINHO_FICHEIRO = "gestores.csv";
-    private List<Gestor> gestores;
-    private int proximoID = 1;
+public class GestorCRUD extends AbstractCsvCRUD<Gestor> {
 
     public GestorCRUD() {
-        this.gestores = new ArrayList<>();
-        carregarFicheiro();
+        super("gestores.csv");
     }
 
-    private void carregarFicheiro() {
-        File ficheiro = new File(CAMINHO_FICHEIRO);
-        if (!ficheiro.exists()) {
-            return;
-        }
-        try (BufferedReader reader = new BufferedReader(new FileReader(CAMINHO_FICHEIRO))) {
-            String linha;
-            while ((linha = reader.readLine()) != null) {
-                String[] dados = linha.split(";");
-                if (dados.length == 7) {
-                    Gestor gestor = new Gestor(
-                            proximoID++,//id
-                            dados[0],//nome
-                            dados[1],//morada
-                            Integer.parseInt(dados[2]),//nif
-                            LocalDate.parse(dados[3]),//data de nascimento
-                            dados[4],//email
-                            dados[5],//senha
-                            dados[6]//Cargo
-                    );
-                    gestores.add(gestor);
-                }
-            }
-        } catch (IOException | NumberFormatException e) {
-            throw new RuntimeException("Erro interno ao carregar o ficheiro de gestores.", e);
+    @Override
+    protected Gestor mapearLinhaParaEntidade(String[] colunas) {
+        try {
+            int id = Integer.parseInt(colunas[0]);
+            String nome = colunas[1];
+            String morada = colunas[2];
+            int nif = Integer.parseInt(colunas[3]);
+            LocalDate dataNascimento = LocalDate.parse(colunas[4]);
+            String email = colunas[5];
+            String hash = colunas[6];
+            String cargo = colunas[7];
+
+            return new Gestor(id, nome, morada, nif, dataNascimento, email, hash, cargo);
+        } catch (Exception e) {
+            return null;
         }
     }
 
-    private void guardarTodosNoFicheiro() {
-        try (PrintWriter print = new PrintWriter(new FileWriter(CAMINHO_FICHEIRO))) {
-            for (Gestor gestor : gestores) {
-                String linha = String.format("%s;%s;%s;%s;%s;%s;%s",
-                        safe(gestor.getNome()),
-                        safe(gestor.getMorada()),
-                        safe(gestor.getNif()),
-                        safe(gestor.getDataNascimento()),
-                        safe(gestor.getEmail()),
-                        safe(gestor.getHash()),
-                        safe(gestor.getCargo()));
-                print.println(linha);
-            }
-        } catch (IOException | NumberFormatException e) {
-            throw new RuntimeException("Erro interno ao carregar o ficheiro de gestores.", e);
-        }
+    @Override
+    protected String mapearEntidadeParaLinha(Gestor g) {
+        return String.format("%d;%s;%s;%d;%s;%s;%s;%s",
+                g.getId(), g.getNome(), g.getMorada(), g.getNif(),
+                g.getDataNascimento().toString(), g.getEmail(), g.getHash(), g.getCargo());
     }
 
-    public Gestor getGestorPorID(int id){
-        for (Gestor g : gestores) {
-            if (g.getId() == id){
-                return g;
-            }
-        }
-        return null;
-    }
-    // CREATE
     public boolean registarGestor(Gestor gestor) {
-        if (gestor != null && procurarPorNif(gestor.getNif()) == null) {
-            gestor.setId(proximoID++);
-            gestores.add(gestor);
+        int proximoID = dados.isEmpty() ? 1 : dados.get(dados.size() - 1).getId() + 1;
+        gestor.setId(proximoID);
+        dados.add(gestor);
+        guardarTodosNoFicheiro();
+        return true;
+    }
+
+    public List<Gestor> getGestores() {
+        return dados;
+    }
+
+    public Gestor procurarPorEmail(String email) {
+        return dados.stream().filter(g -> g.getEmail().equalsIgnoreCase(email)).findFirst().orElse(null);
+    }
+
+    public Gestor procurarPorNif(int nif) {
+        return dados.stream().filter(g -> g.getNif() == nif).findFirst().orElse(null);
+    }
+
+    public boolean atualizarGestor(Gestor gestor) {
+        for (int i = 0; i < dados.size(); i++) {
+            if (dados.get(i).getNif() == gestor.getNif()) {
+                gestor.setId(dados.get(i).getId());
+                dados.set(i, gestor);
+                guardarTodosNoFicheiro();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean eliminarGestor(int nif) {
+        Gestor remover = procurarPorNif(nif);
+        if (remover != null) {
+            dados.remove(remover);
             guardarTodosNoFicheiro();
             return true;
         }
         return false;
     }
 
-    // READ
-    public List<Gestor> getGestores() {
-        return new ArrayList<>(gestores);
-    }
-
-    public Gestor procurarPorNif(int nif) {
-        for (Gestor gestor : gestores) {
-            if (gestor.getNif() == nif) {
-                return gestor;
-            }
-        }
-        return null;
-    }
-
-    public Gestor procurarPorEmail(String email) {
-        for (Gestor gestor : gestores) {
-            if (gestor.getEmail().equalsIgnoreCase(email)) {
-                return gestor;
-            }
-        }
-        return null;
-    }
-
-    // UPDATE
-    public boolean atualizarGestor(Gestor gestorAtualizado) {
-        for (int i = 0; i < gestores.size(); i++) {
-            if (gestores.get(i).getNif() == gestorAtualizado.getNif()) {
-                gestores.set(i, gestorAtualizado);
-                guardarTodosNoFicheiro();
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public Resultado atualizarSenha(Gestor gestor){
-        Resultado resultado = new Resultado();
-        if(gestor != null){
-            for (int i = 0; i < gestores.size(); i++) {
-                if (gestores.get(i).getNif() == gestor.getNif()) {
-                    gestores.set(i, gestor);
-                    guardarTodosNoFicheiro();
-                    resultado.success = true;
-                    return resultado;
-                }
-            }
-        }
-        resultado.success = false;
-        resultado.errorMessage = "Erro ao atualizar o ficheiro do gestor";
-        return resultado;
-    }
-
-    // DELETE
-    public boolean eliminarGestor(int nif) {
-        for (int i = 0; i < gestores.size(); i++) {
-            if (gestores.get(i).getNif() == nif) {
-                gestores.remove(i);
-                guardarTodosNoFicheiro();
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private String safe(Object o){
-        return (o == null) ? "SEM REGISTO" : o.toString();
+    public Gestor getGestorPorID(int id) {
+        return dados.stream().filter(g -> g.getId() == id).findFirst().orElse(null);
     }
 }

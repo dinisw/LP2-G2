@@ -24,6 +24,14 @@ public class UnidadeCurricularView {
 
     public void exibirMenuUnidadesCurriculares() {
         String opcao;
+        ArrayList<String> opcoes = new ArrayList<>();
+        opcoes.add("1. Registar Unidade Curricular");
+        opcoes.add("2. Listar Unidades Curriculares");
+        opcoes.add("3. Procurar Unidade Curricular");
+        opcoes.add("4. Atualizar Unidade Curricular");
+        opcoes.add("5. Eliminar Unidade Curricular");
+        opcoes.add("6. Listar Alunos da UC");
+        opcoes.add("0. Voltar ao Menu de Gestão");
 
         do {
             try {
@@ -48,12 +56,24 @@ public class UnidadeCurricularView {
                 opcao = scanner.nextLine().trim();
 
                 switch (opcao) {
-                    case "1": registarUnidadeCurricular(); break;
-                    case "2": if (temUCs) listarUnidadesCurriculares(); else mostrarErroOpcao(); break;
-                    case "3": if (temUCs) procurarUnidadeCurricular(); else mostrarErroOpcao(); break;
-                    case "4": if (temUCs) atualizarUnidadeCurricular(); else mostrarErroOpcao(); break;
-                    case "5": if (temUCs) eliminarUnidadeCurricular(); else mostrarErroOpcao(); break;
-                    case "6": if (temUCs) definirMomentosAvaliacao(); else mostrarErroOpcao(); break;
+                    case "1":
+                        registarUnidadeCurricular();
+                        break;
+                    case "2":
+                        listarUnidadesCurriculares();
+                        break;
+                    case "3":
+                        procurarUnidadeCurricular();
+                        break;
+                    case "4":
+                        atualizarUnidadeCurricular();
+                        break;
+                    case "5":
+                        eliminarUnidadeCurricular();
+                        break;
+                    case "6":
+                        listarAlunosDaUC();
+                        break;
                     case "0":
                         System.out.println(GetYellow() + "\nA voltar ao menu de gestão..." + GetReset());
                         return;
@@ -116,32 +136,29 @@ public class UnidadeCurricularView {
             listarDocentesDisponiveis();
             String siglaDocente = "";
             boolean docenteValido = false;
-
             while (!docenteValido) {
                 siglaDocente = BackendUtils.lerInputString(scanner, "\nSigla do Docente Responsável (Obrigatório): ").toUpperCase();
                 if (siglaDocente.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
 
-                if (siglaDocente.trim().isEmpty()) {
-                    System.out.println(GetRed() + "Erro: É obrigatório indicar a sigla de um Docente para criar a UC." + GetReset());
+                DocenteController dc = new DocenteController();
+                if (dc.procurarDocentePorSigla(siglaDocente) != null) {
+                    docenteValido = true;
                 } else {
-                    DocenteController docenteController = new DocenteController();
-                    if (docenteController.procurarDocentePorNif(0) != null || true) {
-                        docenteValido = true;
-                    }
+                    System.out.println(GetRed() + "Erro: Docente com essa sigla não encontrado. Tente novamente." + GetReset());
                 }
             }
 
             UnidadeCurricularController unidadeCurricularControllerAtualizado = new UnidadeCurricularController();
-            Resultado resultado = unidadeCurricularControllerAtualizado.registarUC(nome, ano, semestre, siglaDocente);
+            Resultado <UnidadeCurricular> resultado = unidadeCurricularControllerAtualizado.registarUC(nome, ano, semestre, siglaDocente);
 
-            if (resultado.success) {
+            if (resultado.sucesso) {
                 System.out.println(GetGreen() + "\nUC registada com sucesso!" + GetReset());
                 UnidadeCurricular novaUC = unidadeCurricularControllerAtualizado.procurarUCPorNome(nome);
                 if (novaUC != null) {
                     imprimirDadosUnidadeCurricular(novaUC);
                 }
             } else {
-                System.out.println(GetRed() + "\nErro ao registar: " + resultado.errorMessage + GetReset());
+                System.out.println(GetRed() + "\nErro ao registar: " + resultado.mensagemErro + GetReset());
             }
 
             MenuUtils.pressionarEnter(scanner);
@@ -328,16 +345,16 @@ public class UnidadeCurricularView {
                 return;
             }
 
-            Resultado resultado = unidadeCurricularControllerAtualizado.atualizarUCPorId(id, nomeFinal, novoAno, novoSemestre, siglaFinal);
+            Resultado <UnidadeCurricular> resultado = unidadeCurricularControllerAtualizado.atualizarUC(id, nomeFinal, novoAno, novoSemestre, siglaFinal);
 
-            if (resultado.success) {
+            if (resultado.sucesso) {
                 System.out.println(GetGreen() + "\nUC atualizada com sucesso!" + GetReset());
                 UnidadeCurricular ucAtualizada = unidadeCurricularControllerAtualizado.procurarUCPorId(id);
                 if (ucAtualizada != null) {
                     imprimirDadosUnidadeCurricular(ucAtualizada);
                 }
             } else {
-                System.out.println(GetRed() + "\nErro ao atualizar: " + resultado.errorMessage + GetReset());
+                System.out.println(GetRed() + "\nErro ao atualizar: " + resultado.mensagemErro + GetReset());
             }
 
             MenuUtils.pressionarEnter(scanner);
@@ -384,12 +401,12 @@ public class UnidadeCurricularView {
 
             // CORREÇÃO: Chavetas devidamente abertas e fechadas
             if (confirmacao.equals("S")) {
-                Resultado resultado = unidadeCurricularControllerAtualizado.eliminarUCPorId(id);
+                Resultado <UnidadeCurricular> resultado = unidadeCurricularControllerAtualizado.eliminarUCPorId(id);
 
-                if (resultado.success) {
+                if (resultado.sucesso) {
                     System.out.println(GetGreen() + "\nUC eliminada com sucesso!" + GetReset());
                 } else {
-                    System.out.println(GetRed() + "\nErro ao eliminar: " + resultado.errorMessage + GetReset());
+                    System.out.println(GetRed() + "\nErro ao eliminar: " + resultado.mensagemErro + GetReset());
                 }
             } else {
                 System.out.println(GetYellow() + "Operação cancelada." + GetReset());
@@ -407,71 +424,42 @@ public class UnidadeCurricularView {
         }
     }
 
-    private void definirMomentosAvaliacao() {
+    private void listarAlunosDaUC() {
         try {
-            System.out.println(GetBlue() + "\n--- DEFINIR MOMENTOS DE AVALIAÇÃO ---" + GetReset());
+            System.out.println(GetBlue() + "\n--- LISTAR ALUNOS POR UC ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
             listarUCsSemPausa();
-
             String idStr = BackendUtils.lerInputString(scanner, "\nDigite o ID da UC: ");
-            if (idStr.equals("0")) return;
+            int id = Integer.parseInt(idStr);
 
-            int id;
-            try {
-                id = Integer.parseInt(idStr);
-            } catch (NumberFormatException e) {
-                System.out.println(GetRed() + "ID inválido. Por favor introduza um número." + GetReset());
-                MenuUtils.pressionarEnter(scanner);
-                return;
-            }
-
-            UnidadeCurricularController ucc = new UnidadeCurricularController();
-            UnidadeCurricular uc = ucc.procurarUCPorId(id);
+            UnidadeCurricularController ucController = new UnidadeCurricularController();
+            UnidadeCurricular uc = ucController.procurarUCPorId(id);
 
             if (uc == null) {
-                System.out.println(GetRed() + "Erro: UC não encontrada com o ID informado." + GetReset());
+                System.out.println(GetRed() + "Unidade Curricular não encontrada." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
                 return;
             }
 
-            System.out.println(GetGreen() + "\nUC Selecionada: " + uc.getNome() + GetReset());
-            List<String> momentosAtuais = uc.getMomentosAvaliacao();
-            if (momentosAtuais == null || momentosAtuais.isEmpty()) {
-                System.out.println("Momentos atuais: " + GetYellow() + "Nenhum momento definido." + GetReset());
+            DocenteController docenteController = new DocenteController();
+            List<model.Estudante> alunos = docenteController.listarAlunosPorUC(uc.getNome());
+
+            if (alunos.isEmpty()) {
+                System.out.println(GetYellow() + "Ainda não existem estudantes com avaliações registadas nesta UC." + GetReset());
             } else {
-                System.out.println("Momentos atuais: " + String.join(" | ", momentosAtuais));
-            }
-
-            System.out.println("\n" + GetWhiteBold() + "Exemplo de formato: " + GetReset() + "Teste 1 | Teste 2 | Exame Final");
-            String novosMomentos = BackendUtils.lerInputString(scanner, "Introduza os momentos separados por '|' (ou Enter para cancelar): ");
-
-            if(novosMomentos.trim().isEmpty()) {
-                System.out.println(GetYellow() + "Operação cancelada. Não foram feitas alterações." + GetReset());
-                MenuUtils.pressionarEnter(scanner);
-                return;
-            }
-
-            List<String> listaMomentos = new ArrayList<>();
-            String[] particoes = novosMomentos.split("\\|");
-            for (String p : particoes) {
-                if (!p.trim().isEmpty()) {
-                    listaMomentos.add(p.trim());
+                System.out.println(GetGreen() + "\nEstudantes inscritos em " + uc.getNome() + ":" + GetReset());
+                for (model.Estudante e : alunos) {
+                    System.out.printf("- Nº Mec: %d | Nome: %s\n", e.getNumeroMec(), e.getNome());
                 }
             }
-
-            Resultado resultado = ucc.definirMomentosAvaliacao(id, listaMomentos);
-
-            if (resultado.success) {
-                System.out.println(GetGreen() + "\nMomentos de avaliação atualizados com sucesso!" + GetReset());
-            } else {
-                System.out.println(GetRed() + "\nErro ao atualizar momentos: " + resultado.errorMessage + GetReset());
-            }
-
             MenuUtils.pressionarEnter(scanner);
 
-        } catch (Exception e) {
-            System.out.println(GetRed() + "Ocorreu um erro inesperado: " + e.getMessage() + GetReset());
+        } catch (NumberFormatException e) {
+            System.out.println(GetRed() + "ID inválido." + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        } catch (CancelarRegistoException e) {
+            System.out.println(GetYellow() + "Operação cancelada." + GetReset());
             MenuUtils.pressionarEnter(scanner);
         }
     }
