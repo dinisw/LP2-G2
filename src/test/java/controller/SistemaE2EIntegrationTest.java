@@ -99,7 +99,7 @@ public class SistemaE2EIntegrationTest {
         UnidadeCurricular uc = ucCRUD.procurarPorNome(nomeUC);
 
         Avaliacao inscricao = new Avaliacao("Frequência", null, uc, estudante);
-        assertTrue(avaliacaoCRUD.registarAvaliacao(inscricao), "Estudante inscrito na UC (A aguardar nota).");
+        assertTrue(avaliacaoCRUD.registarAvaliacao(inscricao).sucesso, "Estudante inscrito na UC (A aguardar nota).");
     }
 
     @Test
@@ -110,7 +110,7 @@ public class SistemaE2EIntegrationTest {
         assertNotNull(uc, "A UC não foi encontrada na hora de lançar notas!");
 
         Avaliacao notaLancada = new Avaliacao("Frequência", 18.5, uc, estudante);
-        assertTrue(avaliacaoCRUD.registarAvaliacao(notaLancada), "Docente lança nota de 18.5 com sucesso.");
+        assertTrue(avaliacaoCRUD.registarAvaliacao(notaLancada).sucesso, "Docente lança nota de 18.5 com sucesso.");
     }
 
     @Test
