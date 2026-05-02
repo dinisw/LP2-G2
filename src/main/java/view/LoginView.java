@@ -14,7 +14,6 @@ import static common.utils.DesignUtils.*;
 public class LoginView {
 
     public static void Login() {
-        // UM unico Scanner para toda a sessao - evita bug de dois Scanners no System.in
         Scanner scanner = new Scanner(System.in);
         LoginController loginController = new LoginController();
         boolean sair = false;
@@ -58,8 +57,6 @@ public class LoginView {
                     continue;
                 }
 
-                // --- 2. LER PASSWORD E VALIDAR ---
-                // CORRECAO: passa o scanner existente — evita criar new Scanner(System.in)
                 Utilizador utilizador = null;
                 boolean senhaCorreta = false;
 
@@ -71,7 +68,6 @@ public class LoginView {
                         break;
                     }
 
-                    // So agora e que chamamos o login, com a password real
                     utilizador = loginController.login(email, senha);
 
                     if (utilizador == null) {
@@ -81,7 +77,6 @@ public class LoginView {
                     }
                 }
 
-                // --- 3. REDIRECIONAR PARA O MENU CORRETO ---
                 if (senhaCorreta && utilizador != null) {
                     System.out.println(GetGreen() + "\nLogin efetuado com sucesso! Bem-vindo, " + utilizador.getNome() + "!" + GetReset());
                     MenuUtils.pressionarEnter(scanner);
