@@ -17,33 +17,32 @@ public class GestorController {
         this.gestorCRUD = new GestorCRUD();
     }
 
-    // --- REGRA DE NEGÓCIO: INICIAR ANO LETIVO (Requisito do Enunciado) ---
     public Resultado<Curso> arrancarAnoLetivo(String nomeCurso, int anoAlvo) {
-        CursoCRUD cursoCRUD = new CursoCRUD();
+        DAL.CursoCRUD cursoCRUD = new DAL.CursoCRUD();
         Curso curso = cursoCRUD.procurarPorNome(nomeCurso);
 
         if (curso == null) return new Resultado<>(false, "Curso não encontrado.");
-        if (curso.getAnosIniciados().contains(anoAlvo)) {
+
+        if (curso.isAnoIniciado(anoAlvo)) {
             return new Resultado<>(false, "O " + anoAlvo + "º ano deste curso já foi iniciado anteriormente.");
         }
 
-        EstudanteCRUD estudanteCRUD = new EstudanteCRUD();
+        DAL.EstudanteCRUD estudanteCRUD = new DAL.EstudanteCRUD();
         long totalInscritos = estudanteCRUD.getEstudantes().stream()
                 .filter(e -> e.getNomeCurso() != null && e.getNomeCurso().equalsIgnoreCase(nomeCurso) && e.isAtivo())
                 .count();
 
-        // Validação estrita de número de alunos
         if (anoAlvo == 1 && totalInscritos < 5) {
             return new Resultado<>(false, "Bloqueado: Para iniciar o 1º ano, são necessários pelo menos 5 alunos. (Atuais: " + totalInscritos + ")");
         } else if (anoAlvo > 1 && totalInscritos < 1) {
             return new Resultado<>(false, "Bloqueado: Para iniciar o " + anoAlvo + "º ano, é necessário pelo menos 1 aluno. (Atuais: 0)");
         }
 
-        curso.getAnosIniciados().add(anoAlvo);
+        curso.adicionarAnoIniciado(anoAlvo);
+
         return cursoCRUD.registarArranqueAno(nomeCurso, curso);
     }
 
-    // --- OPERAÇÕES CRUD COM 'RESULTADO<T>' ---
 
     public Resultado<Gestor> registarGestor(String nome, String morada, int nif, LocalDate dataNascimento, String email, String hash, String cargo) {
         if (nome == null || nome.trim().isEmpty() || morada == null || morada.trim().isEmpty() ||
@@ -98,8 +97,6 @@ public class GestorController {
     }
 
     public List<Gestor> listarGestores() { return gestorCRUD.getGestores(); }
-    public Gestor procurarGestorPorID(int id) { return gestorCRUD.getGestorPorID(id); }
-    public Gestor procurarGestorPorEmail(String email) { return gestorCRUD.procurarPorEmail(email); }
     public Gestor procurarGestorPorNif(int nif) {
         return gestorCRUD.procurarPorNif(nif);
     }

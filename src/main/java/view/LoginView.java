@@ -71,7 +71,7 @@ public class LoginView {
                         continue;
                     }
 
-                    Utilizador utilizador = loginController.login(email);
+                    Utilizador utilizador = loginController.login(email, "");
 
                     if (utilizador == null) {
                         System.out.println("\n" + GetRed() + "Credenciais inválidas! Tente novamente." + GetReset());
@@ -80,20 +80,20 @@ public class LoginView {
                     }
 
                     boolean senhaCorreta = false;
-                    SenhaUtils su = new SenhaUtils();
-
                     while (!senhaCorreta) {
-                        String senha = reader.readLine("Senha: ", '*');
+                        String senha = BackendUtils.lerSenhaOculta("Senha: ");
 
                         if (senha.equals("0")) {
                             System.out.println(GetYellow() + "\nOperação cancelada." + GetReset());
                             break;
                         }
 
-                        senhaCorreta = su.verificarSenha(senha, utilizador.getHash());
+                        utilizador = loginController.login(email, senha);
 
-                        if (!senhaCorreta) {
-                            System.out.println(GetRed() + "Senha incorreta. Tente novamente (ou digite '0' para voltar)." + GetReset());
+                        if (utilizador == null) {
+                            System.out.println(GetRed() + "Credenciais inválidas! Tente novamente (ou digite '0' para voltar)." + GetReset());
+                        } else {
+                            senhaCorreta = true;
                         }
                     }
 

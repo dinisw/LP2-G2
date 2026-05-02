@@ -59,4 +59,14 @@ public class BackendUtils {
         GestorController g = new GestorController();
         return e.procurarEstudantePorNif(nif) != null || d.procurarDocentePorNif(nif) != null || g.procurarGestorPorNif(nif) != null;
     }
+
+    public static String lerSenhaOculta(String prompt) {
+        if (System.console() != null) {
+            char[] pass = System.console().readPassword(prompt);
+            return new String(pass);
+        } else {
+            System.out.print(prompt);
+            return new java.util.Scanner(System.in).nextLine().trim();
+        }
+    }
 }

@@ -26,9 +26,8 @@ public class DepartamentoView {
         ArrayList<String> opcoes = new ArrayList<>();
         opcoes.add("1. Registar Departamento");
         opcoes.add("2. Listar Departamentos");
-        opcoes.add("3. Procurar Departamento (Sigla)");
-        opcoes.add("4. Atualizar Departamento");
-        opcoes.add("5. Eliminar Departamento");
+        opcoes.add("3. Atualizar Departamento");
+        opcoes.add("4. Eliminar Departamento");
         opcoes.add("0. Voltar ao Menu de Gestão");
 
         do {
@@ -40,9 +39,8 @@ public class DepartamentoView {
                 switch (opcao) {
                     case "1": registarDepartamento(); break;
                     case "2": listarDepartamentos(); break;
-                    case "3": procurarDepartamento(); break;
-                    case "4": atualizarDepartamento(); break;
-                    case "5": eliminarDepartamento(); break;
+                    case "3": atualizarDepartamento(); break;
+                    case "4": eliminarDepartamento(); break;
                     case "0":
                         System.out.println(GetYellow() + "\nA voltar ao menu de gestão..." + GetReset());
                         return;

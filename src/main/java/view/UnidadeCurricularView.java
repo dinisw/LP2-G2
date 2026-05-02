@@ -30,6 +30,7 @@ public class UnidadeCurricularView {
         opcoes.add("3. Procurar Unidade Curricular");
         opcoes.add("4. Atualizar Unidade Curricular");
         opcoes.add("5. Eliminar Unidade Curricular");
+        opcoes.add("6. Listar Alunos da UC");
         opcoes.add("0. Voltar ao Menu de Gestão");
 
         do {
@@ -53,6 +54,9 @@ public class UnidadeCurricularView {
                         break;
                     case "5":
                         eliminarUnidadeCurricular();
+                        break;
+                    case "6":
+                        listarAlunosDaUC();
                         break;
                     case "0":
                         System.out.println(GetYellow() + "\nA voltar ao menu de gestão..." + GetReset());
@@ -112,18 +116,15 @@ public class UnidadeCurricularView {
             listarDocentesDisponiveis();
             String siglaDocente = "";
             boolean docenteValido = false;
-
             while (!docenteValido) {
                 siglaDocente = BackendUtils.lerInputString(scanner, "\nSigla do Docente Responsável (Obrigatório): ").toUpperCase();
                 if (siglaDocente.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
 
-                if (siglaDocente.trim().isEmpty()) {
-                    System.out.println(GetRed() + "Erro: É obrigatório indicar a sigla de um Docente para criar a UC." + GetReset());
+                DocenteController dc = new DocenteController();
+                if (dc.procurarDocentePorSigla(siglaDocente) != null) {
+                    docenteValido = true;
                 } else {
-                    DocenteController docenteController = new DocenteController();
-                    if (docenteController.procurarDocentePorNif(0) != null || true) {
-                        docenteValido = true;
-                    }
+                    System.out.println(GetRed() + "Erro: Docente com essa sigla não encontrado. Tente novamente." + GetReset());
                 }
             }
 
@@ -397,6 +398,46 @@ public class UnidadeCurricularView {
             MenuUtils.pressionarEnter(scanner);
         } catch (Exception e) {
             System.out.println(GetRed() + "Ocorreu um erro inesperado: " + e.getMessage() + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        }
+    }
+
+    private void listarAlunosDaUC() {
+        try {
+            System.out.println(GetBlue() + "\n--- LISTAR ALUNOS POR UC ---" + GetReset());
+            System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
+
+            listarUCsSemPausa();
+            String idStr = BackendUtils.lerInputString(scanner, "\nDigite o ID da UC: ");
+            int id = Integer.parseInt(idStr);
+
+            UnidadeCurricularController ucController = new UnidadeCurricularController();
+            UnidadeCurricular uc = ucController.procurarUCPorId(id);
+
+            if (uc == null) {
+                System.out.println(GetRed() + "Unidade Curricular não encontrada." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            DocenteController docenteController = new DocenteController();
+            List<model.Estudante> alunos = docenteController.listarAlunosPorUC(uc.getNome());
+
+            if (alunos.isEmpty()) {
+                System.out.println(GetYellow() + "Ainda não existem estudantes com avaliações registadas nesta UC." + GetReset());
+            } else {
+                System.out.println(GetGreen() + "\nEstudantes inscritos em " + uc.getNome() + ":" + GetReset());
+                for (model.Estudante e : alunos) {
+                    System.out.printf("- Nº Mec: %d | Nome: %s\n", e.getNumeroMec(), e.getNome());
+                }
+            }
+            MenuUtils.pressionarEnter(scanner);
+
+        } catch (NumberFormatException e) {
+            System.out.println(GetRed() + "ID inválido." + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        } catch (CancelarRegistoException e) {
+            System.out.println(GetYellow() + "Operação cancelada." + GetReset());
             MenuUtils.pressionarEnter(scanner);
         }
     }

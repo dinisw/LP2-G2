@@ -52,14 +52,6 @@ public class Docente extends Utilizador {
         return true;
     }
 
-    public List<Avaliacao> getListaAvaliacao() {
-        return listaAvaliacao;
-    }
-
-    public void setListaAvaliacao(List<Avaliacao> listaAvaliacao) {
-        this.listaAvaliacao = listaAvaliacao;
-    }
-
     @Override
     public String toString() {
         return String.format(

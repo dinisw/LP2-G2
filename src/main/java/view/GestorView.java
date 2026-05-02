@@ -19,8 +19,6 @@ import org.jline.reader.LineReaderBuilder;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 
-import javax.print.Doc;
-
 import static common.utils.DesignUtils.*;
 
 public class GestorView {
@@ -45,7 +43,7 @@ public class GestorView {
         opcoes.add("4. Gerir Cursos");
         opcoes.add("5. Gerir Departamentos");
         opcoes.add("6. Gerir Unidades Curriculares");
-        opcoes.add("7. Consultar Alunos em Dívida (Tesouraria)"); // NOVA OPÇÃO
+        opcoes.add("7. Consultar Alunos em Dívida (Tesouraria)");
         opcoes.add("0. Logout");
 
         do {
@@ -199,13 +197,15 @@ public class GestorView {
             String passDigitada = "";
             boolean senhaValida = false;
             while (!senhaValida) {
-                passDigitada = reader.readLine("Senha: ", '*');
+                passDigitada = BackendUtils.lerSenhaOculta("Senha: ");
+
                 if (passDigitada.equals("0")) {
                     throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
                 }
                 senhaValida = BackendUtils.isSenhaValida(passDigitada);
-                if(!senhaValida)
+                if(!senhaValida) {
                     System.out.println(GetRed() + "SENHA deve conter pelo menos uma letra maiúscula, um número e um caracter especial. Tente novamente." + GetReset());
+                }
             }
 
             SenhaUtils su = new SenhaUtils();
@@ -662,13 +662,13 @@ public class GestorView {
             System.out.println(GetBlue() + "\n--- LISTA DE DOCENTES ---" + GetReset());
 
             DocenteController docenteControllerAtualizado = new DocenteController();
-            List<model.Docente> docentes = docenteControllerAtualizado.listarDocentes();
+            List<Docente> docentes = docenteControllerAtualizado.listarDocentes();
 
             if (docentes.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhum docente registado." + GetReset());
             } else {
                 for (int i = 0; i < docentes.size(); i++) {
-                    model.Docente docente = docentes.get(i);
+                    Docente docente = docentes.get(i);
                     System.out.println("ID: " + (i + 1) + " | NIF: " + docente.getNif() + " | Nome: " + docente.getNome() + " | Sigla: " + docente.getSigla());
                 }
             }
@@ -685,7 +685,7 @@ public class GestorView {
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
             DocenteController docenteControllerAtualizado = new DocenteController();
-            List<model.Docente> listaDocentes = docenteControllerAtualizado.listarDocentes();
+            List<Docente> listaDocentes = docenteControllerAtualizado.listarDocentes();
             if (listaDocentes.isEmpty()) {
                 System.out.println(GetYellow() + "Não há docentes registados no sistema." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
@@ -694,7 +694,7 @@ public class GestorView {
 
             System.out.println("\n" + GetWhiteBold() + "Docentes Disponíveis:" + GetReset());
             for (int i = 0; i < listaDocentes.size(); i++) {
-                model.Docente d = listaDocentes.get(i);
+                Docente d = listaDocentes.get(i);
                 System.out.printf("%d - %s (Sigla: %s)\n", i + 1, d.getNome(), d.getSigla());
             }
 
@@ -713,7 +713,7 @@ public class GestorView {
                 }
             }
 
-            model.Docente docente = listaDocentes.get(escolha - 1);
+            Docente docente = listaDocentes.get(escolha - 1);
             System.out.println(GetGreen() + "\nDados encontrados:" + GetReset());
             System.out.println(docente.toString());
             MenuUtils.pressionarEnter(scanner);
@@ -734,7 +734,7 @@ public class GestorView {
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
             DocenteController docenteControllerAtualizado = new DocenteController();
-            List<model.Docente> listaDocentes = docenteControllerAtualizado.listarDocentes();
+            List<Docente> listaDocentes = docenteControllerAtualizado.listarDocentes();
             if (listaDocentes.isEmpty()) {
                 System.out.println(GetYellow() + "Não há docentes registados no sistema." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
@@ -743,7 +743,7 @@ public class GestorView {
 
             System.out.println("\n" + GetWhiteBold() + "Docentes Disponíveis:" + GetReset());
             for (int i = 0; i < listaDocentes.size(); i++) {
-                model.Docente d = listaDocentes.get(i);
+                Docente d = listaDocentes.get(i);
                 System.out.printf("%d - %s (Sigla: %s)\n", i + 1, d.getNome(), d.getSigla());
             }
 
@@ -762,7 +762,7 @@ public class GestorView {
                 }
             }
 
-            model.Docente docente = listaDocentes.get(escolha - 1);
+            Docente docente = listaDocentes.get(escolha - 1);
 
             System.out.println(GetGreen() + "\nDados atuais:" + GetReset());
             System.out.println(docente.toString());
@@ -799,7 +799,7 @@ public class GestorView {
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
             DocenteController docenteControllerAtualizado = new DocenteController();
-            List<model.Docente> listaDocentes = docenteControllerAtualizado.listarDocentes();
+            List<Docente> listaDocentes = docenteControllerAtualizado.listarDocentes();
             if (listaDocentes.isEmpty()) {
                 System.out.println(GetYellow() + "Não há docentes registados no sistema." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
@@ -808,7 +808,7 @@ public class GestorView {
 
             System.out.println("\n" + GetWhiteBold() + "Docentes Disponíveis:" + GetReset());
             for (int i = 0; i < listaDocentes.size(); i++) {
-                model.Docente d = listaDocentes.get(i);
+                Docente d = listaDocentes.get(i);
                 System.out.printf("%d - %s (Sigla: %s)\n", i + 1, d.getNome(), d.getSigla());
             }
 
@@ -827,7 +827,7 @@ public class GestorView {
                 }
             }
 
-            model.Docente docente = listaDocentes.get(escolha - 1);
+            Docente docente = listaDocentes.get(escolha - 1);
 
             Terminal terminal = TerminalBuilder.terminal();
             LineReader reader = LineReaderBuilder.builder().terminal(terminal).build();
@@ -835,7 +835,8 @@ public class GestorView {
             String novaPass = "";
             boolean senhaValida = false;
             while (!senhaValida) {
-                novaPass = reader.readLine("Nova senha: ", '*');
+                novaPass = BackendUtils.lerSenhaOculta("Nova senha: ");
+
                 if (novaPass.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
                 senhaValida = BackendUtils.isSenhaValida(novaPass);
                 if(!senhaValida) {
@@ -871,7 +872,7 @@ public class GestorView {
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
             DocenteController docenteControllerAtualizado = new DocenteController();
-            List<model.Docente> listaDocentes = docenteControllerAtualizado.listarDocentes();
+            List<Docente> listaDocentes = docenteControllerAtualizado.listarDocentes();
             if (listaDocentes.isEmpty()) {
                 System.out.println(GetYellow() + "Não há docentes registados no sistema." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
@@ -880,7 +881,7 @@ public class GestorView {
 
             System.out.println("\n" + GetWhiteBold() + "Docentes Disponíveis:" + GetReset());
             for (int i = 0; i < listaDocentes.size(); i++) {
-                model.Docente d = listaDocentes.get(i);
+                Docente d = listaDocentes.get(i);
                 System.out.printf("%d - %s (Sigla: %s)\n", i + 1, d.getNome(), d.getSigla());
             }
 
@@ -899,7 +900,7 @@ public class GestorView {
                 }
             }
 
-            model.Docente docente = listaDocentes.get(escolha - 1);
+            Docente docente = listaDocentes.get(escolha - 1);
 
             // Dupla confirmação
             System.out.println(GetYellow() + "\nTem a certeza que deseja eliminar o docente " + docente.getNome() + "? (s/n)" + GetReset());
@@ -947,6 +948,7 @@ public class GestorView {
         opcoes.add("3. Procurar Estudante (Número Mec)");
         opcoes.add("4. Atualizar Estudante (Número Mec)");
         opcoes.add("5. Eliminar Estudante (Número Mec)");
+        opcoes.add("6. Alterar Password do Estudante");
         opcoes.add("0. Voltar");
 
         do {
@@ -970,6 +972,8 @@ public class GestorView {
                         break;
                     case "5":
                         eliminarEstudante();
+                    case "6":
+                        alterarPasswordEstudante();
                         break;
                     case "0":
                         System.out.println(GetYellow() + "\nA voltar ao menu principal..." + GetReset());
@@ -1114,7 +1118,7 @@ public class GestorView {
             System.out.println(GetBlue() + "\n--- LISTA DE ESTUDANTES ---" + GetReset());
 
             EstudanteController estudanteControllerAtualizado = new EstudanteController();
-            List<model.Estudante> lista = estudanteControllerAtualizado.listarEstudantes();
+            List<Estudante> lista = estudanteControllerAtualizado.listarEstudantes();
 
             if (lista.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhum estudante registado no sistema." + GetReset());
@@ -1123,7 +1127,7 @@ public class GestorView {
                 System.out.printf(GetWhiteBold() + " %-5s | %-15s | %-30s | %-25s \n" + GetReset(), "ID", "Nº MEC", "NOME", "CURSO");
                 System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
                 for (int i = 0; i < lista.size(); i++) {
-                    model.Estudante e = lista.get(i);
+                    Estudante e = lista.get(i);
                     System.out.printf(" %-5d | %-15d | %-30s | %-25s \n", (i + 1), e.getNumeroMec(), e.getNome(), e.getNomeCurso());
                 }
                 System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
@@ -1143,7 +1147,7 @@ public class GestorView {
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
             EstudanteController estudanteControllerAtualizado = new EstudanteController();
-            List<model.Estudante> listaEstudantes = estudanteControllerAtualizado.listarEstudantes();
+            List<Estudante> listaEstudantes = estudanteControllerAtualizado.listarEstudantes();
             if (listaEstudantes.isEmpty()) {
                 System.out.println(GetYellow() + "Não há estudantes registados no sistema." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
@@ -1152,7 +1156,7 @@ public class GestorView {
 
             System.out.println("\n" + GetWhiteBold() + "Estudantes Disponíveis:" + GetReset());
             for (int i = 0; i < listaEstudantes.size(); i++) {
-                model.Estudante e = listaEstudantes.get(i);
+                Estudante e = listaEstudantes.get(i);
                 System.out.printf("%d - %s (Nº Mec: %d | Curso: %s)\n", i + 1, e.getNome(), e.getNumeroMec(), e.getNomeCurso());
             }
 
@@ -1171,7 +1175,7 @@ public class GestorView {
                 }
             }
 
-            model.Estudante estudante = listaEstudantes.get(escolha - 1);
+            Estudante estudante = listaEstudantes.get(escolha - 1);
             System.out.println(GetGreen() + "\nDados encontrados:" + GetReset());
             System.out.println(estudante.toString());
             MenuUtils.pressionarEnter(scanner);
@@ -1192,7 +1196,7 @@ public class GestorView {
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
             EstudanteController estudanteControllerAtualizado = new EstudanteController();
-            List<model.Estudante> listaEstudantes = estudanteControllerAtualizado.listarEstudantes();
+            List<Estudante> listaEstudantes = estudanteControllerAtualizado.listarEstudantes();
             if (listaEstudantes.isEmpty()) {
                 System.out.println(GetYellow() + "Não há estudantes registados no sistema." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
@@ -1201,7 +1205,7 @@ public class GestorView {
 
             System.out.println("\n" + GetWhiteBold() + "Estudantes Disponíveis:" + GetReset());
             for (int i = 0; i < listaEstudantes.size(); i++) {
-                model.Estudante e = listaEstudantes.get(i);
+                Estudante e = listaEstudantes.get(i);
                 System.out.printf("%d - %s (Nº Mec: %d | Curso: %s)\n", i + 1, e.getNome(), e.getNumeroMec(), e.getNomeCurso());
             }
 
@@ -1220,7 +1224,7 @@ public class GestorView {
                 }
             }
 
-            model.Estudante estudante = listaEstudantes.get(escolha - 1);
+            Estudante estudante = listaEstudantes.get(escolha - 1);
 
             System.out.println(GetGreen() + "\nDados atuais:" + GetReset());
             System.out.println(estudante.toString());
@@ -1260,7 +1264,7 @@ public class GestorView {
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
             EstudanteController estudanteControllerAtualizado = new EstudanteController();
-            List<model.Estudante> listaEstudantes = estudanteControllerAtualizado.listarEstudantes();
+            List<Estudante> listaEstudantes = estudanteControllerAtualizado.listarEstudantes();
             if (listaEstudantes.isEmpty()) {
                 System.out.println(GetYellow() + "Não há estudantes registados no sistema." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
@@ -1269,7 +1273,7 @@ public class GestorView {
 
             System.out.println("\n" + GetWhiteBold() + "Estudantes Disponíveis:" + GetReset());
             for (int i = 0; i < listaEstudantes.size(); i++) {
-                model.Estudante e = listaEstudantes.get(i);
+                Estudante e = listaEstudantes.get(i);
                 System.out.printf("%d - %s (Nº Mec: %d | Curso: %s)\n", i + 1, e.getNome(), e.getNumeroMec(), e.getNomeCurso());
             }
 
@@ -1288,7 +1292,7 @@ public class GestorView {
                 }
             }
 
-            model.Estudante estudanteAapagar = listaEstudantes.get(escolha - 1);
+            Estudante estudanteAapagar = listaEstudantes.get(escolha - 1);
 
             // Dupla confirmação
             System.out.println(GetYellow() + "\nTem a certeza que deseja eliminar o estudante " + estudanteAapagar.getNome() + "? (s/n)" + GetReset());
@@ -1319,6 +1323,78 @@ public class GestorView {
         } catch (CancelarRegistoException e) {
             System.out.println("\n" + GetYellow() + "Aviso: " + e.getMessage() + GetReset());
             System.out.println(GetRed() + "Operação de eliminação interrompida!" + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Ocorreu um erro inesperado: " + e.getMessage() + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        }
+    }
+
+    private void alterarPasswordEstudante() {
+        try {
+            System.out.println(GetBlue() + "\n--- ALTERAR PASSWORD DO ESTUDANTE ---" + GetReset());
+            System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
+
+            controller.EstudanteController ec = new controller.EstudanteController();
+            List<Estudante> listaEstudantes = ec.listarEstudantes();
+
+            if (listaEstudantes == null || listaEstudantes.isEmpty()) {
+                System.out.println(GetYellow() + "Não existem estudantes registados no sistema." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            System.out.println("\n" + GetWhiteBold() + "Estudantes Disponíveis:" + GetReset());
+            for (int i = 0; i < listaEstudantes.size(); i++) {
+                Estudante e = listaEstudantes.get(i);
+                System.out.printf("%d - %s (Nº Mec: %d | Curso: %s)\n", i + 1, e.getNome(), e.getNumeroMec(), e.getNomeCurso());
+            }
+
+            int escolha = -1;
+            while (escolha < 1 || escolha > listaEstudantes.size()) {
+                try {
+                    String op = BackendUtils.lerInputString(scanner, "\nEscolha o número do estudante da lista: ");
+                    if (op.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
+
+                    escolha = Integer.parseInt(op);
+                    if (escolha < 1 || escolha > listaEstudantes.size()) {
+                        System.out.println(GetRed() + "Opção inválida. Escolha um número entre 1 e " + listaEstudantes.size() + "." + GetReset());
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println(GetRed() + "Por favor, digite apenas números." + GetReset());
+                }
+            }
+
+            Estudante estudanteSelecionado = listaEstudantes.get(escolha - 1);
+
+            String novaPass = "";
+            boolean senhaValida = false;
+            while (!senhaValida) {
+                novaPass = BackendUtils.lerSenhaOculta("Nova Senha: ");
+
+                if (novaPass.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
+
+                senhaValida = BackendUtils.isSenhaValida(novaPass);
+                if (!senhaValida) {
+                    System.out.println(GetRed() + "SENHA deve conter pelo menos uma letra maiúscula, um número e um caracter especial. Tente novamente." + GetReset());
+                }
+            }
+
+            common.utils.SenhaUtils su = new common.utils.SenhaUtils();
+            String novoHash = su.gerarHashComSalt(novaPass);
+
+            Resultado<Estudante> res = ec.alterarPassword(estudanteSelecionado.getNumeroMec(), novoHash);
+
+            if (res.sucesso) {
+                System.out.println(GetGreen() + "\nPassword do estudante alterada com sucesso!" + GetReset());
+            } else {
+                System.out.println(GetRed() + "\nErro ao alterar password: " + res.mensagemErro + GetReset());
+            }
+            MenuUtils.pressionarEnter(scanner);
+
+        } catch (CancelarRegistoException e) {
+            System.out.println("\n" + GetYellow() + "Aviso: " + e.getMessage() + GetReset());
+            System.out.println(GetRed() + "Operação interrompida!" + GetReset());
             MenuUtils.pressionarEnter(scanner);
         } catch (Exception e) {
             System.out.println(GetRed() + "Ocorreu um erro inesperado: " + e.getMessage() + GetReset());

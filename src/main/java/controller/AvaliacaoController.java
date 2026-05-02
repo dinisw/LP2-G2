@@ -41,7 +41,6 @@ public class AvaliacaoController {
         return avaliacaoCRUD.registarAvaliacao(avaliacao);
     }
 
-    // --- NOVO: Cálculo rigoroso da Média e Estado de Aprovação ---
     public Resultado<String> obterStatusAprovacao(int numeroMec, String nomeUC) {
         List<Avaliacao> avaliacoesAluno = avaliacaoCRUD.listarPorEstudante(numeroMec);
         if(avaliacoesAluno == null || avaliacoesAluno.isEmpty()) {

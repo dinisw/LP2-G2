@@ -598,40 +598,39 @@ public class CursoView {
             List<Integer> indicesSelecionados = new ArrayList<>();
 
             while (!sucessoInput) {
-                String opUc = BackendUtils.lerInputString(scanner, "\nDigite as opções das UCs desejadas (separadas por vírgula, ex: 1,3) ou 0 para cancelar: ");
+                String opUc = BackendUtils.lerInputString(scanner, "\nDigite os números das UCs desejadas (separados por vírgula, ex: 1,3,5) ou 0 para cancelar: ");
 
                 if (opUc.trim().equals("0")) {
-                    throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
+                    System.out.println(GetYellow() + "Operação cancelada." + GetReset());
+                    MenuUtils.pressionarEnter(scanner);
+                    return;
                 }
 
                 String[] opcoes = opUc.split(",");
-                boolean inputValido = true;
-                indicesSelecionados.clear();
+                System.out.println();
 
                 for (String op : opcoes) {
                     try {
-                        int escolhaUc = Integer.parseInt(op.trim()); // Removemos os espaços e convertemos
+                        int escolhaUc = Integer.parseInt(op.trim());
+                        if (escolhaUc >= 1 && escolhaUc <= unidadeCurriculars.size()) {
+                            UnidadeCurricular ucSelecionada = unidadeCurriculars.get(escolhaUc - 1);
 
-                        if (escolhaUc < 1 || escolhaUc > unidadeCurriculars.size()) {
-                            System.out.println(GetRed() + "A opção '" + escolhaUc + "' é inválida. Escolha números entre 1 e " + unidadeCurriculars.size() + "." + GetReset());
-                            inputValido = false;
-                            break;
+                            Resultado<Curso> resultado = cursoController.associarUCAoCurso(nomeAtual, ucSelecionada.getNome());
+
+                            if (resultado.sucesso) {
+                                System.out.println(GetGreen() + "- Sucesso: A UC '" + ucSelecionada.getNome() + "' foi associada ao curso!" + GetReset());
+                            } else {
+                                System.out.println(GetRed() + "- Erro ao associar '" + ucSelecionada.getNome() + "': " + resultado.mensagemErro + GetReset());
+                            }
+                        } else {
+                            System.out.println(GetRed() + "- Aviso: A opção '" + escolhaUc + "' não existe na lista." + GetReset());
                         }
-
-                        if (!indicesSelecionados.contains(escolhaUc)) {
-                            indicesSelecionados.add(escolhaUc);
-                        }
-
                     } catch (NumberFormatException e) {
-                        System.out.println(GetRed() + "Formato inválido ('" + op.trim() + "'). Digite apenas números separados por vírgulas." + GetReset());
-                        inputValido = false;
-                        break;
+                        System.out.println(GetRed() + "- Aviso: Formato inválido ('" + op.trim() + "'). Ignorado." + GetReset());
                     }
                 }
 
-                if (inputValido && !indicesSelecionados.isEmpty()) {
-                    sucessoInput = true; // Sai do ciclo while porque o utilizador inseriu tudo corretamente
-                }
+                MenuUtils.pressionarEnter(scanner);
             }
 
             System.out.println();
@@ -641,7 +640,6 @@ public class CursoView {
 
                 Resultado<Curso> resultado = cursoController.associarUCAoCurso(nomeAtual, nomeUC);
 
-                // CORREÇÃO AQUI: .sucesso e .mensagemErro
                 if (resultado.sucesso) {
                     System.out.println(GetGreen() + "- Sucesso: A UC '" + nomeUC + "' foi associada ao curso!" + GetReset());
                 } else {

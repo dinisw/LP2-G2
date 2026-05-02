@@ -6,15 +6,14 @@ import java.util.List;
 
 public abstract class AbstractCsvCRUD<T> {
     protected final String caminhoFicheiro;
-    protected List<T> dados; // Cache em memória comum a todos os CRUDs
+    protected List<T> dados;
 
-    public AbstractCsvCRUD(String caminhoFicheiro) {
-        this.caminhoFicheiro = caminhoFicheiro;
+    public AbstractCsvCRUD(String nomeFicheiro) {
+        this.caminhoFicheiro = "src/main/CSVs/" + nomeFicheiro;
         this.dados = new ArrayList<>();
         carregarFicheiro();
     }
 
-    // Método universal de leitura
     protected void carregarFicheiro() {
         File ficheiro = new File(caminhoFicheiro);
         if (!ficheiro.exists()) return;
@@ -35,18 +34,24 @@ public abstract class AbstractCsvCRUD<T> {
         }
     }
 
-    // Método universal de escrita (Resolve o teu problema no AvaliacaoCRUD!)
     protected void guardarTodosNoFicheiro() {
-        try (PrintWriter writer = new PrintWriter(new FileWriter(caminhoFicheiro))) {
-            for (T entidade : dados) {
-                writer.println(mapearEntidadeParaLinha(entidade));
+        try {
+            File ficheiro = new File(caminhoFicheiro);
+            File diretorio = ficheiro.getParentFile();
+            if (diretorio != null && !diretorio.exists()) {
+                diretorio.mkdirs();
+            }
+
+            try (PrintWriter writer = new PrintWriter(new FileWriter(ficheiro))) {
+                for (T entidade : dados) {
+                    writer.println(mapearEntidadeParaLinha(entidade));
+                }
             }
         } catch (IOException e) {
             System.err.println("Erro interno ao guardar o ficheiro: " + caminhoFicheiro);
         }
     }
 
-    // Métodos abstratos que obrigam as subclasses a ensinar como converter a sua Entidade específica
     protected abstract T mapearLinhaParaEntidade(String[] colunas);
     protected abstract String mapearEntidadeParaLinha(T entidade);
 }

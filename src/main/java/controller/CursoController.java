@@ -57,7 +57,6 @@ public class CursoController {
         return cursoCRUD.procurarPorNome(nome);
     }
 
-    // NOVA ASSINATURA: Recebe o nome antigo (para o procurar) e o objeto Curso atualizado
     public Resultado atualizarCurso(String nomeAntigo, Curso cursoNovo) {
         Resultado resultado = new Resultado();
 
@@ -114,38 +113,37 @@ public class CursoController {
 
     public Resultado eliminarCurso(String nomeAntigo) {
         Resultado resultado = new Resultado();
-
         if (nomeAntigo == null || nomeAntigo.trim().isEmpty()) {
             resultado.sucesso = false;
             resultado.mensagemErro = "O nome do curso a eliminar é obrigatório.";
             return resultado;
         }
 
-        if (cursoCRUD.procurarPorNome(nomeAntigo) == null) {
+        Curso cursoOriginal = cursoCRUD.procurarPorNome(nomeAntigo);
+        if (cursoOriginal == null) {
             resultado.sucesso = false;
             resultado.mensagemErro = "O curso especificado não foi encontrado no sistema.";
             return resultado;
         }
 
-        Resultado <Curso> res = cursoCRUD.eliminarCurso(nomeAntigo);
+        if (cursoOriginal.isIniciado()) {
+            resultado.sucesso = false;
+            resultado.mensagemErro = "O sistema não pode permitir apagar um curso com alunos/iniciado.";
+            return resultado;
+        }
 
+        EstudanteController ec = new EstudanteController();
+        for (Estudante e : ec.listarEstudantes()) {
+            if (e.getNomeCurso() != null && e.getNomeCurso().equalsIgnoreCase(nomeAntigo)) {
+                resultado.sucesso = false;
+                resultado.mensagemErro = "O sistema não pode permitir apagar um curso com alunos/iniciado.";
+                return resultado;
+            }
+        }
+
+        Resultado <Curso> res = cursoCRUD.eliminarCurso(nomeAntigo);
         if (res.sucesso) {
             resultado.sucesso = true;
-            try {
-                EstudanteCRUD estudanteCRUD = new EstudanteCRUD();
-                EstudanteController estudanteController = new EstudanteController();
-                List<Estudante> todosEstudantes = estudanteController.listarEstudantes();
-
-                for (Estudante estudante : todosEstudantes) {
-                    if (estudante.getNomeCurso() != null && estudante.getNomeCurso().equalsIgnoreCase(nomeAntigo)) {
-                        estudante.setNomeCurso("SEM REGISTO");
-                        estudanteCRUD.atualizarEstudante(estudante);
-                    }
-                }
-            } catch (Exception e) {
-                System.out.println("Aviso: Não foi possível atualizar os perfis dos estudantes órfãos.");
-            }
-
         } else {
             resultado.sucesso = false;
             resultado.mensagemErro = res.mensagemErro;
@@ -189,10 +187,10 @@ public class CursoController {
         }
 
         controller.EstudanteController estudanteController = new controller.EstudanteController();
-        List<model.Estudante> todosEstudantes = estudanteController.listarEstudantes();
+        List<Estudante> todosEstudantes = estudanteController.listarEstudantes();
 
         int alunosNesteAno = 0;
-        for (model.Estudante estudante : todosEstudantes) {
+        for (Estudante estudante : todosEstudantes) {
             if (estudante.getNomeCurso() != null && estudante.getNomeCurso().equalsIgnoreCase(curso.getNome())) {
 
                 int anoDoEstudante = estudanteController.obterAnoDesbloqueado(estudante);
