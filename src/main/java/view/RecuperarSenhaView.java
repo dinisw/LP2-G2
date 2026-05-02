@@ -2,9 +2,7 @@ package view;
 
 import common.utils.BackendUtils;
 import common.utils.MenuUtils;
-import controller.LoginController;
 import controller.RecuperarSenhaController;
-import model.Utilizador;
 
 import java.util.Scanner;
 import static common.utils.DesignUtils.*;
@@ -14,7 +12,6 @@ public class RecuperarSenhaView {
     public static void RecuperarSenha() {
         Scanner ler = new Scanner(System.in);
         RecuperarSenhaController recuperarSenhaController = new RecuperarSenhaController();
-        LoginController loginController = new LoginController();
 
         try {
             MenuUtils.exibirTitulo();
@@ -47,19 +44,12 @@ public class RecuperarSenhaView {
             var resultado = recuperarSenhaController.iniciarProcessoRecuperacao(email);
 
             if (resultado.sucesso) {
+                var resAtualizarSenha = recuperarSenhaController.atualizarSenha(email, resultado.dados);
 
-                Utilizador utilizador = loginController.login(email);
-
-                if (utilizador != null) {
-                    var resAtualizarSenha = recuperarSenhaController.atualizarSenha(utilizador, resultado.dados.toString());
-
-                    if (resAtualizarSenha.sucesso) {
-                        System.out.println(GetGreen() + "\nEmail enviado com sucesso! Verifique a sua caixa de entrada com a nova senha e tente fazer login." + GetReset());
-                    } else {
-                        System.out.println(GetRed() + "\nErro ao atualizar a nova senha no sistema: " + resAtualizarSenha.mensagemErro + GetReset());
-                    }
+                if (resAtualizarSenha.sucesso) {
+                    System.out.println(GetGreen() + "\nEmail enviado com sucesso! Verifique a sua caixa de entrada com a nova senha e tente fazer login." + GetReset());
                 } else {
-                    System.out.println(GetRed() + "\nErro crítico: Utilizador não encontrado na base de dados após a validação do email." + GetReset());
+                    System.out.println(GetRed() + "\nErro ao atualizar a nova senha no sistema: " + resAtualizarSenha.mensagemErro + GetReset());
                 }
             } else {
                 System.out.println(GetRed() + "\nFalha na recuperação de senha: " + resultado.mensagemErro + GetReset());

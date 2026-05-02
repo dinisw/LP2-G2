@@ -1,20 +1,21 @@
 package controller;
 
+import DAL.DocenteCRUD;
+import DAL.EstudanteCRUD;
+import DAL.GestorCRUD;
+import common.utils.BackendUtils;
 import common.utils.SenhaUtils;
 import model.*;
 
 public class RecuperarSenhaController {
-
     private EmailService emailService;
 
     public RecuperarSenhaController() {
         this.emailService = new EmailService();
     }
 
-    // CORREÇÃO: Alterado de Resultado<EmailService> para Resultado<String>
     public Resultado<String> iniciarProcessoRecuperacao(String email) {
         Resultado<String> resRecuperacao = new Resultado<>();
-
         if (email == null || email.trim().isEmpty()) {
             resRecuperacao.sucesso = false;
             resRecuperacao.mensagemErro = "O email não pode estar vazio.";
@@ -23,7 +24,6 @@ public class RecuperarSenhaController {
 
         try {
             String token = SenhaUtils.gerarPalavraPasseAleatoria();
-
             Resultado<String> resEmail = emailService.enviarEmailRecuperacaoDeSenha(email, token);
 
             if (resEmail.sucesso) {
@@ -41,10 +41,9 @@ public class RecuperarSenhaController {
         return resRecuperacao;
     }
 
-    public Resultado<? extends Utilizador> atualizarSenha(Utilizador utilizador, String senhaCruaGerada) {
-        Resultado<Utilizador> resultado = new Resultado<>();
-
-        if (utilizador == null || senhaCruaGerada == null || senhaCruaGerada.trim().isEmpty()) {
+    public Resultado<String> atualizarSenha(String email, String senhaCruaGerada) {
+        Resultado<String> resultado = new Resultado<>();
+        if (email == null || email.trim().isEmpty() || senhaCruaGerada == null || senhaCruaGerada.trim().isEmpty()) {
             resultado.sucesso = false;
             resultado.mensagemErro = "Dados inválidos para atualizar a senha.";
             return resultado;
@@ -53,21 +52,36 @@ public class RecuperarSenhaController {
         SenhaUtils su = new SenhaUtils();
         String hash = su.gerarHashComSalt(senhaCruaGerada);
 
-        if (utilizador instanceof Estudante) {
-            EstudanteController ec = new EstudanteController();
-            return ec.alterarPassword(((Estudante) utilizador).getNumeroMec(), hash);
-
-        } else if (utilizador instanceof Docente) {
-            DocenteController dc = new DocenteController();
-            return dc.alterarPassword(((Docente) utilizador).getNif(), hash);
-
-        } else if (utilizador instanceof Gestor) {
-            GestorController gc = new GestorController();
-            return gc.alterarPassword(((Gestor) utilizador).getNif(), hash);
+        if (BackendUtils.emailISSMFEstudanteValido(email)) {
+            EstudanteCRUD estudanteCRUD = new EstudanteCRUD();
+            for (Estudante e : estudanteCRUD.getEstudantes()) {
+                if (e.getEmail().equalsIgnoreCase(email)) {
+                    EstudanteController ec = new EstudanteController();
+                    var res = ec.alterarPassword(e.getNumeroMec(), hash);
+                    return new Resultado<>(res.sucesso ? "Senha atualizada" : null, res.sucesso);
+                }
+            }
+        } else if (BackendUtils.emailISSMFDocenteValido(email)) {
+            DocenteCRUD docenteCRUD = new DocenteCRUD();
+            for (Docente d : docenteCRUD.getDocentes()) {
+                if (d.getEmail().equalsIgnoreCase(email)) {
+                    DocenteController dc = new DocenteController();
+                    var res = dc.alterarPassword(d.getNif(), hash);
+                    return new Resultado<>(res.sucesso ? "Senha atualizada" : null, res.sucesso);
+                }
+            }
+        } else if (BackendUtils.emailISSMFGestorValido(email)) {
+            GestorCRUD gestorCRUD = new GestorCRUD();
+            Gestor g = gestorCRUD.procurarPorEmail(email);
+            if (g != null) {
+                GestorController gc = new GestorController();
+                var res = gc.alterarPassword(g.getNif(), hash);
+                return new Resultado<>(res.sucesso ? "Senha atualizada" : null, res.sucesso);
+            }
         }
 
         resultado.sucesso = false;
-        resultado.mensagemErro = "Tipo de utilizador desconhecido. Não foi possível atualizar a senha.";
+        resultado.mensagemErro = "Erro crítico: Utilizador não encontrado na base de dados.";
         return resultado;
     }
 }
