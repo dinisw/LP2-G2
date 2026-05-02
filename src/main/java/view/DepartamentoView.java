@@ -32,6 +32,21 @@ public class DepartamentoView {
 
         do {
             try {
+                DepartamentoController dc = new DepartamentoController();
+                boolean temDepartamentos = !dc.listarTodosDepartamentos().isEmpty();
+
+                ArrayList<String> opcoes = new ArrayList<>();
+                opcoes.add("1. Registar Departamento");
+
+                if (temDepartamentos) {
+                    opcoes.add("2. Listar Departamentos");
+                    opcoes.add("3. Procurar Departamento");
+                    opcoes.add("4. Atualizar Departamento");
+                    opcoes.add("5. Eliminar Departamento");
+                }
+                opcoes.add("0. Voltar ao Menu Principal");
+
+                MenuUtils.limparTela();
                 MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL > DEPARTAMENTOS", opcoes);
                 System.out.print("\n" + GetWhiteBold() + "Selecione uma opção: " + GetReset());
                 opcao = scanner.nextLine().trim();
@@ -42,17 +57,21 @@ public class DepartamentoView {
                     case "3": atualizarDepartamento(); break;
                     case "4": eliminarDepartamento(); break;
                     case "0":
-                        System.out.println(GetYellow() + "\nA voltar ao menu de gestão..." + GetReset());
+                        System.out.println(GetYellow() + "\nA voltar..." + GetReset());
                         return;
                     default:
-                        System.out.println(GetRed() + "Opção inválida! Por favor, escolha uma opção da lista." + GetReset());
-                        MenuUtils.pressionarEnter(scanner);
+                        mostrarErroOpcao();
                 }
             } catch (Exception e) {
                 System.out.println("\n" + GetRed() + "Ocorreu um erro na navegação: " + e.getMessage() + GetReset());
                 MenuUtils.pressionarEnter(scanner);
             }
         } while (true);
+    }
+
+    private void mostrarErroOpcao() {
+        System.out.println(GetRed() + "Opção inválida! Por favor, escolha uma opção visível na lista." + GetReset());
+        MenuUtils.pressionarEnter(scanner);
     }
 
     private void registarDepartamento() {

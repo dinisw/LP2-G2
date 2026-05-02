@@ -190,7 +190,7 @@ public class EstudanteView {
         List<model.Curso> cursosDisponiveis = new java.util.ArrayList<>();
 
         for (model.Curso curso : todosCursos) {
-            if(!curso.isIniciado()) {
+            if(!curso.isIniciado() && !curso.getUnidadeCurriculars().isEmpty()) {
                 cursosDisponiveis.add(curso);
             }
         }

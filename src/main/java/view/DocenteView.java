@@ -353,8 +353,11 @@ public class DocenteView {
 
             switch (ordem) {
                 case "1":
-                    avaliacoesUC.sort((a1, a2) -> a1.getEstudante().getNome().compareToIgnoreCase(a2.getEstudante().getNome()));
-                    break;
+                    avaliacoesUC.sort((a1, a2) -> {
+                        String n1 = a1.getEstudante() != null ? a1.getEstudante().getNome() : "";
+                        String n2 = a2.getEstudante() != null ? a2.getEstudante().getNome() : "";
+                        return n1.compareToIgnoreCase(n2);
+                    });                    break;
                 case "2":
                     avaliacoesUC.sort((a1, a2) -> {
                         Double nota1 = (a1.getNota() != null) ? a1.getNota() : -1.0;
@@ -371,7 +374,7 @@ public class DocenteView {
                     break;
             }
             System.out.println("\n" + GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
-            System.out.printf(GetWhiteBold() + " %-30s | %-15s | %-15s | %-10s\n" + GetReset(), "NOME DO ESTUDANTE", "Nº MEC", "ÉPOCA", "NOTA");
+            System.out.printf(GetWhiteBold() + " %-30s | %-15s | %-15s | %-10s | %-10s\n" + GetReset(), "NOME DO ESTUDANTE", "Nº MEC", "ÉPOCA", "NOTA", "ESTADO");
             System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
 
             for (Avaliacao avaliacao : avaliacoesUC) {
@@ -379,11 +382,11 @@ public class DocenteView {
                 int mec = avaliacao.getEstudante().getNumeroMec();
                 String epoca = avaliacao.getMomento();
                 String notaStr = (avaliacao.getNota() == null) ? GetYellow() + "A Aguardar" + GetReset() : String.format("%.2f", avaliacao.getNota());
-
-                System.out.printf(" %-30s | %-15d | %-15s | %-10s\n", nomeEstudante, mec, epoca, notaStr);
+                String estadoInscricao = GetGreen() + "Ativo" + GetReset();
+                System.out.printf(" %-30s | %-15d | %-15s | %-10s | %-10s\n", nomeEstudante, mec, epoca, notaStr, estadoInscricao);
             }
             System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
-
+            System.out.println(GetWhiteBold() + "Total de estudantes inscritos na pauta: " + avaliacoesUC.size() + GetReset());
             MenuUtils.pressionarEnter(scanner);
         }
         catch (Exception e) {

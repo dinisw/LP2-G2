@@ -35,6 +35,22 @@ public class UnidadeCurricularView {
 
         do {
             try {
+                UnidadeCurricularController ucc = new UnidadeCurricularController();
+                boolean temUCs = !ucc.listarTodasUCs().isEmpty();
+
+                ArrayList<String> opcoes = new ArrayList<>();
+                opcoes.add("1. Registar Unidade Curricular");
+
+                if (temUCs) {
+                    opcoes.add("2. Listar Unidades Curriculares");
+                    opcoes.add("3. Procurar Unidade Curricular");
+                    opcoes.add("4. Atualizar Unidade Curricular");
+                    opcoes.add("5. Eliminar Unidade Curricular");
+                    opcoes.add("6. Definir Momentos de Avaliação");
+                }
+                opcoes.add("0. Voltar ao Menu de Gestão");
+
+                MenuUtils.limparTela();
                 MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL > UNIDADES CURRICULARES", opcoes);
                 System.out.print("\n" + GetWhiteBold() + "Selecione uma opção: " + GetReset());
                 opcao = scanner.nextLine().trim();
@@ -62,14 +78,18 @@ public class UnidadeCurricularView {
                         System.out.println(GetYellow() + "\nA voltar ao menu de gestão..." + GetReset());
                         return;
                     default:
-                        System.out.println(GetRed() + "Opção inválida! Por favor, escolha uma opção da lista." + GetReset());
-                        MenuUtils.pressionarEnter(scanner);
+                        mostrarErroOpcao();
                 }
             } catch (Exception e) {
                 System.out.println("\n" + GetRed() + "Ocorreu um erro na navegação: " + e.getMessage() + GetReset());
                 MenuUtils.pressionarEnter(scanner);
             }
         } while (true);
+    }
+
+    private void mostrarErroOpcao() {
+        System.out.println(GetRed() + "Opção inválida! Por favor, escolha uma opção visível na lista." + GetReset());
+        MenuUtils.pressionarEnter(scanner);
     }
 
     private void registarUnidadeCurricular() {
@@ -306,6 +326,8 @@ public class UnidadeCurricularView {
                     } catch (NumberFormatException e) {
                         System.out.println(GetYellow() + "Aviso: Formato inválido. Mantendo o semestre original." + GetReset());
                     }
+                } else {
+                    break;
                 }
             }
 
