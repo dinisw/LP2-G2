@@ -2,126 +2,106 @@ package view;
 
 import common.utils.BackendUtils;
 import common.utils.MenuUtils;
-import common.utils.SenhaUtils;
 import controller.LoginController;
 import model.Docente;
 import model.Estudante;
 import model.Gestor;
 import model.Utilizador;
-import org.jline.reader.LineReader;
-import org.jline.reader.LineReaderBuilder;
-import org.jline.terminal.Terminal;
-import org.jline.terminal.TerminalBuilder;
+
 import java.util.Scanner;
 import static common.utils.DesignUtils.*;
 
 public class LoginView {
-    public static final String RESET = "\033[0m";
-    public static final String RED = "\033[0;31m";
 
     public static void Login() {
+        // UM unico Scanner para toda a sessao - evita bug de dois Scanners no System.in
         Scanner scanner = new Scanner(System.in);
         LoginController loginController = new LoginController();
+        boolean sair = false;
 
-        try {
-            Terminal terminal = TerminalBuilder.terminal();
-            LineReader reader = LineReaderBuilder.builder()
-                    .terminal(terminal)
-                    .build();
+        do {
+            try {
+                MenuUtils.exibirTitulo();
+                System.out.println(GetCyanBold() + "LOGIN" + GetReset());
+                System.out.println(GetYellow() + "[Digite '0' para sair | Digite '9' para recuperar password]" + GetReset());
 
-            boolean sair = false;
+                // --- 1. LER EMAIL ---
+                String email = "";
+                boolean emailValido = false;
+                boolean recuperarSenha = false;
 
-            do {
-                try {
-                    MenuUtils.exibirTitulo();
-                    System.out.println(GetCyanBold() + "LOGIN" + GetReset());
-                    System.out.println(GetYellow() + "[Digite '0' para sair | Digite '9' para recuperar password]" + GetReset());
+                while (!emailValido) {
+                    System.out.print("\nEmail: ");
+                    email = scanner.nextLine().trim();
 
-                    String email = "";
-                    boolean emailValido = false;
-                    boolean recuperarSenha = false;
-
-                    while (!emailValido) {
-                        System.out.print("\nEmail: ");
-                        email = scanner.nextLine().trim();
-
-                        if (email.equals("0")) {
-                            System.out.println(GetYellow() + "\nA encerrar o sistema..." + GetReset());
-                            sair = true;
-                            break;
-                        } else if (email.equals("9")) {
-                            recuperarSenha = true;
-                            break;
-                        } else {
-                            emailValido = BackendUtils.emailISSMFGestorValido(email) ||
-                                    BackendUtils.emailISSMFDocenteValido(email) ||
-                                    BackendUtils.emailISSMFEstudanteValido(email);
-
-                            if (!emailValido) {
-                                System.out.println(GetRed() + "Email inválido. Verifique o domínio (@issmf.ipp.pt) e tente novamente!" + GetReset());
-                            }
-                        }
-                    }
-
-                    if (sair) {
+                    if (email.equals("0")) {
+                        System.out.println(GetYellow() + "\nA encerrar o sistema..." + GetReset());
+                        sair = true;
                         break;
-                    }
-                    if (recuperarSenha) {
-                        RecuperarSenhaView.RecuperarSenha();
-                        continue;
-                    }
+                    } else if (email.equals("9")) {
+                        recuperarSenha = true;
+                        break;
+                    } else {
+                        emailValido = BackendUtils.emailISSMFGestorValido(email)
+                                || BackendUtils.emailISSMFDocenteValido(email)
+                                || BackendUtils.emailISSMFEstudanteValido(email);
 
-                    Utilizador utilizador = loginController.login(email, "");
-
-                    if (utilizador == null) {
-                        System.out.println("\n" + GetRed() + "Credenciais inválidas! Tente novamente." + GetReset());
-                        MenuUtils.pressionarEnter(scanner);
-                        continue;
-                    }
-
-                    boolean senhaCorreta = false;
-                    while (!senhaCorreta) {
-                        String senha = BackendUtils.lerSenhaOculta("Senha: ");
-
-                        if (senha.equals("0")) {
-                            System.out.println(GetYellow() + "\nOperação cancelada." + GetReset());
-                            break;
-                        }
-
-                        utilizador = loginController.login(email, senha);
-
-                        if (utilizador == null) {
-                            System.out.println(GetRed() + "Credenciais inválidas! Tente novamente (ou digite '0' para voltar)." + GetReset());
-                        } else {
-                            senhaCorreta = true;
+                        if (!emailValido) {
+                            System.out.println(GetRed() + "Email invalido. Verifique o dominio (@issmf.ipp.pt) e tente novamente!" + GetReset());
                         }
                     }
-
-                    if (senhaCorreta) {
-                        System.out.println(GetGreen() + "\nLogin efetuado com sucesso! Bem-vindo, " + utilizador.getNome() + "!" + GetReset());
-                        MenuUtils.pressionarEnter(scanner);
-
-                        if (utilizador instanceof Estudante) {
-                            EstudanteView.exibirMenu((Estudante) utilizador);
-                        } else if (utilizador instanceof Docente) {
-                            DocenteView docenteView = new DocenteView();
-                            docenteView.exibirMenuPessoalDocente((Docente) utilizador);
-                        } else if (utilizador instanceof Gestor) {
-                            GestorView gestorView = new GestorView();
-                            gestorView.exibirMenuGestao();
-                        }
-                    }
-
-                } catch (Exception e) {
-                    System.out.println("\n" + GetRed() + "Erro inesperado no sistema de Login: " + e.getMessage() + GetReset());
-                    MenuUtils.pressionarEnter(scanner);
                 }
 
-            } while (!sair);
+                if (sair) break;
+                if (recuperarSenha) {
+                    RecuperarSenhaView.RecuperarSenha();
+                    continue;
+                }
 
-        } catch (Exception e) {
-            System.out.println(GetRed() + "Erro crítico ao inicializar a consola. Contacte o suporte." + GetReset());
-            e.printStackTrace();
-        }
+                // --- 2. LER PASSWORD E VALIDAR ---
+                // CORRECAO: passa o scanner existente — evita criar new Scanner(System.in)
+                Utilizador utilizador = null;
+                boolean senhaCorreta = false;
+
+                while (!senhaCorreta) {
+                    String senha = BackendUtils.lerSenhaOculta("Senha: ", scanner);
+
+                    if (senha.equals("0")) {
+                        System.out.println(GetYellow() + "\nOperacao cancelada." + GetReset());
+                        break;
+                    }
+
+                    // So agora e que chamamos o login, com a password real
+                    utilizador = loginController.login(email, senha);
+
+                    if (utilizador == null) {
+                        System.out.println(GetRed() + "Credenciais invalidas! Tente novamente (ou digite '0' para voltar)." + GetReset());
+                    } else {
+                        senhaCorreta = true;
+                    }
+                }
+
+                // --- 3. REDIRECIONAR PARA O MENU CORRETO ---
+                if (senhaCorreta && utilizador != null) {
+                    System.out.println(GetGreen() + "\nLogin efetuado com sucesso! Bem-vindo, " + utilizador.getNome() + "!" + GetReset());
+                    MenuUtils.pressionarEnter(scanner);
+
+                    if (utilizador instanceof Estudante) {
+                        EstudanteView.exibirMenu((Estudante) utilizador);
+                    } else if (utilizador instanceof Docente) {
+                        DocenteView docenteView = new DocenteView();
+                        docenteView.exibirMenuPessoalDocente((Docente) utilizador);
+                    } else if (utilizador instanceof Gestor) {
+                        GestorView gestorView = new GestorView();
+                        gestorView.exibirMenuGestao();
+                    }
+                }
+
+            } catch (Exception e) {
+                System.out.println("\n" + GetRed() + "Erro inesperado no Login: " + e.getMessage() + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+            }
+
+        } while (!sair);
     }
 }

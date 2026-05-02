@@ -60,12 +60,26 @@ public class BackendUtils {
         return e.procurarEstudantePorNif(nif) != null || d.procurarDocentePorNif(nif) != null || g.procurarGestorPorNif(nif) != null;
     }
 
+    /**
+     * Le senha ocultando os caracteres.
+     * Usa System.console() se disponivel (terminal real).
+     * Caso contrario (IntelliJ/IDE), usa o Scanner existente para evitar
+     * o bug de dois Scanner no mesmo System.in.
+     */
     public static String lerSenhaOculta(String prompt) {
+        return lerSenhaOculta(prompt, null);
+    }
+
+    public static String lerSenhaOculta(String prompt, java.util.Scanner scannerExistente) {
         if (System.console() != null) {
             char[] pass = System.console().readPassword(prompt);
-            return new String(pass);
+            return (pass != null) ? new String(pass).trim() : "";
         } else {
             System.out.print(prompt);
+            if (scannerExistente != null) {
+                // CORRETO: reutiliza o Scanner existente, nao cria um novo
+                return scannerExistente.nextLine().trim();
+            }
             return new java.util.Scanner(System.in).nextLine().trim();
         }
     }
