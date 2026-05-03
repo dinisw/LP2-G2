@@ -938,19 +938,6 @@ public class GestorView {
 
         do {
             try {
-                EstudanteController estudanteController = new EstudanteController();
-                boolean temEstudantes = !estudanteController.listarEstudantes().isEmpty();
-
-                ArrayList<String> opcoes = new ArrayList<>();
-                opcoes.add("1. Registar Estudante");
-                if (temEstudantes) {
-                    opcoes.add("2. Listar Estudantes");
-                    opcoes.add("3. Procurar Estudante (Número Mec)");
-                    opcoes.add("4. Atualizar Estudante (Número Mec)");
-                    opcoes.add("5. Eliminar Estudante (Número Mec)");
-                }
-                opcoes.add("0. Voltar");
-
                 MenuUtils.limparTela();
                 MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL > ESTUDANTES", opcoes);
                 System.out.print("\n" + GetWhiteBold() + "Selecione uma opção: " + GetReset());

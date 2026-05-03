@@ -32,20 +32,6 @@ public class DepartamentoView {
 
         do {
             try {
-                DepartamentoController dc = new DepartamentoController();
-                boolean temDepartamentos = !dc.listarTodosDepartamentos().isEmpty();
-
-                ArrayList<String> opcoes = new ArrayList<>();
-                opcoes.add("1. Registar Departamento");
-
-                if (temDepartamentos) {
-                    opcoes.add("2. Listar Departamentos");
-                    opcoes.add("3. Procurar Departamento");
-                    opcoes.add("4. Atualizar Departamento");
-                    opcoes.add("5. Eliminar Departamento");
-                }
-                opcoes.add("0. Voltar ao Menu Principal");
-
                 MenuUtils.limparTela();
                 MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL > DEPARTAMENTOS", opcoes);
                 System.out.print("\n" + GetWhiteBold() + "Selecione uma opção: " + GetReset());

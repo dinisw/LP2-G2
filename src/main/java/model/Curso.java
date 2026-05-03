@@ -62,15 +62,7 @@ public class Curso {
     public boolean isAnoIniciado(int ano) {
         return anosIniciados.contains(ano);
     }
-
-    public double getPrecoAnual() {
-        return precoAnual;
-    }
-
-    public void setPrecoAnual(double precoAnual) {
-        this.precoAnual = precoAnual;
-    }
-
+    
     public void adicionarAnoIniciado(int ano) {
         if (!anosIniciados.contains(ano)) {
             anosIniciados.add(ano);
