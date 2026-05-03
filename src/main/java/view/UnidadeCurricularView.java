@@ -24,6 +24,7 @@ public class UnidadeCurricularView {
 
     public void exibirMenuUnidadesCurriculares() {
         String opcao;
+
         ArrayList<String> opcoes = new ArrayList<>();
         opcoes.add("1. Registar Unidade Curricular");
         opcoes.add("2. Listar Unidades Curriculares");
@@ -35,21 +36,6 @@ public class UnidadeCurricularView {
 
         do {
             try {
-                UnidadeCurricularController ucc = new UnidadeCurricularController();
-                boolean temUCs = !ucc.listarTodasUCs().isEmpty();
-
-                ArrayList<String> opcoes = new ArrayList<>();
-                opcoes.add("1. Registar Unidade Curricular");
-
-                if (temUCs) {
-                    opcoes.add("2. Listar Unidades Curriculares");
-                    opcoes.add("3. Procurar Unidade Curricular");
-                    opcoes.add("4. Atualizar Unidade Curricular");
-                    opcoes.add("5. Eliminar Unidade Curricular");
-                    opcoes.add("6. Definir Momentos de Avaliação");
-                }
-                opcoes.add("0. Voltar ao Menu de Gestão");
-
                 MenuUtils.limparTela();
                 MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL > UNIDADES CURRICULARES", opcoes);
                 System.out.print("\n" + GetWhiteBold() + "Selecione uma opção: " + GetReset());
