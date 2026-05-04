@@ -130,16 +130,20 @@ public class GestorView {
 
     private void registarGestor() {
         try {
-            Terminal terminal = TerminalBuilder.terminal();
-            LineReader reader = LineReaderBuilder.builder()
-                    .terminal(terminal)
-                    .build();
-
             System.out.println(GetBlue() + "\n--- REGISTO DE GESTOR ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
-            String nome = BackendUtils.lerInputString(scanner, "Nome: ");
-            String morada = BackendUtils.lerInputString(scanner, "Morada: ");
+            String nome = "";
+            while (nome.isEmpty()) {
+                nome = BackendUtils.lerInputString(scanner, "Nome: ");
+                if (nome.isEmpty()) System.out.println(GetRed() + "O campo Nome não pode estar vazio. Tente novamente." + GetReset());
+            }
+
+            String morada = "";
+            while (morada.isEmpty()) {
+                morada = BackendUtils.lerInputString(scanner, "Morada: ");
+                if (morada.isEmpty()) System.out.println(GetRed() + "O campo Morada não pode estar vazio. Tente novamente." + GetReset());
+            }
 
             int nif = 0;
             boolean nifValido = false;
@@ -190,8 +194,7 @@ public class GestorView {
             String passDigitada = "";
             boolean senhaValida = false;
             while (!senhaValida) {
-                passDigitada = BackendUtils.lerSenhaOculta("Senha: ");
-
+                passDigitada = BackendUtils.lerSenhaOculta("Senha: ", scanner);
                 if (passDigitada.equals("0")) {
                     throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
                 }
@@ -204,7 +207,11 @@ public class GestorView {
             SenhaUtils su = new SenhaUtils();
             String hash = su.gerarHashComSalt(passDigitada);
 
-            String cargo = BackendUtils.lerInputString(scanner, "Cargo: ");
+            String cargo = "";
+            while (cargo.isEmpty()) {
+                cargo = BackendUtils.lerInputString(scanner, "Cargo: ");
+                if (cargo.isEmpty()) System.out.println(GetRed() + "O campo Cargo não pode estar vazio. Tente novamente." + GetReset());
+            }
 
             GestorController gestorControllerAtualizado = new GestorController();
             Resultado <Gestor> resultado = gestorControllerAtualizado.registarGestor(nome, morada, nif, dataNascimento, email, hash, cargo);
@@ -499,7 +506,11 @@ public class GestorView {
                 System.out.println(GetRed() + "Deve introduzir pelo menos nome e sobrenome. Tente novamente." + GetReset());
             }
 
-            String morada = BackendUtils.lerInputString(scanner, "Morada: ");
+            String morada = "";
+            while (morada.isEmpty()) {
+                morada = BackendUtils.lerInputString(scanner, "Morada: ");
+                if (morada.isEmpty()) System.out.println(GetRed() + "O campo Morada não pode estar vazio. Tente novamente." + GetReset());
+            }
 
             int nif = 0;
             boolean nifValido = false;
@@ -753,13 +764,26 @@ public class GestorView {
             System.out.println(docente.toString());
             System.out.println(GetYellow() + "\n[Pressione ENTER nos campos que deseja manter iguais]" + GetReset());
 
-            String nome = BackendUtils.lerInputString(scanner, "Novo Nome: ");
-            if (!nome.isEmpty()) docente.setNome(nome);
+            System.out.println(GetYellow() + "\n[Pressione ENTER nos campos que deseja manter iguais]" + GetReset());
 
+            String nomeFinal = docente.getNome();
+            while (true) {
+                String nome = BackendUtils.lerInputString(scanner, "Novo Nome: ");
+                if (nome.isEmpty()) {
+                    break;
+                }
+                if (nome.trim().split("\\s+").length >= 2) {
+                    nomeFinal = nome;
+                    break;
+                }
+                System.out.println(GetRed() + "Deve introduzir pelo menos nome e sobrenome. Tente novamente ou prima ENTER para manter o atual." + GetReset());
+            }
+
+            String moradaFinal = docente.getMorada();
             String morada = BackendUtils.lerInputString(scanner, "Nova Morada: ");
-            if (!morada.isEmpty()) docente.setMorada(morada);
+            if (!morada.isEmpty()) moradaFinal = morada;
 
-            Resultado <Docente> resultado = docenteControllerAtualizado.atualizarDocente(docente.getNif(), nome.isEmpty() ? null : nome, morada.isEmpty() ? null : morada, null);
+            Resultado <Docente> resultado = docenteControllerAtualizado.atualizarDocente(docente.getNif(), nomeFinal, moradaFinal, null);
 
             if (resultado.sucesso) {
                 System.out.println(GetGreen() + "\nDocente atualizado com sucesso!" + GetReset());
@@ -997,8 +1021,20 @@ public class GestorView {
 
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
-            String nome = BackendUtils.lerInputString(scanner, "Nome: ");
-            String morada = BackendUtils.lerInputString(scanner, "Morada: ");
+            String nome = "";
+            while (true) {
+                nome = BackendUtils.lerInputString(scanner, "Nome: ");
+                if (nome.trim().split("\\s+").length >= 2) {
+                    break;
+                }
+                System.out.println(GetRed() + "Deve introduzir pelo menos nome e sobrenome. Tente novamente." + GetReset());
+            }
+
+            String morada = "";
+            while (morada.isEmpty()) {
+                morada = BackendUtils.lerInputString(scanner, "Morada: ");
+                if (morada.isEmpty()) System.out.println(GetRed() + "O campo Morada não pode estar vazio. Tente novamente." + GetReset());
+            }
 
             int nif = 0;
             boolean nifValido = false;
@@ -1224,16 +1260,62 @@ public class GestorView {
             System.out.println(estudante.toString());
             System.out.println(GetYellow() + "\n[Pressione ENTER nos campos que deseja manter iguais]" + GetReset());
 
-            String nomeAt = BackendUtils.lerInputString(scanner, "Novo Nome: ");
-            if (!nomeAt.isEmpty()) estudante.setNome(nomeAt);
+            System.out.println(GetYellow() + "\n[Pressione ENTER nos campos que deseja manter iguais]" + GetReset());
 
-            String moradaAt = BackendUtils.lerInputString(scanner, "Nova Morada: ");
-            if (!moradaAt.isEmpty()) estudante.setMorada(moradaAt);
+            String nomeFinal = estudante.getNome();
+            while (true) {
+                String nome = BackendUtils.lerInputString(scanner, "Novo Nome: ");
+                if (nome.isEmpty()) {
+                    break;
+                }
+                if (nome.trim().split("\\s+").length >= 2) {
+                    nomeFinal = nome;
+                    break;
+                }
+                System.out.println(GetRed() + "Deve introduzir pelo menos nome e sobrenome. Tente novamente ou prima ENTER para manter o atual." + GetReset());
+            }
 
-            String cursoAt = BackendUtils.lerInputString(scanner, "Novo Curso: ");
-            if (!cursoAt.isEmpty()) estudante.setNomeCurso(cursoAt);
+            String moradaFinal = estudante.getMorada();
+            String morada = BackendUtils.lerInputString(scanner, "Nova Morada: ");
+            if (!morada.isEmpty()) moradaFinal = morada;
 
-            Resultado <Estudante> resultado = estudanteControllerAtualizado.atualizarEstudante(estudante.getNumeroMec(), nomeAt.isEmpty() ? null : nomeAt, moradaAt.isEmpty() ? null : moradaAt, cursoAt.isEmpty() ? null : cursoAt);
+            String cursoNomeFinal = estudante.getNomeCurso();
+            System.out.print("Deseja alterar o curso? (S/N) [Pressione ENTER para N]: ");
+            String alterarCurso = scanner.nextLine().trim();
+
+            if (alterarCurso.equalsIgnoreCase("S")) {
+                DAL.CursoCRUD cursoCRUD = new DAL.CursoCRUD();
+                List<Curso> cursos = cursoCRUD.getCursos();
+
+                if (cursos.isEmpty()) {
+                    System.out.println(GetYellow() + "Não existem cursos registados no sistema. O curso será mantido." + GetReset());
+                } else {
+                    System.out.println("\n" + GetWhiteBold() + "Cursos Disponíveis:" + GetReset());
+                    for (int i = 0; i < cursos.size(); i++) {
+                        System.out.printf("%d - %s\n", i + 1, cursos.get(i).getNome());
+                    }
+
+                    int escolhaCurso = -1;
+                    while (escolhaCurso < 1 || escolhaCurso > cursos.size()) {
+                        try {
+                            String op = BackendUtils.lerInputString(scanner, "\nSelecione o ID do Novo Curso (ou 0 para cancelar): ");
+                            if (op.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
+
+                            escolhaCurso = Integer.parseInt(op);
+                            if (escolhaCurso >= 1 && escolhaCurso <= cursos.size()) {
+                                cursoNomeFinal = cursos.get(escolhaCurso - 1).getNome();
+                            } else {
+                                System.out.println(GetRed() + "ID inválido. Escolha um número da lista." + GetReset());
+                            }
+                        } catch (NumberFormatException e) {
+                            System.out.println(GetRed() + "Aviso: O valor introduzido não é um número válido." + GetReset());
+                            escolhaCurso = -1;
+                        }
+                    }
+                }
+            }
+
+            Resultado<Estudante> resultado = estudanteControllerAtualizado.atualizarEstudante(estudante.getNumeroMec(), nomeFinal, moradaFinal, cursoNomeFinal);
 
             if (resultado.sucesso) {
                 System.out.println(GetGreen() + "\nEstudante atualizado com sucesso!" + GetReset());
