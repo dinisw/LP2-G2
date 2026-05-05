@@ -138,12 +138,14 @@ public class GestorView {
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
             String nome = "";
-            while (nome.isEmpty()) {
+            while (true) {
                 nome = BackendUtils.lerInputString(scanner, "Nome: ");
-                if (nome.isEmpty()) System.out.println(GetRed() + "O campo Nome não pode estar vazio. Tente novamente." + GetReset());
+                if (BackendUtils.isNomeValido(nome))
+                    break;
+                System.out.println(GetRed() + "Nome inválido. Não use números ou símbolos. Tente novamente." + GetReset());
             }
 
-            String morada = "";
+            String morada = BackendUtils.lerInputString(scanner, "Morada: ");
             while (morada.isEmpty()) {
                 morada = BackendUtils.lerInputString(scanner, "Morada: ");
                 if (morada.isEmpty()) System.out.println(GetRed() + "O campo Morada não pode estar vazio. Tente novamente." + GetReset());
@@ -175,12 +177,8 @@ public class GestorView {
                 try {
                     String dataString = BackendUtils.lerInputString(scanner, "Data de Nascimento (AAAA-MM-DD): ");
                     dataNascimento = LocalDate.parse(dataString);
-                    int idade = Period.between(dataNascimento, LocalDate.now()).getYears();
-                    if (idade >= 18) {
-                        break;
-                    }else {
-                        System.out.println(GetRed() + "Sistem só permite pessoas maiores de 18 anos. Tente novamente." + GetReset());
-                    }
+                    if (Period.between(dataNascimento, LocalDate.now()).getYears() >= 18) break;
+                    System.out.println(GetRed() + "O sistema só permite pessoas maiores de 18 anos. Tente novamente." + GetReset());
                 } catch (DateTimeParseException e) {
                     System.out.println(GetRed() + "Data deve estar no formato AAAA-MM-DD. Tente novamente." + GetReset());
                 }
@@ -190,6 +188,7 @@ public class GestorView {
             boolean emailValido = false;
             while (!emailValido) {
                 email = BackendUtils.lerInputString(scanner, "Email: ");
+                if (email.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
                 emailValido = BackendUtils.emailISSMFGestorValido(email);
                 if(!emailValido)
                     System.out.println(GetRed() + "EMAIL deve ter o formato xxxx.gestor@issmf.ipp.pt. Tente novamente." + GetReset());
