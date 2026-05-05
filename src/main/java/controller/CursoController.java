@@ -73,26 +73,45 @@ public class CursoController {
         }
 
         Curso cursoOriginal = cursoCRUD.procurarPorNome(nomeAntigo);
-
         if (cursoOriginal == null) {
             resultado.sucesso = false;
             resultado.mensagemErro = "O curso original não foi encontrado na base de dados.";
             return resultado;
         }
+        // --- INÍCIO DA REGRA DO ENUNCIADO (Afinada para Finanças) ---
+        DAL.EstudanteCRUD estudanteCRUD = new DAL.EstudanteCRUD();
+        boolean temEstudantes = false;
+        for (model.Estudante e : estudanteCRUD.getEstudantes()) {
+            if (e.getNomeCurso() != null && e.getNomeCurso().equalsIgnoreCase(nomeAntigo)) {
+                temEstudantes = true;
+                break;
+            }
+        }
 
-        // Atualizar na base de dados
+        boolean temProfessores = false;
+        for (model.UnidadeCurricular uc : cursoOriginal.getUnidadeCurriculars()) {
+            if (uc.getDocente() != null) {
+                temProfessores = true;
+                break;
+            }
+        }
+
+        boolean mudouEstrutura = !cursoOriginal.getNome().equalsIgnoreCase(cursoNovo.getNome()) ||
+                cursoOriginal.getDuracao() != cursoNovo.getDuracao() ||
+                !cursoOriginal.getDepartamento().getSigla().equalsIgnoreCase(cursoNovo.getDepartamento().getSigla());
+
+        if (temEstudantes && temProfessores && mudouEstrutura) {
+            resultado.sucesso = false;
+            resultado.mensagemErro = "Bloqueado (Regra de Negócio): O curso já possui estudantes e professores. Apenas o valor da propina pode ser ajustado para anos futuros.";
+            return resultado;
+        }
         Resultado res = cursoCRUD.atualizarCurso(nomeAntigo, cursoNovo);
-
         if (res.sucesso) {
             resultado.sucesso = true;
-
-            // Se o nome do curso mudou, precisamos de atualizar o campo 'nomeCurso' dos Estudantes inscritos
             if (!nomeAntigo.equalsIgnoreCase(cursoNovo.getNome())) {
                 try {
-                    EstudanteCRUD estudanteCRUD = new EstudanteCRUD();
                     EstudanteController estudanteController = new EstudanteController();
                     List<Estudante> todosEstudantes = estudanteController.listarEstudantes();
-
                     for (Estudante estudante : todosEstudantes) {
                         if (estudante.getNomeCurso() != null && estudante.getNomeCurso().equalsIgnoreCase(nomeAntigo)) {
                             estudante.setNomeCurso(cursoNovo.getNome());

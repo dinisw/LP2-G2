@@ -44,6 +44,7 @@ public class GestorView {
         opcoes.add("5. Gerir Departamentos");
         opcoes.add("6. Gerir Unidades Curriculares");
         opcoes.add("7. Consultar Alunos em Dívida (Tesouraria)");
+        opcoes.add("8. Simular Passagem de Ano Letivo (Global)");
         opcoes.add("0. Logout");
 
         do {
@@ -72,12 +73,13 @@ public class GestorView {
                     case "6":
                         unidadeCurricularView.exibirMenuUnidadesCurriculares();
                         break;
-                    case "7": // NOVO CASE
+                    case "7":
                         consultarAlunosEmDivida();
                         break;
+                    case "8":
+                        simularPassagemDeAno();
+                        break;
                     case "0":
-                        System.out.println(GetYellow() + "\nA efetuar logout..." + GetReset());
-                        return;
                     default:
                         System.out.println(GetRed() + "Opção inválida! Por favor, escolha uma opção da lista." + GetReset());
                         MenuUtils.pressionarEnter(scanner);
@@ -1510,6 +1512,37 @@ public class GestorView {
     }
     private void mostrarErroMenu() {
         System.out.println(GetRed() + "Opção inválida ou indisponível de momento. Por favor, escolha uma opção visível na lista." + GetReset());
+        MenuUtils.pressionarEnter(scanner);
+    }
+    private void simularPassagemDeAno() {
+        System.out.println(GetBlue() + "\n--- SIMULADOR DE PASSAGEM DE ANO LETIVO ---" + GetReset());
+        System.out.println(GetYellow() + "Esta ação irá simular a viragem do ano letivo no sistema." + GetReset());
+        System.out.println(GetYellow() + "O sistema vai avaliar as notas de todos os alunos, aplicar a regra dos 60%," + GetReset());
+        System.out.println(GetYellow() + "verificar dívidas e faturar as propinas do novo ano para quem transitar." + GetReset());
+
+        String confirmacao = BackendUtils.lerInputString(scanner, GetWhiteBold() + "\nDeseja prosseguir com a simulação global? (S/N): " + GetReset());
+
+        if (confirmacao.equalsIgnoreCase("S")) {
+            EstudanteController ec = new EstudanteController();
+            Resultado<List<String>> res = ec.simularTransicaoAnoLetivoGlobal();
+
+            if (res.sucesso) {
+                System.out.println(GetGreen() + "\n====== RELATÓRIO DE TRANSIÇÃO ======" + GetReset());
+                for (String log : res.dados) {
+                    if(log.contains("[SUCESSO]")) {
+                        System.out.println(GetGreen() + log + GetReset());
+                    } else {
+                        System.out.println(GetCyanBold() + log + GetReset());
+                    }
+                }
+                System.out.println(GetGreen() + "====================================" + GetReset());
+                System.out.println(GetWhiteBold() + "Transição concluída. Vá à tesouraria ou às fichas para confirmar o resultado!" + GetReset());
+            } else {
+                System.out.println(GetRed() + "\nErro ao simular transição: " + res.mensagemErro + GetReset());
+            }
+        } else {
+            System.out.println(GetYellow() + "Simulação cancelada pelo utilizador." + GetReset());
+        }
         MenuUtils.pressionarEnter(scanner);
     }
 }
