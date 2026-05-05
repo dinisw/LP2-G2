@@ -105,7 +105,11 @@ public class CursoView {
             System.out.println(GetBlue() + "\n--- REGISTO DE CURSO ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
-            String nome = BackendUtils.lerInputString(scanner, "Nome do Curso: ");
+            String nome = "";
+            while (nome.isEmpty()) {
+                nome = BackendUtils.lerInputString(scanner, "Nome do Curso: ");
+                if (nome.isEmpty()) System.out.println(GetRed() + "O campo Nome do Curso não pode estar vazio." + GetReset());
+            }
 
             int duracao = -1;
             while (duracao <= 0) {

@@ -39,14 +39,17 @@ public class EstudanteCRUD extends AbstractCsvCRUD<Estudante> {
     }
 
     public int gerarNumeroMecanografico() {
-        int anoAtual = LocalDate.now().getYear();
-        int prefixo = anoAtual * 1000;
+        int anoAtual = java.time.LocalDate.now().getYear();
+        int yy = anoAtual % 100;
+        int prefixo = 1000000 + (yy * 10000);
+        int baseComparacao = 100 + yy;
         int maxSequencia = 0;
 
-        for (Estudante e : dados) {
-            int anoMec = e.getNumeroMec() / 1000;
-            if (anoMec == anoAtual) {
-                int sequencia = e.getNumeroMec() % 1000;
+        for (model.Estudante e : dados) {
+            int baseEstudante = e.getNumeroMec() / 10000;
+
+            if (baseEstudante == baseComparacao) {
+                int sequencia = e.getNumeroMec() % 10000;
                 if (sequencia > maxSequencia) {
                     maxSequencia = sequencia;
                 }

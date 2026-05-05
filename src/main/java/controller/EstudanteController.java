@@ -156,4 +156,31 @@ public class EstudanteController {
     public List<Estudante> listarEstudantes() { return estudanteCRUD.getEstudantes(); }
     public Estudante procurarEstudantePorNif(int nif) { return nif <= 0 ? null : estudanteCRUD.procurarPorNif(nif); }
     public Estudante procurarEstudantePorNumeroMec(int mec) { return mec <= 0 ? null : estudanteCRUD.lerEstudante(mec); }
+
+    // --- SIMULADOR GLOBAL PARA APRESENTAÇÃO ACADÉMICA ---
+    public Resultado<List<String>> simularTransicaoAnoLetivoGlobal() {
+        List<String> relatorio = new java.util.ArrayList<>();
+        List<Estudante> estudantes = estudanteCRUD.getEstudantes();
+
+        if (estudantes.isEmpty()) {
+            return new Resultado<>(false, "Não há estudantes registados no sistema para simular a transição.");
+        }
+
+        for (Estudante e : estudantes) {
+            if (!e.isAtivo()) continue;
+
+            int anoCalculado = obterAnoDesbloqueado(e);
+            boolean isConcluido = verificarSeCursoConcluido(e);
+
+            if (isConcluido) {
+                relatorio.add("[SUCESSO] Mec: " + e.getNumeroMec() + " (" + e.getNome() + ") -> Concluiu o Curso! (Sem novas propinas)");
+            } else {
+                relatorio.add("[INFO] Mec: " + e.getNumeroMec() + " (" + e.getNome() + ") -> Processado para o " + anoCalculado + "º Ano. (Propinas sincronizadas)");
+            }
+
+            estudanteCRUD.atualizarEstudante(e);
+        }
+
+        return new Resultado<>(relatorio, true);
+    }
 }

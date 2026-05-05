@@ -8,11 +8,9 @@ import controller.UnidadeCurricularController;
 import model.Docente;
 import model.Resultado;
 import model.UnidadeCurricular;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-
 import static common.utils.DesignUtils.*;
 
 public class UnidadeCurricularView {
@@ -24,7 +22,6 @@ public class UnidadeCurricularView {
 
     public void exibirMenuUnidadesCurriculares() {
         String opcao;
-
         ArrayList<String> opcoes = new ArrayList<>();
         opcoes.add("1. Registar Unidade Curricular");
         opcoes.add("2. Listar Unidades Curriculares");
@@ -32,13 +29,13 @@ public class UnidadeCurricularView {
         opcoes.add("4. Atualizar Unidade Curricular");
         opcoes.add("5. Eliminar Unidade Curricular");
         opcoes.add("6. Listar Alunos da UC");
-        opcoes.add("0. Voltar ao Menu de Gestão");
+        opcoes.add("0. Voltar ao Menu de Gest o");
 
         do {
             try {
                 MenuUtils.limparTela();
                 MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL > UNIDADES CURRICULARES", opcoes);
-                System.out.print("\n" + GetWhiteBold() + "Selecione uma opção: " + GetReset());
+                System.out.print("\n" + GetWhiteBold() + "Selecione uma op o: " + GetReset());
                 opcao = scanner.nextLine().trim();
 
                 switch (opcao) {
@@ -61,36 +58,49 @@ public class UnidadeCurricularView {
                         listarAlunosDaUC();
                         break;
                     case "0":
-                        System.out.println(GetYellow() + "\nA voltar ao menu de gestão..." + GetReset());
+                        System.out.println(GetYellow() + "\nA voltar ao menu de gest o..." + GetReset());
                         return;
                     default:
                         mostrarErroOpcao();
                 }
             } catch (Exception e) {
-                System.out.println("\n" + GetRed() + "Ocorreu um erro na navegação: " + e.getMessage() + GetReset());
+                System.out.println("\n" + GetRed() + "Ocorreu um erro na navega o: " + e.getMessage() + GetReset());
                 MenuUtils.pressionarEnter(scanner);
             }
         } while (true);
     }
 
     private void mostrarErroOpcao() {
-        System.out.println(GetRed() + "Opção inválida! Por favor, escolha uma opção visível na lista." + GetReset());
+        System.out.println(GetRed() + "Op o inv lida! Por favor, escolha uma op o vis vel na lista." + GetReset());
         MenuUtils.pressionarEnter(scanner);
     }
 
     private void registarUnidadeCurricular() {
         try {
             System.out.println(GetBlue() + "\n--- REGISTO DE UNIDADE CURRICULAR ---" + GetReset());
-            System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
-            String nome = BackendUtils.lerInputString(scanner, "Nome da UC: ");
+            DocenteController verificacaoDocentes = new DocenteController();
+            if (verificacaoDocentes.listarDocentes().isEmpty()) {
+                System.out.println(GetRed() + "Erro: Não existem docentes registados no sistema." + GetReset());
+                System.out.println(GetYellow() + "Por favor, vá ao menu de Docentes e crie um antes de registar uma Unidade Curricular." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a opera o!]" + GetReset());
+
+            String nome = "";
+            while (nome.isEmpty()) {
+                nome = BackendUtils.lerInputString(scanner, "Nome da UC: ");
+                if (nome.isEmpty()) System.out.println(GetRed() + "O campo Nome da UC não pode estar vazio. Tente novamente." + GetReset());
+            }
 
             int ano = 0;
             boolean anoValido = false;
             while (!anoValido) {
                 try {
                     String anoStr = BackendUtils.lerInputString(scanner, "Ano Curricular (1, 2 ou 3): ");
-                    if (anoStr.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
+                    if (anoStr.equals("0")) throw new CancelarRegistoException("Opera o cancelada pelo utilizador.");
                     ano = Integer.parseInt(anoStr);
                     if (ano >= 1 && ano <= 3) {
                         anoValido = true;
@@ -107,7 +117,7 @@ public class UnidadeCurricularView {
             while (!semestreValido) {
                 try {
                     String semStr = BackendUtils.lerInputString(scanner, "Semestre (1 ou 2): ");
-                    if (semStr.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
+                    if (semStr.equals("0")) throw new CancelarRegistoException("Opera o cancelada pelo utilizador.");
                     semestre = Integer.parseInt(semStr);
                     if (semestre == 1 || semestre == 2) {
                         semestreValido = true;
@@ -123,19 +133,18 @@ public class UnidadeCurricularView {
             String siglaDocente = "";
             boolean docenteValido = false;
             while (!docenteValido) {
-                siglaDocente = BackendUtils.lerInputString(scanner, "\nSigla do Docente Responsável (Obrigatório): ").toUpperCase();
-                if (siglaDocente.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
-
+                siglaDocente = BackendUtils.lerInputString(scanner, "\nSigla do Docente Respons vel (Obrigat rio): ").toUpperCase();
+                if (siglaDocente.equals("0")) throw new CancelarRegistoException("Opera o cancelada pelo utilizador.");
                 DocenteController dc = new DocenteController();
                 if (dc.procurarDocentePorSigla(siglaDocente) != null) {
                     docenteValido = true;
                 } else {
-                    System.out.println(GetRed() + "Erro: Docente com essa sigla não encontrado. Tente novamente." + GetReset());
+                    System.out.println(GetRed() + "Erro: Docente com essa sigla n o encontrado. Tente novamente." + GetReset());
                 }
             }
 
             UnidadeCurricularController unidadeCurricularControllerAtualizado = new UnidadeCurricularController();
-            Resultado <UnidadeCurricular> resultado = unidadeCurricularControllerAtualizado.registarUC(nome, ano, semestre, siglaDocente);
+            Resultado<UnidadeCurricular> resultado = unidadeCurricularControllerAtualizado.registarUC(nome, ano, semestre, siglaDocente);
 
             if (resultado.sucesso) {
                 System.out.println(GetGreen() + "\nUC registada com sucesso!" + GetReset());
@@ -146,9 +155,7 @@ public class UnidadeCurricularView {
             } else {
                 System.out.println(GetRed() + "\nErro ao registar: " + resultado.mensagemErro + GetReset());
             }
-
             MenuUtils.pressionarEnter(scanner);
-
         } catch (CancelarRegistoException e) {
             System.out.println("\n" + GetYellow() + "Aviso: " + e.getMessage() + GetReset());
             System.out.println(GetRed() + "Registo interrompido!" + GetReset());
@@ -166,7 +173,7 @@ public class UnidadeCurricularView {
             List<UnidadeCurricular> unidadeCurriculars = unidadeCurricularControllerAtualizado.listarTodasUCs();
 
             if (unidadeCurriculars.isEmpty()) {
-                System.out.println(GetYellow() + "Nenhuma UC registada até ao momento!" + GetReset());
+                System.out.println(GetYellow() + "Nenhuma UC registada at  ao momento!" + GetReset());
             } else {
                 System.out.println(GetCyanBold() + "-------------------------------------------------------------------------" + GetReset());
                 System.out.printf(GetWhiteBold() + " %-4s | %-25s | %-5s | %-3s | %-15s | %-4s \n" + GetReset(), "ID", "NOME DA UC", "ANO", "SEM", "DOCENTE", "ECTS");
@@ -181,9 +188,7 @@ public class UnidadeCurricularView {
                 }
                 System.out.println(GetCyanBold() + "-------------------------------------------------------------------------" + GetReset());
             }
-
             MenuUtils.pressionarEnter(scanner);
-
         } catch (Exception e) {
             System.out.println(GetRed() + "Ocorreu um erro ao listar as UCs: " + e.getMessage() + GetReset());
             MenuUtils.pressionarEnter(scanner);
@@ -193,8 +198,7 @@ public class UnidadeCurricularView {
     private void procurarUnidadeCurricular() {
         try {
             System.out.println(GetBlue() + "\n--- PROCURAR UNIDADE CURRICULAR ---" + GetReset());
-            System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
-
+            System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a opera o!]" + GetReset());
             listarUCsSemPausa();
 
             String idStr = BackendUtils.lerInputString(scanner, "Digite o ID da UC a procurar: ");
@@ -202,7 +206,7 @@ public class UnidadeCurricularView {
             try {
                 id = Integer.parseInt(idStr);
             } catch (NumberFormatException e) {
-                System.out.println(GetRed() + "ID inválido. Por favor introduza um número." + GetReset());
+                System.out.println(GetRed() + "ID inv lido. Por favor introduza um n mero." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
                 return;
             }
@@ -216,7 +220,6 @@ public class UnidadeCurricularView {
 
                 DAL.CursoCRUD cursoCRUD = new DAL.CursoCRUD();
                 List<String> cursosAssociados = new ArrayList<>();
-
                 for (model.Curso curso : cursoCRUD.getCursos()) {
                     if (curso.getUnidadeCurriculars() != null) {
                         for (model.UnidadeCurricular unidadeCurricularDoCurso : curso.getUnidadeCurriculars()) {
@@ -230,14 +233,12 @@ public class UnidadeCurricularView {
                 System.out.println(GetWhiteBold() + "Cursos a que pertence: " + GetReset() +
                         (cursosAssociados.isEmpty() ? GetYellow() + "Nenhum curso associado" + GetReset() : String.join(" | ", cursosAssociados)));
             } else {
-                System.out.println(GetYellow() + "\nUnidade Curricular não encontrada com o ID informado." + GetReset());
+                System.out.println(GetYellow() + "\nUnidade Curricular n o encontrada com o ID informado." + GetReset());
             }
-
             MenuUtils.pressionarEnter(scanner);
-
         } catch (CancelarRegistoException e) {
             System.out.println("\n" + GetYellow() + "Aviso: " + e.getMessage() + GetReset());
-            System.out.println(GetRed() + "Operação interrompida!" + GetReset());
+            System.out.println(GetRed() + "Opera o interrompida!" + GetReset());
             MenuUtils.pressionarEnter(scanner);
         } catch (Exception e) {
             System.out.println(GetRed() + "Ocorreu um erro inesperado: " + e.getMessage() + GetReset());
@@ -248,8 +249,7 @@ public class UnidadeCurricularView {
     private void atualizarUnidadeCurricular() {
         try {
             System.out.println(GetBlue() + "\n--- ATUALIZAR UNIDADE CURRICULAR ---" + GetReset());
-            System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
-
+            System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a opera o!]" + GetReset());
             listarUCsSemPausa();
 
             String idStr = BackendUtils.lerInputString(scanner, "\nDigite o ID da UC a atualizar: ");
@@ -257,22 +257,21 @@ public class UnidadeCurricularView {
             try {
                 id = Integer.parseInt(idStr);
             } catch (NumberFormatException e) {
-                System.out.println(GetRed() + "ID inválido. Por favor introduza um número." + GetReset());
+                System.out.println(GetRed() + "ID inv lido. Por favor introduza um n mero." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
                 return;
             }
 
             UnidadeCurricularController unidadeCurricularControllerAtualizado = new UnidadeCurricularController();
             UnidadeCurricular ucExistente = unidadeCurricularControllerAtualizado.procurarUCPorId(id);
-
             String nomeAtual;
+
             while (ucExistente == null) {
                 nomeAtual = BackendUtils.lerInputString(scanner, "\nDigite o nome da UC a atualizar: ");
-                if (nomeAtual.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
-
+                if (nomeAtual.equals("0")) throw new CancelarRegistoException("Opera o cancelada pelo utilizador.");
                 ucExistente = unidadeCurricularControllerAtualizado.procurarUCPorNome(nomeAtual);
                 if (ucExistente == null) {
-                    System.out.println(GetRed() + "Erro: UC não encontrada. Verifique a lista e tente novamente." + GetReset());
+                    System.out.println(GetRed() + "Erro: UC n o encontrada. Verifique a lista e tente novamente." + GetReset());
                 }
             }
 
@@ -294,7 +293,7 @@ public class UnidadeCurricularView {
                     } else
                         System.out.println(GetRed() + "Erro: O ano curricular deve ser 1, 2 ou 3. Tente novamente ou pressione Enter para manter." + GetReset());
                 } catch (NumberFormatException e) {
-                    System.out.println(GetRed() + "Erro: Valor inválido. Introduza um número entre 1 e 3, ou pressione Enter para manter." + GetReset());
+                    System.out.println(GetRed() + "Erro: Valor inv lido. Introduza um n mero entre 1 e 3, ou pressione Enter para manter." + GetReset());
                 }
             }
 
@@ -308,9 +307,9 @@ public class UnidadeCurricularView {
                             novoSemestre = semestre;
                             break;
                         } else
-                            System.out.println(GetYellow() + "Aviso: Semestre inválido. Mantendo o semestre original." + GetReset());
+                            System.out.println(GetYellow() + "Aviso: Semestre inv lido. Mantendo o semestre original." + GetReset());
                     } catch (NumberFormatException e) {
-                        System.out.println(GetYellow() + "Aviso: Formato inválido. Mantendo o semestre original." + GetReset());
+                        System.out.println(GetYellow() + "Aviso: Formato inv lido. Mantendo o semestre original." + GetReset());
                     }
                 } else {
                     break;
@@ -318,20 +317,32 @@ public class UnidadeCurricularView {
             }
 
             listarDocentesDisponiveis();
-            String novaSiglaDocente = BackendUtils.lerInputString(scanner, "\nSigla do novo Docente (ou Enter para manter o mesmo): ").toUpperCase();
-            String siglaFinal = novaSiglaDocente.isEmpty() ? null : novaSiglaDocente;
+            String siglaFinal = null;
+            DocenteController dc = new DocenteController();
+
+            while (true) {
+                String novaSiglaDocente = BackendUtils.lerInputString(scanner, "\nSigla do novo Docente (ou Enter para manter o mesmo): ").toUpperCase();
+                if (novaSiglaDocente.isEmpty()) {
+                    break;
+                }
+                if (dc.procurarDocentePorSigla(novaSiglaDocente) != null) {
+                    siglaFinal = novaSiglaDocente;
+                    break;
+                }
+                System.out.println(GetRed() + "Erro: Docente com essa sigla não encontrado no sistema. Tente novamente ou pressione ENTER para manter o atual." + GetReset());
+            }
 
             System.out.println(GetYellow() + "\n AVISO DE IMPACTO GLOBAL ");
             System.out.println("A Unidade Curricular que está a editar pode estar a ser partilhada por múltiplos cursos.");
             System.out.println("Qualquer alteração que faça agora irá refletir-se automaticamente no plano de estudos de TODOS os cursos que a incluem." + GetReset());
-            String confirmacao = BackendUtils.lerInputString(scanner, GetWhiteBold() + "\nTem a certeza que deseja guardar estas alterações? (S/N): " + GetReset());
+            String confirmacao = BackendUtils.lerInputString(scanner, GetWhiteBold() + "\nTem a certeza que deseja guardar estas altera es? (S/N): " + GetReset());
             if (!confirmacao.equalsIgnoreCase("S")) {
-                System.out.println(GetBlue() + "\nOperação de atualização cancelada pelo utilizador." + GetReset());
+                System.out.println(GetBlue() + "\nOpera o de atualiza o cancelada pelo utilizador." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
                 return;
             }
 
-            Resultado <UnidadeCurricular> resultado = unidadeCurricularControllerAtualizado.atualizarUC(id, nomeFinal, novoAno, novoSemestre, siglaFinal);
+            Resultado<UnidadeCurricular> resultado = unidadeCurricularControllerAtualizado.atualizarUC(id, nomeFinal, novoAno, novoSemestre, siglaFinal);
 
             if (resultado.sucesso) {
                 System.out.println(GetGreen() + "\nUC atualizada com sucesso!" + GetReset());
@@ -342,12 +353,10 @@ public class UnidadeCurricularView {
             } else {
                 System.out.println(GetRed() + "\nErro ao atualizar: " + resultado.mensagemErro + GetReset());
             }
-
             MenuUtils.pressionarEnter(scanner);
-
         } catch (CancelarRegistoException e) {
             System.out.println("\n" + GetYellow() + "Aviso: " + e.getMessage() + GetReset());
-            System.out.println(GetRed() + "Operação de atualização interrompida!" + GetReset());
+            System.out.println(GetRed() + "Opera o de atualiza o interrompida!" + GetReset());
             MenuUtils.pressionarEnter(scanner);
         } catch (Exception e) {
             System.out.println(GetRed() + "Ocorreu um erro inesperado: " + e.getMessage() + GetReset());
@@ -358,8 +367,7 @@ public class UnidadeCurricularView {
     private void eliminarUnidadeCurricular() {
         try {
             System.out.println(GetBlue() + "\n--- ELIMINAR UNIDADE CURRICULAR ---" + GetReset());
-            System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
-
+            System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a opera o!]" + GetReset());
             listarUCsSemPausa();
 
             String idStr = BackendUtils.lerInputString(scanner, "\nDigite o ID da UC a eliminar: ");
@@ -367,7 +375,7 @@ public class UnidadeCurricularView {
             try {
                 id = Integer.parseInt(idStr);
             } catch (NumberFormatException e) {
-                System.out.println(GetRed() + "ID inválido. Por favor introduza um número." + GetReset());
+                System.out.println(GetRed() + "ID inv lido. Por favor introduza um n mero." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
                 return;
             }
@@ -375,34 +383,28 @@ public class UnidadeCurricularView {
             UnidadeCurricularController unidadeCurricularControllerAtualizado = new UnidadeCurricularController();
             UnidadeCurricular unidadeCurricular = unidadeCurricularControllerAtualizado.procurarUCPorId(id);
 
-            // CORREÇÃO: Validar se a UC existe para não dar erro
             if (unidadeCurricular == null) {
-                System.out.println(GetRed() + "Erro: UC não encontrada com o ID informado." + GetReset());
+                System.out.println(GetRed() + "Erro: UC n o encontrada com o ID informado." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
                 return;
             }
 
-            // CORREÇÃO: Confirmação única e limpa
             String confirmacao = BackendUtils.lerInputString(scanner, GetYellow() + "Tem a certeza que deseja eliminar a UC '" + unidadeCurricular.getNome() + "' (ID: " + id + ")? (S/N): " + GetReset()).toUpperCase();
 
-            // CORREÇÃO: Chavetas devidamente abertas e fechadas
             if (confirmacao.equals("S")) {
-                Resultado <UnidadeCurricular> resultado = unidadeCurricularControllerAtualizado.eliminarUCPorId(id);
-
+                Resultado<UnidadeCurricular> resultado = unidadeCurricularControllerAtualizado.eliminarUCPorId(id);
                 if (resultado.sucesso) {
                     System.out.println(GetGreen() + "\nUC eliminada com sucesso!" + GetReset());
                 } else {
                     System.out.println(GetRed() + "\nErro ao eliminar: " + resultado.mensagemErro + GetReset());
                 }
             } else {
-                System.out.println(GetYellow() + "Operação cancelada." + GetReset());
+                System.out.println(GetYellow() + "Opera o cancelada." + GetReset());
             }
-
             MenuUtils.pressionarEnter(scanner);
-
         } catch (CancelarRegistoException e) {
             System.out.println("\n" + GetYellow() + "Aviso: " + e.getMessage() + GetReset());
-            System.out.println(GetRed() + "Operação interrompida!" + GetReset());
+            System.out.println(GetRed() + "Opera o interrompida!" + GetReset());
             MenuUtils.pressionarEnter(scanner);
         } catch (Exception e) {
             System.out.println(GetRed() + "Ocorreu um erro inesperado: " + e.getMessage() + GetReset());
@@ -413,17 +415,16 @@ public class UnidadeCurricularView {
     private void listarAlunosDaUC() {
         try {
             System.out.println(GetBlue() + "\n--- LISTAR ALUNOS POR UC ---" + GetReset());
-            System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
-
+            System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a opera o!]" + GetReset());
             listarUCsSemPausa();
+
             String idStr = BackendUtils.lerInputString(scanner, "\nDigite o ID da UC: ");
             int id = Integer.parseInt(idStr);
 
             UnidadeCurricularController ucController = new UnidadeCurricularController();
             UnidadeCurricular uc = ucController.procurarUCPorId(id);
-
             if (uc == null) {
-                System.out.println(GetRed() + "Unidade Curricular não encontrada." + GetReset());
+                System.out.println(GetRed() + "Unidade Curricular n o encontrada." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
                 return;
             }
@@ -432,20 +433,19 @@ public class UnidadeCurricularView {
             List<model.Estudante> alunos = docenteController.listarAlunosPorUC(uc.getNome());
 
             if (alunos.isEmpty()) {
-                System.out.println(GetYellow() + "Ainda não existem estudantes com avaliações registadas nesta UC." + GetReset());
+                System.out.println(GetYellow() + "Ainda n o existem estudantes com avalia es registadas nesta UC." + GetReset());
             } else {
                 System.out.println(GetGreen() + "\nEstudantes inscritos em " + uc.getNome() + ":" + GetReset());
                 for (model.Estudante e : alunos) {
-                    System.out.printf("- Nº Mec: %d | Nome: %s\n", e.getNumeroMec(), e.getNome());
+                    System.out.printf("- N  Mec: %d | Nome: %s\n", e.getNumeroMec(), e.getNome());
                 }
             }
             MenuUtils.pressionarEnter(scanner);
-
         } catch (NumberFormatException e) {
-            System.out.println(GetRed() + "ID inválido." + GetReset());
+            System.out.println(GetRed() + "ID inv lido." + GetReset());
             MenuUtils.pressionarEnter(scanner);
         } catch (CancelarRegistoException e) {
-            System.out.println(GetYellow() + "Operação cancelada." + GetReset());
+            System.out.println(GetYellow() + "Opera o cancelada." + GetReset());
             MenuUtils.pressionarEnter(scanner);
         }
     }
@@ -453,9 +453,8 @@ public class UnidadeCurricularView {
     private void listarUCsSemPausa() {
         UnidadeCurricularController ctrl = new UnidadeCurricularController();
         List<UnidadeCurricular> ucs = ctrl.listarTodasUCs();
-
         if (ucs.isEmpty()) {
-            System.out.println(GetYellow() + "Nenhuma UC registada até ao momento!" + GetReset());
+            System.out.println(GetYellow() + "Nenhuma UC registada at  ao momento!" + GetReset());
         } else {
             System.out.println(GetCyanBold() + "-------------------------------------------------------------------------" + GetReset());
             System.out.printf(GetWhiteBold() + " %-4s | %-25s | %-5s | %-3s | %-15s | %-4s \n" + GetReset(), "ID", "NOME DA UC", "ANO", "SEM", "DOCENTE", "ECTS");
@@ -470,8 +469,8 @@ public class UnidadeCurricularView {
     }
 
     private void listarDocentesDisponiveis() {
-        System.out.println("\n" + GetBlue() + "--- Docentes Disponíveis ---" + GetReset());
-        DocenteController docenteControllerAtualizado = new DocenteController(); // CARREGA MEMÓRIA FRESCA
+        System.out.println("\n" + GetBlue() + "--- Docentes Dispon veis ---" + GetReset());
+        DocenteController docenteControllerAtualizado = new DocenteController();
         List<Docente> docentes = docenteControllerAtualizado.listarDocentes();
         if (docentes == null || docentes.isEmpty()) {
             System.out.println(GetYellow() + "Nenhum docente registado no sistema." + GetReset());
@@ -489,11 +488,10 @@ public class UnidadeCurricularView {
         System.out.println("Ano Curricular: " + unidadeCurricular.getAnoCurricular());
         System.out.println("Semestre: " + unidadeCurricular.getSemestre());
         System.out.println("ECTS: " + unidadeCurricular.getEcts());
-
         if (unidadeCurricular.getDocente() != null) {
-            System.out.println("Docente Responsável: " + unidadeCurricular.getDocente().getNome() + " (" + unidadeCurricular.getDocente().getSigla() + ")");
+            System.out.println("Docente Respons vel: " + unidadeCurricular.getDocente().getNome() + " (" + unidadeCurricular.getDocente().getSigla() + ")");
         } else {
-            System.out.println("Docente Responsável: " + GetYellow() + "NÃO ATRIBUÍDO" + GetReset());
+            System.out.println("Docente Respons vel: " + GetYellow() + "N O ATRIBU DO" + GetReset());
         }
         System.out.println(GetWhiteBold() + "-----------------------------------" + GetReset());
     }

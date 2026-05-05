@@ -65,8 +65,17 @@ public class DepartamentoView {
             System.out.println(GetBlue() + "\n--- REGISTO DE DEPARTAMENTO ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
-            String nome = BackendUtils.lerInputString(scanner, "Nome do Departamento: ");
-            String sigla = BackendUtils.lerInputString(scanner, "Sigla (ex: EI, MAT): ").toUpperCase();
+            String nome = "";
+            while (nome.isEmpty()) {
+                nome = BackendUtils.lerInputString(scanner, "Nome do Departamento: ");
+                if (nome.isEmpty()) System.out.println(GetRed() + "O campo Nome não pode estar vazio." + GetReset());
+            }
+
+            String sigla = "";
+            while (sigla.isEmpty()) {
+                sigla = BackendUtils.lerInputString(scanner, "Sigla (ex: EI, MAT): ").toUpperCase();
+                if (sigla.isEmpty()) System.out.println(GetRed() + "A Sigla não pode estar vazia." + GetReset());
+            }
 
             DepartamentoController departamentoController = new DepartamentoController();
             Resultado <Departamento> resultado = departamentoController.registarDepartamento(nome, sigla);
