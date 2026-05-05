@@ -80,6 +80,8 @@ public class GestorView {
                         simularPassagemDeAno();
                         break;
                     case "0":
+                        System.out.println(GetYellow() + "\nA voltar ao menu principal..." + GetReset());
+                        return;
                     default:
                         System.out.println(GetRed() + "Opção inválida! Por favor, escolha uma opção da lista." + GetReset());
                         MenuUtils.pressionarEnter(scanner);
