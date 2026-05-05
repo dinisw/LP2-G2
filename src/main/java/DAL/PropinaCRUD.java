@@ -1,119 +1,61 @@
 package DAL;
 
 import model.Propina;
-import java.io.*;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
-public class PropinaCRUD {
-    private static final String CAMINHO_FICHEIRO = "propinas.csv";
-    private List<Propina> propinas;
+public class PropinaCRUD extends AbstractCsvCRUD<Propina> {
 
     public PropinaCRUD() {
-        this.propinas = new ArrayList<>();
-        carregarFicheiro();
+        super("propinas.csv");
     }
 
-    private void carregarFicheiro() {
-        File ficheiro = new File(CAMINHO_FICHEIRO);
-        if (!ficheiro.exists()) return;
+    @Override
+    protected Propina mapearLinhaParaEntidade(String[] colunas) {
+        try {
+            int numMec = Integer.parseInt(colunas[0]);
+            int ano = Integer.parseInt(colunas[1]);
+            double total = Double.parseDouble(colunas[2].replace(",", "."));
+            double pago = Double.parseDouble(colunas[3].replace(",", "."));
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(CAMINHO_FICHEIRO))) {
-            String linha;
-            while ((linha = reader.readLine()) != null) {
-                String[] dados = linha.split(";");
-                if (dados.length >= 4) {
-                    Propina propina = new Propina(
-                            Integer.parseInt(dados[0]), // Nº Mec
-                            Integer.parseInt(dados[1]), // Ano Letivo
-                            Double.parseDouble(dados[2]), // Valor Total
-                            Double.parseDouble(dados[3])// Valor Pago
-                    );
-                    if (dados.length >= 5) {
-                        String[] hist = dados[4].split("\\|");
-                        List<String> historico = new ArrayList<>();
-                        for (String string : hist) {
-                            if (!string.trim().isEmpty()) historico.add(string);
-                        }
-                        propina.setHistoricoPagamentos(historico);
-                    }
-                    propinas.add(propina);
-                }
-            }
-        } catch (IOException | NumberFormatException e) {
-            throw new RuntimeException("Erro interno ao carregar o ficheiro de propinas.", e);
+            return new Propina(numMec, ano, total, pago);
+        } catch (Exception e) {
+            return null;
         }
     }
 
-    private void guardarTodosNoFicheiro() {
-        try (PrintWriter print = new PrintWriter(new FileWriter(CAMINHO_FICHEIRO))) {
-            for (Propina propina : propinas) {
-
-                String histStr = "";
-                if (propina.getHistoricoPagamentos() != null && !propina.getHistoricoPagamentos().isEmpty()) {
-                    histStr = String.join("|", propina.getHistoricoPagamentos());
-                }
-                String linha = String.format("%d;%d;%.2f;%.2f;%s",
-                        propina.getNumeroMecEstudante(),
-                        propina.getAnoLetivo(),
-                        propina.getValorTotal(),
-                        propina.getValorPago(),
-                        histStr).replace(",", "."); // Garantir ponto nas decimais
-                print.println(linha);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Erro interno ao guardar o ficheiro de propinas.", e);
-        }
+    @Override
+    protected String mapearEntidadeParaLinha(Propina p) {
+        return String.format("%d;%d;%.2f;%.2f", p.getNumeroMecEstudante(), p.getAnoLetivo(), p.getValorTotal(), p.getValorPago());
     }
 
-    // CREATE
     public boolean registarPropina(Propina propina) {
-        if (propina != null) {
-            propinas.add(propina);
-            guardarTodosNoFicheiro();
-            return true;
-        }
-        return false;
+        dados.add(propina);
+        guardarTodosNoFicheiro();
+        return true;
     }
 
-    // READ: Devolve todas as propinas de um estudante específico
-    public List<Propina> listarPropinasPorEstudante(int numeroMec) {
-        List<Propina> resultado = new ArrayList<>();
-        for (Propina p : propinas) {
-            if (p.getNumeroMecEstudante() == numeroMec) {
-                resultado.add(p);
-            }
-        }
-        return resultado;
-    }
-
-    // READ: Procura a propina exata de um aluno num determinado ano
     public Propina procurarPropina(int numeroMec, int anoLetivo) {
-        for (Propina p : propinas) {
-            if (p.getNumeroMecEstudante() == numeroMec && p.getAnoLetivo() == anoLetivo) {
-                return p;
-            }
-        }
-        return null;
+        return dados.stream().filter(p -> p.getNumeroMecEstudante() == numeroMec && p.getAnoLetivo() == anoLetivo).findFirst().orElse(null);
     }
 
-    // READ: Lista global (útil para o Gestor ver os devedores)
-    public List<Propina> getTodasPropinas() {
-        return new ArrayList<>(propinas);
-    }
-
-    // UPDATE: Atualiza os valores (útil para quando o aluno faz um pagamento)
     public boolean atualizarPropina(Propina propinaAtualizada) {
-        for (int i = 0; i < propinas.size(); i++) {
-            Propina p = propinas.get(i);
-            if (p.getNumeroMecEstudante() == propinaAtualizada.getNumeroMecEstudante() &&
-                    p.getAnoLetivo() == propinaAtualizada.getAnoLetivo()) {
-
-                propinas.set(i, propinaAtualizada);
+        for (int i = 0; i < dados.size(); i++) {
+            if (dados.get(i).getNumeroMecEstudante() == propinaAtualizada.getNumeroMecEstudante() &&
+                    dados.get(i).getAnoLetivo() == propinaAtualizada.getAnoLetivo()) {
+                dados.set(i, propinaAtualizada);
                 guardarTodosNoFicheiro();
                 return true;
             }
         }
         return false;
+    }
+
+    public List<Propina> listarPropinasPorEstudante(int numeroMec) {
+        return dados.stream().filter(p -> p.getNumeroMecEstudante() == numeroMec).collect(Collectors.toList());
+    }
+
+    public List<Propina> getTodasPropinas() {
+        return dados;
     }
 }

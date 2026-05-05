@@ -9,7 +9,7 @@ public class Curso {
     private Departamento departamento;
     private final List<UnidadeCurricular> unidadeCurriculars;
     private List<Integer> anosIniciados;
-    private double precoAnual = 1000.0;
+    private double precoAnual;
 
     public Curso(String nome, int duracao, Departamento departamento) {
         this.nome = nome;
@@ -47,14 +47,6 @@ public class Curso {
         return new ArrayList<>(unidadeCurriculars);
     }
 
-    public boolean isIniciado() {
-        return !anosIniciados.isEmpty();
-    }
-
-    public boolean isAnoIniciado(int ano) {
-        return anosIniciados.contains(ano);
-    }
-
     public double getPrecoAnual() {
         return precoAnual;
     }
@@ -63,6 +55,14 @@ public class Curso {
         this.precoAnual = precoAnual;
     }
 
+    public boolean isIniciado() {
+        return !anosIniciados.isEmpty();
+    }
+
+    public boolean isAnoIniciado(int ano) {
+        return anosIniciados.contains(ano);
+    }
+    
     public void adicionarAnoIniciado(int ano) {
         if (!anosIniciados.contains(ano)) {
             anosIniciados.add(ano);

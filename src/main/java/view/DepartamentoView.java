@@ -10,6 +10,7 @@ import model.Resultado;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.zip.DeflaterOutputStream;
 
 import static common.utils.DesignUtils.*;
 
@@ -22,23 +23,15 @@ public class DepartamentoView {
 
     public void exibirMenuDepartamentos() {
         String opcao;
+        ArrayList<String> opcoes = new ArrayList<>();
+        opcoes.add("1. Registar Departamento");
+        opcoes.add("2. Listar Departamentos");
+        opcoes.add("3. Atualizar Departamento");
+        opcoes.add("4. Eliminar Departamento");
+        opcoes.add("0. Voltar ao Menu de Gestão");
 
         do {
             try {
-                DepartamentoController dc = new DepartamentoController();
-                boolean temDepartamentos = !dc.listarTodosDepartamentos().isEmpty();
-
-                ArrayList<String> opcoes = new ArrayList<>();
-                opcoes.add("1. Registar Departamento");
-
-                if (temDepartamentos) {
-                    opcoes.add("2. Listar Departamentos");
-                    opcoes.add("3. Procurar Departamento");
-                    opcoes.add("4. Atualizar Departamento");
-                    opcoes.add("5. Eliminar Departamento");
-                }
-                opcoes.add("0. Voltar ao Menu Principal");
-
                 MenuUtils.limparTela();
                 MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL > DEPARTAMENTOS", opcoes);
                 System.out.print("\n" + GetWhiteBold() + "Selecione uma opção: " + GetReset());
@@ -46,10 +39,9 @@ public class DepartamentoView {
 
                 switch (opcao) {
                     case "1": registarDepartamento(); break;
-                    case "2": if (temDepartamentos) listarDepartamentos(); else mostrarErroOpcao(); break;
-                    case "3": if (temDepartamentos) procurarDepartamento(); else mostrarErroOpcao(); break;
-                    case "4": if (temDepartamentos) atualizarDepartamento(); else mostrarErroOpcao(); break;
-                    case "5": if (temDepartamentos) eliminarDepartamento(); else mostrarErroOpcao(); break;
+                    case "2": listarDepartamentos(); break;
+                    case "3": atualizarDepartamento(); break;
+                    case "4": eliminarDepartamento(); break;
                     case "0":
                         System.out.println(GetYellow() + "\nA voltar..." + GetReset());
                         return;
@@ -73,16 +65,25 @@ public class DepartamentoView {
             System.out.println(GetBlue() + "\n--- REGISTO DE DEPARTAMENTO ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
-            String nome = BackendUtils.lerInputString(scanner, "Nome do Departamento: ");
-            String sigla = BackendUtils.lerInputString(scanner, "Sigla (ex: EI, MAT): ").toUpperCase();
+            String nome = "";
+            while (nome.isEmpty()) {
+                nome = BackendUtils.lerInputString(scanner, "Nome do Departamento: ");
+                if (nome.isEmpty()) System.out.println(GetRed() + "O campo Nome não pode estar vazio." + GetReset());
+            }
+
+            String sigla = "";
+            while (sigla.isEmpty()) {
+                sigla = BackendUtils.lerInputString(scanner, "Sigla (ex: EI, MAT): ").toUpperCase();
+                if (sigla.isEmpty()) System.out.println(GetRed() + "A Sigla não pode estar vazia." + GetReset());
+            }
 
             DepartamentoController departamentoController = new DepartamentoController();
-            Resultado resultado = departamentoController.registarDepartamento(nome, sigla);
+            Resultado <Departamento> resultado = departamentoController.registarDepartamento(nome, sigla);
 
-            if (resultado.success) {
+            if (resultado.sucesso) {
                 System.out.println(GetGreen() + "\nDepartamento registado com sucesso!" + GetReset());
             } else {
-                System.out.println(GetRed() + "\nErro ao registar: " + resultado.errorMessage + GetReset());
+                System.out.println(GetRed() + "\nErro ao registar: " + resultado.mensagemErro + GetReset());
             }
 
             MenuUtils.pressionarEnter(scanner);
@@ -188,12 +189,12 @@ public class DepartamentoView {
 
             String nomeFinal = nome.isEmpty() ? departamento.getNome() : nome;
 
-            Resultado resultado = departamentoController.atualizarDepartamento(sigla, nomeFinal);
+            Resultado <Departamento> resultado = departamentoController.atualizarDepartamento(sigla, nomeFinal);
 
-            if (resultado.success) {
+            if (resultado.sucesso) {
                 System.out.println(GetGreen() + "\nDepartamento atualizado com sucesso!" + GetReset());
             } else {
-                System.out.println(GetRed() + "\nErro ao atualizar: " + resultado.errorMessage + GetReset());
+                System.out.println(GetRed() + "\nErro ao atualizar: " + resultado.mensagemErro + GetReset());
             }
 
             MenuUtils.pressionarEnter(scanner);
@@ -247,12 +248,12 @@ public class DepartamentoView {
                 return;
             }
 
-            Resultado resultado = departamentoController.eliminarDepartamento(sigla);
+            Resultado <Departamento> resultado = departamentoController.eliminarDepartamento(sigla);
 
-            if (resultado.success) {
+            if (resultado.sucesso) {
                 System.out.println(GetGreen() + "\nDepartamento eliminado com sucesso!" + GetReset());
             } else {
-                System.out.println(GetRed() + "\nErro ao eliminar: " + resultado.errorMessage + GetReset());
+                System.out.println(GetRed() + "\nErro ao eliminar: " + resultado.mensagemErro + GetReset());
             }
 
             MenuUtils.pressionarEnter(scanner);
