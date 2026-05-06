@@ -6,6 +6,7 @@ import common.utils.MenuUtils;
 import common.utils.SenhaUtils;
 import controller.AvaliacaoController;
 import controller.DocenteController;
+import controller.UnidadeCurricularController;
 import model.*;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
@@ -48,7 +49,7 @@ public class DocenteView {
                 opcao = scanner.nextLine().trim();
 
                 switch (opcao) {
-                    case "1": verUC(docente); break;
+                    case "1": verUnidadeCurricular(docente); break;
                     case "2": alterarPasswordPropria(docente); break;
                     case "3": lancarNotaDocente(docente); break;
                     case "4": consultarFichaDocente(docente); break;
@@ -69,14 +70,12 @@ public class DocenteView {
         } while (true);
     }
 
-    private void verUC(Docente docenteAtual) {
+    private void verUnidadeCurricular(Docente docenteAtual) {
         try {
             System.out.println(GetBlue() + "\n--- MINHAS UNIDADES CURRICULARES ---" + GetReset());
 
-            DocenteController dc = new DocenteController();
-            Docente docenteFresco = dc.procurarDocentePorNif(docenteAtual.getNif());
-
-            List<UnidadeCurricular> minhasUcs = docenteFresco.getUnidadesCurriculares();
+            UnidadeCurricularController unidadeCurricularController = new UnidadeCurricularController();
+            List<UnidadeCurricular> minhasUcs = unidadeCurricularController.listarUCsPorDocente(docenteAtual.getSigla());
 
             if (minhasUcs == null || minhasUcs.isEmpty()) {
                 System.out.println(GetYellow() + "Não tem Unidades Curriculares atribuídas neste momento." + GetReset());
@@ -448,7 +447,6 @@ public class DocenteView {
         }
     }
 
-    // Método utilitário para as Views
     private int lerInteiroSeguro(String mensagem) {
         while (true) {
             System.out.print(mensagem);
