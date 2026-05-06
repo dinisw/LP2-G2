@@ -187,7 +187,8 @@ public class GestorView {
             String email = "";
             boolean emailValido = false;
             while (!emailValido) {
-                email = BackendUtils.lerInputString(scanner, "Email: ");
+                System.out.println("Email: ");
+                email = scanner.nextLine().trim();
                 if (email.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
                 emailValido = BackendUtils.emailISSMFGestorValido(email);
                 if(!emailValido)
@@ -550,26 +551,23 @@ public class GestorView {
             String passDigitada = SenhaUtils.gerarPalavraPasseAleatoria();
             SenhaUtils su = new SenhaUtils();
             String hash = su.gerarHashComSalt(passDigitada);
-
-            // Geração de sigla melhorada
             String[] partesNome = nome.trim().split("\\s+");
-            String primeiroNome = partesNome[0];
-            String ultimoNome = partesNome[partesNome.length - 1];
-
-            String sigla = nome.length() >= 3 ? nome.substring(0, 3).toUpperCase() : nome.toUpperCase();
+            String siglaBase = (partesNome[0].substring(0,1) + partesNome[partesNome.length - 1].substring(0,2).toUpperCase());
+            String siglaFinal = siglaBase;
 
             DocenteController docenteControllerAtualizado = new DocenteController();
-            if (docenteControllerAtualizado.procurarDocentePorSigla(sigla) != null) {
-                // Se a sigla padrão já existir, usa a última letra do sobrenome
-                String ultimaLetraSobrenome = ultimoNome.substring(ultimoNome.length() - 1).toUpperCase();
-                if (sigla.length() >= 3) {
-                    sigla = sigla.substring(0, 2) + ultimaLetraSobrenome;
-                } else {
-                    sigla = sigla + ultimaLetraSobrenome;
-                }
-            }
+            int counter = 1;
 
-            String email = sigla.toLowerCase() + "@issmf.ipp.pt";
+            while (docenteControllerAtualizado.procurarDocentePorSigla(siglaFinal) != null) {
+
+                if (siglaBase.length() >= 3) {
+                    siglaFinal = siglaBase.substring(0, 2) + counter;
+                } else {
+                    siglaFinal = siglaBase + counter;
+                }
+                counter++;
+            }
+            String email = siglaFinal.toLowerCase() + "@issmf.ipp.pt";
 
             EmailService es = new EmailService();
             String corpoEmail = "-- Credenciais Geradas Automaticamente --\n" +
