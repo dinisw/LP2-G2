@@ -96,50 +96,56 @@ public class GestorView {
     //region Gestor
     public void exibirMenuGestores() {
         String opcao;
+        ArrayList<String> opcoes = new ArrayList<>();
+        opcoes.add("1. Gerir Gestores");
+        opcoes.add("2. Gerir Docentes");
+        opcoes.add("3. Gerir Estudantes");
+        opcoes.add("4. Gerir Cursos");
+        opcoes.add("5. Gerir Departamentos");
+        opcoes.add("6. Gerir Unidades Curriculares");
+        opcoes.add("7. Consultar Alunos em Dívida (Tesouraria)");
+        opcoes.add("8. Simular Passagem de Ano Letivo (Global)");
+        opcoes.add("0. Logout");
+
         do {
             try {
-                GestorController gestorController = new GestorController();
-                boolean temGestores = !gestorController.listarGestores().isEmpty();
+                MenuUtils.limparTela(); // EXPLICAÇÃO: Limpar o ecrã ajuda a separar as ações visualmente.
+                MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL", opcoes);
 
-                ArrayList<String> opcoes = new ArrayList<>();
-                opcoes.add("1. Registar Gestor");
-                if (temGestores) {
-                    opcoes.add("2. Listar Gestores");
-                    opcoes.add("3. Procurar Gestor");
-                    opcoes.add("4. Atualizar Gestor");
-                    opcoes.add("5. Eliminar Gestor");
-                }
-                opcoes.add("0. Voltar ao Menu Principal");
-
-                MenuUtils.limparTela();
-                MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL > GESTORES", opcoes);
-                System.out.print("\n" + GetWhiteBold() + "Selecione uma opção: " + GetReset());
+                System.out.print("\nSelecione uma opção: ");
                 opcao = scanner.nextLine().trim();
 
                 switch (opcao) {
                     case "1":
-                        registarGestor();
+                        exibirMenuGestores();
                         break;
                     case "2":
-                        if (temGestores) listarGestores();
-                        else mostrarErroMenu();
+                        exibirMenuDocentes();
                         break;
                     case "3":
-                        if (temGestores) procurarGestor();
-                        else mostrarErroMenu();
+                        exibirMenuEstudantes();
                         break;
                     case "4":
-                        if (temGestores) atualizarGestor();
-                        else mostrarErroMenu();
+                        cursoView.exibirMenuCursos();
                         break;
                     case "5":
-                        if (temGestores) eliminarGestor();
-                        else mostrarErroMenu();
+                        departamentoView.exibirMenuDepartamentos();
+                        break;
+                    case "6":
+                        unidadeCurricularView.exibirMenuUnidadesCurriculares();
+                        break;
+                    case "7":
+                        consultarAlunosEmDivida();
+                        break;
+                    case "8":
+                        simularPassagemDeAno();
                         break;
                     case "0":
+                        System.out.println(GetYellow() + "\nA efetuar logout e a voltar ao ecrã de Login..." + GetReset());
                         return;
                     default:
-                        mostrarErroMenu();
+                        System.out.println(GetRed() + "Opção inválida! Por favor, escolha uma opção da lista." + GetReset());
+                        MenuUtils.pressionarEnter(scanner);
                 }
             } catch (Exception e) {
                 System.out.println("\n" + GetRed() + "Ocorreu um erro na navegação: " + e.getMessage() + GetReset());
@@ -363,7 +369,13 @@ public class GestorView {
             System.out.println(gestor.toString());
             System.out.println(GetYellow() + "\n[Pressione ENTER nos campos que deseja manter iguais]" + GetReset());
 
-            String novoNome = BackendUtils.lerInputString(scanner, "Novo Nome:");
+            String novoNome = "";
+            while (true) {
+                novoNome = BackendUtils.lerInputString(scanner, "Novo Nome: ");
+                if (novoNome.isEmpty()) break;
+                if (BackendUtils.isNomeValido(novoNome)) break;
+                System.out.println(GetRed() + "Nome inválido (não use números). Tente novamente." + GetReset());
+            }
             if (!novoNome.isEmpty()) gestor.setNome(novoNome);
 
             String morada = BackendUtils.lerInputString(scanner, "Nova Morada: ");
