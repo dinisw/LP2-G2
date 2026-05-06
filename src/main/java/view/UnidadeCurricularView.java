@@ -9,6 +9,7 @@ import model.Docente;
 import model.Resultado;
 import model.UnidadeCurricular;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 import static common.utils.DesignUtils.*;
@@ -92,7 +93,27 @@ public class UnidadeCurricularView {
             String nome = "";
             while (nome.isEmpty()) {
                 nome = BackendUtils.lerInputString(scanner, "Nome da UC: ");
-                if (nome.isEmpty()) System.out.println(GetRed() + "O campo Nome da UC não pode estar vazio. Tente novamente." + GetReset());
+
+                if (!nome.isEmpty()) {
+                    String [] palavras = nome.toLowerCase().split("\\s+");
+                    StringBuilder nomeFormatado = new StringBuilder();
+
+                    List<String> excecoes = Arrays.asList("de", "do", "da", "dos", "das", "e", "em", "no", "na", "nos", "nas", "por", "para", "com", "a", "o", "as", "os");                    nome = nome.substring(0, 1).toUpperCase() + nome.substring(1);
+
+                    for (int i = 0; i < palavras.length; i++) {
+                        String palavra = palavras[i];
+
+                        if (palavra.isEmpty())
+                            continue;
+                        if (i == 0 || !excecoes.contains(palavra)) {
+                            palavra = palavra.substring(0,1).toUpperCase() + palavra.substring(1);
+                        }
+                        nomeFormatado.append(palavra).append(" ");
+                    }
+                    nome = nomeFormatado.toString().trim();
+                } else {
+                    System.out.println(GetRed() + "O campo Nome da UC não pode estar vazio. Tente novamente." + GetReset());
+                }
             }
 
             int ano = 0;
