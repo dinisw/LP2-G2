@@ -5,13 +5,12 @@ import java.util.List;
 import java.time.LocalDate;
 
 public class Propina {
-    private int numeroMecEstudante; // A quem pertence a propina
-    private int anoLetivo;          // A que ano curricular se refere (ex: 1º Ano)
-    private double valorTotal;      // Valor configurado para o curso
-    private double valorPago;       // Quanto o aluno já pagou (pode ser pago em prestações)
+    private int numeroMecEstudante;
+    private int anoLetivo;
+    private double valorTotal;
+    private double valorPago;
     private List<String> historicoPagamentos;
 
-    // Construtor
     public Propina(int numeroMecEstudante, int anoLetivo, double valorTotal, double valorPago) {
         this.numeroMecEstudante = numeroMecEstudante;
         this.anoLetivo = anoLetivo;
@@ -20,7 +19,6 @@ public class Propina {
         this.historicoPagamentos = new ArrayList<>();
     }
 
-    // Getters e Setters
     public int getNumeroMecEstudante() { return numeroMecEstudante; }
     public void setNumeroMecEstudante(int numeroMecEstudante) { this.numeroMecEstudante = numeroMecEstudante; }
 

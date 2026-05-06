@@ -124,7 +124,6 @@ public class DepartamentoView {
             if (lista.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhum departamento registado no sistema." + GetReset());
             } else {
-                // Tabela bonita e informativa
                 System.out.println(GetCyanBold() + "----------------------------------------------------------------------" + GetReset());
                 System.out.printf(GetWhiteBold() + " %-5s | %-15s | %-30s \n" + GetReset(), "ID", "SIGLA", "NOME DO DEPARTAMENTO");
                 System.out.println(GetCyanBold() + "----------------------------------------------------------------------" + GetReset());

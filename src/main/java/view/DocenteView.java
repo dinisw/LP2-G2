@@ -224,7 +224,7 @@ public class DocenteView {
 
             String momentoSelecionado = momentos.get(escolhaMomento - 1);
 
-            // 4º Passo: Pedir a nota
+
             Double nota = null;
             boolean notaValida = false;
             while (!notaValida) {
@@ -247,7 +247,6 @@ public class DocenteView {
                 }
             }
 
-            // 5º Passo: Submeter
             Avaliacao novaAvaliacao = new Avaliacao(momentoSelecionado, nota, unidadeCurricular, estudanteSelecionado);
             controller.AvaliacaoController avaliacaoController = new controller.AvaliacaoController();
 
@@ -361,14 +360,14 @@ public class DocenteView {
                     avaliacoesUC.sort((a1, a2) -> {
                         Double nota1 = (a1.getNota() != null) ? a1.getNota() : -1.0;
                         Double nota2 = (a2.getNota() != null) ? a2.getNota() : -1.0;
-                        return nota2.compareTo(nota1); // Ordem Descendente
+                        return nota2.compareTo(nota1);
                     });
                     break;
                 case "3":
                     avaliacoesUC.sort((a1, a2) -> {
                         Double nota1 = (a1.getNota() != null) ? a1.getNota() : -1.0;
                         Double nota2 = (a2.getNota() != null) ? a2.getNota() : -1.0;
-                        return nota1.compareTo(nota2); // Ordem Ascendente
+                        return nota1.compareTo(nota2);
                     });
                     break;
             }
@@ -394,7 +393,6 @@ public class DocenteView {
         }
     }
 
-    // --- MENU DE DEFINIR MOMENTOS DE AVALIAÇÃO (Na DocenteView) ---
     private void definirMomentosAvaliacao(Docente docenteLogado) {
         DocenteController docenteController = new DocenteController();
         System.out.println("\n--- Definir Momentos de Avaliacao ---");

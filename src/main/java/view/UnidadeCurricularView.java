@@ -36,7 +36,7 @@ public class UnidadeCurricularView {
                     opcoes.add("4. Atualizar Unidade Curricular");
                     opcoes.add("5. Eliminar Unidade Curricular");
                     opcoes.add("6. Listar Alunos da UC");
-                    opcoes.add("7. Atribuir/Alterar Docente de uma UC"); // EXPLICAÇÃO: Nova Opção!
+                    opcoes.add("7. Atribuir/Alterar Docente de uma UC");
                 }
                 opcoes.add("0. Voltar ao Menu de Gestão");
 

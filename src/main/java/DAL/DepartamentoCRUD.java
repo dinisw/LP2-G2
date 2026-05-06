@@ -12,7 +12,7 @@ public class DepartamentoCRUD extends AbstractCsvCRUD<Departamento> {
     @Override
     protected Departamento mapearLinhaParaEntidade(String[] colunas) {
         try {
-            return new Departamento(colunas[1], colunas[0]); // Nome e Sigla
+            return new Departamento(colunas[1], colunas[0]);
         } catch (Exception e) {
             return null;
         }

@@ -109,7 +109,7 @@ public class GestorView {
 
         do {
             try {
-                MenuUtils.limparTela(); // EXPLICAÇÃO: Limpar o ecrã ajuda a separar as ações visualmente.
+                MenuUtils.limparTela();
                 MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL", opcoes);
 
                 System.out.print("\nSelecione uma opção: ");
@@ -439,7 +439,6 @@ public class GestorView {
 
             Gestor gestor = listaGestores.get(escolha - 1);
 
-            // Dupla confirmação
             System.out.println(GetYellow() + "\nTem a certeza que deseja eliminar o gestor " + gestor.getNome() + "? (s/n)" + GetReset());
             String confirmacao1 = scanner.nextLine().trim();
             if (!confirmacao1.equalsIgnoreCase("s")) {
@@ -541,15 +540,14 @@ public class GestorView {
     private void registarDocente() {
         try {
             System.out.println(GetBlue() + "\n--- REGISTO DE DOCENTE ---" + GetReset());
-            System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
+            System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar!]" + GetReset());
+            DocenteController docenteControllerAtualizado = new DocenteController();
 
             String nome = "";
             while (true) {
                 nome = BackendUtils.lerInputString(scanner, "Nome: ");
-                if (nome.trim().split("\\s+").length >= 2) {
-                    break;
-                }
-                System.out.println(GetRed() + "Deve introduzir pelo menos nome e sobrenome. Tente novamente." + GetReset());
+                if (BackendUtils.isNomeValido(nome) && nome.trim().split("\\s+").length >= 2) break;
+                System.out.println(GetRed() + "Deve introduzir nome e sobrenome válidos (sem números)." + GetReset());
             }
 
             String morada = "";
@@ -597,14 +595,22 @@ public class GestorView {
             }
 
             System.out.println(GetYellow() + "\nA gerar credenciais e a tentar enviar o email..." + GetReset());
-            String passDigitada = SenhaUtils.gerarPalavraPasseAleatoria();
-            SenhaUtils su = new SenhaUtils();
+            String passDigitada = common.utils.SenhaUtils.gerarPalavraPasseAleatoria();
+            common.utils.SenhaUtils su = new common.utils.SenhaUtils();
             String hash = su.gerarHashComSalt(passDigitada);
             String[] partesNome = nome.trim().split("\\s+");
-            String siglaBase = (partesNome[0].substring(0, 1) + partesNome[partesNome.length - 1].substring(0, 2).toUpperCase());
-            String siglaFinal = siglaBase;
+            String primeiroNome = partesNome[0];
+            String ultimoNome = partesNome[partesNome.length - 1];
 
-            DocenteController docenteControllerAtualizado = new DocenteController();
+            String siglaBase;
+            if (ultimoNome.length() >= 2) {
+                siglaBase = (primeiroNome.substring(0, 1) + ultimoNome.substring(0, 2)).toUpperCase();
+            } else {
+                siglaBase = (primeiroNome.substring(0, 1) + ultimoNome).toUpperCase();
+            }
+
+            String siglaFinal = siglaBase;
+            DocenteController dc = new DocenteController();
             int counter = 1;
 
             while (docenteControllerAtualizado.procurarDocentePorSigla(siglaFinal) != null) {
@@ -677,7 +683,6 @@ public class GestorView {
             if (res.sucesso) {
                 System.out.println(GetGreen() + "\nDocente registado com sucesso!" + GetReset());
 
-                // Exibir avisos de UCs não encontradas, caso existam
                 String avisos = (String) res.mensagemErro;
                 if (avisos != null && !avisos.isEmpty()) {
                     System.out.println(GetYellow() + "Notas: " + avisos + GetReset());
@@ -953,7 +958,6 @@ public class GestorView {
 
             Docente docente = listaDocentes.get(escolha - 1);
 
-            // Dupla confirmação
             System.out.println(GetYellow() + "\nTem a certeza que deseja eliminar o docente " + docente.getNome() + "? (s/n)" + GetReset());
             String confirmacao1 = scanner.nextLine().trim();
             if (!confirmacao1.equalsIgnoreCase("s")) {
@@ -1427,7 +1431,6 @@ public class GestorView {
 
             Estudante estudanteAapagar = listaEstudantes.get(escolha - 1);
 
-            // Dupla confirmação
             System.out.println(GetYellow() + "\nTem a certeza que deseja eliminar o estudante " + estudanteAapagar.getNome() + "? (s/n)" + GetReset());
             String confirmacao1 = scanner.nextLine().trim();
             if (!confirmacao1.equalsIgnoreCase("s")) {
@@ -1536,7 +1539,6 @@ public class GestorView {
     }
 //endregion
 
-    // NOVO MÉTODO DE TESOURARIA PARA O GESTOR
     private void consultarAlunosEmDivida() {
         try {
             System.out.println(GetBlue() + "\n--- TESOURARIA: ALUNOS EM DÍVIDA ---" + GetReset());

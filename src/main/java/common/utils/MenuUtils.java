@@ -76,12 +76,10 @@ public class MenuUtils {
             }
         }
     }
-    // --- LEITURA SEGURA DE DECIMAIS (Notas, Propinas, Precos) ---
     public static double lerDoubleSeguro(Scanner scanner, String mensagem) {
         while (true) {
             System.out.print(mensagem);
             try {
-                // Substitui virgula por ponto para evitar erros regionais comuns em Portugal
                 String input = scanner.nextLine().trim().replace(",", ".");
                 return Double.parseDouble(input);
             } catch (NumberFormatException e) {
@@ -90,7 +88,6 @@ public class MenuUtils {
         }
     }
 
-    // --- LEITURA SEGURA DE DATAS (Datas de Nascimento) ---
     public static LocalDate lerDataSegura(Scanner scanner, String mensagem) {
         while (true) {
             System.out.print(mensagem);

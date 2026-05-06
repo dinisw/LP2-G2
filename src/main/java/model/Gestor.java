@@ -11,13 +11,13 @@ public class Gestor extends Utilizador {
         this.id = 0;
     }
 
-    public Gestor(int id, String nome, String morada, int nif, LocalDate dataNascimento, String email, String hash, String cargo) { //usado para ler com id
+    public Gestor(int id, String nome, String morada, int nif, LocalDate dataNascimento, String email, String hash, String cargo) {
         super(nome, morada, nif, dataNascimento, email, hash);
         this.cargo = cargo;
         this.id = id;
     }
 
-    public Gestor(String nome, String morada, int nif, LocalDate dataNascimento, String email, String hash, String cargo) { //usada para o registo do gestor
+    public Gestor(String nome, String morada, int nif, LocalDate dataNascimento, String email, String hash, String cargo) {
         super(nome, morada, nif, dataNascimento, email, hash);
         this.cargo = cargo;
     }
