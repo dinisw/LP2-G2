@@ -97,12 +97,10 @@ public class UnidadeCurricularView {
                 if (!nome.isEmpty()) {
                     String [] palavras = nome.toLowerCase().split("\\s+");
                     StringBuilder nomeFormatado = new StringBuilder();
-
                     List<String> excecoes = Arrays.asList("de", "do", "da", "dos", "das", "e", "em", "no", "na", "nos", "nas", "por", "para", "com", "a", "o", "as", "os");                    nome = nome.substring(0, 1).toUpperCase() + nome.substring(1);
 
                     for (int i = 0; i < palavras.length; i++) {
                         String palavra = palavras[i];
-
                         if (palavra.isEmpty())
                             continue;
                         if (i == 0 || !excecoes.contains(palavra)) {
@@ -300,7 +298,24 @@ public class UnidadeCurricularView {
             System.out.println(GetYellow() + "[Pressione ENTER nos campos que deseja manter iguais]" + GetReset());
 
             String novoNome = BackendUtils.lerInputString(scanner, "Novo nome: ");
-            String nomeFinal = novoNome.isEmpty() ? null : novoNome;
+            String nomeFinal = null;
+
+            if (!novoNome.isEmpty()) {
+                String[] palavras = novoNome.toLowerCase().split("\\s+");
+                StringBuilder nomeFormatado = new StringBuilder();
+                java.util.List<String> excecoes = java.util.Arrays.asList("de", "do", "da", "dos", "das", "e", "em", "no", "na", "nos", "nas", "por", "para", "com", "a", "o", "as", "os");
+
+                for (int i = 0; i < palavras.length; i++) {
+                    String palavra = palavras[i];
+                    if (palavra.isEmpty()) continue;
+
+                    if (i == 0 || !excecoes.contains(palavra)) {
+                        palavra = palavra.substring(0, 1).toUpperCase() + palavra.substring(1);
+                    }
+                    nomeFormatado.append(palavra).append(" ");
+                }
+                nomeFinal = nomeFormatado.toString().trim();
+            }
 
             int novoAno = 0;
             while (true) {

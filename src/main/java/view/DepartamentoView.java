@@ -23,25 +23,41 @@ public class DepartamentoView {
 
     public void exibirMenuDepartamentos() {
         String opcao;
-        ArrayList<String> opcoes = new ArrayList<>();
-        opcoes.add("1. Registar Departamento");
-        opcoes.add("2. Listar Departamentos");
-        opcoes.add("3. Atualizar Departamento");
-        opcoes.add("4. Eliminar Departamento");
-        opcoes.add("0. Voltar ao Menu de Gestão");
-
         do {
             try {
+                DepartamentoController departamentoController = new DepartamentoController();
+                boolean temDepartamentos = !departamentoController.listarTodosDepartamentos().isEmpty();
+
+                ArrayList<String> opcoes = new ArrayList<>();
+                opcoes.add("1. Registar Departamento");
+                if (temDepartamentos) {
+                    opcoes.add("2. Listar Departamentos");
+                    opcoes.add("3. Atualizar Departamento");
+                    opcoes.add("4. Eliminar Departamento");
+                }
+                opcoes.add("0. Voltar ao Menu de Gestão");
+
                 MenuUtils.limparTela();
                 MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL > DEPARTAMENTOS", opcoes);
                 System.out.print("\n" + GetWhiteBold() + "Selecione uma opção: " + GetReset());
                 opcao = scanner.nextLine().trim();
 
                 switch (opcao) {
-                    case "1": registarDepartamento(); break;
-                    case "2": listarDepartamentos(); break;
-                    case "3": atualizarDepartamento(); break;
-                    case "4": eliminarDepartamento(); break;
+                    case "1":
+                        registarDepartamento();
+                        break;
+                    case "2":
+                        if (temDepartamentos) listarDepartamentos();
+                        else mostrarErroOpcao();
+                        break;
+                    case "3":
+                        if (temDepartamentos) atualizarDepartamento();
+                        else mostrarErroOpcao();
+                        break;
+                    case "4":
+                        if (temDepartamentos) eliminarDepartamento();
+                        else mostrarErroOpcao();
+                        break;
                     case "0":
                         System.out.println(GetYellow() + "\nA voltar..." + GetReset());
                         return;
@@ -49,7 +65,7 @@ public class DepartamentoView {
                         mostrarErroOpcao();
                 }
             } catch (Exception e) {
-                System.out.println("\n" + GetRed() + "Ocorreu um erro na navegação: " + e.getMessage() + GetReset());
+                System.out.println("\n" + GetRed() + "Ocorreu um erro: " + e.getMessage() + GetReset());
                 MenuUtils.pressionarEnter(scanner);
             }
         } while (true);
@@ -163,9 +179,6 @@ public class DepartamentoView {
         try {
             System.out.println(GetBlue() + "\n--- ATUALIZAR DEPARTAMENTO ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
-
-            listarDepartamentos();
-
             DepartamentoController departamentoController = new DepartamentoController();
             List<Departamento> lista = departamentoController.listarTodosDepartamentos();
 
@@ -222,25 +235,29 @@ public class DepartamentoView {
         try {
             System.out.println(GetBlue() + "\n--- ELIMINAR DEPARTAMENTO ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
-
-            listarDepartamentos();
-
             DepartamentoController departamentoController = new DepartamentoController();
+            List<Departamento> lista = departamentoController.listarTodosDepartamentos();
+
+            System.out.println("\n" + GetWhiteBold() + "Departamentos Disponíveis:" + GetReset());
+            for (int i = 0; i < lista.size(); i++) {
+                System.out.printf("%d - %s (%s)\n", i + 1, lista.get(i).getNome(), lista.get(i).getSigla());
+            }
             Departamento departamento = null;
-            String sigla = "";
 
             while (departamento == null) {
-                sigla = BackendUtils.lerInputString(scanner, "\nDigite a sigla do departamento a eliminar: ").toUpperCase();
-                if (sigla.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
-
-                departamento = departamentoController.procurarDepartamento(sigla);
-
-                if (departamento == null) {
-                    System.out.println(GetRed() + "Erro: Departamento não encontrado. Tente novamente." + GetReset());
+                try {
+                    String input = BackendUtils.lerInputString(scanner, "\nEscolha o ID numéirico do departamento: ");
+                    int escolha = Integer.parseInt(input);
+                    if (escolha >= 1 && escolha <= lista.size()) {
+                        departamento = lista.get(escolha - 1);
+                    } else {
+                        System.out.println(GetRed() + "ID inválido." + GetReset());
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println(GetRed() + "Digite apenas números inteiros." + GetReset());
                 }
             }
 
-            // Dupla confirmação
             System.out.println(GetYellow() + "\nTem a certeza que deseja eliminar o departamento " + departamento.getNome() + "? (s/n)" + GetReset());
             String confirmacao1 = scanner.nextLine().trim();
             if (!confirmacao1.equalsIgnoreCase("s")) {
@@ -257,7 +274,7 @@ public class DepartamentoView {
                 return;
             }
 
-            Resultado <Departamento> resultado = departamentoController.eliminarDepartamento(sigla);
+            Resultado <Departamento> resultado = departamentoController.eliminarDepartamento(departamento.getSigla());
 
             if (resultado.sucesso) {
                 System.out.println(GetGreen() + "\nDepartamento eliminado com sucesso!" + GetReset());

@@ -1069,7 +1069,7 @@ public class GestorView {
             String nome = "";
             while (true) {
                 nome = BackendUtils.lerInputString(scanner, "Nome: ");
-                if (nome.trim().split("\\s+").length >= 2) {
+                if (BackendUtils.isNomeValido(nome) && nome.trim().split("\\s+").length >= 2) {
                     break;
                 }
                 System.out.println(GetRed() + "Deve introduzir pelo menos nome e sobrenome. Tente novamente." + GetReset());
@@ -1313,7 +1313,7 @@ public class GestorView {
                 if (nome.isEmpty()) {
                     break;
                 }
-                if (nome.trim().split("\\s+").length >= 2) {
+                if (BackendUtils.isNomeValido(nome) && nome.trim().split("\\s+").length >= 2) {
                     nomeFinal = nome;
                     break;
                 }
