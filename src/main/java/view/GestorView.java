@@ -117,13 +117,29 @@ public class GestorView {
                 opcao = scanner.nextLine().trim();
 
                 switch (opcao) {
-                    case "1": registarGestor(); break;
-                    case "2": if (temGestores) listarGestores(); else mostrarErroMenu(); break;
-                    case "3": if (temGestores) procurarGestor(); else mostrarErroMenu(); break;
-                    case "4": if (temGestores) atualizarGestor(); else mostrarErroMenu(); break;
-                    case "5": if (temGestores) eliminarGestor(); else mostrarErroMenu(); break;
-                    case "0": return;
-                    default: mostrarErroMenu();
+                    case "1":
+                        registarGestor();
+                        break;
+                    case "2":
+                        if (temGestores) listarGestores();
+                        else mostrarErroMenu();
+                        break;
+                    case "3":
+                        if (temGestores) procurarGestor();
+                        else mostrarErroMenu();
+                        break;
+                    case "4":
+                        if (temGestores) atualizarGestor();
+                        else mostrarErroMenu();
+                        break;
+                    case "5":
+                        if (temGestores) eliminarGestor();
+                        else mostrarErroMenu();
+                        break;
+                    case "0":
+                        return;
+                    default:
+                        mostrarErroMenu();
                 }
             } catch (Exception e) {
                 System.out.println("\n" + GetRed() + "Ocorreu um erro na navegação: " + e.getMessage() + GetReset());
@@ -148,7 +164,8 @@ public class GestorView {
             String morada = BackendUtils.lerInputString(scanner, "Morada: ");
             while (morada.isEmpty()) {
                 morada = BackendUtils.lerInputString(scanner, "Morada: ");
-                if (morada.isEmpty()) System.out.println(GetRed() + "O campo Morada não pode estar vazio. Tente novamente." + GetReset());
+                if (morada.isEmpty())
+                    System.out.println(GetRed() + "O campo Morada não pode estar vazio. Tente novamente." + GetReset());
             }
 
             int nif = 0;
@@ -160,9 +177,9 @@ public class GestorView {
                     nifValido = BackendUtils.nifEValido(nifString);
                     if (!nifValido) {
                         System.out.println(GetRed() + "NIF deve ser um número inteiro válido e conter 9 dígitos. Tente novamente." + GetReset());
-                    }else{
+                    } else {
                         var nifExiste = BackendUtils.nifExiste(nif);
-                        if(nifExiste) {
+                        if (nifExiste) {
                             System.out.println(GetRed() + "NIF já existente no sistema. Tente com outro NIF." + GetReset());
                             nifValido = false;
                         }
@@ -191,7 +208,7 @@ public class GestorView {
                 email = scanner.nextLine().trim();
                 if (email.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
                 emailValido = BackendUtils.emailISSMFGestorValido(email);
-                if(!emailValido)
+                if (!emailValido)
                     System.out.println(GetRed() + "EMAIL deve ter o formato xxxx.gestor@issmf.ipp.pt. Tente novamente." + GetReset());
             }
 
@@ -203,7 +220,7 @@ public class GestorView {
                     throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
                 }
                 senhaValida = BackendUtils.isSenhaValida(passDigitada);
-                if(!senhaValida) {
+                if (!senhaValida) {
                     System.out.println(GetRed() + "SENHA deve conter pelo menos uma letra maiúscula, um número e um caracter especial. Tente novamente." + GetReset());
                 }
             }
@@ -214,11 +231,12 @@ public class GestorView {
             String cargo = "";
             while (cargo.isEmpty()) {
                 cargo = BackendUtils.lerInputString(scanner, "Cargo: ");
-                if (cargo.isEmpty()) System.out.println(GetRed() + "O campo Cargo não pode estar vazio. Tente novamente." + GetReset());
+                if (cargo.isEmpty())
+                    System.out.println(GetRed() + "O campo Cargo não pode estar vazio. Tente novamente." + GetReset());
             }
 
             GestorController gestorControllerAtualizado = new GestorController();
-            Resultado <Gestor> resultado = gestorControllerAtualizado.registarGestor(nome, morada, nif, dataNascimento, email, hash, cargo);
+            Resultado<Gestor> resultado = gestorControllerAtualizado.registarGestor(nome, morada, nif, dataNascimento, email, hash, cargo);
 
             if (resultado.sucesso) {
                 System.out.println(GetGreen() + "\nGestor registado com sucesso!" + GetReset());
@@ -426,7 +444,7 @@ public class GestorView {
                 return;
             }
 
-            Resultado <Gestor> resultado = gestorControllerAtualizado.eliminarGestor(gestor.getNif());
+            Resultado<Gestor> resultado = gestorControllerAtualizado.eliminarGestor(gestor.getNif());
 
             if (resultado.sucesso) {
                 System.out.println(GetGreen() + "\nGestor eliminado com sucesso!" + GetReset());
@@ -472,16 +490,34 @@ public class GestorView {
                 opcao = scanner.nextLine().trim();
 
                 switch (opcao) {
-                    case "1": registarDocente(); break;
-                    case "2": if (temDocentes) listarDocentes(); else mostrarErroMenu(); break;
-                    case "3": if (temDocentes) procurarDocente(); else mostrarErroMenu(); break;
-                    case "4": if (temDocentes) atualizarDocente(); else mostrarErroMenu(); break;
-                    case "5": if (temDocentes) alterarPasswordDocente(); else mostrarErroMenu(); break;
-                    case "6": if (temDocentes) eliminarDocente(); else mostrarErroMenu(); break;
+                    case "1":
+                        registarDocente();
+                        break;
+                    case "2":
+                        if (temDocentes) listarDocentes();
+                        else mostrarErroMenu();
+                        break;
+                    case "3":
+                        if (temDocentes) procurarDocente();
+                        else mostrarErroMenu();
+                        break;
+                    case "4":
+                        if (temDocentes) atualizarDocente();
+                        else mostrarErroMenu();
+                        break;
+                    case "5":
+                        if (temDocentes) alterarPasswordDocente();
+                        else mostrarErroMenu();
+                        break;
+                    case "6":
+                        if (temDocentes) eliminarDocente();
+                        else mostrarErroMenu();
+                        break;
                     case "0":
                         System.out.println(GetYellow() + "\nA voltar ao menu principal..." + GetReset());
                         return;
-                    default: mostrarErroMenu();
+                    default:
+                        mostrarErroMenu();
                 }
             } catch (Exception e) {
                 System.out.println("\n" + GetRed() + "Ocorreu um erro na navegação: " + e.getMessage() + GetReset());
@@ -507,7 +543,8 @@ public class GestorView {
             String morada = "";
             while (morada.isEmpty()) {
                 morada = BackendUtils.lerInputString(scanner, "Morada: ");
-                if (morada.isEmpty()) System.out.println(GetRed() + "O campo Morada não pode estar vazio. Tente novamente." + GetReset());
+                if (morada.isEmpty())
+                    System.out.println(GetRed() + "O campo Morada não pode estar vazio. Tente novamente." + GetReset());
             }
 
             int nif = 0;
@@ -519,9 +556,9 @@ public class GestorView {
                     nifValido = BackendUtils.nifEValido(nifString);
                     if (!nifValido) {
                         System.out.println(GetRed() + "NIF deve ser um número inteiro válido e conter 9 dígitos. Tente novamente." + GetReset());
-                    }else{
+                    } else {
                         var nifExiste = BackendUtils.nifExiste(nif);
-                        if(nifExiste) {
+                        if (nifExiste) {
                             System.out.println(GetRed() + "NIF já existente no sistema. Tente com outro NIF." + GetReset());
                             nifValido = false;
                         }
@@ -537,9 +574,9 @@ public class GestorView {
                     String dataString = BackendUtils.lerInputString(scanner, "Data de Nascimento (AAAA-MM-DD): ");
                     dataNascimento = LocalDate.parse(dataString);
                     int idade = Period.between(dataNascimento, LocalDate.now()).getYears();
-                    if(idade >= 18) {
+                    if (idade >= 18) {
                         break;
-                    }else {
+                    } else {
                         System.out.println(GetRed() + "Sistema só permite pessoas maiores de 18 anos. Tente novamente." + GetReset());
                     }
                 } catch (DateTimeParseException e) {
@@ -552,7 +589,7 @@ public class GestorView {
             SenhaUtils su = new SenhaUtils();
             String hash = su.gerarHashComSalt(passDigitada);
             String[] partesNome = nome.trim().split("\\s+");
-            String siglaBase = (partesNome[0].substring(0,1) + partesNome[partesNome.length - 1].substring(0,2).toUpperCase());
+            String siglaBase = (partesNome[0].substring(0, 1) + partesNome[partesNome.length - 1].substring(0, 2).toUpperCase());
             String siglaFinal = siglaBase;
 
             DocenteController docenteControllerAtualizado = new DocenteController();
@@ -571,15 +608,15 @@ public class GestorView {
 
             EmailService es = new EmailService();
             String corpoEmail = "-- Credenciais Geradas Automaticamente --\n" +
-                    "Sigla: " + sigla + "\n" +
+                    "Sigla: " + siglaFinal + "\n" +
                     "Email: " + email + "\n" +
                     "Palavra-passe: " + passDigitada;
 
             var resEmail = es.enviarEmailRegisto(email, corpoEmail, TipoDeUtilizador.DOCENTE);
 
-            if(resEmail.sucesso){
+            if (resEmail.sucesso) {
                 System.out.println(GetGreen() + "Email com as credenciais de acesso enviado com sucesso!" + GetReset());
-            }else{
+            } else {
                 System.out.println(GetRed() + "Falha ao enviar email: " + resEmail.mensagemErro + GetReset());
                 System.out.println(GetRed() + "O registo foi abortado para evitar inconsistência de credenciais." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
@@ -623,7 +660,7 @@ public class GestorView {
                 }
             }
 
-            Resultado <Docente> res = docenteControllerAtualizado.registarDocente(nome, morada, nif, dataNascimento, email, hash, sigla, nomesUC);
+            Resultado<Docente> res = docenteControllerAtualizado.registarDocente(nome, morada, nif, dataNascimento, email, hash, siglaFinal, nomesUC);
 
             if (res.sucesso) {
                 System.out.println(GetGreen() + "\nDocente registado com sucesso!" + GetReset());
@@ -759,8 +796,6 @@ public class GestorView {
             System.out.println(docente.toString());
             System.out.println(GetYellow() + "\n[Pressione ENTER nos campos que deseja manter iguais]" + GetReset());
 
-            System.out.println(GetYellow() + "\n[Pressione ENTER nos campos que deseja manter iguais]" + GetReset());
-
             String nomeFinal = docente.getNome();
             while (true) {
                 String nome = BackendUtils.lerInputString(scanner, "Novo Nome: ");
@@ -778,7 +813,7 @@ public class GestorView {
             String morada = BackendUtils.lerInputString(scanner, "Nova Morada: ");
             if (!morada.isEmpty()) moradaFinal = morada;
 
-            Resultado <Docente> resultado = docenteControllerAtualizado.atualizarDocente(docente.getNif(), nomeFinal, moradaFinal, null);
+            Resultado<Docente> resultado = docenteControllerAtualizado.atualizarDocente(docente.getNif(), nomeFinal, moradaFinal, null);
 
             if (resultado.sucesso) {
                 System.out.println(GetGreen() + "\nDocente atualizado com sucesso!" + GetReset());
@@ -843,7 +878,7 @@ public class GestorView {
 
                 if (novaPass.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
                 senhaValida = BackendUtils.isSenhaValida(novaPass);
-                if(!senhaValida) {
+                if (!senhaValida) {
                     System.out.println(GetRed() + "SENHA deve conter pelo menos uma letra maiúscula, um número e um caracter especial. Tente novamente." + GetReset());
                 }
             }
@@ -851,7 +886,7 @@ public class GestorView {
             SenhaUtils su = new SenhaUtils();
             String novoHash = su.gerarHashComSalt(novaPass);
 
-            Resultado <Docente> resultado = docenteControllerAtualizado.alterarPassword(docente.getNif(), novoHash);
+            Resultado<Docente> resultado = docenteControllerAtualizado.alterarPassword(docente.getNif(), novoHash);
 
             if (resultado.sucesso) {
                 System.out.println(GetGreen() + "\nPassword alterada com sucesso!" + GetReset());
@@ -923,7 +958,7 @@ public class GestorView {
                 return;
             }
 
-            Resultado <String> resultado = docenteControllerAtualizado.eliminarDocente(docente.getNif());
+            Resultado<String> resultado = docenteControllerAtualizado.eliminarDocente(docente.getNif());
 
             if (resultado.sucesso) {
                 System.out.println(GetGreen() + "\nDocente eliminado com sucesso!" + GetReset());
@@ -946,17 +981,25 @@ public class GestorView {
     //region Estudante
     private void exibirMenuEstudantes() {
         String opcao;
-        ArrayList<String> opcoes = new ArrayList<>();
-        opcoes.add("1. Registar Estudante");
-        opcoes.add("2. Listar Estudantes");
-        opcoes.add("3. Procurar Estudante (Número Mec)");
-        opcoes.add("4. Atualizar Estudante (Número Mec)");
-        opcoes.add("5. Eliminar Estudante (Número Mec)");
-        opcoes.add("6. Alterar Password do Estudante");
-        opcoes.add("0. Voltar");
 
         do {
             try {
+                EstudanteController estudanteController = new EstudanteController();
+                boolean temEstudantes = !estudanteController.listarEstudantes().isEmpty();
+
+                ArrayList<String> opcoes = new ArrayList<>();
+                opcoes.add("1. Registar Estudante");
+
+                if (temEstudantes) {
+                    opcoes.add("2. Listar Estudantes");
+                    opcoes.add("3. Procurar Estudante (Número Mec)");
+                    opcoes.add("4. Atualizar Estudante (Número Mec)");
+                    opcoes.add("5. Eliminar Estudante (Número Mec)");
+                    opcoes.add("6. Alterar Password do Estudante");
+                }
+                opcoes.add("0. Voltar");
+
+
                 MenuUtils.limparTela();
                 MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL > ESTUDANTES", opcoes);
                 System.out.print("\n" + GetWhiteBold() + "Selecione uma opção: " + GetReset());
@@ -967,23 +1010,29 @@ public class GestorView {
                         registarEstudante();
                         break;
                     case "2":
-                        listarEstudantes();
+                        if (temEstudantes) listarEstudantes();
+                        else mostrarErroMenu();
                         break;
                     case "3":
-                        procurarEstudante();
+                        if (temEstudantes) procurarEstudante();
+                        else mostrarErroMenu();
                         break;
                     case "4":
-                        atualizarEstudante();
+                        if (temEstudantes) atualizarEstudante();
+                        else mostrarErroMenu();
                         break;
                     case "5":
-                        eliminarEstudante();
+                        if (temEstudantes) eliminarEstudante();
+                        else mostrarErroMenu();
+                        break;
                     case "6":
-                        alterarPasswordEstudante();
+                        if (temEstudantes) alterarPasswordEstudante();
+                        else mostrarErroMenu();
                         break;
                     case "0":
-                        System.out.println(GetYellow() + "\nA voltar ao menu principal..." + GetReset());
                         return;
-                    default: mostrarErroMenu();
+                    default:
+                        mostrarErroMenu();
                 }
             } catch (Exception e) {
                 System.out.println("\n" + GetRed() + "Ocorreu um erro na navegação: " + e.getMessage() + GetReset());
@@ -991,6 +1040,7 @@ public class GestorView {
             }
         } while (true);
     }
+
 
     private void registarEstudante() {
         try {
