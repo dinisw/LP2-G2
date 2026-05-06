@@ -317,27 +317,19 @@ public class GestorView {
         try {
             System.out.println(GetBlue() + "\n--- ATUALIZAR GESTOR ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
-
             GestorController gestorControllerAtualizado = new GestorController();
             List<Gestor> listaGestores = gestorControllerAtualizado.listarGestores();
-            if (listaGestores.isEmpty()) {
-                System.out.println(GetYellow() + "Não há gestores registados no sistema." + GetReset());
-                MenuUtils.pressionarEnter(scanner);
-                return;
-            }
 
             System.out.println("\n" + GetWhiteBold() + "Gestores Disponíveis:" + GetReset());
             for (int i = 0; i < listaGestores.size(); i++) {
-                Gestor g = listaGestores.get(i);
-                System.out.printf("%d - %s (NIF: %d)\n", i + 1, g.getNome(), g.getNif());
+                System.out.printf("%d - %s (NIF: %d)\n", i + 1, listaGestores.get(i).getNome(), listaGestores.get(i).getNif());
             }
 
             int escolha = -1;
-            while (escolha < 0 || escolha > listaGestores.size()) {
+            while (escolha < 1 || escolha > listaGestores.size()) {
                 try {
                     String op = BackendUtils.lerInputString(scanner, "\nDigite a opção do gestor a atualizar: ");
                     escolha = Integer.parseInt(op);
-                    if (escolha == 0) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
                     if (escolha < 1 || escolha > listaGestores.size()) {
                         System.out.println(GetRed() + "Opção inválida. Escolha um número entre 1 e " + listaGestores.size() + "." + GetReset());
                     }
@@ -348,10 +340,12 @@ public class GestorView {
             }
 
             Gestor gestor = listaGestores.get(escolha - 1);
-
             System.out.println(GetGreen() + "\nDados atuais:" + GetReset());
             System.out.println(gestor.toString());
             System.out.println(GetYellow() + "\n[Pressione ENTER nos campos que deseja manter iguais]" + GetReset());
+
+            String novoNome = BackendUtils.lerInputString(scanner, "Novo Nome:");
+            if (!novoNome.isEmpty()) gestor.setNome(novoNome);
 
             String morada = BackendUtils.lerInputString(scanner, "Nova Morada: ");
             if (!morada.isEmpty()) gestor.setMorada(morada);
