@@ -103,7 +103,15 @@ public class CursoView {
     private void registarCurso() {
         try {
             System.out.println(GetBlue() + "\n--- REGISTO DE CURSO ---" + GetReset());
+            DepartamentoController departamentoController = new DepartamentoController();
+            List<Departamento> departamentos = departamentoController.listarTodosDepartamentos();
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
+
+            if (departamentos.isEmpty()) {
+                System.out.println(GetYellow() + "Ação Bloqueada: Nenhum departamento registado. Crie um departamento primeiro." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
 
             String nome = "";
             while (nome.isEmpty()) {
@@ -112,25 +120,19 @@ public class CursoView {
             }
 
             int duracao = -1;
-            while (duracao <= 0) {
+            while (duracao <= 0 || duracao > 10) {
                 try {
                     String duracaoStr = BackendUtils.lerInputString(scanner, "Duração do Curso (em anos): ");
                     if (duracaoStr.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
                     duracao = Integer.parseInt(duracaoStr);
+                    if (duracao > 10) System.out.println(GetRed() + "Erro: A duração máxima é de 10 anos." + GetReset());
                 } catch (NumberFormatException e) {
                     System.out.println(GetRed() + "Formato inválido. Insira um número inteiro." + GetReset());
                 }
             }
 
             System.out.println("\n" + GetBlue() + "--- Departamentos Disponíveis ---" + GetReset());
-            DepartamentoController departamentoController = new DepartamentoController();
-            List<Departamento> departamentos = departamentoController.listarTodosDepartamentos();
 
-            if (departamentos.isEmpty()) {
-                System.out.println(GetYellow() + "Nenhum departamento registado. Crie um departamento primeiro." + GetReset());
-                MenuUtils.pressionarEnter(scanner);
-                return;
-            }
             for (Departamento departamento : departamentos) {
                 System.out.println(departamento.getSigla() + " - " + departamento.getNome());
             }
