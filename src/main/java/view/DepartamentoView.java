@@ -167,17 +167,26 @@ public class DepartamentoView {
             listarDepartamentos();
 
             DepartamentoController departamentoController = new DepartamentoController();
+            List<Departamento> lista = departamentoController.listarTodosDepartamentos();
+
+            System.out.println("\n" + GetWhiteBold() + "Departamentos Disponíveis:" + GetReset());
+            for (int i = 0; i < lista.size(); i++) {
+                System.out.printf("%d - %s (%s)\n", i + 1, lista.get(i).getNome(), lista.get(i).getSigla());
+            }
+
             Departamento departamento = null;
-            String sigla = "";
-
             while (departamento == null) {
-                sigla = BackendUtils.lerInputString(scanner, "\nDigite a sigla do departamento a atualizar: ").toUpperCase();
-                if (sigla.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
+                try {
+                    String input = BackendUtils.lerInputString(scanner, "\nEscolha o ID do departamento a atualizar: ");
+                    int escolha = Integer.parseInt(input);
 
-                departamento = departamentoController.procurarDepartamento(sigla);
-
-                if (departamento == null) {
-                    System.out.println(GetRed() + "Erro: Departamento não encontrado. Tente novamente." + GetReset());
+                    if (escolha >= 1 && escolha <= lista.size()) {
+                        departamento = lista.get(escolha - 1);
+                    } else {
+                        System.out.println(GetRed() + "ID inválido. Escolha um número da lista." + GetReset());
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println(GetRed() + "Por favor, digite apenas números." + GetReset());
                 }
             }
 
@@ -189,7 +198,7 @@ public class DepartamentoView {
 
             String nomeFinal = nome.isEmpty() ? departamento.getNome() : nome;
 
-            Resultado <Departamento> resultado = departamentoController.atualizarDepartamento(sigla, nomeFinal);
+            Resultado <Departamento> resultado = departamentoController.atualizarDepartamento(departamento.getSigla(), nomeFinal);
 
             if (resultado.sucesso) {
                 System.out.println(GetGreen() + "\nDepartamento atualizado com sucesso!" + GetReset());
