@@ -24,7 +24,6 @@ public class LoginView {
                 System.out.println(GetCyanBold() + "LOGIN" + GetReset());
                 System.out.println(GetYellow() + "[Digite '0' para sair | Digite '9' para recuperar password]" + GetReset());
 
-                // --- 1. LER EMAIL ---
                 String email = "";
                 boolean emailValido = false;
                 boolean recuperarSenha = false;

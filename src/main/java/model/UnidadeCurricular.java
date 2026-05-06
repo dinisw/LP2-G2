@@ -10,7 +10,7 @@ public class UnidadeCurricular {
     private int semestre;
     private Docente docente;
     private List<String> momentosAvaliacao;
-    private final int ects = 6; // Valor fixo conforme requisito
+    private final int ects = 6;
 
 
     public UnidadeCurricular(String nome, int anoCurricular,int semestre, Docente docente) {

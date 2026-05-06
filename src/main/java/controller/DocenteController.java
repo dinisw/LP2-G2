@@ -23,14 +23,12 @@ public class DocenteController {
         this.avaliacaoCRUD = new AvaliacaoCRUD();
     }
 
-    // --- PODER EXCLUSIVO DO DOCENTE: Definir Momentos de Avaliação ---
     public Resultado<UnidadeCurricular> definirMomentosAvaliacao(String siglaDocente, int idUc, List<String> momentos) {
         UnidadeCurricularCRUD ucCRUD = new UnidadeCurricularCRUD();
         UnidadeCurricular uc = ucCRUD.procurarPorId(idUc);
 
         if (uc == null) return new Resultado<>(false, "Unidade Curricular não encontrada.");
 
-        // Validação de Segurança: O docente só pode alterar a sua própria UC
         if (uc.getDocente() == null || !uc.getDocente().getSigla().equalsIgnoreCase(siglaDocente)) {
             return new Resultado<>(false, "Acesso Negado: Não é o docente responsável por esta Unidade Curricular.");
         }
@@ -52,7 +50,6 @@ public class DocenteController {
 
         Docente docente = new Docente(nome, morada, nif, dataNascimento, email, hash, sigla, new ArrayList<>(), new ArrayList<>());
 
-        // A associação de UCs foi simplificada, o Gestor orquestra isto melhor pelo UnidadeCurricularController
         return docenteCRUD.registarDocente(docente);
     }
 

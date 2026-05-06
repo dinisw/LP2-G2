@@ -12,14 +12,13 @@ import java.util.stream.Stream;
 
 public class EstudanteController {
     private final EstudanteCRUD estudanteCRUD;
-    private final CursoCRUD cursoCRUD; // Injetado para validar regras de negócio transversais
+    private final CursoCRUD cursoCRUD;
 
     public EstudanteController() {
         this.estudanteCRUD = new EstudanteCRUD();
         this.cursoCRUD = new CursoCRUD();
     }
 
-    // --- LÓGICA DE PROGRESSÃO E FICHA (Mantida com pequenas otimizações) ---
 
     public String obterFichaEstudanteFormatada(Estudante estudante) {
         if (estudante == null) return "Erro: Estudante nao encontrado.";
@@ -81,7 +80,7 @@ public class EstudanteController {
         return false;
     }
 
-    // --- OPERAÇÕES CRUD COM 'RESULTADO<T>' ---
+
 
     public int gerarNumeroMecanografico() {
         return estudanteCRUD.gerarNumeroMecanografico();
@@ -133,7 +132,6 @@ public class EstudanteController {
         Estudante estudante = estudanteCRUD.lerEstudante(numeroMec);
         if (estudante == null) return new Resultado<>(false, "Estudante não encontrado.");
 
-        // REGRA DE NEGÓCIO: Não inativar/eliminar se o curso já iniciou
         if (estudante.getNomeCurso() != null && !estudante.getNomeCurso().equals("SEM REGISTO")) {
             Curso cursoInfo = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
 
@@ -152,12 +150,10 @@ public class EstudanteController {
         return res.sucesso ? new Resultado<>("ELIMINADO", true) : new Resultado<>(false, res.mensagemErro);
     }
 
-    // --- LEITURAS SIMPLES ---
     public List<Estudante> listarEstudantes() { return estudanteCRUD.getEstudantes(); }
     public Estudante procurarEstudantePorNif(int nif) { return nif <= 0 ? null : estudanteCRUD.procurarPorNif(nif); }
     public Estudante procurarEstudantePorNumeroMec(int mec) { return mec <= 0 ? null : estudanteCRUD.lerEstudante(mec); }
 
-    // --- SIMULADOR GLOBAL PARA APRESENTAÇÃO ACADÉMICA ---
     public Resultado<List<String>> simularTransicaoAnoLetivoGlobal() {
         List<String> relatorio = new java.util.ArrayList<>();
         List<Estudante> estudantes = estudanteCRUD.getEstudantes();

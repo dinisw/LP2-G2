@@ -76,4 +76,9 @@ public class BackendUtils {
             return new java.util.Scanner(System.in).nextLine().trim();
         }
     }
+
+    public static boolean isNomeValido (String nome) {
+        if (nome == null || nome.trim().isEmpty()) return false;
+        return nome.matches("^[\\p{L} \\.'\\-]+$");
+    }
 }

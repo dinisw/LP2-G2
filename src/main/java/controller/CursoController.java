@@ -20,7 +20,6 @@ public class CursoController {
         this.ucCRUD = new UnidadeCurricularCRUD();
     }
 
-    // NOVA ASSINATURA: Recebe diretamente o objeto Curso montado pela View
     public Resultado <Curso> registarCurso(Curso curso) {
         Resultado <Curso> resultado = new Resultado();
 
@@ -78,7 +77,6 @@ public class CursoController {
             resultado.mensagemErro = "O curso original não foi encontrado na base de dados.";
             return resultado;
         }
-        // --- INÍCIO DA REGRA DO ENUNCIADO (Afinada para Finanças) ---
         DAL.EstudanteCRUD estudanteCRUD = new DAL.EstudanteCRUD();
         boolean temEstudantes = false;
         for (model.Estudante e : estudanteCRUD.getEstudantes()) {

@@ -6,6 +6,7 @@ import common.utils.MenuUtils;
 import common.utils.SenhaUtils;
 import controller.AvaliacaoController;
 import controller.DocenteController;
+import controller.UnidadeCurricularController;
 import model.*;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
@@ -48,7 +49,7 @@ public class DocenteView {
                 opcao = scanner.nextLine().trim();
 
                 switch (opcao) {
-                    case "1": verUC(docente); break;
+                    case "1": verUnidadeCurricular(docente); break;
                     case "2": alterarPasswordPropria(docente); break;
                     case "3": lancarNotaDocente(docente); break;
                     case "4": consultarFichaDocente(docente); break;
@@ -69,14 +70,12 @@ public class DocenteView {
         } while (true);
     }
 
-    private void verUC(Docente docenteAtual) {
+    private void verUnidadeCurricular(Docente docenteAtual) {
         try {
             System.out.println(GetBlue() + "\n--- MINHAS UNIDADES CURRICULARES ---" + GetReset());
 
-            DocenteController dc = new DocenteController();
-            Docente docenteFresco = dc.procurarDocentePorNif(docenteAtual.getNif());
-
-            List<UnidadeCurricular> minhasUcs = docenteFresco.getUnidadesCurriculares();
+            UnidadeCurricularController unidadeCurricularController = new UnidadeCurricularController();
+            List<UnidadeCurricular> minhasUcs = unidadeCurricularController.listarUCsPorDocente(docenteAtual.getSigla());
 
             if (minhasUcs == null || minhasUcs.isEmpty()) {
                 System.out.println(GetYellow() + "Não tem Unidades Curriculares atribuídas neste momento." + GetReset());
@@ -225,7 +224,7 @@ public class DocenteView {
 
             String momentoSelecionado = momentos.get(escolhaMomento - 1);
 
-            // 4º Passo: Pedir a nota
+
             Double nota = null;
             boolean notaValida = false;
             while (!notaValida) {
@@ -248,7 +247,6 @@ public class DocenteView {
                 }
             }
 
-            // 5º Passo: Submeter
             Avaliacao novaAvaliacao = new Avaliacao(momentoSelecionado, nota, unidadeCurricular, estudanteSelecionado);
             controller.AvaliacaoController avaliacaoController = new controller.AvaliacaoController();
 
@@ -362,14 +360,14 @@ public class DocenteView {
                     avaliacoesUC.sort((a1, a2) -> {
                         Double nota1 = (a1.getNota() != null) ? a1.getNota() : -1.0;
                         Double nota2 = (a2.getNota() != null) ? a2.getNota() : -1.0;
-                        return nota2.compareTo(nota1); // Ordem Descendente
+                        return nota2.compareTo(nota1);
                     });
                     break;
                 case "3":
                     avaliacoesUC.sort((a1, a2) -> {
                         Double nota1 = (a1.getNota() != null) ? a1.getNota() : -1.0;
                         Double nota2 = (a2.getNota() != null) ? a2.getNota() : -1.0;
-                        return nota1.compareTo(nota2); // Ordem Ascendente
+                        return nota1.compareTo(nota2);
                     });
                     break;
             }
@@ -395,7 +393,6 @@ public class DocenteView {
         }
     }
 
-    // --- MENU DE DEFINIR MOMENTOS DE AVALIAÇÃO (Na DocenteView) ---
     private void definirMomentosAvaliacao(Docente docenteLogado) {
         DocenteController docenteController = new DocenteController();
         System.out.println("\n--- Definir Momentos de Avaliacao ---");
@@ -448,7 +445,6 @@ public class DocenteView {
         }
     }
 
-    // Método utilitário para as Views
     private int lerInteiroSeguro(String mensagem) {
         while (true) {
             System.out.print(mensagem);

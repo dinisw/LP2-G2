@@ -20,15 +20,12 @@ public class EstudanteCalculo {
 
         long inscritasAno1 = avaliacoes.stream().filter(a -> a.getUnidadeCurricular().getAnoCurricular() == 1).count();
 
-        // Se já esteve inscrito no 1º ano, vamos ver se passa para o 2º
         if (inscritasAno1 > 0) {
             double aproveitamentoAno1 = (double) aprovadasAno1 / totalAno1;
 
-            // Regra do Enunciado: Aproveitamento igual ou superior a 60%
             if (aproveitamentoAno1 >= 0.60) {
-                anoDesbloqueado = 2; // Passou para o 2º ano
+                anoDesbloqueado = 2;
 
-                // 2º ANO: Contar UCs e Aprovações
                 long totalAno2 = curso.getUnidadeCurriculars().stream().filter(u -> u.getAnoCurricular() == 2).count();
                 long aprovadasAno2 = avaliacoes.stream().filter(a -> a.getUnidadeCurricular().getAnoCurricular() == 2 && a.getNota() != null && a.getNota() >= 9.5).count();
                 if (totalAno2 == 0) totalAno2 = 5;
@@ -38,7 +35,7 @@ public class EstudanteCalculo {
                 if (inscritasAno2 > 0) {
                     double aproveitamentoAno2 = (double) aprovadasAno2 / totalAno2;
                     if (aproveitamentoAno2 >= 0.60) {
-                        anoDesbloqueado = 3; // Passou para o 3º ano
+                        anoDesbloqueado = 3;
                     }
                 }
             }
