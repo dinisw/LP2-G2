@@ -26,7 +26,6 @@ public class CursoView {
 
     public void exibirMenuCursos() {
         String opcao;
-
         do {
             try {
                 CursoController cursoController = new CursoController();
@@ -34,7 +33,6 @@ public class CursoView {
 
                 ArrayList<String> opcoes = new ArrayList<>();
                 opcoes.add("1. Registar Curso");
-
                 if (temCursos) {
                     opcoes.add("2. Listar Cursos");
                     opcoes.add("3. Procurar Curso");
@@ -43,8 +41,10 @@ public class CursoView {
                     opcoes.add("6. Iniciar Curso (Bloqueio de Inscrições)");
                     opcoes.add("7. Associar UC a Curso");
                     opcoes.add("8. Listar UCs do Curso");
+                    opcoes.add("9. Listar Alunos por Curso e Ano");
                 }
                 opcoes.add("0. Voltar ao Menu de Gestão");
+
                 MenuUtils.limparTela();
                 MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL > CURSOS", opcoes);
                 System.out.print("\n" + GetWhiteBold() + "Selecione uma opção: " + GetReset());
@@ -82,14 +82,18 @@ public class CursoView {
                         if (temCursos) listarUCsDoCurso();
                         else mostrarErroOpcao();
                         break;
+                    case "9":
+                        if (temCursos) listarAlunosPorCursoEAno();
+                        else mostrarErroOpcao();
+                        break;
                     case "0":
-                        System.out.println(GetYellow() + "\nA voltar ao menu de gestão..." + GetReset());
+                        System.out.println(GetYellow() + "\nA voltar..." + GetReset());
                         return;
                     default:
                         mostrarErroOpcao();
                 }
             } catch (Exception e) {
-                System.out.println("\n" + GetRed() + "Ocorreu um erro na navegação: " + e.getMessage() + GetReset());
+                System.out.println("\n" + GetRed() + "Ocorreu um erro: " + e.getMessage() + GetReset());
                 MenuUtils.pressionarEnter(scanner);
             }
         } while (true);
@@ -105,13 +109,13 @@ public class CursoView {
             System.out.println(GetBlue() + "\n--- REGISTO DE CURSO ---" + GetReset());
             DepartamentoController departamentoController = new DepartamentoController();
             List<Departamento> departamentos = departamentoController.listarTodosDepartamentos();
-            System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
-
             if (departamentos.isEmpty()) {
-                System.out.println(GetYellow() + "Ação Bloqueada: Nenhum departamento registado. Crie um departamento primeiro." + GetReset());
+                System.out.println(GetRed() + "Ação Bloqueada: Não existem departamentos. Registe um departamento primeiro." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
                 return;
             }
+
+            System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
             String nome = "";
             while (nome.isEmpty()) {
@@ -132,29 +136,22 @@ public class CursoView {
             }
 
             System.out.println("\n" + GetBlue() + "--- Departamentos Disponíveis ---" + GetReset());
-
-            for (Departamento departamento : departamentos) {
-                System.out.println(departamento.getSigla() + " - " + departamento.getNome());
+            for (int i = 0; i < departamentos.size(); i++) {
+                System.out.println((i + 1) + ". " + departamentos.get(i).getNome());
             }
 
-            String siglaDep = "";
             Departamento departamentoSelecionado = null;
-            boolean depExiste = false;
-
-            while (!depExiste) {
-                siglaDep = BackendUtils.lerInputString(scanner, "\nSigla do Departamento Associado (ex: EI): ").toUpperCase();
-                if (siglaDep.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
-
-                for(Departamento departamento : departamentos) {
-                    if(departamento.getSigla().equalsIgnoreCase(siglaDep)) {
-                        departamentoSelecionado = departamento;
-                        depExiste = true;
-                        break;
+            while (departamentoSelecionado == null) {
+                try {
+                    String op = BackendUtils.lerInputString(scanner, "\nEscolha o ID do Departamento: ");
+                    int escolha = Integer.parseInt(op);
+                    if (escolha >= 1 && escolha <= departamentos.size()) {
+                        departamentoSelecionado = departamentos.get(escolha - 1);
+                    } else {
+                        System.out.println(GetRed() + "ID inválido." + GetReset());
                     }
-                }
-
-                if(!depExiste) {
-                    System.out.println(GetRed() + "Erro: O departamento '" + siglaDep + "' não existe. Tente novamente." + GetReset());
+                } catch (NumberFormatException e) {
+                    System.out.println(GetRed() + "Insira apenas números." + GetReset());
                 }
             }
 
@@ -200,10 +197,8 @@ public class CursoView {
 
             CursoController cursoController = new CursoController();
 
-            // Usar o tipo raw ou o Genérico caso o teu controller o devolva
             Resultado resultado = cursoController.registarCurso(novoCurso);
 
-            // CORREÇÃO AQUI: .sucesso e .mensagemErro
             if (resultado.sucesso) {
                 System.out.println(GetGreen() + "\nCurso registado com sucesso!" + GetReset());
             } else {
@@ -352,7 +347,7 @@ public class CursoView {
             String nomeFinal = novoNome.isEmpty() ? nomeAtual : novoNome;
 
             String precoNovoStr = BackendUtils.lerInputString(scanner, "Novo Preço Anual (deixe em branco para manter): ");
-            double precoFinal = curso.getPrecoAnual(); // Valor por defeito
+            double precoFinal = curso.getPrecoAnual();
             if (!precoNovoStr.isEmpty()) {
                 try {
                     double preco = Double.parseDouble(precoNovoStr.replace(",", "."));
@@ -372,7 +367,6 @@ public class CursoView {
 
             Resultado resultado = cursoController.atualizarCurso(nomeAtual, cursoAtualizado);
 
-            // CORREÇÃO AQUI: .sucesso e .mensagemErro
             if (resultado.sucesso) {
                 System.out.println(GetGreen() + "\nCurso atualizado com sucesso!" + GetReset());
             } else {
@@ -430,7 +424,6 @@ public class CursoView {
             Curso curso = listaCursos.get(escolha - 1);
             String nomeAtual = curso.getNome();
 
-            // Dupla confirmação
             System.out.println(GetYellow() + "\nTem a certeza que deseja eliminar o curso " + nomeAtual + "? (s/n)" + GetReset());
             String confirmacao1 = scanner.nextLine().trim();
             if (!confirmacao1.equalsIgnoreCase("s")) {
@@ -444,7 +437,6 @@ public class CursoView {
             if (confirmacao2.equalsIgnoreCase("s")) {
                 Resultado resultado = cursoController.eliminarCurso(nomeAtual);
 
-                // CORREÇÃO AQUI: .sucesso e .mensagemErro
                 if (resultado.sucesso) {
                     System.out.println(GetGreen() + "\nCurso eliminado com sucesso!" + GetReset());
                 } else {
@@ -551,11 +543,6 @@ public class CursoView {
 
             CursoController cursoController = new CursoController();
             List<Curso> listaCursos = cursoController.listarCursos();
-            if (listaCursos.isEmpty()) {
-                System.out.println(GetYellow() + "Não há cursos registados no sistema." + GetReset());
-                MenuUtils.pressionarEnter(scanner);
-                return;
-            }
 
             System.out.println("\n" + GetWhiteBold() + "Cursos Disponíveis:" + GetReset());
             for (int i = 0; i < listaCursos.size(); i++) {
@@ -570,10 +557,6 @@ public class CursoView {
 
                     if (escolha == 0) {
                         throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
-                    }
-
-                    if (escolha < 1 || escolha > listaCursos.size()) {
-                        System.out.println(GetRed() + "Opção inválida. Escolha um número entre 1 e " + listaCursos.size() + "." + GetReset());
                     }
                 } catch (NumberFormatException e) {
                     System.out.println(GetRed() + "Por favor, digite apenas números." + GetReset());
@@ -599,18 +582,11 @@ public class CursoView {
                 System.out.printf("%d - %s (Ano: %d | Sem: %d)\n", i + 1, uc.getNome(), uc.getAnoCurricular(), uc.getSemestre());
             }
 
-            // Lógica para múltiplas escolhas de UCs
             boolean sucessoInput = false;
-            List<Integer> indicesSelecionados = new ArrayList<>();
-
             while (!sucessoInput) {
                 String opUc = BackendUtils.lerInputString(scanner, "\nDigite os números das UCs desejadas (separados por vírgula, ex: 1,3,5) ou 0 para cancelar: ");
 
-                if (opUc.trim().equals("0")) {
-                    System.out.println(GetYellow() + "Operação cancelada." + GetReset());
-                    MenuUtils.pressionarEnter(scanner);
-                    return;
-                }
+                if (opUc.trim().equals("0")) throw new CancelarRegistoException("Cancelado.");
 
                 String[] opcoes = opUc.split(",");
                 System.out.println();
@@ -620,7 +596,6 @@ public class CursoView {
                         int escolhaUc = Integer.parseInt(op.trim());
                         if (escolhaUc >= 1 && escolhaUc <= unidadeCurriculars.size()) {
                             UnidadeCurricular ucSelecionada = unidadeCurriculars.get(escolhaUc - 1);
-
                             Resultado<Curso> resultado = cursoController.associarUCAoCurso(nomeAtual, ucSelecionada.getNome());
 
                             if (resultado.sucesso) {
@@ -635,24 +610,8 @@ public class CursoView {
                         System.out.println(GetRed() + "- Aviso: Formato inválido ('" + op.trim() + "'). Ignorado." + GetReset());
                     }
                 }
-
-                MenuUtils.pressionarEnter(scanner);
+                sucessoInput = true;
             }
-
-            System.out.println();
-            for (int indice : indicesSelecionados) {
-                UnidadeCurricular ucSelecionada = unidadeCurriculars.get(indice - 1);
-                String nomeUC = ucSelecionada.getNome();
-
-                Resultado<Curso> resultado = cursoController.associarUCAoCurso(nomeAtual, nomeUC);
-
-                if (resultado.sucesso) {
-                    System.out.println(GetGreen() + "- Sucesso: A UC '" + nomeUC + "' foi associada ao curso!" + GetReset());
-                } else {
-                    System.out.println(GetRed() + "- Erro ao associar '" + nomeUC + "': " + resultado.mensagemErro + GetReset());
-                }
-            }
-
             MenuUtils.pressionarEnter(scanner);
 
         } catch (CancelarRegistoException e) {
@@ -666,52 +625,112 @@ public class CursoView {
     }
 
     private void listarUCsDoCurso() {
-        System.out.println(GetBlue() + "\n--- LISTAR UCS DOS CURSOS ---" + GetReset());
-        System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
+        try {
+            System.out.println(GetBlue() + "\n--- LISTAR UCS DO CURSO ---" + GetReset());
+            CursoController cursoController = new CursoController();
+            List<Curso> listaCursos = cursoController.listarCursos();
 
-        CursoController cursoController = new CursoController();
-        List<Curso> listaCursos = cursoController.listarCursos();
-        if (listaCursos.isEmpty()) {
-            System.out.println(GetYellow() + "Não há cursos registados no sistema." + GetReset());
-            MenuUtils.pressionarEnter(scanner);
-            return;
-        }
-
-        System.out.println("\n" + GetWhiteBold() + "Cursos Disponíveis:" + GetReset());
-        for (int i = 0; i < listaCursos.size(); i++) {
-            System.out.printf("%d - %s\n", i + 1, listaCursos.get(i).getNome());
-        }
-
-        int escolha = -1;
-        while (escolha < 0 || escolha > listaCursos.size()) {
-            try {
-                String op = BackendUtils.lerInputString(scanner, "\nDigite a opção desejada: ");
-                escolha = Integer.parseInt(op);
-
-                if (escolha == 0) {
-                    throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
-                }
-
-                if (escolha < 1 || escolha > listaCursos.size()) {
-                    System.out.println(GetRed() + "Opção inválida. Escolha um número entre 1 e " + listaCursos.size() + "." + GetReset());
-                }
-            } catch (NumberFormatException e) {
-                System.out.println(GetRed() + "Por favor, digite apenas números." + GetReset());
-                escolha = -1;
+            System.out.println("\n" + GetWhiteBold() + "Cursos Disponíveis:" + GetReset());
+            for (int i = 0; i < listaCursos.size(); i++) {
+                System.out.printf("%d - %s\n", i + 1, listaCursos.get(i).getNome());
             }
-        }
 
-        for(Curso curso : listaCursos) {
-            System.out.println("--- UCs do Curso: " + curso.getNome() + " ---");
+            int escolha = -1;
+            while (escolha < 1 || escolha > listaCursos.size()) {
+                try {
+                    String op = BackendUtils.lerInputString(scanner, "\nDigite o ID do Curso (ou 0 para cancelar): ");
+                    if (op.equals("0")) return;
+                    escolha = Integer.parseInt(op);
+                } catch (NumberFormatException e) {
+                    System.out.println(GetRed() + "Por favor, digite apenas números." + GetReset());
+                }
+            }
+
+            Curso curso = listaCursos.get(escolha - 1);
             List<UnidadeCurricular> ucs = curso.getUnidadeCurriculars();
-            if (ucs == null || ucs.isEmpty()) {
-                System.out.println("Nenhuma UC associada a este curso.");
+
+            System.out.println("\n" + GetGreen() + "--- UCs do Curso: " + curso.getNome() + " ---" + GetReset());
+            if (ucs.isEmpty()) {
+                System.out.println(GetYellow() + "Nenhuma UC associada a este curso." + GetReset());
             } else {
+                System.out.println(GetCyanBold() + "-------------------------------------------------------------------------" + GetReset());
+                System.out.printf(GetWhiteBold() + " %-4s | %-25s | %-5s | %-3s | %-15s | %-4s \n" + GetReset(), "ID", "NOME DA UC", "ANO", "SEM", "DOCENTE", "ECTS");
+                System.out.println(GetCyanBold() + "-------------------------------------------------------------------------" + GetReset());
+
                 for (UnidadeCurricular uc : ucs) {
-                    System.out.println("- " + uc);
+                    String docenteNome = (uc.getDocente() != null) ? uc.getDocente().getSigla() : GetYellow() + "N/A" + GetReset();
+                    System.out.printf(" %-4d | %-25s | %-5d |%-3d | %-15s | %-4d \n",
+                            uc.getId(), uc.getNome(), uc.getAnoCurricular(), uc.getSemestre(), docenteNome, uc.getEcts());
+                }
+                System.out.println(GetCyanBold() + "-------------------------------------------------------------------------" + GetReset());
+            }
+
+            MenuUtils.pressionarEnter(scanner);
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Erro: " + e.getMessage() + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        }
+    }
+
+    private void listarAlunosPorCursoEAno() {
+        try {
+            System.out.println(GetBlue() + "\n--- LISTAR ALUNOS POR CURSO E ANO LETIVO ---" + GetReset());
+            CursoController cursoController = new CursoController();
+            List<Curso> listaCursos = cursoController.listarCursos();
+
+            System.out.println("\n" + GetWhiteBold() + "Cursos Disponíveis:" + GetReset());
+            for (int i = 0; i < listaCursos.size(); i++) {
+                System.out.printf("%d - %s\n", i + 1, listaCursos.get(i).getNome());
+            }
+
+            int escolha = -1;
+            while (escolha < 1 || escolha > listaCursos.size()) {
+                try {
+                    String op = BackendUtils.lerInputString(scanner, "\nDigite o ID do Curso (ou 0 para cancelar): ");
+                    if (op.equals("0")) return;
+                    escolha = Integer.parseInt(op);
+                } catch (NumberFormatException e) {
+                    System.out.println(GetRed() + "Apenas números." + GetReset());
                 }
             }
+            Curso curso = listaCursos.get(escolha - 1);
+
+            int anoEscolhido = -1;
+            while (anoEscolhido < 1 || anoEscolhido > curso.getDuracao()) {
+                try {
+                    String op = BackendUtils.lerInputString(scanner, "Qual o Ano Curricular que deseja listar? (1 a " + curso.getDuracao() + "): ");
+                    if (op.equals("0")) return;
+                    anoEscolhido = Integer.parseInt(op);
+                } catch (NumberFormatException e) {
+                    System.out.println(GetRed() + "Apenas números." + GetReset());
+                }
+            }
+
+            controller.EstudanteController ec = new controller.EstudanteController();
+            List<model.Estudante> todos = ec.listarEstudantes();
+            List<model.Estudante> filtrados = new ArrayList<>();
+
+            for (model.Estudante e : todos) {
+                if (e.isAtivo() && e.getNomeCurso().equalsIgnoreCase(curso.getNome())) {
+                    if (ec.obterAnoDesbloqueado(e) == anoEscolhido) {
+                        filtrados.add(e);
+                    }
+                }
+            }
+
+            if (filtrados.isEmpty()) {
+                System.out.println(GetYellow() + "\nNão existem alunos inscritos no " + anoEscolhido + "º ano de " + curso.getNome() + "." + GetReset());
+            } else {
+                System.out.println(GetGreen() + "\nAlunos no " + anoEscolhido + "º Ano de " + curso.getNome() + ":" + GetReset());
+                for (model.Estudante e : filtrados) {
+                    System.out.println("- Mec: " + e.getNumeroMec() + " | Nome: " + e.getNome());
+                }
+            }
+            MenuUtils.pressionarEnter(scanner);
+
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Erro: " + e.getMessage() + GetReset());
+            MenuUtils.pressionarEnter(scanner);
         }
-        MenuUtils.pressionarEnter(scanner);
     }
 }
