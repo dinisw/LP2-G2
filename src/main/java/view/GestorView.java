@@ -1516,6 +1516,15 @@ public class GestorView {
 
             if (res.sucesso) {
                 System.out.println(GetGreen() + "\nPassword do estudante alterada com sucesso!" + GetReset());
+                System.out.println(GetYellow() + "A enviar email de notificação ao aluno..." + GetReset());
+                model.EmailService emailService = new model.EmailService();
+                var resEmail = emailService.enviarEmailRecuperacaoDeSenha(estudanteSelecionado.getEmail(), novaPass);
+
+                if (resEmail.sucesso) {
+                    System.out.println(GetGreen() + "Email com a nova password enviado com sucesso!" + GetReset());
+                } else {
+                    System.out.println(GetRed() + "Aviso: A password foi alterada, mas ocorreu um erro ao enviar o email: " + resEmail.mensagemErro + GetReset());
+                }
             } else {
                 System.out.println(GetRed() + "\nErro ao alterar password: " + res.mensagemErro + GetReset());
             }
@@ -1530,6 +1539,7 @@ public class GestorView {
             MenuUtils.pressionarEnter(scanner);
         }
     }
+
 //endregion
 
     private void consultarAlunosEmDivida() {
