@@ -14,10 +14,6 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import org.jline.reader.LineReader;
-import org.jline.reader.LineReaderBuilder;
-import org.jline.terminal.Terminal;
-import org.jline.terminal.TerminalBuilder;
 
 import static common.utils.DesignUtils.*;
 
@@ -884,9 +880,6 @@ public class GestorView {
             }
 
             Docente docente = listaDocentes.get(escolha - 1);
-
-            Terminal terminal = TerminalBuilder.terminal();
-            LineReader reader = LineReaderBuilder.builder().terminal(terminal).build();
 
             String novaPass = "";
             boolean senhaValida = false;
