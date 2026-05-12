@@ -3,10 +3,25 @@ package BLL;
 import model.Avaliacao;
 import model.Curso;
 import model.Estudante;
-
 import java.util.List;
 
 public class EstudanteCalculo {
+
+    private  static boolean isUCAprovada (List<Avaliacao> avaliacoes, String nomeUC) {
+        List<Avaliacao> avaliacoesDestaUC = avaliacoes.stream().filter(a -> a.getUnidadeCurricular().getNome().equalsIgnoreCase(nomeUC) && a.getNota() != null).toList();
+
+        if (avaliacoesDestaUC.isEmpty()) {
+            return false;
+        }
+
+        double somaNotas = 0;
+        for (Avaliacao avaliacao : avaliacoesDestaUC) {
+            somaNotas += avaliacao.getNota();
+        }
+
+        double mediaFinal = somaNotas / avaliacoesDestaUC.size();
+        return mediaFinal >= 9.5;
+    }
 
     public static int calcularAnoDesbloqueado(Estudante estudante, Curso curso) {
         if (estudante == null || curso == null) return 1;
