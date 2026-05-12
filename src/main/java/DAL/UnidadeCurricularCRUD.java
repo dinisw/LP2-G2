@@ -45,8 +45,8 @@ public class UnidadeCurricularCRUD extends AbstractCsvCRUD<UnidadeCurricular> {
     }
 
     public boolean registarUC(UnidadeCurricular uc) {
-        int proximoid = dados.isEmpty() ? 1 : dados.get(dados.size() - 1).getId() + 1;
-        uc.setId(proximoid);
+        int proximoId = dados.isEmpty() ? 1 : dados.get(dados.size() - 1).getId() + 1;
+        uc.setId(proximoId);
         dados.add(uc);
         guardarTodosNoFicheiro();
         return true;

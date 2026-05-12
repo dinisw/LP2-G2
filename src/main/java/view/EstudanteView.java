@@ -185,6 +185,13 @@ public class EstudanteView {
         EstudanteController estudanteController = new EstudanteController();
         Estudante estudante = estudanteController.procurarEstudantePorNumeroMec(estudanteAtual.getNumeroMec());
 
+        if (estudante.getNomeCurso() != null && !estudante.getNomeCurso().equals("SEM REGISTO")) {
+            System.out.println(GetRed() + "Já se encontra inscrito num curso ('" + estudante.getNomeCurso() + "')." + GetReset());
+            System.out.println(GetYellow() + "As transferências de curso encontram-se bloqueadas." + GetReset());
+            MenuUtils.pressionarEnter(ler);
+            return;
+        }
+
         DAL.CursoCRUD cursoCRUD = new DAL.CursoCRUD();
         List<model.Curso> todosCursos = cursoCRUD.getCursos();
         List<model.Curso> cursosDisponiveis = new java.util.ArrayList<>();

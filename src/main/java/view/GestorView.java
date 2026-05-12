@@ -1567,8 +1567,8 @@ public class GestorView {
                     }
                     System.out.printf(" %-12d | %-25s | %-20s | %10.2f EUR \n",
                             estudante.getNumeroMec(),
-                            estudante.getNome().length() > 25 ? e.getNome().substring(0, 22) + "..." : estudante.getNome(),
-                            estudante.getNomeCurso().length() > 20 ? e.getNomeCurso().substring(0, 17) + "..." : estudante.getNomeCurso(),
+                            estudante.getNome().length() > 25 ? estudante.getNome().substring(0, 22) + "..." : estudante.getNome(),
+                            estudante.getNomeCurso().length() > 20 ? estudante.getNomeCurso().substring(0, 17) + "..." : estudante.getNomeCurso(),
                             totalDivida);
                 }
                 System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());

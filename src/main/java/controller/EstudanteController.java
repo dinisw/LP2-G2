@@ -24,10 +24,10 @@ public class EstudanteController {
         if (estudante == null) return "Erro: Estudante nao encontrado.";
 
         String dataNascimentoStr = (estudante.getDataNascimento() != null) ? estudante.getDataNascimento().toString() : "Nao definida";
-        String cursoStr = (estudante.getNomeCurso() != null && !estudante.getNomeCurso().trim().isEmpty()) ? estudante.getNomeCurso() : "Sem curso atribuido";
+        String cursoStr = (estudante.getNomeCurso() != null && !estudante.getNomeCurso().trim().isEmpty()) ? estudante.getNomeCurso() : "Sem curso atribuído";
 
         boolean isConcluido = verificarSeCursoConcluido(estudante);
-        String statusCurso = isConcluido ? "CONCLUIDO" : "EM CURSO";
+        String statusCurso = isConcluido ? "CONCLUÍDO" : "EM CURSO";
 
         int anoLetivoAtual = obterAnoDesbloqueado(estudante);
 
@@ -43,12 +43,12 @@ public class EstudanteController {
         return """
         --- FICHA DE ESTUDANTE ---
         Nome: %s
-        N. Mecanografico: %s
+        N. Mecanográfico: %s
         Email: %s
         NIF: %d
         Data Nascimento: %s
         Morada: %s
-        Curso (Inscricao): %s
+        Curso (Inscrição): %s
         Estado do Curso: %s
         Ano Letivo Atual: %do Ano
         """.formatted(estudante.getNome(), estudante.getNumeroMec(), estudante.getEmail(),
