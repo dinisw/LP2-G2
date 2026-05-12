@@ -31,6 +31,15 @@ public class EstudanteController {
 
         int anoLetivoAtual = obterAnoDesbloqueado(estudante);
 
+        PropinaController propinaController = new PropinaController();
+        List<model.Propina> propinas = propinaController.consultarPropinasEstudante(estudante.getNumeroMec());
+        double dividaTotal = 0;
+        if (propinas != null) {
+            for (model.Propina propina : propinas) {
+                dividaTotal += propina.getValorEmDivida();
+            }
+        }
+
         return """
         --- FICHA DE ESTUDANTE ---
         Nome: %s

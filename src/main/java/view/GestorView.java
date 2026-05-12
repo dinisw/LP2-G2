@@ -1554,11 +1554,22 @@ public class GestorView {
             } else {
                 System.out.println(GetYellow() + "\nLista de Estudantes com pagamentos pendentes:" + GetReset());
                 System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
-                System.out.printf(GetWhiteBold() + " %-15s | %-30s | %-25s \n" + GetReset(), "Nº MEC", "NOME", "CURSO");
+                System.out.printf(GetWhiteBold() + " %-12s | %-25s | %-20s | %-12s \n" + GetReset(), "Nº MEC", "NOME", "CURSO", "DÍVIDA TOTAL");
                 System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
 
-                for (Estudante e : devedores) {
-                    System.out.printf(" %-15d | %-30s | %-25s \n", e.getNumeroMec(), e.getNome(), e.getNomeCurso());
+                for (Estudante estudante : devedores) {
+                    List<model.Propina> propinas = propinaController.consultarPropinasEstudante(estudante.getNumeroMec());
+                    double totalDivida = 0;
+                    if (propinas != null) {
+                        for (model.Propina propina : propinas) {
+                            totalDivida += propina.getValorEmDivida();
+                        }
+                    }
+                    System.out.printf(" %-12d | %-25s | %-20s | %10.2f EUR \n",
+                            estudante.getNumeroMec(),
+                            estudante.getNome().length() > 25 ? e.getNome().substring(0, 22) + "..." : estudante.getNome(),
+                            estudante.getNomeCurso().length() > 20 ? e.getNomeCurso().substring(0, 17) + "..." : estudante.getNomeCurso(),
+                            totalDivida);
                 }
                 System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
             }
