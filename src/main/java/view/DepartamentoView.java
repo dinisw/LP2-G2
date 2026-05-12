@@ -245,7 +245,7 @@ public class DepartamentoView {
 
             while (departamento == null) {
                 try {
-                    String input = BackendUtils.lerInputString(scanner, "\nEscolha o ID numéirico do departamento: ");
+                    String input = BackendUtils.lerInputString(scanner, "\nEscolha o ID numérico do departamento: ");
                     int escolha = Integer.parseInt(input);
                     if (escolha >= 1 && escolha <= lista.size()) {
                         departamento = lista.get(escolha - 1);

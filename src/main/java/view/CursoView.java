@@ -518,7 +518,7 @@ public class CursoView {
                         System.out.println(GetRed() + "- Aviso: Formato inválido ('" + op.trim() + "')." + GetReset());
                     }
                 }
-                sucessoInput = true; 
+                sucessoInput = true;
             }
             MenuUtils.pressionarEnter(scanner);
 
@@ -533,7 +533,7 @@ public class CursoView {
 
     private void listarUCsDoCurso() {
         try {
-            System.out.println(GetBlue() + "\n--- LISTAR UCS DO CURSO ---" + GetReset());
+            System.out.println(GetBlue() + "\n--- LISTAR UCs DO CURSO ---" + GetReset());
             CursoController cursoController = new CursoController();
             List<Curso> listaCursos = cursoController.listarCursos();
 

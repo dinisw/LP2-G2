@@ -137,7 +137,9 @@ public class DocenteView {
             System.out.println(GetBlue() + "\n--- LANÇAR NOTA ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar | Dica: Nota zero é '0.0']" + GetReset());
 
-            List<UnidadeCurricular> ucsDoDocente = docenteLogado.getUnidadesCurriculares();
+            UnidadeCurricularController ucc = new UnidadeCurricularController();
+            List<UnidadeCurricular> ucsDoDocente = ucc.listarUCsPorDocente(docenteLogado.getSigla());
+
             if (ucsDoDocente == null || ucsDoDocente.isEmpty()) {
                 System.out.println(GetYellow() + "Não tem Unidades Curriculares atribuídas neste momento." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
@@ -153,7 +155,7 @@ public class DocenteView {
             while (escolhaUc < 1 || escolhaUc > ucsDoDocente.size()) {
                 try {
                     String op = BackendUtils.lerInputString(scanner, "\nEscolha a UC (1-" + ucsDoDocente.size() + "): ");
-                    if (op.equals("0")) throw new CancelarRegistoException("Operação cancelada.");
+                    if (op.equals("0")) return;
                     escolhaUc = Integer.parseInt(op);
                     if (escolhaUc < 1 || escolhaUc > ucsDoDocente.size()) System.out.println(GetRed() + "Opção inválida." + GetReset());
                 } catch (NumberFormatException e) {
@@ -161,36 +163,9 @@ public class DocenteView {
                 }
             }
 
-            UnidadeCurricular unidadeCurricular = ucsDoDocente.get(escolhaUc - 1);
-            controller.DocenteController docenteController = new controller.DocenteController();
+            UnidadeCurricular ucSelecionada = ucsDoDocente.get(escolhaUc - 1);
 
-            List<Estudante> alunos = docenteController.listarAlunosPorUC(unidadeCurricular.getNome());
-            if (alunos == null || alunos.isEmpty()) {
-                System.out.println(GetYellow() + "Não há estudantes inscritos nesta UC." + GetReset());
-                MenuUtils.pressionarEnter(scanner);
-                return;
-            }
-
-            System.out.println("\n" + GetCyanBold() + "--- Alunos Inscritos em " + unidadeCurricular.getNome() + " ---" + GetReset());
-            for (int i = 0; i < alunos.size(); i++) {
-                System.out.printf("%d - Nome: %s | Nº Mec: %d\n", i + 1, alunos.get(i).getNome(), alunos.get(i).getNumeroMec());
-            }
-
-            int escolhaAluno = -1;
-            while (escolhaAluno < 1 || escolhaAluno > alunos.size()) {
-                try {
-                    String op = BackendUtils.lerInputString(scanner, "\nEscolha o aluno (1-" + alunos.size() + "): ");
-                    if (op.equals("0")) throw new CancelarRegistoException("Operação cancelada.");
-                    escolhaAluno = Integer.parseInt(op);
-                    if (escolhaAluno < 1 || escolhaAluno > alunos.size()) System.out.println(GetRed() + "Opção inválida." + GetReset());
-                } catch (NumberFormatException e) {
-                    System.out.println(GetRed() + "Por favor, introduza um número." + GetReset());
-                }
-            }
-
-            Estudante estudanteSelecionado = alunos.get(escolhaAluno - 1);
-
-            List<String> momentos = unidadeCurricular.getMomentosAvaliacao();
+            List<String> momentos = ucSelecionada.getMomentosAvaliacao();
             if (momentos == null || momentos.isEmpty()) {
                 System.out.println(GetRed() + "Erro: Esta UC ainda não tem momentos de avaliação definidos. Utilize a opção 6 primeiro." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
@@ -206,7 +181,7 @@ public class DocenteView {
             while (escolhaMomento < 1 || escolhaMomento > momentos.size()) {
                 try {
                     String op = BackendUtils.lerInputString(scanner, "\nEscolha o momento (1-" + momentos.size() + "): ");
-                    if (op.equals("0")) throw new CancelarRegistoException("Operação cancelada.");
+                    if (op.equals("0")) return;
                     escolhaMomento = Integer.parseInt(op);
                     if (escolhaMomento < 1 || escolhaMomento > momentos.size()) System.out.println(GetRed() + "Aviso: Escolha um número da lista." + GetReset());
                 } catch (NumberFormatException e) {
@@ -216,44 +191,111 @@ public class DocenteView {
 
             String momentoSelecionado = momentos.get(escolhaMomento - 1);
 
+            boolean continuarLancando = true;
 
-            Double nota = null;
-            boolean notaValida = false;
-            while (!notaValida) {
-                String notaStr = BackendUtils.lerInputString(scanner, "\nNota (Deixe em branco e dê Enter se for 'Aguardar Lançamento'): ");
-                if (notaStr.equals("0")) throw new CancelarRegistoException("Operação cancelada.");
+            while (continuarLancando) {
+                controller.DocenteController docenteController = new controller.DocenteController();
+                List<Estudante> alunos = docenteController.listarAlunosPorUC(ucSelecionada.getNome());
 
-                if (notaStr.isEmpty()) {
-                    notaValida = true;
-                } else {
+                if (alunos == null || alunos.isEmpty()) {
+                    System.out.println(GetYellow() + "Não há estudantes inscritos nesta UC." + GetReset());
+                    break;
+                }
+
+                System.out.println("\n" + GetCyanBold() + "--- Alunos Inscritos em " + ucSelecionada.getNome() + " ---" + GetReset());
+                for (int i = 0; i < alunos.size(); i++) {
+                    System.out.printf("%d - Nome: %s | Nº Mec: %d\n", i + 1, alunos.get(i).getNome(), alunos.get(i).getNumeroMec());
+                }
+
+                int escolhaAluno = -1;
+                while (escolhaAluno < 1 || escolhaAluno > alunos.size()) {
                     try {
-                        nota = Double.parseDouble(notaStr.replace(",", "."));
-                        if (nota >= 0.0 && nota <= 20.0) {
-                            notaValida = true;
-                        } else {
-                            System.out.println(GetRed() + "Aviso: A nota deve estar entre 0.0 e 20.0." + GetReset());
+                        String op = BackendUtils.lerInputString(scanner, "\nEscolha o aluno (1-" + alunos.size() + ") ou 0 para voltar: ");
+                        if (op.equals("0")) {
+                            continuarLancando = false;
+                            break;
                         }
+                        escolhaAluno = Integer.parseInt(op);
+                        if (escolhaAluno < 1 || escolhaAluno > alunos.size()) System.out.println(GetRed() + "Opção inválida." + GetReset());
                     } catch (NumberFormatException e) {
-                        System.out.println(GetRed() + "Aviso: Formato de nota inválido (use números)." + GetReset());
+                        System.out.println(GetRed() + "Por favor, introduza um número." + GetReset());
                     }
+                }
+
+                if (!continuarLancando) break;
+
+                Estudante estudanteSelecionado = alunos.get(escolhaAluno - 1);
+
+                Avaliacao avaliacaoExistente = null;
+                if (estudanteSelecionado.getListaAvaliacoes() != null) {
+                    for (Avaliacao av : estudanteSelecionado.getListaAvaliacoes()) {
+                        if (av.getUnidadeCurricular().getNome().equalsIgnoreCase(ucSelecionada.getNome()) &&
+                                av.getMomento().equalsIgnoreCase(momentoSelecionado)) {
+                            avaliacaoExistente = av;
+                            break;
+                        }
+                    }
+                }
+
+                if (avaliacaoExistente != null && avaliacaoExistente.getNota() != null) {
+                    String resp = BackendUtils.lerInputString(scanner, "\n" + GetYellow() + "O aluno já possui a nota " + avaliacaoExistente.getNota() + " neste momento. Deseja sobrepor? (s/n): " + GetReset());
+                    if (!resp.equalsIgnoreCase("s")) {
+                        System.out.println(GetYellow() + "Operação cancelada para este aluno." + GetReset());
+                        System.out.print("\n" + GetYellow() + "Deseja lançar outra nota nesta UC para o momento '" + momentoSelecionado + "'? (S/N): " + GetReset());
+                        String resposta = scanner.nextLine().trim().toUpperCase();
+                        if (!resposta.equals("S")) {
+                            continuarLancando = false;
+                        }
+                        continue;
+                    }
+                }
+
+                Double nota = null;
+                boolean notaValida = false;
+                while (!notaValida) {
+                    String notaStr = BackendUtils.lerInputString(scanner, "\nNota (Deixe em branco e dê Enter se for 'Aguardar Lançamento' ou 0 para voltar): ");
+
+                    if (notaStr.equals("0")) {
+                        notaValida = true;
+                        continue;
+                    }
+
+                    if (notaStr.isEmpty()) {
+                        notaValida = true;
+                    } else {
+                        try {
+                            nota = Double.parseDouble(notaStr.replace(",", "."));
+                            if (nota >= 0.0 && nota <= 20.0) {
+                                notaValida = true;
+                            } else {
+                                System.out.println(GetRed() + "Aviso: A nota deve estar entre 0.0 e 20.0." + GetReset());
+                            }
+                        } catch (NumberFormatException e) {
+                            System.out.println(GetRed() + "Aviso: Formato de nota inválido (use números)." + GetReset());
+                        }
+                    }
+                }
+
+                if (nota != null || BackendUtils.lerInputString(scanner, "A nota ficará vazia. Confirmar? (s/n): ").equalsIgnoreCase("s")) {
+                    Avaliacao novaAvaliacao = new Avaliacao(momentoSelecionado, nota, ucSelecionada, estudanteSelecionado);
+                    controller.AvaliacaoController avaliacaoController = new controller.AvaliacaoController();
+
+                    Resultado<Avaliacao> resultado = avaliacaoController.registarAvaliacao(novaAvaliacao);
+
+                    if (resultado.sucesso) {
+                        System.out.println(GetGreen() + "\nAvaliação registada com sucesso!" + GetReset());
+                    } else {
+                        System.out.println(GetRed() + "\nErro ao registar avaliação na base de dados: " + resultado.mensagemErro + GetReset());
+                    }
+                }
+
+                System.out.print("\n" + GetYellow() + "Deseja lançar outra nota nesta UC para o momento '" + momentoSelecionado + "'? (S/N): " + GetReset());
+                String resposta = scanner.nextLine().trim().toUpperCase();
+                if (!resposta.equals("S")) {
+                    continuarLancando = false;
                 }
             }
 
-            Avaliacao novaAvaliacao = new Avaliacao(momentoSelecionado, nota, unidadeCurricular, estudanteSelecionado);
-            controller.AvaliacaoController avaliacaoController = new controller.AvaliacaoController();
-
-            Resultado<Avaliacao> resultado = avaliacaoController.registarAvaliacao(novaAvaliacao);
-
-            if (resultado.sucesso) {
-                System.out.println(GetGreen() + "\nAvaliação registada com sucesso!" + GetReset());
-            } else {
-                System.out.println(GetRed() + "\nErro ao registar avaliação na base de dados: " + resultado.mensagemErro + GetReset());
-            }
-            MenuUtils.pressionarEnter(scanner);
-
-        } catch (CancelarRegistoException e) {
-            System.out.println("\n" + GetYellow() + "Aviso: " + e.getMessage() + GetReset());
-            MenuUtils.pressionarEnter(scanner);
         } catch (Exception e) {
             System.out.println(GetRed() + "Ocorreu um erro inesperado: " + e.getMessage() + GetReset());
             MenuUtils.pressionarEnter(scanner);
@@ -285,16 +327,15 @@ public class DocenteView {
         try {
             System.out.println(GetBlue() + "\n--- CONSULTAR PAUTA DE ALUNOS ---" + GetReset());
 
-            DocenteController dc = new DocenteController();
-            Docente docenteFresco = dc.procurarDocentePorNif(docenteAtual.getNif());
-
-            List<UnidadeCurricular> unidadesCurriculares = docenteFresco.getUnidadesCurriculares();
+            UnidadeCurricularController ucc = new UnidadeCurricularController();
+            List<UnidadeCurricular> unidadesCurriculares = ucc.listarUCsPorDocente(docenteAtual.getSigla());
 
             if(unidadesCurriculares == null || unidadesCurriculares.isEmpty()) {
                 System.out.println(GetYellow() + "Não tem Unidades Curriculares atribuídas neste momento." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
                 return;
             }
+
             System.out.println(GetWhiteBold() + "As suas Unidades Curriculares:" + GetReset());
             for (int i = 0; i < unidadesCurriculares.size(); i++) {
                 System.out.println((i + 1) + ". " + unidadesCurriculares.get(i).getNome());
@@ -387,34 +428,58 @@ public class DocenteView {
 
     private void definirMomentosAvaliacao(Docente docenteLogado) {
         DocenteController docenteController = new DocenteController();
-        System.out.println("\n--- Definir Momentos de Avaliacao ---");
+        UnidadeCurricularController ucc = new UnidadeCurricularController();
+        System.out.println(GetBlue() + "\n--- DEFINIR MOMENTOS DE AVALIAÇÃO ---" + GetReset());
 
-        List<UnidadeCurricular> ucsDoDocente = docenteLogado.getUnidadesCurriculares();
-        if (ucsDoDocente.isEmpty()) {
-            System.out.println("Nao tem Unidades Curriculares atribuidas.");
+        List<UnidadeCurricular> ucsDoDocente = ucc.listarUCsPorDocente(docenteLogado.getSigla());
+
+        if (ucsDoDocente == null || ucsDoDocente.isEmpty()) {
+            System.out.println(GetYellow() + "Não tem Unidades Curriculares atribuídas neste momento." + GetReset());
+            MenuUtils.pressionarEnter(scanner);
             return;
         }
 
-        System.out.println("As suas UCs:");
-        for (UnidadeCurricular uc : ucsDoDocente) {
-            System.out.println("- ID: " + uc.getId() + " | Nome: " + uc.getNome());
+        System.out.println(GetWhiteBold() + "\nAs suas UCs:" + GetReset());
+        for (int i = 0; i < ucsDoDocente.size(); i++) {
+            System.out.println((i + 1) + ". " + ucsDoDocente.get(i).getNome() + " (Ano: " + ucsDoDocente.get(i).getAnoCurricular() + ")");
         }
 
-        int idUc = lerInteiroSeguro("Digite o ID da UC que pretende configurar: ");
+        int escolhaUc = -1;
+        while (escolhaUc < 1 || escolhaUc > ucsDoDocente.size()) {
+            try {
+                String op = BackendUtils.lerInputString(scanner, "\nEscolha o número da UC (ou 0 para cancelar): ");
+                if (op.equals("0")) return;
+                escolhaUc = Integer.parseInt(op);
+                if (escolhaUc < 1 || escolhaUc > ucsDoDocente.size()) System.out.println(GetRed() + "Opção inválida." + GetReset());
+            } catch (NumberFormatException e) {
+                System.out.println(GetRed() + "Por favor, introduza um número." + GetReset());
+            }
+        }
 
-        System.out.print("Digite os momentos de avaliacao separados por virgula (ex: Frequencia, Trabalho Pratico): ");
-        String inputMomentos = scanner.nextLine();
-        List<String> momentos = Arrays.asList(inputMomentos.split(","));
+        UnidadeCurricular ucSelecionada = ucsDoDocente.get(escolhaUc - 1);
+
+        List<String> momentos = new ArrayList<>();
+        while (true) {
+            String inputMomentos = BackendUtils.lerInputString(scanner, "\nDigite os momentos de avaliação separados por vírgula (ex: Frequência, Trabalho Prático): ");
+            momentos = Arrays.asList(inputMomentos.split(","));
+
+            if (momentos.size() > 3) {
+                System.out.println(GetRed() + "Erro: Uma UC pode ter no máximo 3 momentos de avaliação. Tente novamente." + GetReset());
+            } else {
+                break;
+            }
+        }
 
         momentos.replaceAll(String::trim);
 
-        Resultado<UnidadeCurricular> res = docenteController.definirMomentosAvaliacao(docenteLogado.getSigla(), idUc, momentos);
+        Resultado<UnidadeCurricular> res = docenteController.definirMomentosAvaliacao(docenteLogado.getSigla(), ucSelecionada.getId(), momentos);
 
         if (res.sucesso) {
-            System.out.println("Sucesso! Momentos atualizados para a UC: " + res.dados.getNome());
+            System.out.println(GetGreen() + "\nSucesso! Momentos atualizados para a UC: " + res.dados.getNome() + GetReset());
         } else {
-            System.out.println("Erro: " + res.mensagemErro);
+            System.out.println(GetRed() + "\nErro: " + res.mensagemErro + GetReset());
         }
+        MenuUtils.pressionarEnter(scanner);
     }
 
     private void listarAlunosDaMinhaUC(Docente docenteLogado) {
@@ -426,7 +491,7 @@ public class DocenteView {
         List<Estudante> alunos = docenteController.listarAlunosPorUC(nomeUc);
 
         if (alunos.isEmpty()) {
-            System.out.println("Nao ha alunos com avaliacoes registadas nesta UC.");
+            System.out.println("Não há alunos com avaliações registadas nesta UC.");
         } else {
             System.out.println("\n--- Alunos na UC " + nomeUc + " ---");
             for (Estudante est : alunos) {
