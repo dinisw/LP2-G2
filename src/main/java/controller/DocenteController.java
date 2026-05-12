@@ -87,13 +87,13 @@ public class DocenteController {
         if (nomeUC == null || nomeUC.trim().isEmpty()) return new ArrayList<>();
         List<Avaliacao> avaliacoes = avaliacaoCRUD.listarPorUnidadeCurricular(nomeUC);
         List<Estudante> alunosUnicos = new ArrayList<>();
-        List<Integer> mecs = new ArrayList<>();
+        List<Integer> mec = new ArrayList<>();
 
         for (Avaliacao av : avaliacoes) {
             Estudante est = av.getEstudante();
-            if (est != null && !mecs.contains(est.getNumeroMec())) {
+            if (est != null && !mec.contains(est.getNumeroMec())) {
                 alunosUnicos.add(est);
-                mecs.add(est.getNumeroMec());
+                mec.add(est.getNumeroMec());
             }
         }
         alunosUnicos.sort((a, b) -> a.getNome().compareToIgnoreCase(b.getNome()));

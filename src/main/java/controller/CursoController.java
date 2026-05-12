@@ -77,18 +77,28 @@ public class CursoController {
             resultado.mensagemErro = "O curso original não foi encontrado na base de dados.";
             return resultado;
         }
+
+        if (cursoOriginal.isIniciado()) {
+            if (!cursoOriginal.getNome().equalsIgnoreCase(cursoNovo.getNome()) || !cursoOriginal.getDepartamento().getSigla().equalsIgnoreCase(cursoNovo.getDepartamento().getSigla())) {
+
+                resultado.sucesso = false;
+                resultado.mensagemErro = "Bloqueado: Não é possível alterar o Nome ou o Departamento de um curso que já iniciou atividade letiva.";
+                return resultado;
+            }
+        }
+
         DAL.EstudanteCRUD estudanteCRUD = new DAL.EstudanteCRUD();
         boolean temEstudantes = false;
-        for (model.Estudante e : estudanteCRUD.getEstudantes()) {
-            if (e.getNomeCurso() != null && e.getNomeCurso().equalsIgnoreCase(nomeAntigo)) {
+        for (model.Estudante estudante : estudanteCRUD.getEstudantes()) {
+            if (estudante.getNomeCurso() != null && estudante.getNomeCurso().equalsIgnoreCase(nomeAntigo)) {
                 temEstudantes = true;
                 break;
             }
         }
 
         boolean temProfessores = false;
-        for (model.UnidadeCurricular uc : cursoOriginal.getUnidadeCurriculars()) {
-            if (uc.getDocente() != null) {
+        for (model.UnidadeCurricular unidadeCurricular : cursoOriginal.getUnidadeCurriculars()) {
+            if (unidadeCurricular.getDocente() != null) {
                 temProfessores = true;
                 break;
             }

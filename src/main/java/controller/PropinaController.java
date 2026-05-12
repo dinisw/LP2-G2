@@ -66,14 +66,14 @@ public class PropinaController {
         List<Propina> todas = propinaCRUD.getTodasPropinas();
         EstudanteCRUD estudanteCRUD = new EstudanteCRUD();
         List<Estudante> devedores = new ArrayList<>();
-        List<Integer> mecsAdicionados = new ArrayList<>();
+        List<Integer> mecAdicionado = new ArrayList<>();
 
         for (Propina p : todas) {
-            if (!p.isTotalmentePaga() && !mecsAdicionados.contains(p.getNumeroMecEstudante())) {
+            if (!p.isTotalmentePaga() && !mecAdicionado.contains(p.getNumeroMecEstudante())) {
                 Estudante est = estudanteCRUD.lerEstudante(p.getNumeroMecEstudante());
                 if (est != null) {
                     devedores.add(est);
-                    mecsAdicionados.add(p.getNumeroMecEstudante());
+                    mecAdicionado.add(p.getNumeroMecEstudante());
                 }
             }
         }
