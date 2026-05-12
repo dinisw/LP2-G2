@@ -14,10 +14,6 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import org.jline.reader.LineReader;
-import org.jline.reader.LineReaderBuilder;
-import org.jline.terminal.Terminal;
-import org.jline.terminal.TerminalBuilder;
 
 import static common.utils.DesignUtils.*;
 
@@ -885,9 +881,6 @@ public class GestorView {
 
             Docente docente = listaDocentes.get(escolha - 1);
 
-            Terminal terminal = TerminalBuilder.terminal();
-            LineReader reader = LineReaderBuilder.builder().terminal(terminal).build();
-
             String novaPass = "";
             boolean senhaValida = false;
             while (!senhaValida) {
@@ -1523,6 +1516,15 @@ public class GestorView {
 
             if (res.sucesso) {
                 System.out.println(GetGreen() + "\nPassword do estudante alterada com sucesso!" + GetReset());
+                System.out.println(GetYellow() + "A enviar email de notificação ao aluno..." + GetReset());
+                model.EmailService emailService = new model.EmailService();
+                var resEmail = emailService.enviarEmailRecuperacaoDeSenha(estudanteSelecionado.getEmail(), novaPass);
+
+                if (resEmail.sucesso) {
+                    System.out.println(GetGreen() + "Email com a nova password enviado com sucesso!" + GetReset());
+                } else {
+                    System.out.println(GetRed() + "Aviso: A password foi alterada, mas ocorreu um erro ao enviar o email: " + resEmail.mensagemErro + GetReset());
+                }
             } else {
                 System.out.println(GetRed() + "\nErro ao alterar password: " + res.mensagemErro + GetReset());
             }
@@ -1537,6 +1539,7 @@ public class GestorView {
             MenuUtils.pressionarEnter(scanner);
         }
     }
+
 //endregion
 
     private void consultarAlunosEmDivida() {
@@ -1551,11 +1554,22 @@ public class GestorView {
             } else {
                 System.out.println(GetYellow() + "\nLista de Estudantes com pagamentos pendentes:" + GetReset());
                 System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
-                System.out.printf(GetWhiteBold() + " %-15s | %-30s | %-25s \n" + GetReset(), "Nº MEC", "NOME", "CURSO");
+                System.out.printf(GetWhiteBold() + " %-12s | %-25s | %-20s | %-12s \n" + GetReset(), "Nº MEC", "NOME", "CURSO", "DÍVIDA TOTAL");
                 System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
 
-                for (Estudante e : devedores) {
-                    System.out.printf(" %-15d | %-30s | %-25s \n", e.getNumeroMec(), e.getNome(), e.getNomeCurso());
+                for (Estudante estudante : devedores) {
+                    List<model.Propina> propinas = propinaController.consultarPropinasEstudante(estudante.getNumeroMec());
+                    double totalDivida = 0;
+                    if (propinas != null) {
+                        for (model.Propina propina : propinas) {
+                            totalDivida += propina.getValorEmDivida();
+                        }
+                    }
+                    System.out.printf(" %-12d | %-25s | %-20s | %10.2f EUR \n",
+                            estudante.getNumeroMec(),
+                            estudante.getNome().length() > 25 ? estudante.getNome().substring(0, 22) + "..." : estudante.getNome(),
+                            estudante.getNomeCurso().length() > 20 ? estudante.getNomeCurso().substring(0, 17) + "..." : estudante.getNomeCurso(),
+                            totalDivida);
                 }
                 System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
             }
