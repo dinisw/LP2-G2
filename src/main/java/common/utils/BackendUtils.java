@@ -43,7 +43,21 @@ public class BackendUtils {
         if (valor.equals("0")) {
             throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
         }
+        return valor;
+    }
 
+    public static String lerInputStringObrigatorio(Scanner scanner, String prompt) {
+        String valor = "";
+        while (valor.isEmpty()) {
+            System.out.print(prompt);
+            valor = scanner.nextLine().trim();
+            if (valor.isEmpty()) {
+                System.out.println(DesignUtils.GetRed() + "Erro: Este campo é obrigatório e não pode ficar vazio." + DesignUtils.GetReset());
+            }
+        }
+        if (valor.equals("0")) {
+            throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
+        }
         return valor;
     }
 

@@ -35,13 +35,15 @@ public class CursoController {
             return resultado;
         }
 
-        if (cursoCRUD.registarCurso(curso) != null) {
+
+        Resultado<Curso> resCRUD = cursoCRUD.registarCurso(curso);
+
+        if (resCRUD.sucesso) {
             resultado.sucesso = true;
         } else {
             resultado.sucesso = false;
-            resultado.mensagemErro = "Já existe um curso com o nome '" + curso.getNome() + "' no sistema.";
+            resultado.mensagemErro = resCRUD.mensagemErro;
         }
-
         return resultado;
     }
 
@@ -71,14 +73,17 @@ public class CursoController {
         if (cursoOriginal == null) {
             return new Resultado<> (false, "O curso original não foi encontrado na base de dados.");
         }
-
         if (cursoOriginal.isIniciado()) {
-          boolean tentouMudarNome = !cursoOriginal.getNome().equalsIgnoreCase(cursoNovo.getNome());
-          boolean tentouMudarDepartamento = !cursoOriginal.getDepartamento().getSigla().equalsIgnoreCase(cursoNovo.getDepartamento().getSigla());
+            boolean tentouMudarNome = !cursoOriginal.getNome().equalsIgnoreCase(cursoNovo.getNome());
+            boolean tentouMudarDepartamento = false;
 
-          if (tentouMudarNome || tentouMudarDepartamento) {
-              return new Resultado<>(false, "Bloqueado: Não é possível alterar o Nome ou o Departamento de um curso que já iniciou atividade letiva. (A alteração do Preço Anual é permitida para faturamentos futuros).");
-          }
+            if (cursoNovo.getDepartamento() != null && cursoNovo.getDepartamento().getSigla() != null) {
+                tentouMudarDepartamento = !cursoOriginal.getDepartamento().getSigla().equalsIgnoreCase(cursoNovo.getDepartamento().getSigla());
+            }
+
+            if (tentouMudarNome || tentouMudarDepartamento) {
+                return new Resultado<>(false, "Bloqueado: Não é possível alterar o Nome ou o Departamento de um curso que já iniciou atividade letiva. (A alteração do Preço Anual é permitida para faturamentos futuros).");
+            }
         }
 
         Resultado res = cursoCRUD.atualizarCurso(nomeAntigo, cursoNovo);
@@ -246,12 +251,12 @@ public class CursoController {
         }
 
         if (curso.adicionarUnidadeCurricular(unidadeCurricular)) {
-            Resultado <Curso> resultado1 = this.cursoCRUD.registarArranqueAno(curso.getNome(), curso);
-            if (resultado1.sucesso) {
+            Resultado <Curso> resultadoGravar = this.cursoCRUD.atualizarCurso(curso.getNome(), curso);
+            if (resultadoGravar.sucesso) {
                 resultado.sucesso = true;
             } else {
                 resultado.sucesso = false;
-                resultado.mensagemErro = resultado1.mensagemErro;
+                resultado.mensagemErro = resultadoGravar.mensagemErro;
             }
         } else {
             resultado.sucesso = false;

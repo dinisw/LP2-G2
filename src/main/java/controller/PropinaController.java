@@ -7,10 +7,10 @@ import model.Curso;
 import model.Estudante;
 import model.Propina;
 import model.Resultado;
-
-import java.awt.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class PropinaController {
     private final PropinaCRUD propinaCRUD;
@@ -46,11 +46,11 @@ public class PropinaController {
 
         Propina propina = propinaCRUD.procurarPropina(numeroMec, anoLetivo);
         if (propina == null) return new Resultado<>(false, "Propina não encontrada para o " + anoLetivo + "º ano.");
-        if (propina.isTotalmentePaga()) return new Resultado<>(false, "Esta propina já se encontra totalmente paga. Obrigado!");
 
         if (valorPagamento > propina.getValorEmDivida()) {
-            return new Resultado<>(false, "O valor inserido excede o valor em dívida (" + String.format("%.2f", propina.getValorEmDivida()) + "€).");
-        }
+            return new Resultado<>(false, "Operação Recusada: O valor inserido (" + valorPagamento + "€) é superior à dívida atual (" + propina.getValorEmDivida() + "€).");        }
+
+        if (propina.isTotalmentePaga()) return new Resultado<>(false, "Esta propina já se encontra totalmente paga. Obrigado!");
 
         propina.registarPagamento(valorPagamento);
 
@@ -66,14 +66,14 @@ public class PropinaController {
         List<Propina> todas = propinaCRUD.getTodasPropinas();
         EstudanteCRUD estudanteCRUD = new EstudanteCRUD();
         List<Estudante> devedores = new ArrayList<>();
-        List<Integer> mecAdicionado = new ArrayList<>();
+        Set<Integer> mecAdicionado = new HashSet<>();
 
-        for (Propina p : todas) {
-            if (!p.isTotalmentePaga() && !mecAdicionado.contains(p.getNumeroMecEstudante())) {
-                Estudante est = estudanteCRUD.lerEstudante(p.getNumeroMecEstudante());
-                if (est != null) {
-                    devedores.add(est);
-                    mecAdicionado.add(p.getNumeroMecEstudante());
+        for (Propina propina : todas) {
+            if (!propina.isTotalmentePaga() && !mecAdicionado.contains(propina.getNumeroMecEstudante())) {
+                Estudante estudante = estudanteCRUD.lerEstudante(propina.getNumeroMecEstudante());
+                if (estudante != null && estudante.isAtivo()) {
+                    devedores.add(estudante);
+                    mecAdicionado.add(propina.getNumeroMecEstudante());
                 }
             }
         }

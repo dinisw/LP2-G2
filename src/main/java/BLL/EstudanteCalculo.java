@@ -3,6 +3,7 @@ package BLL;
 import model.Avaliacao;
 import model.Curso;
 import model.Estudante;
+import model.UnidadeCurricular;
 import java.util.List;
 
 public class EstudanteCalculo {
@@ -14,12 +15,20 @@ public class EstudanteCalculo {
             return false;
         }
 
+        UnidadeCurricular ucAtualizada = avaliacoesDestaUC.get(0).getUnidadeCurricular();
+        List<String> momentosValidos = ucAtualizada.getMomentosAvaliacao();
+        int totalMomentosExigidos = momentosValidos.size();
+
+        if (totalMomentosExigidos == 0) return false;
+
         double somaNotas = 0;
         for (Avaliacao avaliacao : avaliacoesDestaUC) {
-            somaNotas += avaliacao.getNota();
+            if (momentosValidos.contains(avaliacao.getMomento())) {
+                somaNotas += avaliacao.getNota();
+            }
         }
 
-        double mediaFinal = somaNotas / avaliacoesDestaUC.size();
+        double mediaFinal = somaNotas / totalMomentosExigidos;
         return mediaFinal >= 9.5;
     }
 

@@ -22,7 +22,7 @@ public abstract class AbstractCsvCRUD<T> {
             String linha;
             while ((linha = reader.readLine()) != null) {
                 if (!linha.trim().isEmpty()) {
-                    String[] colunas = linha.split(";");
+                    String[] colunas = linha.split(";", -1);
                     T entidade = mapearLinhaParaEntidade(colunas);
                     if (entidade != null) {
                         dados.add(entidade);
