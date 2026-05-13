@@ -2,8 +2,10 @@ package controller;
 
 import DAL.CursoCRUD;
 import DAL.EstudanteCRUD;
+import DAL.PropinaCRUD;
 import model.Curso;
 import model.Estudante;
+import model.Propina;
 import model.Resultado;
 
 import java.time.LocalDate;
@@ -119,9 +121,17 @@ public class EstudanteController {
         Estudante estudante = new Estudante(nome, morada, nif, dataNascimento, email, numeroMec, hash, curso, true);
 
         Resultado<Estudante> res = estudanteCRUD.registarEstudante(estudante);
-        if (res.sucesso) return new Resultado<>(numeroMec, true);
+        if (!res.sucesso) return new Resultado<>(false, res.mensagemErro);
 
-        return new Resultado<>(false, res.mensagemErro);
+        double precoAnual = 1000.0;
+        Curso cursoObj = cursoCRUD.procurarPorNome(curso);
+        if (cursoObj != null && cursoObj.getPrecoAnual() > 0) {
+            precoAnual = cursoObj.getPrecoAnual();
+        }
+        PropinaCRUD propinaCRUD = new PropinaCRUD();
+        propinaCRUD.registarPropina(new Propina(numeroMec, 1, precoAnual, 0.0));
+
+        return new Resultado<>(numeroMec, true);
     }
 
     public Resultado<Estudante> atualizarEstudante(int numeroMec, String nome, String morada, String curso) {

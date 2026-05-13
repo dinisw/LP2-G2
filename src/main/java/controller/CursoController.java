@@ -153,16 +153,16 @@ public class CursoController {
     public Resultado <Curso> iniciarAnoLetivo(String nome, int anoLetivo) {
         Resultado <Curso> resultado = new Resultado<>();
 
-        if (anoLetivo < 1 || anoLetivo > 3) {
-            resultado.sucesso = false;
-            resultado.mensagemErro = "Ano letivo inválido. Os cursos têm 3 anos curriculares.";
-            return resultado;
-        }
-
         Curso curso = cursoCRUD.procurarPorNome(nome);
         if (curso == null) {
             resultado.sucesso = false;
             resultado.mensagemErro = "Curso não encontrado.";
+            return resultado;
+        }
+
+        if (anoLetivo < 1 || anoLetivo > curso.getDuracao()) {
+            resultado.sucesso = false;
+            resultado.mensagemErro = "Ano letivo inválido. Este curso tem " + curso.getDuracao() + " ano(s) curricular(is).";
             return resultado;
         }
 

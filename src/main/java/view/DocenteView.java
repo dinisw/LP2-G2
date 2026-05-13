@@ -487,22 +487,55 @@ public class DocenteView {
     }
 
     private void listarAlunosDaMinhaUC(Docente docenteLogado) {
-        DocenteController docenteController = new DocenteController();
-        AvaliacaoController avaliacaoController = new AvaliacaoController();
-        System.out.print("Digite o nome da sua UC para ver os alunos inscritos: ");
-        String nomeUc = scanner.nextLine();
+        try {
+            System.out.println(GetBlue() + "\n--- LISTAR ALUNOS DA MINHA UC ---" + GetReset());
 
-        List<Estudante> alunos = docenteController.listarAlunosPorUC(nomeUc);
+            UnidadeCurricularController ucc = new UnidadeCurricularController();
+            List<UnidadeCurricular> ucsDoDocente = ucc.listarUCsPorDocente(docenteLogado.getSigla());
 
-        if (alunos.isEmpty()) {
-            System.out.println("Não há alunos com avaliações registadas nesta UC.");
-        } else {
-            System.out.println("\n--- Alunos na UC " + nomeUc + " ---");
-            for (Estudante est : alunos) {
-                Resultado<String> status = avaliacaoController.obterStatusAprovacao(est.getNumeroMec(), nomeUc);
-
-                System.out.println("Mec: " + est.getNumeroMec() + " | Nome: " + est.getNome() + " | " + status.dados);
+            if (ucsDoDocente == null || ucsDoDocente.isEmpty()) {
+                System.out.println(GetYellow() + "Não tem Unidades Curriculares atribuídas neste momento." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
             }
+
+            System.out.println(GetWhiteBold() + "\nAs suas UCs:" + GetReset());
+            for (int i = 0; i < ucsDoDocente.size(); i++) {
+                System.out.println((i + 1) + ". " + ucsDoDocente.get(i).getNome() + " (Ano: " + ucsDoDocente.get(i).getAnoCurricular() + ")");
+            }
+
+            int escolhaUc = -1;
+            while (escolhaUc < 1 || escolhaUc > ucsDoDocente.size()) {
+                try {
+                    String op = BackendUtils.lerInputString(scanner, "\nEscolha o número da UC (ou 0 para cancelar): ");
+                    if (op.equals("0")) return;
+                    escolhaUc = Integer.parseInt(op);
+                    if (escolhaUc < 1 || escolhaUc > ucsDoDocente.size()) System.out.println(GetRed() + "Opção inválida." + GetReset());
+                } catch (NumberFormatException e) {
+                    System.out.println(GetRed() + "Por favor, introduza um número." + GetReset());
+                }
+            }
+
+            UnidadeCurricular ucSelecionada = ucsDoDocente.get(escolhaUc - 1);
+            String nomeUc = ucSelecionada.getNome();
+
+            DocenteController docenteController = new DocenteController();
+            AvaliacaoController avaliacaoController = new AvaliacaoController();
+            List<Estudante> alunos = docenteController.listarAlunosPorUC(nomeUc);
+
+            if (alunos.isEmpty()) {
+                System.out.println(GetYellow() + "\nNão há alunos inscritos na UC '" + nomeUc + "'." + GetReset());
+            } else {
+                System.out.println("\n" + GetCyanBold() + "--- Alunos na UC: " + nomeUc + " ---" + GetReset());
+                for (Estudante est : alunos) {
+                    Resultado<String> status = avaliacaoController.obterStatusAprovacao(est.getNumeroMec(), nomeUc);
+                    System.out.println("Mec: " + est.getNumeroMec() + " | Nome: " + est.getNome() + " | " + status.dados);
+                }
+            }
+            MenuUtils.pressionarEnter(scanner);
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Ocorreu um erro inesperado: " + e.getMessage() + GetReset());
+            MenuUtils.pressionarEnter(scanner);
         }
     }
 }

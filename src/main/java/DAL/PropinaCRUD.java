@@ -18,7 +18,17 @@ public class PropinaCRUD extends AbstractCsvCRUD<Propina> {
             double total = Double.parseDouble(colunas[2].replace(",", "."));
             double pago = Double.parseDouble(colunas[3].replace(",", "."));
 
-            return new Propina(numMec, ano, total, pago);
+            Propina propina = new Propina(numMec, ano, total, pago);
+
+            if (colunas.length > 4 && !colunas[4].isEmpty()) {
+                java.util.List<String> historico = new java.util.ArrayList<>();
+                for (String entry : colunas[4].split("\\|")) {
+                    historico.add(entry.trim());
+                }
+                propina.setHistoricoPagamentos(historico);
+            }
+
+            return propina;
         } catch (Exception e) {
             return null;
         }
@@ -26,7 +36,12 @@ public class PropinaCRUD extends AbstractCsvCRUD<Propina> {
 
     @Override
     protected String mapearEntidadeParaLinha(Propina p) {
-        return String.format("%d;%d;%.2f;%.2f", p.getNumeroMecEstudante(), p.getAnoLetivo(), p.getValorTotal(), p.getValorPago());
+        String historico = "";
+        if (p.getHistoricoPagamentos() != null && !p.getHistoricoPagamentos().isEmpty()) {
+            historico = String.join("|", p.getHistoricoPagamentos());
+        }
+        return String.format("%d;%d;%.2f;%.2f;%s",
+                p.getNumeroMecEstudante(), p.getAnoLetivo(), p.getValorTotal(), p.getValorPago(), historico);
     }
 
     public boolean registarPropina(Propina propina) {

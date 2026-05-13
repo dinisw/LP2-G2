@@ -363,6 +363,13 @@ public class EstudanteView {
             System.out.println("--------------------------------------------------");
             System.out.printf("  %d. %dº Ano\n  Total: %.2f EUR | Pago: %.2f EUR | Em Falta: %.2f EUR  %s\n",
                     i + 1, p.getAnoLetivo(), p.getValorTotal(), p.getValorPago(), p.getValorEmDivida(), estado);
+            java.util.List<String> historico = p.getHistoricoPagamentos();
+            if (historico != null && !historico.isEmpty()) {
+                System.out.println(GetWhiteBold() + "  Histórico de Pagamentos:" + GetReset());
+                for (String registo : historico) {
+                    System.out.println("    • " + registo);
+                }
+            }
         }
         System.out.println("--------------------------------------------------");
         MenuUtils.pressionarEnter(ler);

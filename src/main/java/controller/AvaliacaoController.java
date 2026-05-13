@@ -30,7 +30,8 @@ public class AvaliacaoController {
 
         if (avaliacoesExistentes != null) {
             long contagem = avaliacoesExistentes.stream()
-                    .filter(a -> a.getEstudante().getNumeroMec() == avaliacao.getEstudante().getNumeroMec())
+                    .filter(a -> a.getEstudante().getNumeroMec() == avaliacao.getEstudante().getNumeroMec()
+                            && !a.getMomento().equalsIgnoreCase("A Definir"))
                     .count();
 
             if (contagem >= 3) {

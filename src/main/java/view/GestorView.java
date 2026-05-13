@@ -92,56 +92,51 @@ public class GestorView {
     //region Gestor
     public void exibirMenuGestores() {
         String opcao;
-        ArrayList<String> opcoes = new ArrayList<>();
-        opcoes.add("1. Gerir Gestores");
-        opcoes.add("2. Gerir Docentes");
-        opcoes.add("3. Gerir Estudantes");
-        opcoes.add("4. Gerir Cursos");
-        opcoes.add("5. Gerir Departamentos");
-        opcoes.add("6. Gerir Unidades Curriculares");
-        opcoes.add("7. Consultar Alunos em Dívida (Tesouraria)");
-        opcoes.add("8. Simular Passagem de Ano Letivo (Global)");
-        opcoes.add("0. Logout");
-
         do {
             try {
-                MenuUtils.limparTela();
-                MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL", opcoes);
+                GestorController gestorController = new GestorController();
+                boolean temGestores = !gestorController.listarGestores().isEmpty();
 
-                System.out.print("\nSelecione uma opção: ");
+                ArrayList<String> opcoes = new ArrayList<>();
+                opcoes.add("1. Registar Gestor");
+                if (temGestores) {
+                    opcoes.add("2. Listar Gestores");
+                    opcoes.add("3. Procurar Gestor");
+                    opcoes.add("4. Atualizar Gestor");
+                    opcoes.add("5. Eliminar Gestor");
+                }
+                opcoes.add("0. Voltar ao Menu Principal");
+
+                MenuUtils.limparTela();
+                MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL > GESTORES", opcoes);
+                System.out.print("\n" + GetWhiteBold() + "Selecione uma opção: " + GetReset());
                 opcao = scanner.nextLine().trim();
 
                 switch (opcao) {
                     case "1":
-                        exibirMenuGestores();
+                        registarGestor();
                         break;
                     case "2":
-                        exibirMenuDocentes();
+                        if (temGestores) listarGestores();
+                        else mostrarErroMenu();
                         break;
                     case "3":
-                        exibirMenuEstudantes();
+                        if (temGestores) procurarGestor();
+                        else mostrarErroMenu();
                         break;
                     case "4":
-                        cursoView.exibirMenuCursos();
+                        if (temGestores) atualizarGestor();
+                        else mostrarErroMenu();
                         break;
                     case "5":
-                        departamentoView.exibirMenuDepartamentos();
-                        break;
-                    case "6":
-                        unidadeCurricularView.exibirMenuUnidadesCurriculares();
-                        break;
-                    case "7":
-                        consultarAlunosEmDivida();
-                        break;
-                    case "8":
-                        simularPassagemDeAno();
+                        if (temGestores) eliminarGestor();
+                        else mostrarErroMenu();
                         break;
                     case "0":
-                        System.out.println(GetYellow() + "\nA efetuar logout e a voltar ao ecrã de Login..." + GetReset());
+                        System.out.println(GetYellow() + "\nA voltar ao menu principal..." + GetReset());
                         return;
                     default:
-                        System.out.println(GetRed() + "Opção inválida! Por favor, escolha uma opção da lista." + GetReset());
-                        MenuUtils.pressionarEnter(scanner);
+                        mostrarErroMenu();
                 }
             } catch (Exception e) {
                 System.out.println("\n" + GetRed() + "Ocorreu um erro na navegação: " + e.getMessage() + GetReset());
@@ -629,12 +624,10 @@ public class GestorView {
             var resEmail = es.enviarEmailRegisto(email, corpoEmail, TipoDeUtilizador.DOCENTE);
 
             if (resEmail.sucesso) {
-                System.out.println(GetGreen() + "Email com as credenciais de acesso enviado com sucesso!" + GetReset());
+                System.out.println(GetGreen() + "Email com as credenciais de acesso enviado com sucesso (CC para gestor incluído)!" + GetReset());
             } else {
-                System.out.println(GetRed() + "Falha ao enviar email: " + resEmail.mensagemErro + GetReset());
-                System.out.println(GetRed() + "O registo foi abortado para evitar inconsistência de credenciais." + GetReset());
-                MenuUtils.pressionarEnter(scanner);
-                return;
+                System.out.println(GetRed() + "Aviso: Falha no envio de email: " + resEmail.mensagemErro + GetReset());
+                System.out.println(GetYellow() + "O registo prosseguirá. Entregue as credenciais manualmente ao docente." + GetReset());
             }
 
             System.out.println("\n" + GetBlue() + "--- Unidades Curriculares Disponíveis ---" + GetReset());
@@ -1168,12 +1161,10 @@ public class GestorView {
             var resEmail = es.enviarEmailRegisto(emailAuto, corpoEmail, TipoDeUtilizador.ESTUDANTE);
 
             if (resEmail.sucesso) {
-                System.out.println(GetGreen() + "Email com as credenciais de acesso enviado com sucesso!" + GetReset());
+                System.out.println(GetGreen() + "Email com as credenciais de acesso enviado com sucesso (CC para gestor incluído)!" + GetReset());
             } else {
-                System.out.println(GetRed() + "Falha ao enviar email: " + resEmail.mensagemErro + GetReset());
-                System.out.println(GetRed() + "O registo foi abortado para evitar inconsistência de credenciais." + GetReset());
-                MenuUtils.pressionarEnter(scanner);
-                return;
+                System.out.println(GetRed() + "Aviso: Falha no envio de email: " + resEmail.mensagemErro + GetReset());
+                System.out.println(GetYellow() + "O registo prosseguirá. Entregue as credenciais manualmente ao estudante." + GetReset());
             }
 
             Resultado <Integer> resultado = estudanteControllerAtualizado.registarEstudante(nome, morada, nif, dataNascimento, cursoNomeSelecionado, senha);
