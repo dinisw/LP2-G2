@@ -387,11 +387,11 @@ public class DocenteView {
 
     private void definirMomentosAvaliacao(Docente docenteLogado) {
         DocenteController docenteController = new DocenteController();
-        System.out.println("\n--- Definir Momentos de Avaliacao ---");
+        System.out.println("\n--- Definir Momentos de Avaliação ---");
 
         List<UnidadeCurricular> ucsDoDocente = docenteLogado.getUnidadesCurriculares();
         if (ucsDoDocente.isEmpty()) {
-            System.out.println("Nao tem Unidades Curriculares atribuidas.");
+            System.out.println("Nao tem Unidades Curriculares atribuídas.");
             return;
         }
 
@@ -402,11 +402,9 @@ public class DocenteView {
 
         int idUc = lerInteiroSeguro("Digite o ID da UC que pretende configurar: ");
 
-        System.out.print("Digite os momentos de avaliacao separados por virgula (ex: Frequencia, Trabalho Pratico): ");
+        System.out.print("Digite os momentos de avaliação separados por virgula (ex: Frequência, Trabalho Prático): ");
         String inputMomentos = scanner.nextLine();
-        List<String> momentos = Arrays.asList(inputMomentos.split(","));
-
-        momentos.replaceAll(String::trim);
+        List<String> momentos = common.utils.CsvUtils.separarStringPorVirgula(inputMomentos);
 
         Resultado<UnidadeCurricular> res = docenteController.definirMomentosAvaliacao(docenteLogado.getSigla(), idUc, momentos);
 
