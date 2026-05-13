@@ -35,13 +35,15 @@ public class CursoController {
             return resultado;
         }
 
-        if (cursoCRUD.registarCurso(curso) != null) {
+
+        Resultado<Curso> resCRUD = cursoCRUD.registarCurso(curso);
+
+        if (resCRUD.sucesso) {
             resultado.sucesso = true;
         } else {
             resultado.sucesso = false;
-            resultado.mensagemErro = "Já existe um curso com o nome '" + curso.getNome() + "' no sistema.";
+            resultado.mensagemErro = resCRUD.mensagemErro;
         }
-
         return resultado;
     }
 
@@ -53,67 +55,38 @@ public class CursoController {
         Resultado resultado = new Resultado();
 
         if (nomeAntigo == null || nomeAntigo.trim().isEmpty()) {
-            resultado.sucesso = false;
-            resultado.mensagemErro = "O nome do curso a atualizar é obrigatório.";
-            return resultado;
+            return new Resultado<> (false, "O nome do curso a atualizar é obrigatório.");
         }
 
         if (cursoNovo == null || cursoNovo.getNome() == null || cursoNovo.getNome().trim().isEmpty()) {
-            resultado.sucesso = false;
-            resultado.mensagemErro = "O novo nome do curso não pode estar vazio.";
-            return resultado;
+            return new Resultado<> (false, "O novo nome do curso não pode estar vazio.");
         }
 
         Curso cursoOriginal = cursoCRUD.procurarPorNome(nomeAntigo);
         if (cursoOriginal == null) {
-            resultado.sucesso = false;
-            resultado.mensagemErro = "O curso original não foi encontrado na base de dados.";
-            return resultado;
+            return new Resultado<> (false, "O curso original não foi encontrado na base de dados.");
         }
-
         if (cursoOriginal.isIniciado()) {
-            if (!cursoOriginal.getNome().equalsIgnoreCase(cursoNovo.getNome()) || !cursoOriginal.getDepartamento().getSigla().equalsIgnoreCase(cursoNovo.getDepartamento().getSigla())) {
+            boolean tentouMudarNome = !cursoOriginal.getNome().equalsIgnoreCase(cursoNovo.getNome());
+            boolean tentouMudarDepartamento = false;
 
-                resultado.sucesso = false;
-                resultado.mensagemErro = "Bloqueado: Não é possível alterar o Nome ou o Departamento de um curso que já iniciou atividade letiva.";
-                return resultado;
+            if (cursoNovo.getDepartamento() != null && cursoNovo.getDepartamento().getSigla() != null) {
+                tentouMudarDepartamento = !cursoOriginal.getDepartamento().getSigla().equalsIgnoreCase(cursoNovo.getDepartamento().getSigla());
+            }
+
+            if (tentouMudarNome || tentouMudarDepartamento) {
+                return new Resultado<>(false, "Bloqueado: Não é possível alterar o Nome ou o Departamento de um curso que já iniciou atividade letiva. (A alteração do Preço Anual é permitida para faturamentos futuros).");
             }
         }
 
-        DAL.EstudanteCRUD estudanteCRUD = new DAL.EstudanteCRUD();
-        boolean temEstudantes = false;
-        for (model.Estudante estudante : estudanteCRUD.getEstudantes()) {
-            if (estudante.getNomeCurso() != null && estudante.getNomeCurso().equalsIgnoreCase(nomeAntigo)) {
-                temEstudantes = true;
-                break;
-            }
-        }
-
-        boolean temProfessores = false;
-        for (model.UnidadeCurricular unidadeCurricular : cursoOriginal.getUnidadeCurriculars()) {
-            if (unidadeCurricular.getDocente() != null) {
-                temProfessores = true;
-                break;
-            }
-        }
-
-        boolean mudouEstrutura = !cursoOriginal.getNome().equalsIgnoreCase(cursoNovo.getNome()) ||
-                cursoOriginal.getDuracao() != cursoNovo.getDuracao() ||
-                !cursoOriginal.getDepartamento().getSigla().equalsIgnoreCase(cursoNovo.getDepartamento().getSigla());
-
-        if (temEstudantes && temProfessores && mudouEstrutura) {
-            resultado.sucesso = false;
-            resultado.mensagemErro = "Bloqueado (Regra de Negócio): O curso já possui estudantes e professores. Apenas o valor da propina pode ser ajustado para anos futuros.";
-            return resultado;
-        }
         Resultado res = cursoCRUD.atualizarCurso(nomeAntigo, cursoNovo);
         if (res.sucesso) {
             resultado.sucesso = true;
             if (!nomeAntigo.equalsIgnoreCase(cursoNovo.getNome())) {
                 try {
                     EstudanteController estudanteController = new EstudanteController();
-                    List<Estudante> todosEstudantes = estudanteController.listarEstudantes();
-                    for (Estudante estudante : todosEstudantes) {
+                    DAL.EstudanteCRUD estudanteCRUD = new DAL.EstudanteCRUD();
+                    for (model.Estudante estudante : estudanteController.listarEstudantes()) {
                         if (estudante.getNomeCurso() != null && estudante.getNomeCurso().equalsIgnoreCase(nomeAntigo)) {
                             estudante.setNomeCurso(cursoNovo.getNome());
                             estudanteCRUD.atualizarEstudante(estudante);
@@ -124,8 +97,7 @@ public class CursoController {
                 }
             }
         } else {
-            resultado.sucesso = false;
-            resultado.mensagemErro = res.mensagemErro;
+            return new Resultado<>(false, res.mensagemErro);
         }
 
         return resultado;
@@ -272,12 +244,12 @@ public class CursoController {
         }
 
         if (curso.adicionarUnidadeCurricular(unidadeCurricular)) {
-            Resultado <Curso> resultado1 = this.cursoCRUD.registarArranqueAno(curso.getNome(), curso);
-            if (resultado1.sucesso) {
+            Resultado <Curso> resultadoGravar = this.cursoCRUD.atualizarCurso(curso.getNome(), curso);
+            if (resultadoGravar.sucesso) {
                 resultado.sucesso = true;
             } else {
                 resultado.sucesso = false;
-                resultado.mensagemErro = resultado1.mensagemErro;
+                resultado.mensagemErro = resultadoGravar.mensagemErro;
             }
         } else {
             resultado.sucesso = false;

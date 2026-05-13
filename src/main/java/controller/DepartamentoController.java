@@ -81,6 +81,14 @@ public class DepartamentoController {
     }
 
     public Resultado <Departamento> eliminarDepartamento(String sigla) {
+
+        DAL.CursoCRUD cursoCRUD1 = new DAL.CursoCRUD();
+        boolean temCursos = cursoCRUD.getCursos().stream().anyMatch(c -> c.getDepartamento().getSigla().equalsIgnoreCase(sigla));
+
+        if (temCursos) {
+            return new Resultado<>(false, "Bloqueado: Não pode eliminar este departamento porque existem Cursos associados a ele.");
+        }
+
         Resultado <Departamento> resultado = new Resultado<>();
 
         if (cursoCRUD.existeCursoComDepartamento(sigla)) {

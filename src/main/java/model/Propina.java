@@ -47,6 +47,8 @@ public class Propina {
         this.historicoPagamentos = historicoPagamentos;
     }
 
+
+
     public void registarPagamento(double valor) {
         if (valor > 0) {
             this.valorPago += valor;

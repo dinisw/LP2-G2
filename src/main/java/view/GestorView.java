@@ -855,7 +855,7 @@ public class GestorView {
             String novaPass = "";
             boolean senhaValida = false;
             while (!senhaValida) {
-                novaPass = BackendUtils.lerSenhaOculta("Nova senha: ");
+                novaPass = BackendUtils.lerSenhaOculta("Nova senha: ", scanner);
 
                 if (novaPass.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
                 senhaValida = BackendUtils.isSenhaValida(novaPass);
@@ -1471,7 +1471,7 @@ public class GestorView {
             String novaPass = "";
             boolean senhaValida = false;
             while (!senhaValida) {
-                novaPass = BackendUtils.lerSenhaOculta("Nova Senha: ");
+                novaPass = BackendUtils.lerSenhaOculta("Nova Senha: ", scanner);
 
                 if (novaPass.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
 
