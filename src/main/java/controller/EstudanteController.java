@@ -51,8 +51,9 @@ public class EstudanteController {
         Curso (Inscrição): %s
         Estado do Curso: %s
         Ano Letivo Atual: %do Ano
+        Dívida Total Acumulada: %.2f EUR
         """.formatted(estudante.getNome(), estudante.getNumeroMec(), estudante.getEmail(),
-                estudante.getNif(), dataNascimentoStr, estudante.getMorada(), cursoStr, statusCurso, anoLetivoAtual);
+                estudante.getNif(), dataNascimentoStr, estudante.getMorada(), cursoStr, statusCurso, anoLetivoAtual, dividaTotal);
     }
 
     public int obterAnoDesbloqueado(Estudante estudante) {

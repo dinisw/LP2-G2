@@ -429,6 +429,7 @@ public class DocenteView {
     private void definirMomentosAvaliacao(Docente docenteLogado) {
         DocenteController docenteController = new DocenteController();
         UnidadeCurricularController ucc = new UnidadeCurricularController();
+        
         System.out.println(GetBlue() + "\n--- DEFINIR MOMENTOS DE AVALIAÇÃO ---" + GetReset());
 
         List<UnidadeCurricular> ucsDoDocente = ucc.listarUCsPorDocente(docenteLogado.getSigla());
@@ -458,19 +459,22 @@ public class DocenteView {
 
         UnidadeCurricular ucSelecionada = ucsDoDocente.get(escolhaUc - 1);
 
-        List<String> momentos = new ArrayList<>();
+        List<String> momentos;
         while (true) {
             String inputMomentos = BackendUtils.lerInputString(scanner, "\nDigite os momentos de avaliação separados por vírgula (ex: Frequência, Trabalho Prático): ");
-            momentos = Arrays.asList(inputMomentos.split(","));
+            
+            // O teu requisito de usar o CsvUtils foi aplicado aqui!
+            momentos = common.utils.CsvUtils.separarStringPorVirgula(inputMomentos);
 
+            // A regra da MAIN que limita a um máximo de 3 momentos
             if (momentos.size() > 3) {
                 System.out.println(GetRed() + "Erro: Uma UC pode ter no máximo 3 momentos de avaliação. Tente novamente." + GetReset());
+            } else if (momentos.isEmpty()) {
+                System.out.println(GetRed() + "Erro: Tem de introduzir pelo menos um momento válido." + GetReset());
             } else {
                 break;
             }
         }
-
-        momentos.replaceAll(String::trim);
 
         Resultado<UnidadeCurricular> res = docenteController.definirMomentosAvaliacao(docenteLogado.getSigla(), ucSelecionada.getId(), momentos);
 

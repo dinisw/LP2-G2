@@ -212,16 +212,6 @@ public class EstudanteView {
             }
         }
 
-        if (estudante.getNomeCurso() != null && !estudante.getNomeCurso().equals("SEM REGISTO")) {
-            model.Curso cursoAtual = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
-            if (cursoAtual != null && cursoAtual.isIniciado()) {
-                System.out.println(GetRed() + "O seu curso atual ('" + cursoAtual.getNome() + "') já iniciou o ano letivo." + GetReset());
-                System.out.println(GetYellow() + "As transferências de curso encontram-se bloqueadas." + GetReset());
-                MenuUtils.pressionarEnter(ler);
-                return;
-            }
-        }
-
         if (cursosDisponiveis.isEmpty()) {
             System.out.println(GetYellow() + "De momento não existem curso com inscrições abertas." + GetReset());
             MenuUtils.pressionarEnter(ler);

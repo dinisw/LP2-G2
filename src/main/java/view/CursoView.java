@@ -498,10 +498,11 @@ public class CursoView {
                 String opUc = BackendUtils.lerInputString(scanner, "\nDigite os números das UCs (separados por vírgula, ex: 1,3,5) ou 0 para cancelar: ");
                 if (opUc.trim().equals("0")) throw new CancelarRegistoException("Cancelado.");
 
-                String[] opcoes = opUc.split(",");
+                List<String> opcoes = common.utils.CsvUtils.separarStringPorVirgula(opUc);
+
                 for (String op : opcoes) {
                     try {
-                        int escolhaUc = Integer.parseInt(op.trim());
+                        int escolhaUc = Integer.parseInt(op);
                         if (escolhaUc >= 1 && escolhaUc <= unidadeCurriculars.size()) {
                             UnidadeCurricular ucSelecionada = unidadeCurriculars.get(escolhaUc - 1);
                             Resultado<Curso> resultado = cursoController.associarUCAoCurso(nomeAtual, ucSelecionada.getNome());
