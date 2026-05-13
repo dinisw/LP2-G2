@@ -1,6 +1,8 @@
 package controller;
 
+import DAL.CursoCRUD;
 import DAL.DocenteCRUD;
+import DAL.AvaliacaoCRUD;
 import DAL.UnidadeCurricularCRUD;
 import model.Docente;
 import model.Resultado;
@@ -44,8 +46,28 @@ public class UnidadeCurricularController {
     public UnidadeCurricular procurarUCPorId(int id) { return ucCRUD.procurarPorId(id); }
 
     public Resultado<UnidadeCurricular> eliminarUCPorId(int id) {
+        UnidadeCurricular ucExistente = ucCRUD.procurarPorId(id);
+        if (ucExistente == null) {
+            return new Resultado<>(false, "Erro: UC não encontrada.");
+        }
+
+        String nomeUC = ucExistente.getNome();
+
+        AvaliacaoCRUD avaliacaoCRUD = new AvaliacaoCRUD();
+        if (!avaliacaoCRUD.listarPorUnidadeCurricular(nomeUC).isEmpty()) {
+            return new Resultado<>(false, "Bloqueado: Esta UC já possui notas lançadas no sistema. Não pode ser eliminada por razões de histórico escolar.");
+        }
+
+        CursoCRUD cursoCRUD = new CursoCRUD();
+        boolean estaNumCurso = cursoCRUD.getCursos().stream()
+                .anyMatch(c -> c.getUnidadeCurriculars().stream().anyMatch(uc -> uc.getNome().equalsIgnoreCase(nomeUC)));
+
+        if (estaNumCurso) {
+            return new Resultado<>(false, "Bloqueado: Esta UC pertence a um ou mais cursos. Tem de a remover dos cursos primeiro.");
+        }
+
         return ucCRUD.eliminarUCPorId(id) ? new Resultado<>(null, true)
-                : new Resultado<>(false, "Erro ao eliminar UC.");
+                : new Resultado<>(false, "Erro interno ao eliminar UC.");
     }
 
     public Resultado<UnidadeCurricular> atualizarUC(int id, String novoNome, int novoAno, int novoSemestre, String novaSiglaDocente) {
@@ -54,13 +76,26 @@ public class UnidadeCurricularController {
             return new Resultado<>(false, "Erro: A Unidade Curricular selecionada não existe.");
         }
 
+        String nomeAntigo = ucExistente.getNome();
+
         if (novoNome == null || novoNome.trim().isEmpty()) {
             return new Resultado<>(false, "Nome da UC não pode estar vazio.");
         }
 
-        if (!ucExistente.getNome().equalsIgnoreCase(novoNome)) {
+        if (!nomeAntigo.equalsIgnoreCase(novoNome)) {
             if (ucCRUD.procurarPorNome(novoNome) != null) {
                 return new Resultado<>(false, "Já existe outra UC com esse nome no sistema.");
+            }
+
+            AvaliacaoCRUD avaliacaoCRUD = new AvaliacaoCRUD();
+            if (!avaliacaoCRUD.listarPorUnidadeCurricular(nomeAntigo).isEmpty()) {
+                return new Resultado<>(false, "Bloqueado: Não pode alterar o NOME de uma UC que já tem pautas/notas registadas.");
+            }
+            CursoCRUD cursoCRUD = new CursoCRUD();
+            boolean estaNumCurso = cursoCRUD.getCursos().stream()
+                    .anyMatch(c -> c.getUnidadeCurriculars().stream().anyMatch(uc -> uc.getNome().equalsIgnoreCase(nomeAntigo)));
+            if (estaNumCurso) {
+                return new Resultado<>(false, "Bloqueado: Não pode alterar o NOME de uma UC que está associada a um Curso. (Dica: Remova do curso primeiro).");
             }
         }
 
@@ -76,10 +111,13 @@ public class UnidadeCurricularController {
             return new Resultado<>(false, "Bloqueado: Docente com a sigla '" + novaSiglaDocente + "' não existe no sistema.");
         }
 
-        UnidadeCurricular ucAtualizada = new UnidadeCurricular(novoNome, novoAno, novoSemestre, novoDocente);
+        ucExistente.setNome(novoNome);
+        ucExistente.setAnoCurricular(novoAno);
+        ucExistente.setSemestre(novoSemestre);
+        ucExistente.setDocente(novoDocente);
 
-        return ucCRUD.atualizarUC(novoNome, ucAtualizada)
-                ? new Resultado<>(ucAtualizada, true)
+        return ucCRUD.atualizarUC(novoNome, ucExistente)
+                ? new Resultado<>(ucExistente, true)
                 : new Resultado<>(false, "Ocorreu um erro na base de dados ao atualizar a UC.");
     }
 

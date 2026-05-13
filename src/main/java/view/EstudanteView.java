@@ -155,12 +155,12 @@ public class EstudanteView {
             String opUc = ler.nextLine().trim();
             if (opUc.equals("0")) return;
 
-            String[] opcoes = opUc.split(",");
+            List<String> opcoes = common.utils.CsvUtils.separarStringPorVirgula(opUc);
             List<model.UnidadeCurricular> ucsSelecionadas = new ArrayList<>();
 
             for (String op : opcoes) {
                 try {
-                    int escolhaUc = Integer.parseInt(op.trim());
+                    int escolhaUc = Integer.parseInt(op);
                     if (escolhaUc >= 1 && escolhaUc <= disponiveis.size()) {
                         ucsSelecionadas.add(disponiveis.get(escolhaUc - 1));
                     } else {

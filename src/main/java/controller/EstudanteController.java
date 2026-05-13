@@ -72,7 +72,6 @@ public class EstudanteController {
         } else if (anoPorNotas == 3 && !propinaController.isPropinaPaga(estudante.getNumeroMec(), 2)) {
             anoReal = 2;
         }
-        propinaController.gerarPropinaAnual(estudante.getNumeroMec(), anoReal);
         return anoReal;
     }
 
@@ -85,12 +84,15 @@ public class EstudanteController {
 
         if (BLL.EstudanteCalculo.isCursoConcluido(estudante, curso)) {
             PropinaController propinaController = new PropinaController();
-            return propinaController.isPropinaPaga(estudante.getNumeroMec(), curso.getDuracao());
+            for (int i = 1; i <= curso.getDuracao(); i++) {
+                if (!propinaController.isPropinaPaga(estudante.getNumeroMec(), i)) {
+                    return false;
+                }
+            }
+            return true;
         }
         return false;
     }
-
-
 
     public int gerarNumeroMecanografico() {
         return estudanteCRUD.gerarNumeroMecanografico();
@@ -101,7 +103,14 @@ public class EstudanteController {
                 curso == null || curso.trim().isEmpty() || hash == null || hash.trim().isEmpty()) {
             return new Resultado<>(false, "Todos os campos de texto são obrigatórios.");
         }
-        if (nif <= 0) return new Resultado<>(false, "O NIF fornecido é inválido.");
+        if (String.valueOf(nif).length() != 9) {
+            return new Resultado<>(false, "O NIF fornecido é inválido. Deve conter exatamente 9 dígitos.");
+        }
+
+        if (procurarEstudantePorNif(nif) != null) {
+            return new Resultado<>(false, "Operação Recusada: O NIF '" + nif + "' já se encontra associado a outro estudante.");
+        }
+
         if (dataNascimento == null) return new Resultado<>(false, "A data de nascimento fornecida é inválida.");
 
         int numeroMec = estudanteCRUD.gerarNumeroMecanografico();
@@ -173,23 +182,23 @@ public class EstudanteController {
         }
 
         PropinaController propinaController = new PropinaController();
+        DAL.AvaliacaoCRUD avaliacaoCRUD = new DAL.AvaliacaoCRUD();
 
-        for (Estudante e : estudantes) {
-            if (!e.isAtivo()) continue;
+        for (Estudante estudante : estudantes) {
+            if (!estudante.isAtivo()) continue;
 
-            Curso curso = cursoCRUD.procurarPorNome(e.getNomeCurso());
+            Curso curso = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
             if (curso == null) continue;
 
-            DAL.AvaliacaoCRUD avaliacaoCRUD = new DAL.AvaliacaoCRUD();
-            e.setListaAvaliacoes(avaliacaoCRUD.listarPorEstudante(e.getNumeroMec()));
+            estudante.setListaAvaliacoes(avaliacaoCRUD.listarPorEstudante(estudante.getNumeroMec()));
 
-            int anoPorNotas = BLL.EstudanteCalculo.calcularAnoDesbloqueado(e, curso);
+            int anoPorNotas = BLL.EstudanteCalculo.calcularAnoDesbloqueado(estudante, curso);
             int anoReal = anoPorNotas;
             String motivo = "";
 
-            if (anoPorNotas >= 2 && !propinaController.isPropinaPaga(e.getNumeroMec(), 1)) {
+            if (anoPorNotas >= 2 && !propinaController.isPropinaPaga(estudante.getNumeroMec(), 1)) {
                 anoReal = 1;
-            } else if (anoPorNotas == 3 && !propinaController.isPropinaPaga(e.getNumeroMec(), 2)) {
+            } else if (anoPorNotas == 3 && !propinaController.isPropinaPaga(estudante.getNumeroMec(), 2)) {
                 anoReal = 2;
             }
 
@@ -203,18 +212,28 @@ public class EstudanteController {
                 }
             }
 
-            propinaController.gerarPropinaAnual(e.getNumeroMec(), anoReal);
-            boolean isConcluido = verificarSeCursoConcluido(e);
+            List<model.Propina> historicoPropinas = propinaController.consultarPropinasEstudante(estudante.getNumeroMec());
+            boolean jaFaturadoEsteAno = false;
+
+            if (historicoPropinas != null) {
+                for (model.Propina propina : historicoPropinas) {
+                    if (propina.getAnoLetivo() == anoReal){
+                        jaFaturadoEsteAno = true;
+                        break;
+                    }
+                }
+            }
+            if (!jaFaturadoEsteAno) {
+                propinaController.gerarPropinaAnual(estudante.getNumeroMec(),anoReal);
+            }
+            boolean isConcluido = verificarSeCursoConcluido(estudante);
 
             if (isConcluido) {
-                relatorio.add("[SUCESSO] Mec: " + e.getNumeroMec() + " (" + e.getNome() + ") -> Concluiu o Curso! (Sem novas propinas)");
+                relatorio.add("[SUCESSO] Mec: " + estudante.getNumeroMec() + " (" + estudante.getNome() + ") -> Concluiu o Curso! (Sem novas propinas)");
             } else {
-                relatorio.add("[INFO] Mec: " + e.getNumeroMec() + " (" + e.getNome() + ") -> Processado para o " + anoReal + "º Ano" + motivo);
+                relatorio.add("[INFO] Mec: " + estudante.getNumeroMec() + " (" + estudante.getNome() + ") -> Processado para o " + anoReal + "º Ano" + motivo);
             }
-
-            estudanteCRUD.atualizarEstudante(e);
         }
-
         return new Resultado<>(relatorio, true);
     }
 }

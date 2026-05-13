@@ -98,7 +98,7 @@ public class DocenteView {
             String novaPass = "";
             boolean senhaValida = false;
             while (!senhaValida) {
-                novaPass = BackendUtils.lerSenhaOculta("Nova senha: ");
+                novaPass = BackendUtils.lerSenhaOculta("Nova senha: ", scanner);
 
                 if (novaPass.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
 
@@ -502,17 +502,6 @@ public class DocenteView {
                 Resultado<String> status = avaliacaoController.obterStatusAprovacao(est.getNumeroMec(), nomeUc);
 
                 System.out.println("Mec: " + est.getNumeroMec() + " | Nome: " + est.getNome() + " | " + status.dados);
-            }
-        }
-    }
-
-    private int lerInteiroSeguro(String mensagem) {
-        while (true) {
-            System.out.print(mensagem);
-            try {
-                return Integer.parseInt(scanner.nextLine().trim());
-            } catch (NumberFormatException e) {
-                System.out.println("Entrada inválida. Por favor, introduza um número.");
             }
         }
     }
