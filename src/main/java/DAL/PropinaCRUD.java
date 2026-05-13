@@ -3,7 +3,6 @@ package DAL;
 import model.Propina;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,9 +34,6 @@ public class PropinaCRUD extends AbstractCsvCRUD<Propina> {
         } catch (Exception e) {
             return null;
         }
-        return String.format("%d;%d;%.2f;%.2f;%s",
-                p.getNumeroMecEstudante(), p.getAnoLetivo(),
-                p.getValorTotal(), p.getValorPago(), historico);
     }
 
     @Override
