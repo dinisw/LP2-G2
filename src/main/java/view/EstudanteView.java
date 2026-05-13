@@ -149,30 +149,40 @@ public class EstudanteView {
         }
         System.out.println(GetWhiteBold() + "0. " + GetReset() + "Voltar");
 
-        int escolha = -1;
-        while (escolha < 0 || escolha > disponiveis.size()) {
-            try {
-                String op = common.utils.BackendUtils.lerInputString(ler, "\nEscolha o número da UC para se inscrever: ");
-                escolha = Integer.parseInt(op);
-                if (escolha == 0) return;
+        boolean sucessoInput = false;
+        while (!sucessoInput) {
+            System.out.print("\nDigite os números das UCs (separados por vírgula, ex: 1,3) ou 0 para cancelar: ");
+            String opUc = ler.nextLine().trim();
+            if (opUc.equals("0")) return;
 
-                if (escolha < 1 || escolha > disponiveis.size()) {
-                    System.out.println(GetRed() + "Opção inválida. Escolha um número da lista." + GetReset());
+            String[] opcoes = opUc.split(",");
+            List<model.UnidadeCurricular> ucsSelecionadas = new ArrayList<>();
+
+            for (String op : opcoes) {
+                try {
+                    int escolhaUc = Integer.parseInt(op.trim());
+                    if (escolhaUc >= 1 && escolhaUc <= disponiveis.size()) {
+                        ucsSelecionadas.add(disponiveis.get(escolhaUc - 1));
+                    } else {
+                        System.out.println(GetRed() + "- Aviso: Opção '" + escolhaUc + "' não existe." + GetReset());
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println(GetRed() + "- Aviso: Formato inválido ('" + op.trim() + "')." + GetReset());
                 }
-            } catch (NumberFormatException e) {
-                System.out.println(GetRed() + "Entrada inválida. Digite apenas números." + GetReset());
-                escolha = -1;
             }
-        }
 
-        model.UnidadeCurricular ucEscolhida = disponiveis.get(escolha - 1);
-        model.Avaliacao novaInscricao = new model.Avaliacao("A Definir", null, ucEscolhida, estudante);
-        controller.AvaliacaoController avaliacaoController = new controller.AvaliacaoController();
-
-        if (avaliacaoController.registarAvaliacao(novaInscricao) != null) {
-            System.out.println(GetGreen() + "\nInscrição na UC '" + ucEscolhida.getNome() + "' realizada com sucesso!" + GetReset());
-        } else {
-            System.out.println(GetRed() + "\nErro ao registar a inscrição no sistema." + GetReset());
+            if (!ucsSelecionadas.isEmpty()) {
+                controller.AvaliacaoController avaliacaoController = new controller.AvaliacaoController();
+                for (model.UnidadeCurricular ucEscolhida : ucsSelecionadas) {
+                    model.Avaliacao novaInscricao = new model.Avaliacao("A Definir", null, ucEscolhida, estudante);
+                    if (avaliacaoController.registarAvaliacao(novaInscricao) != null) {
+                        System.out.println(GetGreen() + "- Inscrição na UC '" + ucEscolhida.getNome() + "' realizada com sucesso!" + GetReset());
+                    } else {
+                        System.out.println(GetRed() + "- Erro ao registar a inscrição na UC '" + ucEscolhida.getNome() + "'." + GetReset());
+                    }
+                }
+                sucessoInput = true;
+            }
         }
         MenuUtils.pressionarEnter(ler);
     }
@@ -245,6 +255,23 @@ public class EstudanteView {
             Estudante estudante = controller.procurarEstudantePorNumeroMec(estudanteAtual.getNumeroMec());
 
             System.out.println(controller.obterFichaEstudanteFormatada(estudante));
+
+            System.out.println("\n" + GetWhiteBold() + "--- Unidades Curriculares Inscritas ---" + GetReset());
+            List<Avaliacao> avaliacoes = estudante.getListaAvaliacoes();
+            boolean temInscricoes = false;
+
+            if (avaliacoes != null) {
+                for (Avaliacao a : avaliacoes) {
+                    if (a.getNota() == null) {
+                        System.out.println("- " + a.getUnidadeCurricular().getNome() + " (" + a.getUnidadeCurricular().getAnoCurricular() + "º Ano)");
+                        temInscricoes = true;
+                    }
+                }
+            }
+
+            if (!temInscricoes) {
+                System.out.println(GetYellow() + "Nenhuma inscrição ativa de momento." + GetReset());
+            }
 
             MenuUtils.pressionarEnter(ler);
 
@@ -363,16 +390,21 @@ public class EstudanteView {
 
         int escolha = -1;
         while (escolha < 0 || escolha > propinas.size()) {
+            System.out.print("\nEscolha o número da propina que deseja pagar (ou '0' para cancelar): ");
+            String op = ler.nextLine().trim();
+            if (op.equals("0")) {
+                System.out.println(GetYellow() + "Operação cancelada pelo utilizador." + GetReset());
+                MenuUtils.pressionarEnter(ler);
+                return;
+            }
             try {
-                String op = BackendUtils.lerInputString(ler, "\nEscolha o número da propina que deseja pagar: ");
                 escolha = Integer.parseInt(op);
-                if (escolha == 0)
-                    throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
                 if (escolha < 1 || escolha > propinas.size()) {
                     System.out.println(GetRed() + "Opção inválida. Escolha um número da lista." + GetReset());
+                    escolha = -1;
                 }
             } catch (NumberFormatException e) {
-                System.out.println(GetRed() + "Entrada inválida. Digite apenas números." + GetReset());
+                System.out.println(GetRed() + "Entrada inválida. Digite apenas números inteiros correspondentes à lista." + GetReset());
                 escolha = -1;
             }
         }
@@ -387,7 +419,8 @@ public class EstudanteView {
 
         double valorPagamento = -1;
         while (valorPagamento <= 0) {
-            String inputValor = BackendUtils.lerInputString(ler, "\nIntroduza o valor a pagar agora (ex: 250.50) ou '0' para cancelar: ");
+            System.out.print("\nIntroduza o valor a pagar agora (ex: 250.50 ou 250,50) ou '0' para cancelar: ");
+            String inputValor = ler.nextLine().trim();
 
             if (inputValor.equals("0")) {
                 System.out.println(GetYellow() + "Operação de pagamento cancelada." + GetReset());
@@ -399,9 +432,12 @@ public class EstudanteView {
                 valorPagamento = Double.parseDouble(inputValor.replace(",", "."));
                 if (valorPagamento <= 0) {
                     System.out.println(GetRed() + "O valor deve ser superior a zero." + GetReset());
+                } else if (valorPagamento > propinaSelecionada.getValorEmDivida()) {
+                    System.out.println(GetRed() + "Erro: O valor inserido (" + String.format("%.2f", valorPagamento) + " EUR) é superior ao valor em dívida (" + String.format("%.2f", propinaSelecionada.getValorEmDivida()) + " EUR). Tente novamente." + GetReset());
+                    valorPagamento = -1;
                 }
             } catch (NumberFormatException e) {
-                System.out.println(GetRed() + "Formato inválido. Use números e ponto/vírgula para decimais." + GetReset());
+                System.out.println(GetRed() + "Erro: Deve introduzir um valor numérico válido. Use ponto (.) ou vírgula (,) para separar os cêntimos." + GetReset());
                 valorPagamento = -1;
             }
         }

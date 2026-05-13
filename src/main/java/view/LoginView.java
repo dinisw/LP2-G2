@@ -45,7 +45,7 @@ public class LoginView {
                                 || BackendUtils.emailISSMFEstudanteValido(email);
 
                         if (!emailValido) {
-                            System.out.println(GetRed() + "Email invalido. Verifique o dominio (@issmf.ipp.pt) e tente novamente!" + GetReset());
+                            System.out.println(GetRed() + "Email inválido. Verifique o domínio (@issmf.ipp.pt) e tente novamente!" + GetReset());
                         }
                     }
                 }
@@ -63,14 +63,14 @@ public class LoginView {
                     String senha = BackendUtils.lerSenhaOculta("Senha: ", scanner);
 
                     if (senha.equals("0")) {
-                        System.out.println(GetYellow() + "\nOperacao cancelada." + GetReset());
+                        System.out.println(GetYellow() + "\nOperação cancelada." + GetReset());
                         break;
                     }
 
                     utilizador = loginController.login(email, senha);
 
                     if (utilizador == null) {
-                        System.out.println(GetRed() + "Credenciais invalidas! Tente novamente (ou digite '0' para voltar)." + GetReset());
+                        System.out.println(GetRed() + "Credenciais inválidas! Tente novamente (ou digite '0' para voltar)." + GetReset());
                     } else {
                         senhaCorreta = true;
                     }

@@ -172,16 +172,44 @@ public class EstudanteController {
             return new Resultado<>(false, "Não há estudantes registados no sistema para simular a transição.");
         }
 
+        PropinaController propinaController = new PropinaController();
+
         for (Estudante e : estudantes) {
             if (!e.isAtivo()) continue;
 
-            int anoCalculado = obterAnoDesbloqueado(e);
+            Curso curso = cursoCRUD.procurarPorNome(e.getNomeCurso());
+            if (curso == null) continue;
+
+            DAL.AvaliacaoCRUD avaliacaoCRUD = new DAL.AvaliacaoCRUD();
+            e.setListaAvaliacoes(avaliacaoCRUD.listarPorEstudante(e.getNumeroMec()));
+
+            int anoPorNotas = BLL.EstudanteCalculo.calcularAnoDesbloqueado(e, curso);
+            int anoReal = anoPorNotas;
+            String motivo = "";
+
+            if (anoPorNotas >= 2 && !propinaController.isPropinaPaga(e.getNumeroMec(), 1)) {
+                anoReal = 1;
+            } else if (anoPorNotas == 3 && !propinaController.isPropinaPaga(e.getNumeroMec(), 2)) {
+                anoReal = 2;
+            }
+
+            if (anoPorNotas > anoReal) {
+                motivo = " - RETIDO: Falta de pagamento da propina do " + anoReal + "º ano.";
+            } else {
+                if (anoReal < curso.getDuracao()) {
+                    motivo = " - AGUARDA ACADÉMICO: Ainda não completou 60% das UCs para passar ao " + (anoReal + 1) + "º ano.";
+                } else {
+                    motivo = " - NO ÚLTIMO ANO DO CURSO.";
+                }
+            }
+
+            propinaController.gerarPropinaAnual(e.getNumeroMec(), anoReal);
             boolean isConcluido = verificarSeCursoConcluido(e);
 
             if (isConcluido) {
                 relatorio.add("[SUCESSO] Mec: " + e.getNumeroMec() + " (" + e.getNome() + ") -> Concluiu o Curso! (Sem novas propinas)");
             } else {
-                relatorio.add("[INFO] Mec: " + e.getNumeroMec() + " (" + e.getNome() + ") -> Processado para o " + anoCalculado + "º Ano. (Propinas sincronizadas)");
+                relatorio.add("[INFO] Mec: " + e.getNumeroMec() + " (" + e.getNome() + ") -> Processado para o " + anoReal + "º Ano" + motivo);
             }
 
             estudanteCRUD.atualizarEstudante(e);

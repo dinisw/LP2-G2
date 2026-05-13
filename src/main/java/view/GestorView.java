@@ -1553,25 +1553,34 @@ public class GestorView {
                 System.out.println(GetGreen() + "\nExcelente notícia! Não há nenhum estudante com propinas em atraso no sistema." + GetReset());
             } else {
                 System.out.println(GetYellow() + "\nLista de Estudantes com pagamentos pendentes:" + GetReset());
-                System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
-                System.out.printf(GetWhiteBold() + " %-12s | %-25s | %-20s | %-12s \n" + GetReset(), "Nº MEC", "NOME", "CURSO", "DÍVIDA TOTAL");
-                System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
+                System.out.println(GetCyanBold() + "------------------------------------------------------------------------------------------------------------------" + GetReset());
+                System.out.printf(GetWhiteBold() + " %-12s | %-25s | %-20s | %-15s | %-25s \n" + GetReset(), "Nº MEC", "NOME", "CURSO", "DÍVIDA TOTAL", "SITUAÇÃO (ANOS)");
+                System.out.println(GetCyanBold() + "------------------------------------------------------------------------------------------------------------------" + GetReset());
 
-                for (Estudante estudante : devedores) {
-                    List<model.Propina> propinas = propinaController.consultarPropinasEstudante(estudante.getNumeroMec());
-                    double totalDivida = 0;
-                    if (propinas != null) {
-                        for (model.Propina propina : propinas) {
-                            totalDivida += propina.getValorEmDivida();
+                for (Estudante e : devedores) {
+                    List<Propina> propinas = propinaController.consultarPropinasEstudante(e.getNumeroMec());
+                    double dividaTotal = 0.0;
+                    StringBuilder situacaoAnos = new StringBuilder();
+
+                    for (Propina p : propinas) {
+                        if (!p.isTotalmentePaga()) {
+                            dividaTotal += p.getValorEmDivida();
+                            if (situacaoAnos.length() > 0) situacaoAnos.append(", ");
+                            situacaoAnos.append(p.getAnoLetivo()).append("º Ano");
                         }
                     }
-                    System.out.printf(" %-12d | %-25s | %-20s | %10.2f EUR \n",
-                            estudante.getNumeroMec(),
-                            estudante.getNome().length() > 25 ? estudante.getNome().substring(0, 22) + "..." : estudante.getNome(),
-                            estudante.getNomeCurso().length() > 20 ? estudante.getNomeCurso().substring(0, 17) + "..." : estudante.getNomeCurso(),
-                            totalDivida);
+
+                    String nome = e.getNome();
+                    if (nome.length() > 25) nome = nome.substring(0, 22) + "...";
+                    String curso = e.getNomeCurso();
+                    if (curso.length() > 20) curso = curso.substring(0, 17) + "...";
+                    String anosStr = situacaoAnos.toString();
+                    if(anosStr.length() > 25) anosStr = anosStr.substring(0, 22) + "...";
+
+                    System.out.printf(" %-12d | %-25s | %-20s | %-15s | %-25s \n",
+                            e.getNumeroMec(), nome, curso, String.format("%.2f€", dividaTotal), anosStr);
                 }
-                System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
+                System.out.println(GetCyanBold() + "------------------------------------------------------------------------------------------------------------------" + GetReset());
             }
 
             MenuUtils.pressionarEnter(scanner);
@@ -1581,6 +1590,7 @@ public class GestorView {
             MenuUtils.pressionarEnter(scanner);
         }
     }
+
     private void mostrarErroMenu() {
         System.out.println(GetRed() + "Opção inválida ou indisponível de momento. Por favor, escolha uma opção visível na lista." + GetReset());
         MenuUtils.pressionarEnter(scanner);
