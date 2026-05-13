@@ -2,12 +2,15 @@ package view;
 
 import common.utils.BackendUtils;
 import common.utils.MenuUtils;
+import controller.CursoController;
+import model.Curso;
 import model.Estudante;
 import model.Avaliacao;
 import controller.EstudanteController;
 import common.exceptions.CancelarRegistoException;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 
@@ -94,8 +97,8 @@ public class EstudanteView {
             return;
         }
 
-        DAL.CursoCRUD cursoCRUD = new DAL.CursoCRUD();
-        model.Curso curso = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
+        CursoController cursoController = new CursoController();
+        Curso curso = cursoController.procurarCurso(estudante.getNomeCurso());
 
         if (curso == null) {
             System.out.println(GetRed() + "Erro: Curso '" + estudante.getNomeCurso() + "' não encontrado no sistema." + GetReset());
@@ -194,19 +197,18 @@ public class EstudanteView {
 
         EstudanteController estudanteController = new EstudanteController();
         Estudante estudante = estudanteController.procurarEstudantePorNumeroMec(estudanteAtual.getNumeroMec());
-
-        DAL.CursoCRUD cursoCRUD = new DAL.CursoCRUD();
-        List<model.Curso> todosCursos = cursoCRUD.getCursos();
+        CursoController cursoController = new CursoController();
+        List<Curso> cursos = cursoController.listarCursos();
         List<model.Curso> cursosDisponiveis = new java.util.ArrayList<>();
 
-        for (model.Curso curso : todosCursos) {
+        for (model.Curso curso : cursos) {
             if(!curso.isIniciado() && !curso.getUnidadeCurriculars().isEmpty()) {
                 cursosDisponiveis.add(curso);
             }
         }
 
         if (estudante.getNomeCurso() != null && !estudante.getNomeCurso().equals("SEM REGISTO")) {
-            model.Curso cursoAtual = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
+            model.Curso cursoAtual = cursoController.procurarCurso(estudante.getNomeCurso());
             if (cursoAtual != null && cursoAtual.isIniciado()) {
                 System.out.println(GetRed() + "O seu curso atual ('" + cursoAtual.getNome() + "') já iniciou o ano letivo." + GetReset());
                 System.out.println(GetYellow() + "As transferências de curso encontram-se bloqueadas." + GetReset());

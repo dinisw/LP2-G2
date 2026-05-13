@@ -2,9 +2,12 @@ package DAL;
 
 import model.Docente;
 import model.Resultado;
+import model.UnidadeCurricular;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class DocenteCRUD extends AbstractCsvCRUD<Docente> {
 
@@ -23,10 +26,19 @@ public class DocenteCRUD extends AbstractCsvCRUD<Docente> {
             String hash = colunas[5];
             String sigla = colunas[6];
 
-            return new Docente(nome, morada, nif, dataNascimento, email, hash, sigla, new ArrayList<>(), new ArrayList<>());
+            Docente docente = new Docente(nome, morada, nif, dataNascimento, email, hash, sigla,
+                    new ArrayList<>(), new ArrayList<>());
+            UnidadeCurricularCRUD ucCRUD = new UnidadeCurricularCRUD();
+            List<UnidadeCurricular> ucsDoDocente = ucCRUD.getUnidadeCurriculars().stream()
+                    .filter(uc -> uc.getDocente() != null &&
+                            uc.getDocente().getSigla().equalsIgnoreCase(sigla))
+                    .collect(Collectors.toList());
+            docente.setUnidadesCurriculares(ucsDoDocente);
+            return docente;
         } catch (Exception e) {
             return null;
         }
+
     }
 
     @Override

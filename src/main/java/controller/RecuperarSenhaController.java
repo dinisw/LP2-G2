@@ -6,6 +6,7 @@ import DAL.GestorCRUD;
 import common.utils.BackendUtils;
 import common.utils.SenhaUtils;
 import model.*;
+import service.EmailService;
 
 public class RecuperarSenhaController {
     private EmailService emailService;

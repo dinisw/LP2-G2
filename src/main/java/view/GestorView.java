@@ -2,10 +2,8 @@ package view;
 
 import common.exceptions.CancelarRegistoException;
 import common.utils.BackendUtils;
-import common.utils.DesignUtils;
 import common.utils.MenuUtils;
 import common.utils.SenhaUtils;
-import DAL.CursoCRUD;
 import controller.*;
 import model.*;
 import java.time.LocalDate;
@@ -18,6 +16,7 @@ import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
+import service.EmailService;
 
 import static common.utils.DesignUtils.*;
 
@@ -96,60 +95,33 @@ public class GestorView {
     //region Gestor
     public void exibirMenuGestores() {
         String opcao;
-        ArrayList<String> opcoes = new ArrayList<>();
-        opcoes.add("1. Gerir Gestores");
-        opcoes.add("2. Gerir Docentes");
-        opcoes.add("3. Gerir Estudantes");
-        opcoes.add("4. Gerir Cursos");
-        opcoes.add("5. Gerir Departamentos");
-        opcoes.add("6. Gerir Unidades Curriculares");
-        opcoes.add("7. Consultar Alunos em Dívida (Tesouraria)");
-        opcoes.add("8. Simular Passagem de Ano Letivo (Global)");
-        opcoes.add("0. Logout");
-
         do {
-            try {
-                MenuUtils.limparTela();
-                MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL", opcoes);
+            GestorController gc = new GestorController();
+            boolean temGestores = !gc.listarGestores().isEmpty();
 
-                System.out.print("\nSelecione uma opção: ");
-                opcao = scanner.nextLine().trim();
+            ArrayList<String> opcoes = new ArrayList<>();
+            opcoes.add("1. Registar Gestor");
+            if (temGestores) {
+                opcoes.add("2. Listar Gestores");
+                opcoes.add("3. Procurar Gestor");
+                opcoes.add("4. Atualizar Gestor");
+                opcoes.add("5. Eliminar Gestor");
+            }
+            opcoes.add("0. Voltar ao Menu Principal");
 
-                switch (opcao) {
-                    case "1":
-                        exibirMenuGestores();
-                        break;
-                    case "2":
-                        exibirMenuDocentes();
-                        break;
-                    case "3":
-                        exibirMenuEstudantes();
-                        break;
-                    case "4":
-                        cursoView.exibirMenuCursos();
-                        break;
-                    case "5":
-                        departamentoView.exibirMenuDepartamentos();
-                        break;
-                    case "6":
-                        unidadeCurricularView.exibirMenuUnidadesCurriculares();
-                        break;
-                    case "7":
-                        consultarAlunosEmDivida();
-                        break;
-                    case "8":
-                        simularPassagemDeAno();
-                        break;
-                    case "0":
-                        System.out.println(GetYellow() + "\nA efetuar logout e a voltar ao ecrã de Login..." + GetReset());
-                        return;
-                    default:
-                        System.out.println(GetRed() + "Opção inválida! Por favor, escolha uma opção da lista." + GetReset());
-                        MenuUtils.pressionarEnter(scanner);
-                }
-            } catch (Exception e) {
-                System.out.println("\n" + GetRed() + "Ocorreu um erro na navegação: " + e.getMessage() + GetReset());
-                MenuUtils.pressionarEnter(scanner);
+            MenuUtils.limparTela();
+            MenuUtils.exibirSubTitulo("PORTAL GESTOR > GESTORES", opcoes);
+            System.out.print("\nSelecione uma opção: ");
+            opcao = scanner.nextLine().trim();
+
+            switch (opcao) {
+                case "1": registarGestor(); break;
+                case "2": if (temGestores) listarGestores(); else mostrarErroMenu(); break;
+                case "3": if (temGestores) procurarGestor(); else mostrarErroMenu(); break;
+                case "4": if (temGestores) atualizarGestor(); else mostrarErroMenu(); break;
+                case "5": if (temGestores) eliminarGestor(); else mostrarErroMenu(); break;
+                case "0": return;
+                default: mostrarErroMenu();
             }
         } while (true);
     }
@@ -384,7 +356,7 @@ public class GestorView {
             String cargo = BackendUtils.lerInputString(scanner, "Novo Cargo: ");
             if (!cargo.isEmpty()) gestor.setCargo(cargo);
 
-            Resultado<Gestor> resultado = gestorControllerAtualizado.atualizarGestor(gestor.getNif(), morada.isEmpty() ? null : morada, null, cargo.isEmpty() ? null : cargo);
+            Resultado<Gestor> resultado = gestorControllerAtualizado.atualizarGestor(gestor.getNif(), novoNome.isEmpty() ? null : novoNome, morada.isEmpty() ? null : morada, null, cargo.isEmpty() ? null : cargo);
 
             if (resultado.sucesso) {
                 System.out.println(GetGreen() + "\nGestor atualizado com sucesso!" + GetReset());
@@ -1062,16 +1034,17 @@ public class GestorView {
         try {
             System.out.println(GetBlue() + "\n--- REGISTO DE ESTUDANTE ---" + GetReset());
 
-            DAL.DepartamentoCRUD departamentoCRUD = new DAL.DepartamentoCRUD();
-            if (departamentoCRUD.getDepartamentos().isEmpty()) {
+            DepartamentoController departamentoController = new DepartamentoController();
+            List<Departamento> departamentos = departamentoController.listarTodosDepartamentos();
+            if (departamentos.isEmpty()) {
                 System.out.println(GetYellow() + "\nAviso: Não existem Departamentos registados no sistema." + GetReset());
                 System.out.println(GetRed() + "Por favor, vá a 'Gerir Departamentos' e crie um antes de registar estudantes." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
                 return;
             }
 
-            DAL.CursoCRUD cc = new DAL.CursoCRUD();
-            List<Curso> cursos = cc.getCursos();
+            CursoController cursoController = new CursoController();
+            List<Curso> cursos = cursoController.listarCursos();
 
             if (cursos.isEmpty()) {
                 System.out.println(GetYellow() + "\nAviso: Não existem Cursos registados no sistema." + GetReset());
@@ -1345,8 +1318,8 @@ public class GestorView {
             String alterarCurso = scanner.nextLine().trim();
 
             if (alterarCurso.equalsIgnoreCase("S")) {
-                DAL.CursoCRUD cursoCRUD = new DAL.CursoCRUD();
-                List<Curso> cursos = cursoCRUD.getCursos();
+                CursoController cursoController = new CursoController();
+                List<Curso> cursos = cursoController.listarCursos();
 
                 if (cursos.isEmpty()) {
                     System.out.println(GetYellow() + "Não existem cursos registados no sistema. O curso será mantido." + GetReset());

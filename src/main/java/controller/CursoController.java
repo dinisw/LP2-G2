@@ -45,16 +45,9 @@ public class CursoController {
         return resultado;
     }
 
-    public List<Curso> listarCursos() {
-        return cursoCRUD.getCursos();
-    }
+    public List<Curso> listarCursos() { return cursoCRUD.getCursos(); }
+    public Curso procurarCurso(String nome) { return cursoCRUD.procurarPorNome(nome); }
 
-    public Curso procurarCurso(String nome) {
-        if (nome == null || nome.trim().isEmpty()) {
-            return null;
-        }
-        return cursoCRUD.procurarPorNome(nome);
-    }
 
     public Resultado atualizarCurso(String nomeAntigo, Curso cursoNovo) {
         Resultado resultado = new Resultado();
