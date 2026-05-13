@@ -2,8 +2,10 @@ package controller;
 
 import DAL.CursoCRUD;
 import DAL.EstudanteCRUD;
+import DAL.PropinaCRUD;
 import model.Curso;
 import model.Estudante;
+import model.Propina;
 import model.Resultado;
 
 import java.time.LocalDate;
@@ -59,22 +61,18 @@ public class EstudanteController {
     public int obterAnoDesbloqueado(Estudante estudante) {
         Curso curso = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
         if (curso == null) return 1;
-
         DAL.AvaliacaoCRUD avaliacaoCRUD = new DAL.AvaliacaoCRUD();
         estudante.setListaAvaliacoes(avaliacaoCRUD.listarPorEstudante(estudante.getNumeroMec()));
-
         int anoPorNotas = BLL.EstudanteCalculo.calcularAnoDesbloqueado(estudante, curso);
-
-        PropinaController propinaController = new PropinaController();
-        int anoReal = anoPorNotas;
-        if (anoPorNotas >= 2 && !propinaController.isPropinaPaga(estudante.getNumeroMec(), 1)) {
-            anoReal = 1;
-        } else if (anoPorNotas == 3 && !propinaController.isPropinaPaga(estudante.getNumeroMec(), 2)) {
-            anoReal = 2;
-        }
-        return anoReal;
+        PropinaController pc = new PropinaController();
+        if (anoPorNotas >= 2 && !pc.isPropinaPaga(estudante.getNumeroMec(), 1)) return 1;
+        if (anoPorNotas == 3 && !pc.isPropinaPaga(estudante.getNumeroMec(), 2)) return 2;
+        return anoPorNotas;
     }
-
+    public void garantirPropinaGerada(Estudante estudante) {
+        int ano = obterAnoDesbloqueado(estudante);
+        new PropinaController().gerarPropinaAnual(estudante.getNumeroMec(), ano);
+    }
     public boolean verificarSeCursoConcluido(Estudante estudante) {
         Curso curso = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
         if (curso == null) return false;
@@ -119,9 +117,17 @@ public class EstudanteController {
         Estudante estudante = new Estudante(nome, morada, nif, dataNascimento, email, numeroMec, hash, curso, true);
 
         Resultado<Estudante> res = estudanteCRUD.registarEstudante(estudante);
-        if (res.sucesso) return new Resultado<>(numeroMec, true);
+        if (!res.sucesso) return new Resultado<>(false, res.mensagemErro);
 
-        return new Resultado<>(false, res.mensagemErro);
+        double precoAnual = 1000.0;
+        Curso cursoObj = cursoCRUD.procurarPorNome(curso);
+        if (cursoObj != null && cursoObj.getPrecoAnual() > 0) {
+            precoAnual = cursoObj.getPrecoAnual();
+        }
+        PropinaCRUD propinaCRUD = new PropinaCRUD();
+        propinaCRUD.registarPropina(new Propina(numeroMec, 1, precoAnual, 0.0));
+
+        return new Resultado<>(numeroMec, true);
     }
 
     public Resultado<Estudante> atualizarEstudante(int numeroMec, String nome, String morada, String curso) {

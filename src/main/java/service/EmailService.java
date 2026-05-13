@@ -1,7 +1,10 @@
-package model;
+package service;
 
 import jakarta.mail.*;
 import jakarta.mail.internet.*;
+import model.Resultado;
+import model.TipoDeUtilizador;
+
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
