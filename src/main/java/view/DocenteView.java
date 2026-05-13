@@ -8,10 +8,6 @@ import controller.AvaliacaoController;
 import controller.DocenteController;
 import controller.UnidadeCurricularController;
 import model.*;
-import org.jline.reader.LineReader;
-import org.jline.reader.LineReaderBuilder;
-import org.jline.terminal.Terminal;
-import org.jline.terminal.TerminalBuilder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -98,10 +94,6 @@ public class DocenteView {
             System.out.println(GetBlue() + "\n--- ALTERAR A MINHA PASSWORD ---" + GetReset());
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
-            Terminal terminal = TerminalBuilder.terminal();
-            LineReader reader = LineReaderBuilder.builder()
-                    .terminal(terminal)
-                    .build();
 
             String novaPass = "";
             boolean senhaValida = false;
