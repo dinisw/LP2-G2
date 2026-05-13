@@ -14,13 +14,26 @@ public class PropinaCRUD extends AbstractCsvCRUD<Propina> {
     }
 
     @Override
-    // PropinaCRUD.java
-    protected String mapearEntidadeParaLinha(Propina p) {
-        String historico = "";
-        if (p.getHistoricoPagamentos() != null && !p.getHistoricoPagamentos().isEmpty()) {
-            historico = p.getHistoricoPagamentos().stream()
-                    .map(h -> h.replace(";", "|"))
-                    .collect(Collectors.joining(","));
+    protected Propina mapearLinhaParaEntidade(String[] colunas) {
+        try {
+            int numMec = Integer.parseInt(colunas[0]);
+            int ano = Integer.parseInt(colunas[1]);
+            double total = Double.parseDouble(colunas[2].replace(",", "."));
+            double pago = Double.parseDouble(colunas[3].replace(",", "."));
+
+            Propina propina = new Propina(numMec, ano, total, pago);
+
+            if (colunas.length > 4 && !colunas[4].isEmpty()) {
+                java.util.List<String> historico = new java.util.ArrayList<>();
+                for (String entry : colunas[4].split("\\|")) {
+                    historico.add(entry.trim());
+                }
+                propina.setHistoricoPagamentos(historico);
+            }
+
+            return propina;
+        } catch (Exception e) {
+            return null;
         }
         return String.format("%d;%d;%.2f;%.2f;%s",
                 p.getNumeroMecEstudante(), p.getAnoLetivo(),
@@ -28,18 +41,13 @@ public class PropinaCRUD extends AbstractCsvCRUD<Propina> {
     }
 
     @Override
-    protected Propina mapearLinhaParaEntidade(String[] colunas) {
-        int numMec = Integer.parseInt(colunas[0]);
-        int ano = Integer.parseInt(colunas[1]);
-        double total = Double.parseDouble(colunas[2].replace(",", "."));
-        double pago = Double.parseDouble(colunas[3].replace(",", "."));
-
-        Propina p = new Propina(numMec, ano, total, pago);
-        if (colunas.length > 4 && !colunas[4].isEmpty()) {
-            List<String> historico = Arrays.asList(colunas[4].split(","));
-            p.setHistoricoPagamentos(new ArrayList<>(historico));
+    protected String mapearEntidadeParaLinha(Propina p) {
+        String historico = "";
+        if (p.getHistoricoPagamentos() != null && !p.getHistoricoPagamentos().isEmpty()) {
+            historico = String.join("|", p.getHistoricoPagamentos());
         }
-        return p;
+        return String.format("%d;%d;%.2f;%.2f;%s",
+                p.getNumeroMecEstudante(), p.getAnoLetivo(), p.getValorTotal(), p.getValorPago(), historico);
     }
 
     public boolean registarPropina(Propina propina) {

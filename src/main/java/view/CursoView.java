@@ -414,19 +414,21 @@ public class CursoView {
 
             Curso curso = listaCursos.get(escolha - 1);
 
+            int duracaoCurso = curso.getDuracao();
             System.out.println("\nQual ano letivo deseja iniciar para o curso " + curso.getNome() + "?");
-            System.out.println("1. Primeiro Ano (Exige 5 alunos)");
-            System.out.println("2. Segundo Ano (Exige 1 aluno)");
-            System.out.println("3. Terceiro Ano (Exige 1 aluno)");
+            for (int a = 1; a <= duracaoCurso; a++) {
+                String req = (a == 1) ? "(Exige 5 alunos)" : "(Exige 1 aluno)";
+                System.out.println(a + ". " + a + "º Ano " + req);
+            }
 
             int anoParaIniciar = -1;
-            while (anoParaIniciar < 1 || anoParaIniciar > 3) {
+            while (anoParaIniciar < 1 || anoParaIniciar > duracaoCurso) {
                 try {
-                    String anoParaIniciarString = BackendUtils.lerInputString(scanner, "Opção (1-3): ");
+                    String anoParaIniciarString = BackendUtils.lerInputString(scanner, "Opção (1-" + duracaoCurso + "): ");
                     if (anoParaIniciarString.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
                     anoParaIniciar = Integer.parseInt(anoParaIniciarString);
-                    if (anoParaIniciar < 1 || anoParaIniciar > 3) {
-                        System.out.println(GetRed() + "Opção inválida. Escolha 1, 2 ou 3." + GetReset());
+                    if (anoParaIniciar < 1 || anoParaIniciar > duracaoCurso) {
+                        System.out.println(GetRed() + "Opção inválida. Escolha entre 1 e " + duracaoCurso + "." + GetReset());
                     }
                 } catch (NumberFormatException e) {
                     System.out.println(GetRed() + "Por favor, digite apenas números." + GetReset());
