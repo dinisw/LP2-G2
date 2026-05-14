@@ -1,21 +1,21 @@
 package controller;
 
 import DAL.CursoCRUD;
-import DAL.EstudanteCRUD;
+import DAL.IEstudanteDAO;
 import model.Curso;
 import model.Estudante;
 import model.Resultado;
-
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Stream;
+import DAL.IEstudanteDAO;
+import DAL.DAOFactory;
 
 public class EstudanteController {
-    private final EstudanteCRUD estudanteCRUD;
+    private final IEstudanteDAO estudanteDAO;
     private final CursoCRUD cursoCRUD;
 
     public EstudanteController() {
-        this.estudanteCRUD = new EstudanteCRUD();
+        this.estudanteDAO = DAOFactory.getEstudanteDAO();
         this.cursoCRUD = new CursoCRUD();
     }
 
@@ -95,7 +95,7 @@ public class EstudanteController {
     }
 
     public int gerarNumeroMecanografico() {
-        return estudanteCRUD.gerarNumeroMecanografico();
+        return estudanteDAO.gerarNumeroMecanografico();
     }
 
     public Resultado<Integer> registarEstudante(String nome, String morada, int nif, LocalDate dataNascimento, String curso, String hash) {
@@ -113,12 +113,12 @@ public class EstudanteController {
 
         if (dataNascimento == null) return new Resultado<>(false, "A data de nascimento fornecida é inválida.");
 
-        int numeroMec = estudanteCRUD.gerarNumeroMecanografico();
+        int numeroMec = estudanteDAO.gerarNumeroMecanografico();
         String email = numeroMec + "@issmf.ipp.pt";
 
         Estudante estudante = new Estudante(nome, morada, nif, dataNascimento, email, numeroMec, hash, curso, true);
 
-        Resultado<Estudante> res = estudanteCRUD.registarEstudante(estudante);
+        Resultado<Estudante> res = estudanteDAO.registarEstudante(estudante);
         if (res.sucesso) return new Resultado<>(numeroMec, true);
 
         return new Resultado<>(false, res.mensagemErro);
@@ -127,28 +127,28 @@ public class EstudanteController {
     public Resultado<Estudante> atualizarEstudante(int numeroMec, String nome, String morada, String curso) {
         if (numeroMec <= 0) return new Resultado<>(false, "Número Mecanográfico inválido.");
 
-        Estudante estudante = estudanteCRUD.lerEstudante(numeroMec);
+        Estudante estudante = estudanteDAO.lerEstudante(numeroMec);
         if (estudante == null) return new Resultado<>(false, "Estudante não encontrado.");
 
         if (nome != null && !nome.trim().isEmpty()) estudante.setNome(nome);
         if (morada != null && !morada.trim().isEmpty()) estudante.setMorada(morada);
         if (curso != null && !curso.trim().isEmpty()) estudante.setNomeCurso(curso);
 
-        return estudanteCRUD.atualizarEstudante(estudante);
+        return estudanteDAO.atualizarEstudante(estudante);
     }
 
     public Resultado<Estudante> alterarPassword(int numeroMec, String novaSenhaHash) {
         if (novaSenhaHash == null || novaSenhaHash.trim().isEmpty()) return new Resultado<>(false, "A nova senha não pode estar vazia.");
 
-        Estudante estudante = estudanteCRUD.lerEstudante(numeroMec);
+        Estudante estudante = estudanteDAO.lerEstudante(numeroMec);
         if (estudante == null) return new Resultado<>(false, "Estudante não encontrado.");
 
         estudante.setHash(novaSenhaHash);
-        return estudanteCRUD.atualizarSenha(estudante);
+        return estudanteDAO.atualizarSenha(estudante);
     }
 
     public Resultado<String> eliminarEstudante(int numeroMec) {
-        Estudante estudante = estudanteCRUD.lerEstudante(numeroMec);
+        Estudante estudante = estudanteDAO.lerEstudante(numeroMec);
         if (estudante == null) return new Resultado<>(false, "Estudante não encontrado.");
 
         if (estudante.getNomeCurso() != null && !estudante.getNomeCurso().equals("SEM REGISTO")) {
@@ -161,21 +161,21 @@ public class EstudanteController {
             if (!estudante.isAtivo()) return new Resultado<>(false, "O Estudante já se encontra inativo.");
 
             estudante.setAtivo(false);
-            Resultado<Estudante> res = estudanteCRUD.atualizarEstudante(estudante);
+            Resultado<Estudante> res = estudanteDAO.atualizarEstudante(estudante);
             return res.sucesso ? new Resultado<>("INATIVADO", true) : new Resultado<>(false, res.mensagemErro);
         }
 
-        Resultado<Estudante> res = estudanteCRUD.eliminarEstudante(numeroMec);
+        Resultado<Estudante> res = estudanteDAO.eliminarEstudante(numeroMec);
         return res.sucesso ? new Resultado<>("ELIMINADO", true) : new Resultado<>(false, res.mensagemErro);
     }
 
-    public List<Estudante> listarEstudantes() { return estudanteCRUD.getEstudantes(); }
-    public Estudante procurarEstudantePorNif(int nif) { return nif <= 0 ? null : estudanteCRUD.procurarPorNif(nif); }
-    public Estudante procurarEstudantePorNumeroMec(int mec) { return mec <= 0 ? null : estudanteCRUD.lerEstudante(mec); }
+    public List<Estudante> listarEstudantes() { return estudanteDAO.getEstudantes(); }
+    public Estudante procurarEstudantePorNif(int nif) { return nif <= 0 ? null : estudanteDAO.procurarPorNif(nif); }
+    public Estudante procurarEstudantePorNumeroMec(int mec) { return mec <= 0 ? null : estudanteDAO.lerEstudante(mec); }
 
     public Resultado<List<String>> simularTransicaoAnoLetivoGlobal() {
         List<String> relatorio = new java.util.ArrayList<>();
-        List<Estudante> estudantes = estudanteCRUD.getEstudantes();
+        List<Estudante> estudantes = estudanteDAO.getEstudantes();
 
         if (estudantes.isEmpty()) {
             return new Resultado<>(false, "Não há estudantes registados no sistema para simular a transição.");
