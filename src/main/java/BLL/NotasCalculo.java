@@ -15,24 +15,17 @@ public class NotasCalculo {
 
         Map<String, Double> melhoresNotas = new HashMap<>();
 
-        for (Avaliacao av : avaliacoes) {
-            if (av.getNota() != null) {
-                String nomeUC = av.getUnidadeCurricular().getNome();
-                if (!melhoresNotas.containsKey(nomeUC) || av.getNota() > melhoresNotas.get(nomeUC)) {
-                    melhoresNotas.put(nomeUC, av.getNota());
-                }
+        for (Avaliacao avaliacao : avaliacoes) {
+            if (avaliacao.getNota() != null) {
+                String nomeUC = avaliacao.getUnidadeCurricular().getNome();
+                melhoresNotas.put(nomeUC, Math.max(melhoresNotas.getOrDefault(nomeUC, 0.0), avaliacao.getNota()));
             }
         }
 
         double soma = 0;
-        int count = 0;
         for (Double nota : melhoresNotas.values()) {
-            if (nota >= 9.5) {
                 soma += nota;
-                count++;
-            }
         }
-
-        return count > 0 ? soma / count : 0.0;
+        return melhoresNotas.size() > 0 ? soma / melhoresNotas.size() : 0.0;
     }
 }
