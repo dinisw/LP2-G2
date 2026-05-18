@@ -6,11 +6,14 @@ import common.utils.MenuUtils;
 import common.utils.SenhaUtils;
 import controller.*;
 import model.*;
+import service.EmailService;
+
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.Scanner;
 
 import static common.utils.DesignUtils.*;
@@ -600,16 +603,16 @@ public class GestorView {
 
             String siglaFinal = siglaBase;
             DocenteController dc = new DocenteController();
-            int counter = 1;
 
             while (docenteControllerAtualizado.procurarDocentePorSigla(siglaFinal) != null) {
-
+                Random random = new Random();
+                String letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+                char letra = letras.charAt(random.nextInt(letras.length()));
                 if (siglaBase.length() >= 3) {
-                    siglaFinal = siglaBase.substring(0, 2) + counter;
+                    siglaFinal = siglaBase.substring(0, 2) + letra;
                 } else {
-                    siglaFinal = siglaBase + counter;
+                    siglaFinal = siglaBase + letra;
                 }
-                counter++;
             }
             String email = siglaFinal.toLowerCase() + "@issmf.ipp.pt";
 
@@ -1507,7 +1510,7 @@ public class GestorView {
             if (res.sucesso) {
                 System.out.println(GetGreen() + "\nPassword do estudante alterada com sucesso!" + GetReset());
                 System.out.println(GetYellow() + "A enviar email de notificação ao aluno..." + GetReset());
-                model.EmailService emailService = new model.EmailService();
+                EmailService emailService = new EmailService();
                 var resEmail = emailService.enviarEmailRecuperacaoDeSenha(estudanteSelecionado.getEmail(), novaPass);
 
                 if (resEmail.sucesso) {
