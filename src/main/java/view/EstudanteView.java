@@ -205,9 +205,9 @@ public class EstudanteView {
             return;
         }
 
-        DAL.CursoCRUD cursoCRUD = new DAL.CursoCRUD();
-        List<model.Curso> todosCursos = cursoCRUD.getCursos();
-        List<model.Curso> cursosDisponiveis = new java.util.ArrayList<>();
+        CursoController cursoController = new CursoController();
+        List<Curso> cursos = cursoController.listarCursos();
+        List<Curso> cursosDisponiveis = new java.util.ArrayList<>();
 
         for (model.Curso curso : cursos) {
             if(!curso.isIniciado() && !curso.getUnidadeCurriculars().isEmpty()) {
