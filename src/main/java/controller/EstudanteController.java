@@ -204,42 +204,45 @@ public class EstudanteController {
 
             estudante.setListaAvaliacoes(avaliacaoCRUD.listarPorEstudante(estudante.getNumeroMec()));
 
+            int anoAnterior = estudante.getAnoLetivo();
             int anoPorNotas = BLL.EstudanteCalculo.calcularAnoDesbloqueado(estudante, curso);
             int anoReal = obterAnoDesbloqueado(estudante);
-            String motivo = "";
-
-            if (anoReal < anoPorNotas) {
-                motivo = " - RETIDO: Falta de pagamento da propina de anos anteriores.";
-            } else if (anoReal < curso.getDuracao()) {
-                    motivo = " - AGUARDA ACADÉMICO: Ainda não completou 60% das UCs para passar de ano.";
-            } else {
-                    motivo = " - NO ÚLTIMO ANO DO CURSO.";
-            }
 
             List<model.Propina> historicoPropinas = propinaController.consultarPropinasEstudante(estudante.getNumeroMec());
             boolean jaFaturadoEsteAno = false;
 
             if (historicoPropinas != null) {
                 for (model.Propina propina : historicoPropinas) {
-                    if (propina.getAnoLetivo() == anoReal){
+                    if (propina.getAnoLetivo() == anoReal) {
                         jaFaturadoEsteAno = true;
                         break;
                     }
                 }
             }
             if (!jaFaturadoEsteAno) {
-                propinaController.gerarPropinaAnual(estudante.getNumeroMec(),anoReal);
+                propinaController.gerarPropinaAnual(estudante.getNumeroMec(), anoReal);
             }
             boolean isConcluido = verificarSeCursoConcluido(estudante);
 
             estudante.setAnoLetivo(anoReal);
             estudanteCRUD.atualizarEstudante(estudante);
 
+            String prefixo;
+            String motivo;
             if (isConcluido) {
-                relatorio.add("[SUCESSO] Mec: " + estudante.getNumeroMec() + " (" + estudante.getNome() + ") -> Concluiu o Curso! (Sem novas propinas)");
+                prefixo = "[CONCLUÍDO]";
+                motivo = "Concluiu o curso com todas as UCs aprovadas e propinas pagas.";
+            } else if (anoReal > anoAnterior) {
+                prefixo = "[AVANÇOU]";
+                motivo = "Progrediu do " + anoAnterior + "º para o " + anoReal + "º ano.";
+            } else if (anoPorNotas > anoAnterior) {
+                prefixo = "[RETIDO]";
+                motivo = "Propina do " + anoAnterior + "º ano não paga — ficou no " + anoAnterior + "º ano.";
             } else {
-                relatorio.add("[INFO] Mec: " + estudante.getNumeroMec() + " (" + estudante.getNome() + ") -> Processado para o " + anoReal + "º Ano" + motivo);
+                prefixo = "[RETIDO]";
+                motivo = "Não atingiu 60% de aprovações nas UCs do " + anoAnterior + "º ano — ficou no " + anoAnterior + "º ano.";
             }
+            relatorio.add(prefixo + " Mec: " + estudante.getNumeroMec() + " (" + estudante.getNome() + ") -> " + motivo);
         }
         return new Resultado<>(relatorio, true);
     }

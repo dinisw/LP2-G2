@@ -24,7 +24,9 @@ public class EstudanteCRUD extends AbstractCsvCRUD<Estudante> {
             String nomeCurso = colunas[7];
             boolean ativo = Boolean.parseBoolean(colunas[8]);
 
-            return new Estudante(nome, morada, nif, dataNascimento, email, numeroMec, hash, nomeCurso, ativo);
+            Estudante est = new Estudante(nome, morada, nif, dataNascimento, email, numeroMec, hash, nomeCurso, ativo);
+            if (colunas.length > 9) est.setAnoLetivo(Integer.parseInt(colunas[9]));
+            return est;
         } catch (Exception e) {
             return null;
         }
@@ -32,10 +34,10 @@ public class EstudanteCRUD extends AbstractCsvCRUD<Estudante> {
 
     @Override
     protected String mapearEntidadeParaLinha(Estudante e) {
-        return String.format("%d;%s;%s;%d;%s;%s;%s;%s;%b",
+        return String.format("%d;%s;%s;%d;%s;%s;%s;%s;%b;%d",
                 e.getNumeroMec(), sanitizar(e.getNome()), sanitizar(e.getMorada()), e.getNif(),
                 e.getDataNascimento().toString(), sanitizar(e.getEmail()), sanitizar(e.getHash()),
-                sanitizar(e.getNomeCurso()), e.isAtivo());
+                sanitizar(e.getNomeCurso()), e.isAtivo(), e.getAnoLetivo());
     }
 
     public int gerarNumeroMecanografico() {

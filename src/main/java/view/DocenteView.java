@@ -309,11 +309,15 @@ public class DocenteView {
 
             System.out.println(docenteFresco.toString());
             System.out.println("Unidades Curriculares Atribuídas:");
-            if (docenteFresco.getUnidadesCurriculares() == null || docenteFresco.getUnidadesCurriculares().isEmpty()) {
+
+            UnidadeCurricularController ucc = new UnidadeCurricularController();
+            List<UnidadeCurricular> ucsDocente = ucc.listarUCsPorDocente(docenteFresco.getSigla());
+
+            if (ucsDocente == null || ucsDocente.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhuma unidade curricular atribuída." + GetReset());
             } else {
-                for (UnidadeCurricular unidadeCurricular : docenteFresco.getUnidadesCurriculares()) {
-                    System.out.println("- " + unidadeCurricular.getNome() + " (Ano: " + unidadeCurricular.getAnoCurricular() + ")");
+                for (UnidadeCurricular uc : ucsDocente) {
+                    System.out.println("- " + uc.getNome() + " (Ano: " + uc.getAnoCurricular() + ", Semestre: " + uc.getSemestre() + ")");
                 }
             }
             MenuUtils.pressionarEnter(scanner);

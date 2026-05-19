@@ -1,13 +1,14 @@
 package controller;
 
+import DAL.AvaliacaoCRUD;
 import DAL.CursoCRUD;
 import DAL.DepartamentoCRUD;
 import DAL.EstudanteCRUD;
 import DAL.UnidadeCurricularCRUD;
 import model.*;
 
-import javax.xml.crypto.Data;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class CursoController {
 
@@ -194,12 +195,39 @@ public class CursoController {
 
         curso.adicionarAnoIniciado(anoLetivo);
         Resultado <Curso> res = cursoCRUD.registarArranqueAno(curso.getNome(), curso);
-        if (res.sucesso) {
-            resultado.sucesso = true;
-        } else {
+        if (!res.sucesso) {
             resultado.sucesso = false;
             resultado.mensagemErro = res.mensagemErro;
+            return resultado;
         }
+
+        List<UnidadeCurricular> ucsDoAno = curso.getUnidadeCurriculars().stream()
+                .filter(uc -> uc.getAnoCurricular() == anoLetivo)
+                .collect(Collectors.toList());
+
+        AvaliacaoCRUD avaliacaoCRUD = new AvaliacaoCRUD();
+        for (Estudante estudante : todosEstudantes) {
+            if (!estudante.isAtivo() || estudante.getNomeCurso() == null
+                    || !estudante.getNomeCurso().equalsIgnoreCase(curso.getNome())) continue;
+
+            int anoDoEstudante = estudanteController.obterAnoDesbloqueado(estudante);
+            if (anoDoEstudante != anoLetivo) continue;
+
+            List<Avaliacao> existentes = avaliacaoCRUD.listarPorEstudante(estudante.getNumeroMec());
+
+            for (UnidadeCurricular uc : ucsDoAno) {
+                for (String momento : uc.getMomentosAvaliacao()) {
+                    boolean jaExiste = existentes.stream()
+                            .anyMatch(a -> a.getUnidadeCurricular().getNome().equalsIgnoreCase(uc.getNome())
+                                    && a.getMomento().equalsIgnoreCase(momento));
+                    if (!jaExiste) {
+                        avaliacaoCRUD.registarAvaliacao(new Avaliacao(momento, null, uc, estudante));
+                    }
+                }
+            }
+        }
+
+        resultado.sucesso = true;
         return resultado;
     }
 
