@@ -33,9 +33,9 @@ public class EstudanteCRUD extends AbstractCsvCRUD<Estudante> {
     @Override
     protected String mapearEntidadeParaLinha(Estudante e) {
         return String.format("%d;%s;%s;%d;%s;%s;%s;%s;%b",
-                e.getNumeroMec(), e.getNome(), e.getMorada(), e.getNif(),
-                e.getDataNascimento().toString(), e.getEmail(), e.getHash(),
-                e.getNomeCurso(), e.isAtivo());
+                e.getNumeroMec(), sanitizar(e.getNome()), sanitizar(e.getMorada()), e.getNif(),
+                e.getDataNascimento().toString(), sanitizar(e.getEmail()), sanitizar(e.getHash()),
+                sanitizar(e.getNomeCurso()), e.isAtivo());
     }
 
     public int gerarNumeroMecanografico() {

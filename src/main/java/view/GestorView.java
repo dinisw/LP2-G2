@@ -616,7 +616,7 @@ public class GestorView {
             }
             String email = siglaFinal.toLowerCase() + "@issmf.ipp.pt";
 
-            EmailService es = new EmailService();
+            service.EmailService es = new service.EmailService();
             String corpoEmail = "-- Credenciais Geradas Automaticamente --\n" +
                     "Sigla: " + siglaFinal + "\n" +
                     "Email: " + email + "\n" +
@@ -1154,7 +1154,7 @@ public class GestorView {
             SenhaUtils su = new SenhaUtils();
             String senha = su.gerarHashComSalt(passAuto);
 
-            EmailService es = new EmailService();
+            service.EmailService es = new service.EmailService();
             String corpoEmail = "-- Credenciais Geradas Automaticamente --\n" +
                     "Nº Mecanográfico: " + mecAuto + "\n" +
                     "Email: " + emailAuto + "\n" +

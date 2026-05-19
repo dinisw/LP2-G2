@@ -6,6 +6,7 @@ import DAL.EstudanteCRUD;
 import DAL.UnidadeCurricularCRUD;
 import model.*;
 
+import javax.xml.crypto.Data;
 import java.util.List;
 
 public class CursoController {
@@ -64,8 +65,19 @@ public class CursoController {
 
         Curso cursoOriginal = cursoCRUD.procurarPorNome(nomeAntigo);
         if (cursoOriginal == null) {
-            return new Resultado<> (false, "O curso original não foi encontrado na base de dados.");
+            return new Resultado<> (false, "O curso original não foi encontrado");
         }
+
+        DAL.EstudanteCRUD estudanteCRUD = new DAL.EstudanteCRUD();
+        boolean temEstudantes = estudanteCRUD.getEstudantes().stream().anyMatch(e -> e.getNomeCurso() != null && e.getNomeCurso().contentEquals(nomeAntigo));
+
+        DAL.DocenteCRUD docenteCRUD = new DAL.DocenteCRUD();
+        boolean temDocentes = docenteCRUD.getDocentes().stream().anyMatch(d -> d.getUnidadesCurriculares() != null && d.getUnidadesCurriculares().stream().anyMatch(ucDocente -> cursoOriginal.getUnidadeCurriculars().stream().anyMatch(ucCurso -> ucCurso.getNome().equalsIgnoreCase(ucDocente.getNome()))));
+
+        if (temEstudantes || temDocentes) {
+            return new Resultado<>(false, "Operação Recusada: O curso já possui estudantes ou docentes alocados e não pode ser alterado em sistema.");
+        }
+
         if (cursoOriginal.isIniciado()) {
             boolean tentouMudarNome = !cursoOriginal.getNome().equalsIgnoreCase(cursoNovo.getNome());
             boolean tentouMudarDepartamento = false;
@@ -79,28 +91,7 @@ public class CursoController {
             }
         }
 
-        Resultado res = cursoCRUD.atualizarCurso(nomeAntigo, cursoNovo);
-        if (res.sucesso) {
-            resultado.sucesso = true;
-            if (!nomeAntigo.equalsIgnoreCase(cursoNovo.getNome())) {
-                try {
-                    EstudanteController estudanteController = new EstudanteController();
-                    DAL.EstudanteCRUD estudanteCRUD = new DAL.EstudanteCRUD();
-                    for (model.Estudante estudante : estudanteController.listarEstudantes()) {
-                        if (estudante.getNomeCurso() != null && estudante.getNomeCurso().equalsIgnoreCase(nomeAntigo)) {
-                            estudante.setNomeCurso(cursoNovo.getNome());
-                            estudanteCRUD.atualizarEstudante(estudante);
-                        }
-                    }
-                } catch (Exception e) {
-                    System.out.println("Aviso: Não foi possível sincronizar o novo nome nos perfis dos estudantes.");
-                }
-            }
-        } else {
-            return new Resultado<>(false, res.mensagemErro);
-        }
-
-        return resultado;
+        return cursoCRUD.atualizarCurso(nomeAntigo, cursoNovo);
     }
 
     public Resultado eliminarCurso(String nomeAntigo) {
@@ -183,7 +174,7 @@ public class CursoController {
 
         int alunosNesteAno = 0;
         for (Estudante estudante : todosEstudantes) {
-            if (estudante.getNomeCurso() != null && estudante.getNomeCurso().equalsIgnoreCase(curso.getNome())) {
+            if (estudante.isAtivo() && estudante.getNomeCurso() != null && estudante.getNomeCurso().equalsIgnoreCase(curso.getNome())) {
 
                 int anoDoEstudante = estudanteController.obterAnoDesbloqueado(estudante);
 

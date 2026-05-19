@@ -44,4 +44,23 @@ public class Estudante extends Utilizador {
         this.listaAvaliacoes.add(avaliacao);
     }
 
+    public Curso getCurso() {
+        return curso;
+    }
+
+    public void setCurso(Curso curso) {
+        this.curso = curso;
+    }
+
+    public void setNumeroMec(int numeroMec) {
+        this.numeroMec = numeroMec;
+    }
+
+    public int getAnoLetivo() {
+        return anoLetivo;
+    }
+
+    public void setAnoLetivo(int anoLetivo) {
+        this.anoLetivo = anoLetivo;
+    }
 }

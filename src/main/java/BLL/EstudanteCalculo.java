@@ -36,35 +36,18 @@ public class EstudanteCalculo {
         if (estudante == null || curso == null) return 1;
 
         List<Avaliacao> avaliacoes = estudante.getListaAvaliacoes();
-        int anoDesbloqueado = 1;
 
-        long totalAno1 = curso.getUnidadeCurriculars().stream().filter(u -> u.getAnoCurricular() == 1).count();
-        if (totalAno1 == 0) totalAno1 = 5;
-        long aprovadasAno1 = curso.getUnidadeCurriculars().stream().filter(u -> u.getAnoCurricular() == 1 && isUCAprovada(avaliacoes, u.getNome())).count();
+        long totalInscritas = curso.getUnidadeCurriculars().stream().filter(uc -> uc.getAnoCurricular() <= estudante.getAnoLetivo()).count();
 
-        long inscritasAno1 = avaliacoes.stream().filter(a -> a.getUnidadeCurricular().getAnoCurricular() == 1).count();
+        if (totalInscritas == 0) return 1;
 
-        if (inscritasAno1 > 0) {
-            double aproveitamentoAno1 = (double) aprovadasAno1 / totalAno1;
+        long aprovadasGlobais = curso.getUnidadeCurriculars().stream().filter(u -> isUCAprovada(avaliacoes, u.getNome())).count();
 
-            if (aproveitamentoAno1 >= 0.60) {
-                anoDesbloqueado = 2;
-
-                long totalAno2 = curso.getUnidadeCurriculars().stream().filter(u -> u.getAnoCurricular() == 2).count();
-                if (totalAno2 == 0) totalAno2 = 5;
-
-                long aprovadasAno2 = curso.getUnidadeCurriculars().stream().filter(u -> u.getAnoCurricular() == 2 && isUCAprovada(avaliacoes, u.getNome())).count();
-                long inscritasAno2 = avaliacoes.stream().filter(a -> a.getUnidadeCurricular().getAnoCurricular() == 2).count();
-
-                if (inscritasAno2 > 0) {
-                    double aproveitamentoAno2 = (double) aprovadasAno2 / totalAno2;
-                    if (aproveitamentoAno2 >= 0.60) {
-                        anoDesbloqueado = 3;
-                    }
-                }
-            }
+        double aproveitamento = (double) aprovadasGlobais / totalInscritas;
+        if (aproveitamento >= 0.60) {
+            return Math.min(estudante.getAnoLetivo() + 1, curso.getDuracao());
         }
-        return anoDesbloqueado;
+        return estudante.getAnoLetivo();
     }
 
     public static boolean isCursoConcluido(Estudante estudante, Curso curso) {

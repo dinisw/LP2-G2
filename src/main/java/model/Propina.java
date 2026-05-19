@@ -32,11 +32,12 @@ public class Propina {
     public void setValorPago(double valorPago) { this.valorPago = valorPago; }
 
     public double getValorEmDivida() {
-        return valorTotal - valorPago;
+        double divida = valorTotal - valorPago;
+        return Math.round(divida * 100) /100;
     }
 
     public boolean isTotalmentePaga() {
-        return valorPago >= valorTotal;
+        return getValorEmDivida() <= 0.0;
     }
 
     public List<String> getHistoricoPagamentos() {
@@ -51,8 +52,11 @@ public class Propina {
 
     public void registarPagamento(double valor) {
         if (valor > 0) {
+            valor = Math.round(valor * 100) / 100;
             this.valorPago += valor;
-            this.historicoPagamentos.add(LocalDate.now().toString() + " -> " + String.format("%.2f", valor) + "€");
+
+            String registo = LocalDate.now().toString() + " -> " + String.valueOf(valor) + " EUR";
+            this.historicoPagamentos.add(registo);
         }
     }
 }

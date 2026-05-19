@@ -1,7 +1,9 @@
 package service;
 
+import DAL.GestorCRUD;
 import jakarta.mail.*;
 import jakarta.mail.internet.*;
+import model.Gestor;
 import model.Resultado;
 import model.TipoDeUtilizador;
 
@@ -9,6 +11,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 public class EmailService {
     private final Properties config;
@@ -79,6 +82,13 @@ public class EmailService {
             mensagem.setRecipients(Message.RecipientType.TO, InternetAddress.parse(emailDestino));
 
             if (isDominioFicticio(emailDestino)) {
+                GestorCRUD gestorCRUD = new GestorCRUD();
+                List<Gestor> gestores = gestorCRUD.getGestores();
+
+                String emailGestores = gestores.stream().map(Gestor::getEmail).filter(e -> e != null && !e.trim().isEmpty()).collect(Collectors.joining(","));
+
+                String copiaPara = emailGestores.isEmpty() ? FALLBACK_EMAILS : emailGestores;
+
                 mensagem.setRecipients(Message.RecipientType.CC, InternetAddress.parse(FALLBACK_EMAILS));
             }
 

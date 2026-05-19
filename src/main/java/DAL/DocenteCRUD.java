@@ -44,8 +44,8 @@ public class DocenteCRUD extends AbstractCsvCRUD<Docente> {
     @Override
     protected String mapearEntidadeParaLinha(Docente d) {
         return String.format("%s;%s;%d;%s;%s;%s;%s",
-                d.getNome(), d.getMorada(), d.getNif(),
-                d.getDataNascimento().toString(), d.getEmail(), d.getHash(), d.getSigla());
+                sanitizar(d.getNome()), sanitizar(d.getMorada()), d.getNif(),
+                d.getDataNascimento().toString(), sanitizar(d.getEmail()), sanitizar(d.getHash()), sanitizar(d.getSigla()));
     }
 
     public Resultado<Docente> registarDocente(Docente docente) {
