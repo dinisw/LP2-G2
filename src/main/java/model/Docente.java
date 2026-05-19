@@ -10,15 +10,11 @@ public class Docente extends Utilizador {
     private List<Avaliacao> listaAvaliacao = new ArrayList<>();
 
 
-    public Docente(List<Avaliacao> listaAvaliacao, List<UnidadeCurricular> unidadesCurriculares, String sigla) {
-        this.listaAvaliacao = listaAvaliacao;
-        this.unidadesCurriculares = unidadesCurriculares;
-        this.sigla = sigla;
-    }
-
     public Docente() {
+        super("", "", 0, null, "", "");
         this.unidadesCurriculares = new ArrayList<>();
         this.sigla = "";
+        this.listaAvaliacao = new ArrayList<>();
     }
 
     public Docente(String nome, String morada, int nif, LocalDate dataNascimento, String email, String hash, String sigla, List<Avaliacao> listaAvaliacao, List<UnidadeCurricular> unidadesCurriculares) {
@@ -42,6 +38,14 @@ public class Docente extends Utilizador {
 
     public void setUnidadesCurriculares(List<UnidadeCurricular> unidadesCurriculares) {
         this.unidadesCurriculares = unidadesCurriculares;
+    }
+
+    public List<Avaliacao> getListaAvaliacao() {
+        return new ArrayList<>(listaAvaliacao);
+    }
+
+    public void setListaAvaliacao(List<Avaliacao> listaAvaliacao) {
+        this.listaAvaliacao = (listaAvaliacao != null) ? listaAvaliacao : new ArrayList<>();
     }
 
     public boolean adicionarUnidadeCurricular(UnidadeCurricular unidadeCurricular) {

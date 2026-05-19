@@ -25,23 +25,33 @@ public class PropinaController {
             return new Resultado<>(false, "A propina para o " + anoLetivo + "º ano já foi gerada.");
         }
 
-        double precoAConfigurar = VALOR_PROPINA_PADRAO;
         EstudanteCRUD estudanteCRUD = new EstudanteCRUD();
         Estudante estudante = estudanteCRUD.lerEstudante(numeroMec);
 
-        if (estudante != null && estudante.getNomeCurso() != null) {
-            CursoCRUD cursoCRUD = new CursoCRUD();
-            Curso curso = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
-            if (curso != null) precoAConfigurar = curso.getPrecoAnual();
+        if (estudante == null || estudante.getNomeCurso() == null) {
+            return new Resultado<>(false, "Estudante ou Curso inválido.");
         }
 
-        Propina novaPropina = new Propina(numeroMec, anoLetivo, precoAConfigurar, 0.0);
+            CursoCRUD cursoCRUD = new CursoCRUD();
+            Curso curso = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
+            if (curso == null) {
+                return new Resultado<>(false, "Erro: O curso do estudante não existe. Propina não gerada.");
+            }
 
-        return propinaCRUD.registarPropina(novaPropina) ? new Resultado<>(novaPropina, true)
+            double precoAConfigurar = curso.getPrecoAnual();
+            if (precoAConfigurar <= 0) {
+                precoAConfigurar = VALOR_PROPINA_PADRAO;
+            }
+            Propina novaPropina = new Propina(numeroMec, anoLetivo, precoAConfigurar, 0.0);
+
+            return propinaCRUD.registarPropina(novaPropina) ? new Resultado<>(novaPropina, true)
                 : new Resultado<>(false, "Erro ao gerar a propina na base de dados.");
     }
 
     public Resultado<Propina> pagarPropina(int numeroMec, int anoLetivo, double valorPagamento) {
+
+        valorPagamento = Math.round(valorPagamento * 100) / 100;
+
         if (valorPagamento <= 0) return new Resultado<>(false, "O valor do pagamento deve ser superior a zero.");
 
         Propina propina = propinaCRUD.procurarPropina(numeroMec, anoLetivo);
@@ -51,6 +61,10 @@ public class PropinaController {
             return new Resultado<>(false, "Operação Recusada: O valor inserido (" + valorPagamento + "€) é superior à dívida atual (" + propina.getValorEmDivida() + "€).");        }
 
         if (propina.isTotalmentePaga()) return new Resultado<>(false, "Esta propina já se encontra totalmente paga. Obrigado!");
+
+        if (valorPagamento > propina.getValorEmDivida()) {
+            return new Resultado<>(false, "Operação Recusada: O valor inserido (" + valorPagamento + "€) é superior à dívida atual(" + propina.getValorEmDivida() + "€).");
+        }
 
         propina.registarPagamento(valorPagamento);
 

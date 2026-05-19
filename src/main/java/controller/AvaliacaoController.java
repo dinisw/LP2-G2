@@ -48,21 +48,23 @@ public class AvaliacaoController {
             return new Resultado<>("Sem classificação atribuída", true);
         }
 
+        DAL.UnidadeCurricularCRUD unidadeCurricularCRUD = new DAL.UnidadeCurricularCRUD();
+        model.UnidadeCurricular unidadeCurricular = unidadeCurricularCRUD.procurarPorNome(nomeUC);
+
+        if (unidadeCurricular == null || unidadeCurricular.getNome() == null || unidadeCurricular.getMomentosAvaliacao().isEmpty()) {
+            return new Resultado<>("Erro: UC sem momentos de avaliação definidos.", false);
+        }
+
         double somaNotas = 0.0;
-        int contagemNotas = 0;
 
         for (Avaliacao av : avaliacoesAluno) {
             if (av.getUnidadeCurricular().getNome().equalsIgnoreCase(nomeUC) && av.getNota() != null) {
                 somaNotas += av.getNota();
-                contagemNotas++;
             }
         }
 
-        if (contagemNotas == 0) {
-            return new Resultado<>("Sem classificação atribuída", true);
-        }
-
-        double media = somaNotas / contagemNotas;
+        int totalMomentosExigidos = unidadeCurricular.getMomentosAvaliacao().size();
+        double media = somaNotas / totalMomentosExigidos;
         media = Math.round(media * 100.0) / 100.0;
 
         String estado = (media >= 9.5) ? "APROVADO" : "REPROVADO";

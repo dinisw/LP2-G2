@@ -17,7 +17,7 @@ public class LoginController {
         if (BackendUtils.emailISSMFEstudanteValido(email)) {
             EstudanteCRUD estudanteCRUD = new EstudanteCRUD();
             for (Estudante e : estudanteCRUD.getEstudantes()) {
-                if (e.getEmail().equalsIgnoreCase(email)) {
+                if (e.getEmail().equalsIgnoreCase(email) && e.isAtivo()) {
                     utilizadorEncontrado = e;
                     break;
                 }

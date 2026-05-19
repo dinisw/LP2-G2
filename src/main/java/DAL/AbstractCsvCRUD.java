@@ -54,4 +54,11 @@ public abstract class AbstractCsvCRUD<T> {
 
     protected abstract T mapearLinhaParaEntidade(String[] colunas);
     protected abstract String mapearEntidadeParaLinha(T entidade);
+
+    protected String sanitizar(String texto) {
+        if (texto == null) return "";
+        return texto.replace(";", ",");
+    }
+
+
 }

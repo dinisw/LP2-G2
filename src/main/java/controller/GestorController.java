@@ -18,29 +18,8 @@ public class GestorController {
     }
 
     public Resultado<Curso> arrancarAnoLetivo(String nomeCurso, int anoAlvo) {
-        DAL.CursoCRUD cursoCRUD = new DAL.CursoCRUD();
-        Curso curso = cursoCRUD.procurarPorNome(nomeCurso);
-
-        if (curso == null) return new Resultado<>(false, "Curso não encontrado.");
-
-        if (curso.isAnoIniciado(anoAlvo)) {
-            return new Resultado<>(false, "O " + anoAlvo + "º ano deste curso já foi iniciado anteriormente.");
-        }
-
-        DAL.EstudanteCRUD estudanteCRUD = new DAL.EstudanteCRUD();
-        long totalInscritos = estudanteCRUD.getEstudantes().stream()
-                .filter(e -> e.getNomeCurso() != null && e.getNomeCurso().equalsIgnoreCase(nomeCurso) && e.isAtivo())
-                .count();
-
-        if (anoAlvo == 1 && totalInscritos < 5) {
-            return new Resultado<>(false, "Bloqueado: Para iniciar o 1º ano, são necessários pelo menos 5 alunos. (Atuais: " + totalInscritos + ")");
-        } else if (anoAlvo > 1 && totalInscritos < 1) {
-            return new Resultado<>(false, "Bloqueado: Para iniciar o " + anoAlvo + "º ano, é necessário pelo menos 1 aluno. (Atuais: 0)");
-        }
-
-        curso.adicionarAnoIniciado(anoAlvo);
-
-        return cursoCRUD.registarArranqueAno(nomeCurso, curso);
+       CursoController cursoController = new CursoController();
+       return cursoController.iniciarAnoLetivo(nomeCurso, anoAlvo);
     }
 
 

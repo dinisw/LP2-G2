@@ -62,11 +62,11 @@ public class UnidadeCurricularCRUD extends AbstractCsvCRUD<UnidadeCurricular> {
         return dados.stream().filter(u -> u.getId() == id).findFirst().orElse(null);
     }
 
-    public boolean atualizarUC(String nomeAtual, UnidadeCurricular uc) {
+    public boolean atualizarUC(UnidadeCurricular unidadeCurricular) {
         for (int i = 0; i < dados.size(); i++) {
-            if (dados.get(i).getNome().equalsIgnoreCase(nomeAtual)) {
-                uc.setId(dados.get(i).getId());
-                dados.set(i, uc);
+            if (dados.get(i).getNome() == unidadeCurricular.getNome()) {
+                unidadeCurricular.setId(dados.get(i).getId());
+                dados.set(i, unidadeCurricular);
                 guardarTodosNoFicheiro();
                 return true;
             }
