@@ -21,9 +21,14 @@ public class EstudanteCalculo {
 
         if (totalMomentosExigidos == 0) return false;
 
+        boolean todosOsMomentosTêmNota = momentosValidos.stream()
+                .allMatch(momento -> avaliacoesDestaUC.stream()
+                        .anyMatch(a -> a.getMomento().equalsIgnoreCase(momento)));
+        if (!todosOsMomentosTêmNota) return false;
+
         double somaNotas = 0;
         for (Avaliacao avaliacao : avaliacoesDestaUC) {
-            if (momentosValidos.contains(avaliacao.getMomento())) {
+            if (momentosValidos.stream().anyMatch(m -> m.equalsIgnoreCase(avaliacao.getMomento()))) {
                 somaNotas += avaliacao.getNota();
             }
         }

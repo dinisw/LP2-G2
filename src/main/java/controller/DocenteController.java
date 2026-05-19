@@ -1,6 +1,7 @@
 package controller;
 
 import DAL.AvaliacaoCRUD;
+import DAL.CursoCRUD;
 import DAL.DocenteCRUD;
 import DAL.UnidadeCurricularCRUD;
 import model.*;
@@ -27,6 +28,13 @@ public class DocenteController {
 
         if (uc.getDocente() == null || !uc.getDocente().getSigla().equalsIgnoreCase(siglaDocente)) {
             return new Resultado<>(false, "Acesso Negado: Não é o docente responsável por esta Unidade Curricular.");
+        }
+
+        boolean cursoIniciado = new CursoCRUD().getCursos().stream()
+                .anyMatch(c -> c.isIniciado() && c.getUnidadeCurriculars().stream()
+                        .anyMatch(u -> u.getNome().equalsIgnoreCase(uc.getNome())));
+        if (cursoIniciado) {
+            return new Resultado<>(false, "Bloqueado: O ano letivo desta UC já foi iniciado. Os momentos de avaliação não podem ser alterados.");
         }
 
         uc.setMomentosAvaliacao(momentos);

@@ -22,8 +22,10 @@ public class UnidadeCurricularCRUD extends AbstractCsvCRUD<UnidadeCurricular> {
             int semestre = Integer.parseInt(colunas[3]);
             String siglaDocente = colunas[4];
 
-            DocenteCRUD docenteCRUD = new DocenteCRUD();
-            Docente docente = docenteCRUD.procurarPorSigla(siglaDocente);
+            Docente docente = null;
+            if (siglaDocente != null && !siglaDocente.isEmpty() && !siglaDocente.equalsIgnoreCase("N/A")) {
+                docente = new Docente(null, null, 0, null, null, null, siglaDocente, new ArrayList<>(), new ArrayList<>());
+            }
 
             List<String> momentos = new ArrayList<>();
             if (colunas.length > 5 && !colunas[5].isEmpty()) {

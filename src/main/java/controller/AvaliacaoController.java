@@ -29,13 +29,18 @@ public class AvaliacaoController {
         List<Avaliacao> avaliacoesExistentes = avaliacaoCRUD.listarPorUnidadeCurricular(avaliacao.getUnidadeCurricular().getNome());
 
         if (avaliacoesExistentes != null) {
-            long contagem = avaliacoesExistentes.stream()
-                    .filter(a -> a.getEstudante().getNumeroMec() == avaliacao.getEstudante().getNumeroMec()
-                            && !a.getMomento().equalsIgnoreCase("A Definir"))
-                    .count();
+            boolean eAtualizacao = avaliacoesExistentes.stream()
+                    .anyMatch(a -> a.getEstudante().getNumeroMec() == avaliacao.getEstudante().getNumeroMec()
+                            && a.getMomento().equalsIgnoreCase(avaliacao.getMomento()));
 
-            if (contagem >= 3) {
-                return new Resultado<>(false, "O estudante já atingiu o limite máximo de 3 avaliações para esta UC.");
+            if (!eAtualizacao) {
+                long contagem = avaliacoesExistentes.stream()
+                        .filter(a -> a.getEstudante().getNumeroMec() == avaliacao.getEstudante().getNumeroMec())
+                        .count();
+
+                if (contagem >= 3) {
+                    return new Resultado<>(false, "O estudante já atingiu o limite máximo de 3 avaliações para esta UC.");
+                }
             }
         }
 
@@ -55,15 +60,17 @@ public class AvaliacaoController {
             return new Resultado<>("Erro: UC sem momentos de avaliação definidos.", false);
         }
 
+        List<String> momentosValidos = unidadeCurricular.getMomentosAvaliacao();
         double somaNotas = 0.0;
 
         for (Avaliacao av : avaliacoesAluno) {
-            if (av.getUnidadeCurricular().getNome().equalsIgnoreCase(nomeUC) && av.getNota() != null) {
+            if (av.getUnidadeCurricular().getNome().equalsIgnoreCase(nomeUC)
+                    && av.getNota() != null
+                    ) {
                 somaNotas += av.getNota();
             }
         }
-
-        int totalMomentosExigidos = unidadeCurricular.getMomentosAvaliacao().size();
+        int totalMomentosExigidos = avaliacoesAluno.size();
         double media = somaNotas / totalMomentosExigidos;
         media = Math.round(media * 100.0) / 100.0;
 

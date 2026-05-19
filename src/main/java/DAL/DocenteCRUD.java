@@ -28,12 +28,6 @@ public class DocenteCRUD extends AbstractCsvCRUD<Docente> {
 
             Docente docente = new Docente(nome, morada, nif, dataNascimento, email, hash, sigla,
                     new ArrayList<>(), new ArrayList<>());
-            UnidadeCurricularCRUD ucCRUD = new UnidadeCurricularCRUD();
-            List<UnidadeCurricular> ucsDoDocente = ucCRUD.getUnidadeCurriculars().stream()
-                    .filter(uc -> uc.getDocente() != null &&
-                            uc.getDocente().getSigla().equalsIgnoreCase(sigla))
-                    .collect(Collectors.toList());
-            docente.setUnidadesCurriculares(ucsDoDocente);
             return docente;
         } catch (Exception e) {
             return null;
