@@ -1,8 +1,8 @@
 package controller;
 
+import DAL.AvaliacaoCRUD;
 import DAL.CursoCRUD;
 import DAL.DocenteCRUD;
-import DAL.AvaliacaoCRUD;
 import DAL.UnidadeCurricularCRUD;
 import model.Docente;
 import model.Resultado;
@@ -76,6 +76,13 @@ public class UnidadeCurricularController {
             return new Resultado<>(false, "Erro: A Unidade Curricular selecionada não existe.");
         }
 
+        boolean cursoIniciado = new CursoCRUD().getCursos().stream()
+                .anyMatch(c -> c.isIniciado() && c.getUnidadeCurriculars().stream()
+                        .anyMatch(u -> u.getNome().equalsIgnoreCase(ucExistente.getNome())));
+        if (cursoIniciado) {
+            return new Resultado<>(false, "Bloqueado: Esta UC pertence a um curso cujo ano letivo já foi iniciado e não pode ser alterada.");
+        }
+
         String nomeAntigo = ucExistente.getNome();
 
         if (novoNome == null || novoNome.trim().isEmpty()) {
@@ -116,7 +123,7 @@ public class UnidadeCurricularController {
         ucExistente.setSemestre(novoSemestre);
         ucExistente.setDocente(novoDocente);
 
-        return ucCRUD.atualizarUC(novoNome, ucExistente)
+        return ucCRUD.atualizarUC(ucExistente)
                 ? new Resultado<>(ucExistente, true)
                 : new Resultado<>(false, "Ocorreu um erro na base de dados ao atualizar a UC.");
     }

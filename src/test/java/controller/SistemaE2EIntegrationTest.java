@@ -80,7 +80,8 @@ public class SistemaE2EIntegrationTest {
 
         Docente docFresco = docenteController.procurarDocentePorNif(nifDocente);
         ucAtualizada.setDocente(docFresco);
-        ucCRUD.atualizarUC(nomeUC, ucAtualizada);
+        ucAtualizada.setNome(nomeUC);
+        ucCRUD.atualizarUC(ucAtualizada);
 
         assertNotNull(ucAtualizada.getDocente(), "A UC deve ter o docente guardado.");
         assertEquals(siglaDocente, ucAtualizada.getDocente().getSigla());
