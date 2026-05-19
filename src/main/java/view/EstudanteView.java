@@ -23,12 +23,10 @@ public class EstudanteView {
         Scanner ler = new Scanner(System.in);
         String opcao;
         ArrayList<String> opcoes = new ArrayList<>();
-        opcoes.add("1. Inscrever em Curso");
-        opcoes.add("2. Inscrever em Unidades Curriculares");
-        opcoes.add("3. Consultar Ficha de Estudante");
-        opcoes.add("4. Verificar Notas de Avaliação");
-        opcoes.add("5. Consultar Propinas");
-        opcoes.add("6. Pagar Propinas");
+        opcoes.add("1. Consultar Ficha de Estudante");
+        opcoes.add("2. Verificar Notas de Avaliação");
+        opcoes.add("3. Consultar Propinas");
+        opcoes.add("4. Pagar Propinas");
         opcoes.add("0. Logout");
 
         do {
@@ -44,21 +42,15 @@ public class EstudanteView {
 
                 switch (opcao) {
                     case "1":
-                        inscreverEmCurso(estudante, ler);
-                        break;
-                    case "2":
-                        inscreverEmUC(estudante, ler);
-                        break;
-                    case "3":
                         consultarFichaEstudante(estudante, ler);
                         break;
-                    case "4":
+                    case "2":
                         consultarNotasEstudante(estudante, ler);
                         break;
-                    case "5":
+                    case "3":
                         consultarPropinas(estudante, ler);
                         break;
-                    case "6":
+                    case "4":
                         pagarPropinas(estudante, ler);
                         break;
                     case "0":
@@ -298,6 +290,9 @@ public class EstudanteView {
         try {
             EstudanteController controller = new EstudanteController();
             Estudante estudante = controller.procurarEstudantePorNumeroMec(estudanteAtual.getNumeroMec());
+
+            DAL.AvaliacaoCRUD avaliacaoCRUD = new DAL.AvaliacaoCRUD();
+            estudante.setListaAvaliacoes(avaliacaoCRUD.listarPorEstudante(estudante.getNumeroMec()));
 
             List<Avaliacao> minhasNotas = estudante.getListaAvaliacoes();
 

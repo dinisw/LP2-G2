@@ -1,6 +1,7 @@
 package controller;
 
 import DAL.AvaliacaoCRUD;
+import DAL.CursoCRUD;
 import model.Avaliacao;
 import model.Resultado;
 
@@ -24,6 +25,16 @@ public class AvaliacaoController {
 
         if (avaliacao.getMomento() == null || avaliacao.getMomento().trim().isEmpty()) {
             return new Resultado<>(false, "O momento de avaliação é obrigatório.");
+        }
+
+        int anoCurricular = avaliacao.getUnidadeCurricular().getAnoCurricular();
+        String nomeUC = avaliacao.getUnidadeCurricular().getNome();
+        boolean anoIniciado = new CursoCRUD().getCursos().stream()
+                .anyMatch(c -> c.isAnoIniciado(anoCurricular)
+                        && c.getUnidadeCurriculars().stream()
+                               .anyMatch(u -> u.getNome().equalsIgnoreCase(nomeUC)));
+        if (!anoIniciado) {
+            return new Resultado<>(false, "Bloqueado: O ano letivo desta UC ainda não foi iniciado. Inicie o ano letivo primeiro.");
         }
 
         List<Avaliacao> avaliacoesExistentes = avaliacaoCRUD.listarPorUnidadeCurricular(avaliacao.getUnidadeCurricular().getNome());
@@ -62,15 +73,22 @@ public class AvaliacaoController {
 
         List<String> momentosValidos = unidadeCurricular.getMomentosAvaliacao();
         double somaNotas = 0.0;
+        int notasEncontradas = 0;
 
         for (Avaliacao av : avaliacoesAluno) {
             if (av.getUnidadeCurricular().getNome().equalsIgnoreCase(nomeUC)
                     && av.getNota() != null
-                    ) {
+                    && momentosValidos.stream().anyMatch(m -> m.trim().equalsIgnoreCase(av.getMomento().trim()))) {
                 somaNotas += av.getNota();
+                notasEncontradas++;
             }
         }
-        int totalMomentosExigidos = avaliacoesAluno.size();
+
+        if (notasEncontradas == 0) {
+            return new Resultado<>("Sem classificação atribuída", true);
+        }
+
+        int totalMomentosExigidos = momentosValidos.size();
         double media = somaNotas / totalMomentosExigidos;
         media = Math.round(media * 100.0) / 100.0;
 
