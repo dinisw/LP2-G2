@@ -1,0 +1,303 @@
+package controller;
+
+import DAL.AvaliacaoCRUD;
+import DAL.CursoCRUD;
+import DAL.DepartamentoCRUD;
+import DAL.EstudanteCRUD;
+import DAL.UnidadeCurricularCRUD;
+import model.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class CursoController {
+
+    private CursoCRUD cursoCRUD;
+    private DepartamentoCRUD depCRUD;
+    private UnidadeCurricularCRUD ucCRUD;
+
+    public CursoController() {
+        this.cursoCRUD = new CursoCRUD();
+        this.depCRUD = new DepartamentoCRUD();
+        this.ucCRUD = new UnidadeCurricularCRUD();
+    }
+
+    public Resultado <Curso> registarCurso(Curso curso) {
+        Resultado <Curso> resultado = new Resultado();
+
+        if (curso == null || curso.getNome() == null || curso.getNome().trim().isEmpty()) {
+            resultado.sucesso = false;
+            resultado.mensagemErro = "O nome do curso é obrigatório.";
+            return resultado;
+        }
+
+        if (curso.getDepartamento() == null) {
+            resultado.sucesso = false;
+            resultado.mensagemErro = "O departamento associado é obrigatório.";
+            return resultado;
+        }
+
+
+        Resultado<Curso> resCRUD = cursoCRUD.registarCurso(curso);
+
+        if (resCRUD.sucesso) {
+            resultado.sucesso = true;
+        } else {
+            resultado.sucesso = false;
+            resultado.mensagemErro = resCRUD.mensagemErro;
+        }
+        return resultado;
+    }
+
+    public List<Curso> listarCursos() { return cursoCRUD.getCursos(); }
+    public Curso procurarCurso(String nome) { return cursoCRUD.procurarPorNome(nome); }
+
+
+    public Resultado atualizarCurso(String nomeAntigo, Curso cursoNovo) {
+        Resultado resultado = new Resultado();
+
+        if (nomeAntigo == null || nomeAntigo.trim().isEmpty()) {
+            return new Resultado<> (false, "O nome do curso a atualizar é obrigatório.");
+        }
+
+        if (cursoNovo == null || cursoNovo.getNome() == null || cursoNovo.getNome().trim().isEmpty()) {
+            return new Resultado<> (false, "O novo nome do curso não pode estar vazio.");
+        }
+
+        Curso cursoOriginal = cursoCRUD.procurarPorNome(nomeAntigo);
+        if (cursoOriginal == null) {
+            return new Resultado<> (false, "O curso original não foi encontrado");
+        }
+
+        DAL.EstudanteCRUD estudanteCRUD = new DAL.EstudanteCRUD();
+        boolean temEstudantes = estudanteCRUD.getEstudantes().stream().anyMatch(e -> e.getNomeCurso() != null && e.getNomeCurso().contentEquals(nomeAntigo));
+
+        DAL.DocenteCRUD docenteCRUD = new DAL.DocenteCRUD();
+        boolean temDocentes = docenteCRUD.getDocentes().stream().anyMatch(d -> d.getUnidadesCurriculares() != null && d.getUnidadesCurriculares().stream().anyMatch(ucDocente -> cursoOriginal.getUnidadeCurriculars().stream().anyMatch(ucCurso -> ucCurso.getNome().equalsIgnoreCase(ucDocente.getNome()))));
+
+        if (temEstudantes || temDocentes) {
+            return new Resultado<>(false, "Operação Recusada: O curso já possui estudantes ou docentes alocados e não pode ser alterado em sistema.");
+        }
+
+        if (cursoOriginal.isIniciado()) {
+            boolean tentouMudarNome = !cursoOriginal.getNome().equalsIgnoreCase(cursoNovo.getNome());
+            boolean tentouMudarDepartamento = false;
+
+            if (cursoNovo.getDepartamento() != null && cursoNovo.getDepartamento().getSigla() != null) {
+                tentouMudarDepartamento = !cursoOriginal.getDepartamento().getSigla().equalsIgnoreCase(cursoNovo.getDepartamento().getSigla());
+            }
+
+            if (tentouMudarNome || tentouMudarDepartamento) {
+                return new Resultado<>(false, "Bloqueado: Não é possível alterar o Nome ou o Departamento de um curso que já iniciou atividade letiva. (A alteração do Preço Anual é permitida para faturamentos futuros).");
+            }
+        }
+
+        return cursoCRUD.atualizarCurso(nomeAntigo, cursoNovo);
+    }
+
+    public Resultado eliminarCurso(String nomeAntigo) {
+        Resultado resultado = new Resultado();
+        if (nomeAntigo == null || nomeAntigo.trim().isEmpty()) {
+            resultado.sucesso = false;
+            resultado.mensagemErro = "O nome do curso a eliminar é obrigatório.";
+            return resultado;
+        }
+
+        Curso cursoOriginal = cursoCRUD.procurarPorNome(nomeAntigo);
+        if (cursoOriginal == null) {
+            resultado.sucesso = false;
+            resultado.mensagemErro = "O curso especificado não foi encontrado no sistema.";
+            return resultado;
+        }
+
+        if (cursoOriginal.isIniciado()) {
+            resultado.sucesso = false;
+            resultado.mensagemErro = "O sistema não pode permitir apagar um curso com alunos/iniciado.";
+            return resultado;
+        }
+
+        EstudanteController ec = new EstudanteController();
+        for (Estudante e : ec.listarEstudantes()) {
+            if (e.getNomeCurso() != null && e.getNomeCurso().equalsIgnoreCase(nomeAntigo)) {
+                resultado.sucesso = false;
+                resultado.mensagemErro = "O sistema não pode permitir apagar um curso com alunos/iniciado.";
+                return resultado;
+            }
+        }
+
+        Resultado <Curso> res = cursoCRUD.eliminarCurso(nomeAntigo);
+        if (res.sucesso) {
+            resultado.sucesso = true;
+        } else {
+            resultado.sucesso = false;
+            resultado.mensagemErro = res.mensagemErro;
+        }
+        return resultado;
+    }
+
+    public Resultado <Curso> iniciarAnoLetivo(String nome, int anoLetivo) {
+        Resultado <Curso> resultado = new Resultado<>();
+
+        Curso curso = cursoCRUD.procurarPorNome(nome);
+        if (curso == null) {
+            resultado.sucesso = false;
+            resultado.mensagemErro = "Curso não encontrado.";
+            return resultado;
+        }
+
+        if (anoLetivo < 1 || anoLetivo > curso.getDuracao()) {
+            resultado.sucesso = false;
+            resultado.mensagemErro = "Ano letivo inválido. Este curso tem " + curso.getDuracao() + " ano(s) curricular(is).";
+            return resultado;
+        }
+
+        if (curso.isAnoIniciado(anoLetivo)) {
+            resultado.sucesso = false;
+            resultado.mensagemErro = "O " + anoLetivo + "º ano deste curso já se encontra iniciado.";
+            return resultado;
+        }
+
+        if (!isEstruturaCurricularValida(curso)) {
+            resultado.sucesso = false;
+            resultado.mensagemErro = "Estrutura curricular incompleta (é obrigatório ter pelo menos uma UC em cada um dos 3 anos).";
+            return resultado;
+        }
+
+        List<String> unidadesCurricularesSemMomentos = obterUCsSemMomentosDeAvaliacao(curso);
+        if (!unidadesCurricularesSemMomentos.isEmpty()) {
+            resultado.sucesso = false;
+            resultado.mensagemErro = "As seguintes UCs não têm Momentos de Avaliação: " + String.join(",", unidadesCurricularesSemMomentos) + ".";
+            return resultado;
+        }
+
+        controller.EstudanteController estudanteController = new controller.EstudanteController();
+        List<Estudante> todosEstudantes = estudanteController.listarEstudantes();
+
+        int alunosNesteAno = 0;
+        for (Estudante estudante : todosEstudantes) {
+            if (estudante.isAtivo() && estudante.getNomeCurso() != null && estudante.getNomeCurso().equalsIgnoreCase(curso.getNome())) {
+
+                int anoDoEstudante = estudanteController.obterAnoDesbloqueado(estudante);
+
+                if (anoDoEstudante == anoLetivo) {
+                    alunosNesteAno++;
+                }
+            }
+        }
+
+        int minimoExigido = (anoLetivo == 1) ? 5 : 1;
+
+        if (alunosNesteAno < minimoExigido) {
+            resultado.sucesso = false;
+            resultado.mensagemErro = "O " + anoLetivo + "º ano exige no mínimo " + minimoExigido + " aluno(s). Atualmente tem " + alunosNesteAno + " aluno(s) apto(s).";
+            return resultado;
+        }
+
+        curso.adicionarAnoIniciado(anoLetivo);
+        Resultado <Curso> res = cursoCRUD.registarArranqueAno(curso.getNome(), curso);
+        if (!res.sucesso) {
+            resultado.sucesso = false;
+            resultado.mensagemErro = res.mensagemErro;
+            return resultado;
+        }
+
+        List<UnidadeCurricular> ucsDoAno = curso.getUnidadeCurriculars().stream()
+                .filter(uc -> uc.getAnoCurricular() == anoLetivo)
+                .collect(Collectors.toList());
+
+        AvaliacaoCRUD avaliacaoCRUD = new AvaliacaoCRUD();
+        for (Estudante estudante : todosEstudantes) {
+            if (!estudante.isAtivo() || estudante.getNomeCurso() == null
+                    || !estudante.getNomeCurso().equalsIgnoreCase(curso.getNome())) continue;
+
+            int anoDoEstudante = estudanteController.obterAnoDesbloqueado(estudante);
+            if (anoDoEstudante != anoLetivo) continue;
+
+            List<Avaliacao> existentes = avaliacaoCRUD.listarPorEstudante(estudante.getNumeroMec());
+
+            for (UnidadeCurricular uc : ucsDoAno) {
+                for (String momento : uc.getMomentosAvaliacao()) {
+                    boolean jaExiste = existentes.stream()
+                            .anyMatch(a -> a.getUnidadeCurricular().getNome().equalsIgnoreCase(uc.getNome())
+                                    && a.getMomento().equalsIgnoreCase(momento));
+                    if (!jaExiste) {
+                        avaliacaoCRUD.registarAvaliacao(new Avaliacao(momento, null, uc, estudante));
+                    }
+                }
+            }
+        }
+
+        resultado.sucesso = true;
+        return resultado;
+    }
+
+    public Resultado<Curso> associarUCAoCurso (String nomeCurso, String nomeUC) {
+        Resultado <Curso> resultado = new Resultado<>();
+
+        if (nomeCurso == null || nomeCurso.trim().isEmpty() || nomeUC == null || nomeUC.trim().isEmpty()) {
+            resultado.sucesso = false;
+            resultado.mensagemErro = "O nome do curso e da UC são obrigatórios.";
+            return resultado;
+        }
+
+        Curso curso = this.cursoCRUD.procurarPorNome(nomeCurso);
+        if (curso == null) {
+            resultado.sucesso = false;
+            resultado.mensagemErro = "Curso não encontrado.";
+            return resultado;
+        }
+
+        UnidadeCurricular unidadeCurricular = this.ucCRUD.procurarPorNome(nomeUC);
+        if (unidadeCurricular == null) {
+            resultado.sucesso = false;
+            resultado.mensagemErro = "Unidade Curricular não encontrada.";
+            return resultado;
+        }
+
+        for (UnidadeCurricular unidadeCurricularExistente : curso.getUnidadeCurriculars()) {
+            if (unidadeCurricularExistente.getNome().equalsIgnoreCase(nomeUC)) {
+                resultado.sucesso = false;
+                resultado.mensagemErro = "A UC '" + nomeUC + "' já está associada a este curso.";
+                return resultado;
+            }
+        }
+
+        if (curso.adicionarUnidadeCurricular(unidadeCurricular)) {
+            Resultado <Curso> resultadoGravar = this.cursoCRUD.atualizarCurso(curso.getNome(), curso);
+            if (resultadoGravar.sucesso) {
+                resultado.sucesso = true;
+            } else {
+                resultado.sucesso = false;
+                resultado.mensagemErro = resultadoGravar.mensagemErro;
+            }
+        } else {
+            resultado.sucesso = false;
+            resultado.mensagemErro = "Limite de 5 UCs por ano atingido.";
+        }
+        return resultado;
+    }
+
+    private boolean isEstruturaCurricularValida (model.Curso curso) {
+        boolean temAno1 = false;
+        boolean temAno2 = false;
+        boolean temAno3 = false;
+
+        for (model.UnidadeCurricular unidadeCurricular : curso.getUnidadeCurriculars()) {
+            if (unidadeCurricular.getAnoCurricular() == 1) temAno1 = true;
+            if (unidadeCurricular.getAnoCurricular() == 2) temAno2 = true;
+            if (unidadeCurricular.getAnoCurricular() == 3) temAno3 = true;
+        }
+        return temAno1 && temAno2 && temAno3;
+    }
+
+    private java.util.List<String> obterUCsSemMomentosDeAvaliacao(model.Curso curso) {
+        java.util.List<String> unidadesCurricularesEmFalta = new java.util.ArrayList<>();
+
+        for (model.UnidadeCurricular unidadeCurricular : curso.getUnidadeCurriculars()) {
+            if (unidadeCurricular.getMomentosAvaliacao() == null || unidadeCurricular.getMomentosAvaliacao().isEmpty()) {
+                unidadesCurricularesEmFalta.add(unidadeCurricular.getNome());
+            }
+        }
+        return unidadesCurricularesEmFalta;
+    }
+}
