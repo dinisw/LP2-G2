@@ -1,31 +1,31 @@
 package controller;
 
-import DAL.AvaliacaoCRUD;
-import DAL.DocenteCRUD;
-import DAL.UnidadeCurricularCRUD;
+import DAL.DAOFactory;
+import DAL.IAvaliacaoDAO;
+import DAL.IDocenteDAO;
+import DAL.IUnidadeCurricularDAO;
 import model.Avaliacao;
 import model.Docente;
 import model.Estudante;
 import model.Resultado;
 import model.UnidadeCurricular;
 
-import javax.print.Doc;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DocenteController {
-    private final DocenteCRUD docenteCRUD;
-    private final AvaliacaoCRUD avaliacaoCRUD;
+    private final IDocenteDAO docenteDAO;
+    private final IAvaliacaoDAO avaliacaoDAO;
 
     public DocenteController() {
-        this.docenteCRUD = new DocenteCRUD();
-        this.avaliacaoCRUD = new AvaliacaoCRUD();
+        this.docenteDAO = DAOFactory.getDocenteDAO();
+        this.avaliacaoDAO = DAOFactory.getAvaliacaoDAO();
     }
 
     public Resultado<UnidadeCurricular> definirMomentosAvaliacao(String siglaDocente, int idUc, List<String> momentos) {
-        UnidadeCurricularCRUD ucCRUD = new UnidadeCurricularCRUD();
-        UnidadeCurricular uc = ucCRUD.procurarPorId(idUc);
+        IUnidadeCurricularDAO ucDAO = DAOFactory.getUnidadeCurricularDAO();
+        UnidadeCurricular uc = ucDAO.procurarPorId(idUc);
 
         if (uc == null) return new Resultado<>(false, "Unidade Curricular não encontrada.");
 
@@ -34,7 +34,7 @@ public class DocenteController {
         }
 
         uc.setMomentosAvaliacao(momentos);
-        boolean sucesso = ucCRUD.atualizarUCPorId(idUc, uc);
+        boolean sucesso = ucDAO.atualizarUCPorId(idUc, uc);
 
         return sucesso ? new Resultado<>(uc, true) : new Resultado<>(false, "Erro ao gravar momentos de avaliação.");
     }
@@ -45,47 +45,48 @@ public class DocenteController {
         }
         if (nif <= 0) return new Resultado<>(false, "NIF inválido.");
         if (dataNascimento == null) return new Resultado<>(false, "Data de nascimento inválida.");
-        if (docenteCRUD.procurarPorNif(nif) != null) return new Resultado<>(false, "Já existe um docente com este NIF.");
-        if (docenteCRUD.procurarPorSigla(sigla) != null) return new Resultado<>(false, "Já existe um docente com esta sigla.");
+        if (docenteDAO.procurarPorNif(nif) != null) return new Resultado<>(false, "Já existe um docente com este NIF.");
+        if (docenteDAO.procurarPorSigla(sigla) != null) return new Resultado<>(false, "Já existe um docente com esta sigla.");
 
         Docente docente = new Docente(nome, morada, nif, dataNascimento, email, hash, sigla, new ArrayList<>(), new ArrayList<>());
-
-        return docenteCRUD.registarDocente(docente);
+        return docenteDAO.registarDocente(docente);
     }
 
     public Resultado<Docente> atualizarDocente(int nif, String novoNome, String novaMorada, LocalDate novaData) {
         if (nif <= 0) return new Resultado<>(false, "NIF inválido.");
-        Docente existente = docenteCRUD.procurarPorNif(nif);
+        Docente existente = docenteDAO.procurarPorNif(nif);
         if (existente == null) return new Resultado<>(false, "Docente não encontrado.");
 
         if (novoNome != null && !novoNome.trim().isEmpty()) existente.setNome(novoNome);
         if (novaMorada != null && !novaMorada.trim().isEmpty()) existente.setMorada(novaMorada);
         if (novaData != null) existente.setDataNascimento(novaData);
 
-        return docenteCRUD.atualizarDocente(existente);
+        return docenteDAO.atualizarDocente(existente);
     }
 
     public Resultado<Docente> alterarPassword(int nif, String novoHash) {
         if (novoHash == null || novoHash.trim().isEmpty()) return new Resultado<>(false, "A nova senha não pode estar vazia.");
-        Docente existente = docenteCRUD.procurarPorNif(nif);
+        Docente existente = docenteDAO.procurarPorNif(nif);
         if (existente == null) return new Resultado<>(false, "Docente não encontrado.");
 
         existente.setHash(novoHash);
-        return docenteCRUD.atualizarDocente(existente);
+        return docenteDAO.atualizarDocente(existente);
     }
 
     public Resultado<String> eliminarDocente(int nif) {
-        if (docenteCRUD.procurarPorNif(nif) == null) return new Resultado<>(false, "Docente não encontrado.");
-        return docenteCRUD.eliminarDocente(nif).sucesso ? new Resultado<>("ELIMINADO", true) : new Resultado<>(false, "Erro ao eliminar docente.");
+        if (docenteDAO.procurarPorNif(nif) == null) return new Resultado<>(false, "Docente não encontrado.");
+        return docenteDAO.eliminarDocente(nif).sucesso
+                ? new Resultado<>("ELIMINADO", true)
+                : new Resultado<>(false, "Erro ao eliminar docente.");
     }
 
-    public List<Docente> listarDocentes() { return docenteCRUD.getDocentes(); }
-    public Docente procurarDocentePorNif(int nif) { return nif <= 0 ? null : docenteCRUD.procurarPorNif(nif); }
-    public Docente procurarDocentePorSigla(String sigla) { return sigla == null ? null : docenteCRUD.procurarPorSigla(sigla); }
+    public List<Docente> listarDocentes() { return docenteDAO.getDocentes(); }
+    public Docente procurarDocentePorNif(int nif) { return nif <= 0 ? null : docenteDAO.procurarPorNif(nif); }
+    public Docente procurarDocentePorSigla(String sigla) { return sigla == null ? null : docenteDAO.procurarPorSigla(sigla); }
 
     public List<Estudante> listarAlunosPorUC(String nomeUC) {
         if (nomeUC == null || nomeUC.trim().isEmpty()) return new ArrayList<>();
-        List<Avaliacao> avaliacoes = avaliacaoCRUD.listarPorUnidadeCurricular(nomeUC);
+        List<Avaliacao> avaliacoes = avaliacaoDAO.listarPorUnidadeCurricular(nomeUC);
         List<Estudante> alunosUnicos = new ArrayList<>();
         List<Integer> mec = new ArrayList<>();
 

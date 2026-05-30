@@ -5,7 +5,7 @@ import model.Resultado;
 import java.time.LocalDate;
 import java.util.List;
 
-public class GestorCRUD extends AbstractCsvCRUD<Gestor> {
+public class GestorCRUD extends AbstractCsvCRUD<Gestor> implements IGestorDAO {
 
     public GestorCRUD() {
         super("gestores.csv");

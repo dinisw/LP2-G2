@@ -4,7 +4,7 @@ import model.Propina;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class PropinaCRUD extends AbstractCsvCRUD<Propina> {
+public class PropinaCRUD extends AbstractCsvCRUD<Propina> implements IPropinaDAO {
 
     public PropinaCRUD() {
         super("propinas.csv");

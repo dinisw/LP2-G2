@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class UnidadeCurricularCRUD extends AbstractCsvCRUD<UnidadeCurricular> {
+public class UnidadeCurricularCRUD extends AbstractCsvCRUD<UnidadeCurricular> implements IUnidadeCurricularDAO {
 
     public UnidadeCurricularCRUD() {
         super("ucs.csv");

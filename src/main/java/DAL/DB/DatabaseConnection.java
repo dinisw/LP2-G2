@@ -1,6 +1,7 @@
-package DAL;
+package DAL.DB;
 
 import io.github.cdimascio.dotenv.Dotenv;
+
 import java.sql.*;
 import java.util.ArrayList;
 
@@ -19,10 +20,10 @@ public class DatabaseConnection {
                 .ignoreIfMissing()
                 .load();
 
-        this.serverName = dotenv.get("DB_SERVER");
+        this.serverName   = dotenv.get("DB_SERVER");
         this.databaseName = dotenv.get("DB_DATABASE");
-        this.username = dotenv.get("DB_USER");
-        this.password = dotenv.get("DB_PASSWORD");
+        this.username     = dotenv.get("DB_USER");
+        this.password     = dotenv.get("DB_PASSWORD");
     }
 
     private Connection connect() {
@@ -46,7 +47,6 @@ public class DatabaseConnection {
 
     private boolean disconnect() {
         boolean disconnected = false;
-
         try {
             if (connection != null && !connection.isClosed()) {
                 connection.close();
@@ -61,7 +61,6 @@ public class DatabaseConnection {
 
     private boolean beginTransaction() {
         boolean isTransactionActive = false;
-
         try {
             if (connection != null && !connection.isClosed()) {
                 connection.setAutoCommit(false);
@@ -76,7 +75,6 @@ public class DatabaseConnection {
 
     private boolean commitTransaction() {
         boolean isTransactionActive = false;
-
         try {
             if (connection != null && !connection.isClosed()) {
                 connection.commit();
@@ -91,7 +89,6 @@ public class DatabaseConnection {
 
     private boolean rollbackTransaction() {
         boolean isTransactionClosed = false;
-
         try {
             if (connection != null && !connection.isClosed()) {
                 connection.rollback();
@@ -104,9 +101,9 @@ public class DatabaseConnection {
         return isTransactionClosed;
     }
 
+    // SELECT — devolve lista mapeada
     public <T> ArrayList<T> select(String sql, RowMapper<T> mapper, Object... params) {
         ArrayList<T> results = new ArrayList<>();
-
         try {
             connect();
             try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -130,26 +127,22 @@ public class DatabaseConnection {
         return results;
     }
 
+    // INSERT com chave gerada automaticamente — devolve o ID gerado
     public int create(String sql, Object... params) {
         int result = 0;
         try {
             connect();
             beginTransaction();
-            try (PreparedStatement stmt = connect().prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 if (params != null) {
                     for (int i = 0; i < params.length; i++) {
                         stmt.setObject(i + 1, params[i]);
                     }
                 }
                 stmt.executeUpdate();
-
                 try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
                         result = generatedKeys.getInt(1);
-                    }
-                    else {
-                        //Creation failed, no ID obtained.
-                        result = 0;
                     }
                 }
                 commitTransaction();
@@ -165,5 +158,33 @@ public class DatabaseConnection {
             disconnect();
         }
         return result;
+    }
+
+    // INSERT / UPDATE / DELETE sem chave gerada — devolve linhas afetadas
+    public int execute(String sql, Object... params) {
+        int rowsAffected = 0;
+        try {
+            connect();
+            beginTransaction();
+            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+                if (params != null) {
+                    for (int i = 0; i < params.length; i++) {
+                        stmt.setObject(i + 1, params[i]);
+                    }
+                }
+                rowsAffected = stmt.executeUpdate();
+                commitTransaction();
+            }
+        }
+        catch (SQLException e) {
+            rollbackTransaction();
+        }
+        catch (Exception ex) {
+            //System.out.println(ex.getMessage());
+        }
+        finally {
+            disconnect();
+        }
+        return rowsAffected;
     }
 }

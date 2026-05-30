@@ -6,7 +6,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DocenteCRUD extends AbstractCsvCRUD<Docente> {
+public class DocenteCRUD extends AbstractCsvCRUD<Docente> implements IDocenteDAO {
 
     public DocenteCRUD() {
         super("docentes.csv");

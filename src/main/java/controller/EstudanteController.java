@@ -1,6 +1,8 @@
 package controller;
 
-import DAL.CursoCRUD;
+import DAL.DAOFactory;
+import DAL.IAvaliacaoDAO;
+import DAL.ICursoDAO;
 import DAL.IEstudanteDAO;
 import model.Curso;
 import model.Estudante;
@@ -8,15 +10,14 @@ import model.Resultado;
 import java.time.LocalDate;
 import java.util.List;
 import DAL.IEstudanteDAO;
-import DAL.DAOFactory;
 
 public class EstudanteController {
     private final IEstudanteDAO estudanteDAO;
-    private final CursoCRUD cursoCRUD;
+    private final ICursoDAO cursoDAO;
 
     public EstudanteController() {
         this.estudanteDAO = DAOFactory.getEstudanteDAO();
-        this.cursoCRUD = new CursoCRUD();
+        this.cursoDAO     = DAOFactory.getCursoDAO();
     }
 
 
@@ -57,10 +58,10 @@ public class EstudanteController {
     }
 
     public int obterAnoDesbloqueado(Estudante estudante) {
-        Curso curso = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
+        Curso curso = cursoDAO.procurarPorNome(estudante.getNomeCurso());
         if (curso == null) return 1;
 
-        DAL.AvaliacaoCRUD avaliacaoCRUD = new DAL.AvaliacaoCRUD();
+        IAvaliacaoDAO avaliacaoCRUD = DAOFactory.getAvaliacaoDAO();
         estudante.setListaAvaliacoes(avaliacaoCRUD.listarPorEstudante(estudante.getNumeroMec()));
 
         int anoPorNotas = BLL.EstudanteCalculo.calcularAnoDesbloqueado(estudante, curso);
@@ -76,10 +77,10 @@ public class EstudanteController {
     }
 
     public boolean verificarSeCursoConcluido(Estudante estudante) {
-        Curso curso = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
+        Curso curso = cursoDAO.procurarPorNome(estudante.getNomeCurso());
         if (curso == null) return false;
 
-        DAL.AvaliacaoCRUD avaliacaoCRUD = new DAL.AvaliacaoCRUD();
+        IAvaliacaoDAO avaliacaoCRUD = DAOFactory.getAvaliacaoDAO();
         estudante.setListaAvaliacoes(avaliacaoCRUD.listarPorEstudante(estudante.getNumeroMec()));
 
         if (BLL.EstudanteCalculo.isCursoConcluido(estudante, curso)) {
@@ -152,7 +153,7 @@ public class EstudanteController {
         if (estudante == null) return new Resultado<>(false, "Estudante não encontrado.");
 
         if (estudante.getNomeCurso() != null && !estudante.getNomeCurso().equals("SEM REGISTO")) {
-            Curso cursoInfo = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
+            Curso cursoInfo = cursoDAO.procurarPorNome(estudante.getNomeCurso());
 
             if (cursoInfo != null && cursoInfo.getAnosIniciados() != null && !cursoInfo.getAnosIniciados().isEmpty()) {
                 return new Resultado<>(false, "Bloqueado: Não é possível eliminar um estudante cujo curso já iniciou atividade letiva.");
@@ -182,12 +183,12 @@ public class EstudanteController {
         }
 
         PropinaController propinaController = new PropinaController();
-        DAL.AvaliacaoCRUD avaliacaoCRUD = new DAL.AvaliacaoCRUD();
+        IAvaliacaoDAO avaliacaoCRUD = DAOFactory.getAvaliacaoDAO();
 
         for (Estudante estudante : estudantes) {
             if (!estudante.isAtivo()) continue;
 
-            Curso curso = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
+            Curso curso = cursoDAO.procurarPorNome(estudante.getNomeCurso());
             if (curso == null) continue;
 
             estudante.setListaAvaliacoes(avaliacaoCRUD.listarPorEstudante(estudante.getNumeroMec()));
