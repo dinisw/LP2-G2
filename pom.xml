@@ -29,7 +29,7 @@
         <dependency>
             <groupId>io.github.cdimascio</groupId>
             <artifactId>java-dotenv</artifactId>
-            <version>5.2.2</version>
+            <version>3.0.0</version>
         </dependency>
 
         <dependency>
@@ -53,7 +53,7 @@
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>mssql-jdbc</artifactId>
-            <version>12.6.1.jre11</version>
+            <version>12.10.0.jre11</version>
         </dependency>
     </dependencies>
 
