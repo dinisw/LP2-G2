@@ -5,14 +5,15 @@ import java.util.Properties;
 
 /**
  * Fábrica central de DAOs.
- * Lê "armazenamento.tipo" de config.properties (CSV | SQL).
- * Adicionar novas entidades aqui basta para que todo o programa mude de backend.
+ * O modo é definido no arranque da aplicação via {@link #setModo(String)}.
+ * Fallback: lê "armazenamento.tipo" de config.properties (CSV | SQL).
  */
 public class DAOFactory {
 
-    private static final String tipoArmazenamento;
+    private static String tipoArmazenamento;
 
     static {
+        // Fallback: ler do config.properties caso setModo() não seja chamado
         String tipo = "CSV";
         try (InputStream input = DAOFactory.class.getClassLoader().getResourceAsStream("config.properties")) {
             if (input != null) {
@@ -24,6 +25,22 @@ public class DAOFactory {
             System.err.println("Aviso: Falha ao ler config.properties. A usar CSV por defeito.");
         }
         tipoArmazenamento = tipo;
+    }
+
+    /**
+     * Define o modo de armazenamento em runtime.
+     * Deve ser chamado UMA VEZ no arranque da aplicação, antes de qualquer DAO ser instanciado.
+     *
+     * @param modo "CSV" ou "SQL"
+     */
+    public static void setModo(String modo) {
+        if (modo != null && (modo.equalsIgnoreCase("CSV") || modo.equalsIgnoreCase("SQL"))) {
+            tipoArmazenamento = modo.toUpperCase();
+        }
+    }
+
+    public static String getModo() {
+        return tipoArmazenamento;
     }
 
     public static boolean isSql() {

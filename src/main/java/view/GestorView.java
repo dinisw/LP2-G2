@@ -1055,7 +1055,7 @@ public class GestorView {
         try {
             System.out.println(GetBlue() + "\n--- REGISTO DE ESTUDANTE ---" + GetReset());
 
-            DAL.DepartamentoCRUD departamentoCRUD = new DAL.DepartamentoCRUD();
+            DAL.IDepartamentoDAO departamentoCRUD = DAL.DAOFactory.getDepartamentoDAO();
             if (departamentoCRUD.getDepartamentos().isEmpty()) {
                 System.out.println(GetYellow() + "\nAviso: Não existem Departamentos registados no sistema." + GetReset());
                 System.out.println(GetRed() + "Por favor, vá a 'Gerir Departamentos' e crie um antes de registar estudantes." + GetReset());
@@ -1063,7 +1063,7 @@ public class GestorView {
                 return;
             }
 
-            DAL.CursoCRUD cc = new DAL.CursoCRUD();
+            DAL.ICursoDAO cc = DAL.DAOFactory.getCursoDAO();
             List<Curso> cursos = cc.getCursos();
 
             if (cursos.isEmpty()) {
@@ -1338,7 +1338,7 @@ public class GestorView {
             String alterarCurso = scanner.nextLine().trim();
 
             if (alterarCurso.equalsIgnoreCase("S")) {
-                DAL.CursoCRUD cursoCRUD = new DAL.CursoCRUD();
+                DAL.ICursoDAO cursoCRUD = DAL.DAOFactory.getCursoDAO();
                 List<Curso> cursos = cursoCRUD.getCursos();
 
                 if (cursos.isEmpty()) {

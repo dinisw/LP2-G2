@@ -94,7 +94,7 @@ public class EstudanteView {
             return;
         }
 
-        DAL.CursoCRUD cursoCRUD = new DAL.CursoCRUD();
+        DAL.ICursoDAO cursoCRUD = DAL.DAOFactory.getCursoDAO();
         model.Curso curso = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
 
         if (curso == null) {
@@ -202,7 +202,7 @@ public class EstudanteView {
             return;
         }
 
-        DAL.CursoCRUD cursoCRUD = new DAL.CursoCRUD();
+        DAL.ICursoDAO cursoCRUD = DAL.DAOFactory.getCursoDAO();
         List<model.Curso> todosCursos = cursoCRUD.getCursos();
         List<model.Curso> cursosDisponiveis = new java.util.ArrayList<>();
 
