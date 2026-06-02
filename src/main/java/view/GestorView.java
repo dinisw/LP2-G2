@@ -10,6 +10,7 @@ import controller.*;
 import model.*;
 import service.EmailService;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeParseException;
@@ -32,7 +33,7 @@ public class GestorView {
         this.scanner = new Scanner(System.in);
     }
 
-    public void exibirMenuGestao() {
+    public void exibirMenuGestao(Gestor gestorLog) {
         String opcao;
         ArrayList<String> opcoes = new ArrayList<>();
         opcoes.add("1. Gerir Gestores");
@@ -48,13 +49,12 @@ public class GestorView {
         do {
             try {
                 MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL", opcoes);
-
                 System.out.print("\nSelecione uma opção: ");
                 opcao = scanner.nextLine().trim();
 
                 switch (opcao) {
                     case "1":
-                        exibirMenuGestores();
+                        exibirMenuGestores(gestorLog);
                         break;
                     case "2":
                         exibirMenuDocentes();
@@ -92,7 +92,7 @@ public class GestorView {
     }
 
     //region Gestor
-    public void exibirMenuGestores() {
+    public void exibirMenuGestores(Gestor gestorLog) {
         String opcao;
         ArrayList<String> opcoes = new ArrayList<>();
         opcoes.add("1. Registar Gestores");
@@ -100,10 +100,13 @@ public class GestorView {
         opcoes.add("3. Procurar Gestores");
         opcoes.add("4. Atualizar Gestores");
         opcoes.add("5. Eliminar Gestores");
-        opcoes.add("0. Logout");
+        opcoes.add("6. Alterar a minha Password");
+        opcoes.add("0. Voltar ao Menu Principal");
 
         do {
             try {
+                GestorController gc = new GestorController();
+                Gestor gestor = gc.procurarGestorPorNif(gestorLog.getNif());
                 MenuUtils.limparTela();
                 MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL", opcoes);
 
@@ -125,6 +128,9 @@ public class GestorView {
                         break;
                     case "5":
                         eliminarGestor();
+                        break;
+                    case "6":
+                        alterarPassword(gestor);
                         break;
                     case "0":
                         System.out.println(GetYellow() + "\nA voltar ao menu principal..." + GetReset());
@@ -454,6 +460,49 @@ public class GestorView {
         } catch (CancelarRegistoException e) {
             System.out.println("\n" + GetYellow() + "Aviso: " + e.getMessage() + GetReset());
             System.out.println(GetRed() + "Operação de eliminação interrompida!" + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Ocorreu um erro inesperado: " + e.getMessage() + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        }
+    }
+
+    private void alterarPassword(Gestor gestor) {
+        try {
+            System.out.println(GetBlue() + "\n--- ALTERAR A PASSWORD DO GESTOR---" + GetReset());
+            System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
+
+
+            String novaPass = "";
+            boolean senhaValida = false;
+            while (!senhaValida) {
+                novaPass = BackendUtils.lerSenhaOculta("Nova senha: ", scanner);
+
+                if (novaPass.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
+
+                senhaValida = BackendUtils.isSenhaValida(novaPass);
+                if(!senhaValida) {
+                    System.out.println(GetRed() + "SENHA deve conter pelo menos uma letra maiúscula, um número e um caracter especial. Tente novamente." + GetReset());
+                }
+            }
+
+            SenhaUtils su = new SenhaUtils();
+            String passHash = su.gerarHashComSalt(novaPass);
+
+            GestorController gestorControllerAtualizado = new GestorController();
+            Resultado <Gestor> resultado = gestorControllerAtualizado.alterarPassword(gestor.getNif(), passHash);
+
+            if (resultado.sucesso) {
+                System.out.println(GetGreen() + "\nPassword alterada com sucesso!" + GetReset());
+            } else {
+                System.out.println(GetRed() + "\nErro ao guardar alteração da password: " + resultado.mensagemErro + GetReset());
+            }
+
+            MenuUtils.pressionarEnter(scanner);
+
+        } catch (CancelarRegistoException e) {
+            System.out.println("\n" + GetYellow() + "Aviso: " + e.getMessage() + GetReset());
+            System.out.println(GetRed() + "Operação interrompida!" + GetReset());
             MenuUtils.pressionarEnter(scanner);
         } catch (Exception e) {
             System.out.println(GetRed() + "Ocorreu um erro inesperado: " + e.getMessage() + GetReset());
@@ -1549,12 +1598,16 @@ public class GestorView {
 
                 for (Estudante e : devedores) {
                     List<Propina> propinas = propinaController.consultarPropinasEstudante(e.getNumeroMec());
-                    double dividaTotal = 0.0;
+
+                    // CORREÇÃO 1: Usar BigDecimal.ZERO
+                    BigDecimal dividaTotal = BigDecimal.ZERO;
                     StringBuilder situacaoAnos = new StringBuilder();
 
                     for (Propina p : propinas) {
                         if (!p.isTotalmentePaga()) {
-                            dividaTotal += p.getValorEmDivida();
+                            // CORREÇÃO 2: Usar o método .add() em vez de +=
+                            dividaTotal = dividaTotal.add(p.getValorEmDivida());
+
                             if (situacaoAnos.length() > 0) situacaoAnos.append(", ");
                             situacaoAnos.append(p.getAnoLetivo()).append("º Ano");
                         }
@@ -1567,6 +1620,7 @@ public class GestorView {
                     String anosStr = situacaoAnos.toString();
                     if(anosStr.length() > 25) anosStr = anosStr.substring(0, 22) + "...";
 
+                    // CORREÇÃO 3: Quando imprimimos BigDecimal formatado com String.format, passamos o próprio objeto
                     System.out.printf(" %-12d | %-25s | %-20s | %-15s | %-25s \n",
                             e.getNumeroMec(), nome, curso, String.format("%.2f€", dividaTotal), anosStr);
                 }

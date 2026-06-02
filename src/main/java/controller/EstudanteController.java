@@ -7,6 +7,8 @@ import DAL.IEstudanteDAO;
 import model.Curso;
 import model.Estudante;
 import model.Resultado;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import DAL.IEstudanteDAO;
@@ -34,10 +36,10 @@ public class EstudanteController {
 
         PropinaController propinaController = new PropinaController();
         List<model.Propina> propinas = propinaController.consultarPropinasEstudante(estudante.getNumeroMec());
-        double dividaTotal = 0;
+        BigDecimal dividaTotal = BigDecimal.valueOf(0);
         if (propinas != null) {
             for (model.Propina propina : propinas) {
-                dividaTotal += propina.getValorEmDivida();
+                dividaTotal = dividaTotal.add(propina.getValorEmDivida());
             }
         }
 

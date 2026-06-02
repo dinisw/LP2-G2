@@ -14,8 +14,8 @@ public class PropinaSqlDAO implements IPropinaDAO {
     private final RowMapper<Propina> propinaMapper = rs -> new Propina(
             rs.getInt("numeroMecEstudante"),
             rs.getInt("anoLetivo"),
-            rs.getDouble("valorTotal"),
-            rs.getDouble("valorPago")
+            rs.getBigDecimal("valorTotal"),
+            rs.getBigDecimal("valorPago")
     );
 
     public PropinaSqlDAO() {
