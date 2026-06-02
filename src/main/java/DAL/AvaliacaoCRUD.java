@@ -24,7 +24,7 @@ public class AvaliacaoCRUD extends AbstractCsvCRUD<Avaliacao> implements IAvalia
             UnidadeCurricularCRUD ucCRUD = new UnidadeCurricularCRUD();
             UnidadeCurricular uc = ucCRUD.procurarPorNome(nomeUC);
 
-            EstudanteCsvDAO estudanteCRUD = new EstudanteCsvDAO();
+            EstudanteCRUD estudanteCRUD = new EstudanteCRUD();
             Estudante estudante = estudanteCRUD.lerEstudante(numMec);
 
             if (uc != null && estudante != null) {

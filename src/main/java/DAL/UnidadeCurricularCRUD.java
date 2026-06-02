@@ -64,6 +64,11 @@ public class UnidadeCurricularCRUD extends AbstractCsvCRUD<UnidadeCurricular> im
         return dados.stream().filter(u -> u.getId() == id).findFirst().orElse(null);
     }
 
+    @Override
+    public boolean atualizarUC(String nomeAtual, UnidadeCurricular uc) {
+        return false;
+    }
+
     public boolean atualizarUC(UnidadeCurricular unidadeCurricular) {
         for (int i = 0; i < dados.size(); i++) {
             if (dados.get(i).getNome() == unidadeCurricular.getNome()) {
