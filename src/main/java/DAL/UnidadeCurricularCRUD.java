@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class UnidadeCurricularCRUD extends AbstractCsvCRUD<UnidadeCurricular> {
+public class UnidadeCurricularCRUD extends AbstractCsvCRUD<UnidadeCurricular> implements IUnidadeCurricularDAO {
 
     public UnidadeCurricularCRUD() {
         super("ucs.csv");
@@ -62,6 +62,11 @@ public class UnidadeCurricularCRUD extends AbstractCsvCRUD<UnidadeCurricular> {
 
     public UnidadeCurricular procurarPorId(int id) {
         return dados.stream().filter(u -> u.getId() == id).findFirst().orElse(null);
+    }
+
+    @Override
+    public boolean atualizarUC(String nomeAtual, UnidadeCurricular uc) {
+        return false;
     }
 
     public boolean atualizarUC(UnidadeCurricular unidadeCurricular) {

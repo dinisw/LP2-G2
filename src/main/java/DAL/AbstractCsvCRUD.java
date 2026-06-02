@@ -9,7 +9,7 @@ public abstract class AbstractCsvCRUD<T> {
     protected List<T> dados;
 
     public AbstractCsvCRUD(String nomeFicheiro) {
-        this.caminhoFicheiro = "src/main/CSVs/" + nomeFicheiro;
+        this.caminhoFicheiro = "src/main/java/CSVs/" + nomeFicheiro;
         this.dados = new ArrayList<>();
         carregarFicheiro();
     }

@@ -1,24 +1,23 @@
 package controller;
 
-import DAL.CursoCRUD;
-import DAL.EstudanteCRUD;
-import DAL.PropinaCRUD;
+import DAL.DAOFactory;
+import DAL.IAvaliacaoDAO;
+import DAL.ICursoDAO;
+import DAL.IEstudanteDAO;
 import model.Curso;
 import model.Estudante;
-import model.Propina;
 import model.Resultado;
-
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Stream;
+import DAL.IEstudanteDAO;
 
 public class EstudanteController {
-    private final EstudanteCRUD estudanteCRUD;
-    private final CursoCRUD cursoCRUD;
+    private final IEstudanteDAO estudanteDAO;
+    private final ICursoDAO cursoDAO;
 
     public EstudanteController() {
-        this.estudanteCRUD = new EstudanteCRUD();
-        this.cursoCRUD = new CursoCRUD();
+        this.estudanteDAO = DAOFactory.getEstudanteDAO();
+        this.cursoDAO     = DAOFactory.getCursoDAO();
     }
 
 
@@ -59,31 +58,29 @@ public class EstudanteController {
     }
 
     public int obterAnoDesbloqueado(Estudante estudante) {
-        Curso curso = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
+        Curso curso = cursoDAO.procurarPorNome(estudante.getNomeCurso());
         if (curso == null) return 1;
 
-        DAL.AvaliacaoCRUD avaliacaoCRUD = new DAL.AvaliacaoCRUD();
+        IAvaliacaoDAO avaliacaoCRUD = DAOFactory.getAvaliacaoDAO();
         estudante.setListaAvaliacoes(avaliacaoCRUD.listarPorEstudante(estudante.getNumeroMec()));
 
         int anoPorNotas = BLL.EstudanteCalculo.calcularAnoDesbloqueado(estudante, curso);
-        PropinaController propinaController = new PropinaController();
 
-        for (int anoValidar = 1; anoValidar < anoPorNotas; anoValidar++) {
-            if (!propinaController.isPropinaPaga(estudante.getNumeroMec(), anoValidar)) {
-                return anoValidar;
-            }
+        PropinaController propinaController = new PropinaController();
+        int anoReal = anoPorNotas;
+        if (anoPorNotas >= 2 && !propinaController.isPropinaPaga(estudante.getNumeroMec(), 1)) {
+            anoReal = 1;
+        } else if (anoPorNotas == 3 && !propinaController.isPropinaPaga(estudante.getNumeroMec(), 2)) {
+            anoReal = 2;
         }
-        return anoPorNotas;
+        return anoReal;
     }
-    public void garantirPropinaGerada(Estudante estudante) {
-        int ano = obterAnoDesbloqueado(estudante);
-        new PropinaController().gerarPropinaAnual(estudante.getNumeroMec(), ano);
-    }
+
     public boolean verificarSeCursoConcluido(Estudante estudante) {
-        Curso curso = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
+        Curso curso = cursoDAO.procurarPorNome(estudante.getNomeCurso());
         if (curso == null) return false;
 
-        DAL.AvaliacaoCRUD avaliacaoCRUD = new DAL.AvaliacaoCRUD();
+        IAvaliacaoDAO avaliacaoCRUD = DAOFactory.getAvaliacaoDAO();
         estudante.setListaAvaliacoes(avaliacaoCRUD.listarPorEstudante(estudante.getNumeroMec()));
 
         if (BLL.EstudanteCalculo.isCursoConcluido(estudante, curso)) {
@@ -99,7 +96,7 @@ public class EstudanteController {
     }
 
     public int gerarNumeroMecanografico() {
-        return estudanteCRUD.gerarNumeroMecanografico();
+        return estudanteDAO.gerarNumeroMecanografico();
     }
 
     public Resultado<Integer> registarEstudante(String nome, String morada, int nif, LocalDate dataNascimento, String curso, String hash) {
@@ -117,96 +114,117 @@ public class EstudanteController {
 
         if (dataNascimento == null) return new Resultado<>(false, "A data de nascimento fornecida é inválida.");
 
-        Curso cursoObj = cursoCRUD.procurarPorNome(curso);
-        if (cursoObj == null) {
-            return new Resultado<>(false, "Operação Recusada: O curso '" + curso + "' não existe no sistema. Crie o curso primeiro.");
-        }
-
-        int numeroMec = estudanteCRUD.gerarNumeroMecanografico();
+        int numeroMec = estudanteDAO.gerarNumeroMecanografico();
         String email = numeroMec + "@issmf.ipp.pt";
 
         Estudante estudante = new Estudante(nome, morada, nif, dataNascimento, email, numeroMec, hash, curso, true);
 
-        Resultado<Estudante> res = estudanteCRUD.registarEstudante(estudante);
-        if (!res.sucesso) return new Resultado<>(false, res.mensagemErro);
+        Resultado<Estudante> res = estudanteDAO.registarEstudante(estudante);
+        if (res.sucesso) {
+            // v1.1: ao inscrever o estudante num curso, criar a propina anual do 1.º ano
+            garantirPropinaPrimeiroAno(numeroMec);
+            return new Resultado<>(numeroMec, true);
+        }
 
-        double precoAnual = cursoObj.getPrecoAnual() > 0 ? cursoObj.getPrecoAnual() : 1000.0;
-
-        PropinaCRUD propinaCRUD = new PropinaCRUD();
-        propinaCRUD.registarPropina(new Propina(numeroMec, 1, precoAnual, 0.0));
-
-        return new Resultado<>(numeroMec, true);
+        return new Resultado<>(false, res.mensagemErro);
     }
 
     public Resultado<Estudante> atualizarEstudante(int numeroMec, String nome, String morada, String curso) {
         if (numeroMec <= 0) return new Resultado<>(false, "Número Mecanográfico inválido.");
 
-        Estudante estudante = estudanteCRUD.lerEstudante(numeroMec);
+        Estudante estudante = estudanteDAO.lerEstudante(numeroMec);
         if (estudante == null) return new Resultado<>(false, "Estudante não encontrado.");
+
+        boolean tinhaCurso = temCurso(estudante.getNomeCurso());
 
         if (nome != null && !nome.trim().isEmpty()) estudante.setNome(nome);
         if (morada != null && !morada.trim().isEmpty()) estudante.setMorada(morada);
         if (curso != null && !curso.trim().isEmpty()) estudante.setNomeCurso(curso);
 
-        return estudanteCRUD.atualizarEstudante(estudante);
+        Resultado<Estudante> res = estudanteDAO.atualizarEstudante(estudante);
+
+        // v1.1: se o estudante passou a estar inscrito num curso, criar a propina anual do 1.º ano
+        if (res.sucesso && !tinhaCurso && temCurso(estudante.getNomeCurso())) {
+            garantirPropinaPrimeiroAno(numeroMec);
+        }
+        return res;
     }
 
     public Resultado<Estudante> alterarPassword(int numeroMec, String novaSenhaHash) {
         if (novaSenhaHash == null || novaSenhaHash.trim().isEmpty()) return new Resultado<>(false, "A nova senha não pode estar vazia.");
 
-        Estudante estudante = estudanteCRUD.lerEstudante(numeroMec);
+        Estudante estudante = estudanteDAO.lerEstudante(numeroMec);
         if (estudante == null) return new Resultado<>(false, "Estudante não encontrado.");
 
         estudante.setHash(novaSenhaHash);
-        return estudanteCRUD.atualizarSenha(estudante);
+        return estudanteDAO.atualizarSenha(estudante);
     }
 
     public Resultado<String> eliminarEstudante(int numeroMec) {
-        Estudante estudante = estudanteCRUD.lerEstudante(numeroMec);
+        Estudante estudante = estudanteDAO.lerEstudante(numeroMec);
         if (estudante == null) return new Resultado<>(false, "Estudante não encontrado.");
 
         if (estudante.getNomeCurso() != null && !estudante.getNomeCurso().equals("SEM REGISTO")) {
-            Curso cursoInfo = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
+            Curso cursoInfo = cursoDAO.procurarPorNome(estudante.getNomeCurso());
 
             if (cursoInfo != null && cursoInfo.getAnosIniciados() != null && !cursoInfo.getAnosIniciados().isEmpty()) {
-                if (!estudante.isAtivo()) return new Resultado<>(false, "O Estudante já se encontra inativo.");
-
-                estudante.setAtivo(false);
-                Resultado<Estudante> resultado = estudanteCRUD.atualizarEstudante(estudante);
-
-                return resultado.sucesso ? new Resultado<>("INATIVADO (Histórico Preservado)", true) : new Resultado<>(false, resultado.mensagemErro);
+                return new Resultado<>(false, "Bloqueado: Não é possível eliminar um estudante cujo curso já iniciou atividade letiva.");
             }
+
+            if (!estudante.isAtivo()) return new Resultado<>(false, "O Estudante já se encontra inativo.");
+
+            estudante.setAtivo(false);
+            Resultado<Estudante> res = estudanteDAO.atualizarEstudante(estudante);
+            return res.sucesso ? new Resultado<>("INATIVADO", true) : new Resultado<>(false, res.mensagemErro);
         }
-        Resultado<Estudante> res = estudanteCRUD.eliminarEstudante(numeroMec);
+
+        Resultado<Estudante> res = estudanteDAO.eliminarEstudante(numeroMec);
         return res.sucesso ? new Resultado<>("ELIMINADO", true) : new Resultado<>(false, res.mensagemErro);
     }
 
-    public List<Estudante> listarEstudantes() { return estudanteCRUD.getEstudantes(); }
-    public Estudante procurarEstudantePorNif(int nif) { return nif <= 0 ? null : estudanteCRUD.procurarPorNif(nif); }
-    public Estudante procurarEstudantePorNumeroMec(int mec) { return mec <= 0 ? null : estudanteCRUD.lerEstudante(mec); }
+    public List<Estudante> listarEstudantes() { return estudanteDAO.getEstudantes(); }
+    public Estudante procurarEstudantePorNif(int nif) { return nif <= 0 ? null : estudanteDAO.procurarPorNif(nif); }
+    public Estudante procurarEstudantePorNumeroMec(int mec) { return mec <= 0 ? null : estudanteDAO.lerEstudante(mec); }
 
     public Resultado<List<String>> simularTransicaoAnoLetivoGlobal() {
         List<String> relatorio = new java.util.ArrayList<>();
-        List<Estudante> estudantes = estudanteCRUD.getEstudantes();
+        List<Estudante> estudantes = estudanteDAO.getEstudantes();
 
         if (estudantes.isEmpty()) {
             return new Resultado<>(false, "Não há estudantes registados no sistema para simular a transição.");
         }
 
         PropinaController propinaController = new PropinaController();
-        DAL.AvaliacaoCRUD avaliacaoCRUD = new DAL.AvaliacaoCRUD();
+        IAvaliacaoDAO avaliacaoCRUD = DAOFactory.getAvaliacaoDAO();
 
         for (Estudante estudante : estudantes) {
             if (!estudante.isAtivo()) continue;
 
-            Curso curso = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
+            Curso curso = cursoDAO.procurarPorNome(estudante.getNomeCurso());
             if (curso == null) continue;
 
             estudante.setListaAvaliacoes(avaliacaoCRUD.listarPorEstudante(estudante.getNumeroMec()));
 
             int anoAnterior = estudante.getAnoLetivo();
             int anoPorNotas = BLL.EstudanteCalculo.calcularAnoDesbloqueado(estudante, curso);
-            int anoReal = obterAnoDesbloqueado(estudante);
+            int anoReal = anoPorNotas;
+            String motivo = "";
+
+            if (anoPorNotas >= 2 && !propinaController.isPropinaPaga(estudante.getNumeroMec(), 1)) {
+                anoReal = 1;
+            } else if (anoPorNotas == 3 && !propinaController.isPropinaPaga(estudante.getNumeroMec(), 2)) {
+                anoReal = 2;
+            }
+
+            if (anoPorNotas > anoReal) {
+                motivo = " - RETIDO: Falta de pagamento da propina do " + anoReal + "º ano.";
+            } else {
+                if (anoReal < curso.getDuracao()) {
+                    motivo = " - AGUARDA ACADÉMICO: Ainda não completou 60% das UCs para passar ao " + (anoReal + 1) + "º ano.";
+                } else {
+                    motivo = " - NO ÚLTIMO ANO DO CURSO.";
+                }
+            }
 
             List<model.Propina> historicoPropinas = propinaController.consultarPropinasEstudante(estudante.getNumeroMec());
             boolean jaFaturadoEsteAno = false;
@@ -224,11 +242,6 @@ public class EstudanteController {
             }
             boolean isConcluido = verificarSeCursoConcluido(estudante);
 
-            estudante.setAnoLetivo(anoReal);
-            estudanteCRUD.atualizarEstudante(estudante);
-
-            String prefixo;
-            String motivo;
             if (isConcluido) {
                 prefixo = "[CONCLUÍDO]";
                 motivo = "Concluiu o curso com todas as UCs aprovadas e propinas pagas.";
@@ -245,5 +258,23 @@ public class EstudanteController {
             relatorio.add(prefixo + " Mec: " + estudante.getNumeroMec() + " (" + estudante.getNome() + ") -> " + motivo);
         }
         return new Resultado<>(relatorio, true);
+    }
+
+    /**
+     * v1.1 — Garante a existência da propina anual do 1.º ano para o estudante.
+     * É idempotente: {@code gerarPropinaAnual} não duplica caso a propina já exista.
+     * Uma falha aqui não compromete o registo/inscrição do estudante (apenas regista aviso).
+     */
+    private void garantirPropinaPrimeiroAno(int numeroMec) {
+        try {
+            new PropinaController().gerarPropinaAnual(numeroMec, 1);
+        } catch (Exception e) {
+            System.err.println("Aviso: não foi possível gerar a propina do 1.º ano para o estudante "
+                    + numeroMec + ": " + e.getMessage());
+        }
+    }
+
+    private boolean temCurso(String nomeCurso) {
+        return nomeCurso != null && !nomeCurso.trim().isEmpty() && !nomeCurso.equalsIgnoreCase("SEM REGISTO");
     }
 }

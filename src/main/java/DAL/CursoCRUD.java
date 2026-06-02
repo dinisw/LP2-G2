@@ -7,7 +7,7 @@ import model.UnidadeCurricular;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CursoCRUD extends AbstractCsvCRUD<Curso> {
+public class CursoCRUD extends AbstractCsvCRUD<Curso> implements ICursoDAO {
 
     public CursoCRUD() {
         super("cursos.csv");

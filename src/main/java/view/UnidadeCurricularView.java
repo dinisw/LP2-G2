@@ -252,7 +252,7 @@ public class UnidadeCurricularView {
                 System.out.println(GetGreen() + "\nUC Encontrada:" + GetReset());
                 imprimirDadosUnidadeCurricular(unidadeCurricular);
 
-                DAL.CursoCRUD cursoCRUD = new DAL.CursoCRUD();
+                DAL.ICursoDAO cursoCRUD = DAL.DAOFactory.getCursoDAO();
                 List<String> cursosAssociados = new ArrayList<>();
                 for (model.Curso curso : cursoCRUD.getCursos()) {
                     if (curso.getUnidadeCurriculars() != null) {

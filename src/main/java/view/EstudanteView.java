@@ -2,15 +2,12 @@ package view;
 
 import common.utils.BackendUtils;
 import common.utils.MenuUtils;
-import controller.CursoController;
-import model.Curso;
 import model.Estudante;
 import model.Avaliacao;
 import controller.EstudanteController;
 import common.exceptions.CancelarRegistoException;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 
@@ -89,8 +86,8 @@ public class EstudanteView {
             return;
         }
 
-        CursoController cursoController = new CursoController();
-        Curso curso = cursoController.procurarCurso(estudante.getNomeCurso());
+        DAL.ICursoDAO cursoCRUD = DAL.DAOFactory.getCursoDAO();
+        model.Curso curso = cursoCRUD.procurarPorNome(estudante.getNomeCurso());
 
         if (curso == null) {
             System.out.println(GetRed() + "Erro: Curso '" + estudante.getNomeCurso() + "' não encontrado no sistema." + GetReset());
@@ -197,23 +194,13 @@ public class EstudanteView {
             return;
         }
 
-        CursoController cursoController = new CursoController();
-        List<Curso> cursos = cursoController.listarCursos();
-        List<Curso> cursosDisponiveis = new java.util.ArrayList<>();
+        DAL.ICursoDAO cursoCRUD = DAL.DAOFactory.getCursoDAO();
+        List<model.Curso> todosCursos = cursoCRUD.getCursos();
+        List<model.Curso> cursosDisponiveis = new java.util.ArrayList<>();
 
-        for (model.Curso curso : cursos) {
+        for (model.Curso curso : todosCursos) {
             if(!curso.isIniciado() && !curso.getUnidadeCurriculars().isEmpty()) {
                 cursosDisponiveis.add(curso);
-            }
-        }
-
-        if (estudante.getNomeCurso() != null && !estudante.getNomeCurso().equals("SEM REGISTO")) {
-            model.Curso cursoAtual = cursoController.procurarCurso(estudante.getNomeCurso());
-            if (cursoAtual != null && cursoAtual.isIniciado()) {
-                System.out.println(GetRed() + "O seu curso atual ('" + cursoAtual.getNome() + "') já iniciou o ano letivo." + GetReset());
-                System.out.println(GetYellow() + "As transferências de curso encontram-se bloqueadas." + GetReset());
-                MenuUtils.pressionarEnter(ler);
-                return;
             }
         }
 
@@ -371,13 +358,6 @@ public class EstudanteView {
             System.out.println("--------------------------------------------------");
             System.out.printf("  %d. %dº Ano\n  Total: %.2f EUR | Pago: %.2f EUR | Em Falta: %.2f EUR  %s\n",
                     i + 1, p.getAnoLetivo(), p.getValorTotal(), p.getValorPago(), p.getValorEmDivida(), estado);
-            java.util.List<String> historico = p.getHistoricoPagamentos();
-            if (historico != null && !historico.isEmpty()) {
-                System.out.println(GetWhiteBold() + "  Histórico de Pagamentos:" + GetReset());
-                for (String registo : historico) {
-                    System.out.println("    • " + registo);
-                }
-            }
         }
         System.out.println("--------------------------------------------------");
         MenuUtils.pressionarEnter(ler);

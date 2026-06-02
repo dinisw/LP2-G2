@@ -1,8 +1,9 @@
 package controller;
 
-import DAL.DocenteCRUD;
-import DAL.EstudanteCRUD;
-import DAL.GestorCRUD;
+import DAL.DAOFactory;
+import DAL.IDocenteDAO;
+import DAL.IEstudanteDAO;
+import DAL.IGestorDAO;
 import common.utils.BackendUtils;
 import common.utils.SenhaUtils;
 import model.Docente;
@@ -15,35 +16,29 @@ public class LoginController {
         Utilizador utilizadorEncontrado = null;
 
         if (BackendUtils.emailISSMFEstudanteValido(email)) {
-            EstudanteCRUD estudanteCRUD = new EstudanteCRUD();
-            for (Estudante e : estudanteCRUD.getEstudantes()) {
-                if (e.getEmail().equalsIgnoreCase(email) && e.isAtivo()) {
+            IEstudanteDAO estudanteDAO = DAOFactory.getEstudanteDAO();
+            for (Estudante e : estudanteDAO.getEstudantes()) {
+                if (e.getEmail().equalsIgnoreCase(email)) {
                     utilizadorEncontrado = e;
                     break;
                 }
             }
         } else if (BackendUtils.emailISSMFDocenteValido(email)) {
-            DocenteCRUD docenteCRUD = new DocenteCRUD();
-            for (Docente d : docenteCRUD.getDocentes()) {
+            IDocenteDAO docenteDAO = DAOFactory.getDocenteDAO();
+            for (Docente d : docenteDAO.getDocentes()) {
                 if (d.getEmail().equalsIgnoreCase(email)) {
                     utilizadorEncontrado = d;
                     break;
                 }
             }
         } else if (BackendUtils.emailISSMFGestorValido(email)) {
-            GestorCRUD gestorCRUD = new GestorCRUD();
-            utilizadorEncontrado = gestorCRUD.procurarPorEmail(email);
+            IGestorDAO gestorDAO = DAOFactory.getGestorDAO();
+            utilizadorEncontrado = gestorDAO.procurarPorEmail(email);
         }
 
-        if (utilizadorEncontrado == null) {
-            return null;
-        }
+        if (utilizadorEncontrado == null) return null;
 
         SenhaUtils su = new SenhaUtils();
-        if (su.verificarSenha(senhaDigitada, utilizadorEncontrado.getHash())) {
-            return utilizadorEncontrado;
-        }
-
-        return null;
+        return su.verificarSenha(senhaDigitada, utilizadorEncontrado.getHash()) ? utilizadorEncontrado : null;
     }
 }

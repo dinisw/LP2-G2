@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class DocenteCRUD extends AbstractCsvCRUD<Docente> {
+public class DocenteCRUD extends AbstractCsvCRUD<Docente> implements IDocenteDAO {
 
     public DocenteCRUD() {
         super("docentes.csv");

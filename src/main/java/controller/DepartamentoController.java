@@ -1,109 +1,66 @@
 package controller;
 
-import DAL.DepartamentoCRUD;
-import DAL.CursoCRUD;
+import DAL.DAOFactory;
+import DAL.ICursoDAO;
+import DAL.IDepartamentoDAO;
 import model.Departamento;
 import model.Resultado;
 import java.util.List;
 
 public class DepartamentoController {
 
-    private DepartamentoCRUD crud;
-    private CursoCRUD cursoCRUD;
+    private final IDepartamentoDAO departamentoDAO;
+    private final ICursoDAO cursoDAO;
 
     public DepartamentoController() {
-        this.crud = new DepartamentoCRUD();
-        this.cursoCRUD = new CursoCRUD();
+        this.departamentoDAO = DAOFactory.getDepartamentoDAO();
+        this.cursoDAO = DAOFactory.getCursoDAO();
     }
 
-    public Resultado <Departamento> registarDepartamento(String nome, String sigla) {
-        Resultado <Departamento> resultado = new Resultado<>();
-
+    public Resultado<Departamento> registarDepartamento(String nome, String sigla) {
         if (nome == null || nome.trim().isEmpty() || sigla == null || sigla.trim().isEmpty()) {
-            resultado.sucesso = false;
-            resultado.mensagemErro = "O nome e a sigla do departamento são obrigatórios.";
-            return resultado;
+            return new Resultado<>(false, "O nome e a sigla do departamento são obrigatórios.");
         }
 
         Departamento novo = new Departamento(nome, sigla);
-
-        if (crud.registarDepartamento(novo)) {
-            resultado.sucesso = true;
-        } else {
-            resultado.sucesso = false;
-            resultado.mensagemErro = "Já existe um departamento registado com a sigla '" + sigla + "'.";
-        }
-
-        return resultado;
+        return departamentoDAO.registarDepartamento(novo)
+                ? new Resultado<>(novo, true)
+                : new Resultado<>(false, "Já existe um departamento registado com a sigla '" + sigla + "'.");
     }
 
     public List<Departamento> listarTodosDepartamentos() {
-        return crud.getDepartamentos();
+        return departamentoDAO.getDepartamentos();
     }
 
     public Departamento procurarDepartamento(String sigla) {
-        return crud.procurarPorSigla(sigla);
+        return departamentoDAO.procurarPorSigla(sigla);
     }
 
-    public Resultado <Departamento> atualizarDepartamento(String siglaAntiga, String novoNome) {
-        Resultado <Departamento> resultado = new Resultado<>();
-
-        if (cursoCRUD.existeCursoComDepartamento(siglaAntiga)) {
-            resultado.sucesso = false;
-            resultado.mensagemErro = "O departamento possui cursos associados e não pode ser alterado.";
-            return resultado;
+    public Resultado<Departamento> atualizarDepartamento(String siglaAntiga, String novoNome) {
+        if (cursoDAO.existeCursoComDepartamento(siglaAntiga)) {
+            return new Resultado<>(false, "O departamento possui cursos associados e não pode ser alterado.");
         }
 
-        Departamento dep = crud.procurarPorSigla(siglaAntiga);
-
-        if (dep == null) {
-            resultado.sucesso = false;
-            resultado.mensagemErro = "Departamento não encontrado com a sigla informada.";
-            return resultado;
-        }
-
-        if (novoNome == null || novoNome.trim().isEmpty()) {
-            resultado.sucesso = false;
-            resultado.mensagemErro = "O novo nome do departamento não pode estar vazio.";
-            return resultado;
-        }
+        Departamento dep = departamentoDAO.procurarPorSigla(siglaAntiga);
+        if (dep == null) return new Resultado<>(false, "Departamento não encontrado com a sigla informada.");
+        if (novoNome == null || novoNome.trim().isEmpty()) return new Resultado<>(false, "O novo nome do departamento não pode estar vazio.");
 
         dep.setNome(novoNome);
-
-        if (crud.atualizarDepartamento(dep)) {
-            resultado.sucesso = true;
-        } else {
-            resultado.sucesso = false;
-            resultado.mensagemErro = "Ocorreu um erro ao guardar a atualização na base de dados.";
-        }
-
-        return resultado;
+        return departamentoDAO.atualizarDepartamento(dep)
+                ? new Resultado<>(dep, true)
+                : new Resultado<>(false, "Ocorreu um erro ao guardar a atualização na base de dados.");
     }
 
-    public Resultado <Departamento> eliminarDepartamento(String sigla) {
-
-        DAL.CursoCRUD cursoCRUD1 = new DAL.CursoCRUD();
-        boolean temCursos = cursoCRUD.getCursos().stream().anyMatch(c -> c.getDepartamento().getSigla().equalsIgnoreCase(sigla));
+    public Resultado<Departamento> eliminarDepartamento(String sigla) {
+        boolean temCursos = cursoDAO.getCursos().stream()
+                .anyMatch(c -> c.getDepartamento() != null && c.getDepartamento().getSigla().equalsIgnoreCase(sigla));
 
         if (temCursos) {
             return new Resultado<>(false, "Bloqueado: Não pode eliminar este departamento porque existem Cursos associados a ele.");
         }
 
-        Resultado <Departamento> resultado = new Resultado<>();
-
-        if (cursoCRUD.existeCursoComDepartamento(sigla)) {
-            resultado.sucesso = false;
-            resultado.mensagemErro = "O departamento possui cursos associados e não pode ser eliminado.";
-            return resultado;
-        }
-
-        if (crud.eliminarDepartamento(sigla)) {
-            resultado.sucesso = true;
-        } else {
-            resultado.sucesso = false;
-            resultado.mensagemErro = "Departamento não encontrado com a sigla informada.";
-        }
-
-        return resultado;
+        return departamentoDAO.eliminarDepartamento(sigla)
+                ? new Resultado<>(null, true)
+                : new Resultado<>(false, "Departamento não encontrado com a sigla informada.");
     }
 }

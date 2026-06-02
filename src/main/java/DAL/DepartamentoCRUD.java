@@ -3,7 +3,7 @@ package DAL;
 import model.Departamento;
 import java.util.List;
 
-public class DepartamentoCRUD extends AbstractCsvCRUD<Departamento> {
+public class DepartamentoCRUD extends AbstractCsvCRUD<Departamento> implements IDepartamentoDAO {
 
     public DepartamentoCRUD() {
         super("departamentos.csv");

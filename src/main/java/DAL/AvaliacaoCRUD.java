@@ -7,7 +7,7 @@ import model.UnidadeCurricular;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class AvaliacaoCRUD extends AbstractCsvCRUD<Avaliacao> {
+public class AvaliacaoCRUD extends AbstractCsvCRUD<Avaliacao> implements IAvaliacaoDAO {
 
     public AvaliacaoCRUD() {
         super("avaliacoes.csv");
