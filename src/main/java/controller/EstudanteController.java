@@ -120,7 +120,11 @@ public class EstudanteController {
         Estudante estudante = new Estudante(nome, morada, nif, dataNascimento, email, numeroMec, hash, curso, true);
 
         Resultado<Estudante> res = estudanteDAO.registarEstudante(estudante);
-        if (res.sucesso) return new Resultado<>(numeroMec, true);
+        if (res.sucesso) {
+            // v1.1: ao inscrever o estudante num curso, criar a propina anual do 1.º ano
+            garantirPropinaPrimeiroAno(numeroMec);
+            return new Resultado<>(numeroMec, true);
+        }
 
         return new Resultado<>(false, res.mensagemErro);
     }
@@ -131,11 +135,19 @@ public class EstudanteController {
         Estudante estudante = estudanteDAO.lerEstudante(numeroMec);
         if (estudante == null) return new Resultado<>(false, "Estudante não encontrado.");
 
+        boolean tinhaCurso = temCurso(estudante.getNomeCurso());
+
         if (nome != null && !nome.trim().isEmpty()) estudante.setNome(nome);
         if (morada != null && !morada.trim().isEmpty()) estudante.setMorada(morada);
         if (curso != null && !curso.trim().isEmpty()) estudante.setNomeCurso(curso);
 
-        return estudanteDAO.atualizarEstudante(estudante);
+        Resultado<Estudante> res = estudanteDAO.atualizarEstudante(estudante);
+
+        // v1.1: se o estudante passou a estar inscrito num curso, criar a propina anual do 1.º ano
+        if (res.sucesso && !tinhaCurso && temCurso(estudante.getNomeCurso())) {
+            garantirPropinaPrimeiroAno(numeroMec);
+        }
+        return res;
     }
 
     public Resultado<Estudante> alterarPassword(int numeroMec, String novaSenhaHash) {
@@ -236,5 +248,23 @@ public class EstudanteController {
             }
         }
         return new Resultado<>(relatorio, true);
+    }
+
+    /**
+     * v1.1 — Garante a existência da propina anual do 1.º ano para o estudante.
+     * É idempotente: {@code gerarPropinaAnual} não duplica caso a propina já exista.
+     * Uma falha aqui não compromete o registo/inscrição do estudante (apenas regista aviso).
+     */
+    private void garantirPropinaPrimeiroAno(int numeroMec) {
+        try {
+            new PropinaController().gerarPropinaAnual(numeroMec, 1);
+        } catch (Exception e) {
+            System.err.println("Aviso: não foi possível gerar a propina do 1.º ano para o estudante "
+                    + numeroMec + ": " + e.getMessage());
+        }
+    }
+
+    private boolean temCurso(String nomeCurso) {
+        return nomeCurso != null && !nomeCurso.trim().isEmpty() && !nomeCurso.equalsIgnoreCase("SEM REGISTO");
     }
 }
