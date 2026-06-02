@@ -1,5 +1,6 @@
 package view;
 
+import DAL.DB.DatabaseConnection;
 import common.utils.BackendUtils;
 import common.utils.MenuUtils;
 import controller.LoginController;
@@ -70,7 +71,11 @@ public class LoginView {
                     utilizador = loginController.login(email, senha);
 
                     if (utilizador == null) {
-                        System.out.println(GetRed() + "Credenciais inválidas! Tente novamente (ou digite '0' para voltar)." + GetReset());
+                        if (DatabaseConnection.houveErroConexao()) {
+                            System.out.println(GetRed() + "Não foi possível ligar à base de dados. Verifique a ligação e tente novamente." + GetReset());
+                        } else {
+                            System.out.println(GetRed() + "Credenciais inválidas! Tente novamente (ou digite '0' para voltar)." + GetReset());
+                        }
                     } else {
                         senhaCorreta = true;
                     }
