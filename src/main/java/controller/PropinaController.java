@@ -34,7 +34,8 @@ public class PropinaController {
         if (estudante != null && estudante.getNomeCurso() != null) {
             ICursoDAO cursoDAO = DAOFactory.getCursoDAO();
             Curso curso = cursoDAO.procurarPorNome(estudante.getNomeCurso());
-            if (curso != null) precoAConfigurar = curso.getPrecoAnual();
+            // Usa o preço configurado no curso; se não estiver definido (<= 0), mantém o valor por omissão
+            if (curso != null && curso.getPrecoAnual() > 0) precoAConfigurar = curso.getPrecoAnual();
         }
 
         Propina novaPropina = new Propina(numeroMec, anoLetivo, precoAConfigurar, 0.0);
