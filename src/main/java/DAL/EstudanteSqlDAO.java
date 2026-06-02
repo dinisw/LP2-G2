@@ -13,15 +13,21 @@ public class EstudanteSqlDAO implements IEstudanteDAO {
 
     private final DatabaseConnection db;
 
+    // JOIN com Curso para obter o nomeCurso a partir do cursoId
+    private static final String SELECT_BASE =
+            "SELECT e.*, c.nome AS nomeCurso " +
+            "FROM Estudante e " +
+            "LEFT JOIN Curso c ON e.cursoId = c.id";
+
     private final RowMapper<Estudante> estudanteMapper = rs -> new Estudante(
             rs.getString("nome"),
             rs.getString("morada"),
             rs.getInt("nif"),
-            rs.getDate("data_nascimento").toLocalDate(),
+            rs.getDate("dataNascimento").toLocalDate(),
             rs.getString("email"),
-            rs.getInt("numero_mec"),
-            rs.getString("hash_senha"),
-            rs.getString("curso"),
+            rs.getInt("numeroMec"),
+            rs.getString("hashSenha"),
+            rs.getString("nomeCurso"),
             rs.getBoolean("ativo")
     );
 
@@ -31,19 +37,25 @@ public class EstudanteSqlDAO implements IEstudanteDAO {
 
     @Override
     public Resultado<Estudante> registarEstudante(Estudante estudante) {
-        String sql = "INSERT INTO Estudantes (nome, morada, nif, data_nascimento, email, numero_mec, hash_senha, curso, ativo) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        // Resolve cursoId a partir do nome do curso
+        String sqlCurso = "SELECT id FROM Curso WHERE nome = ?";
+        ArrayList<Integer> ids = db.select(sqlCurso, rs -> rs.getInt("id"), estudante.getNomeCurso());
+        Integer cursoId = ids.isEmpty() ? null : ids.get(0);
+
+        String sql = "INSERT INTO Estudante (numeroMec, nome, morada, nif, dataNascimento, email, hashSenha, ativo, cursoId, anoLetivo) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         int rows = db.execute(sql,
+                estudante.getNumeroMec(),
                 estudante.getNome(),
                 estudante.getMorada(),
                 estudante.getNif(),
                 Date.valueOf(estudante.getDataNascimento()),
                 estudante.getEmail(),
-                estudante.getNumeroMec(),
                 estudante.getHash(),
-                estudante.getNomeCurso(),
-                estudante.isAtivo()
+                estudante.isAtivo(),
+                cursoId,
+                estudante.getAnoLetivo()
         );
 
         if (rows > 0) return new Resultado<>(estudante, true);
@@ -52,15 +64,20 @@ public class EstudanteSqlDAO implements IEstudanteDAO {
 
     @Override
     public Estudante lerEstudante(int numeroMec) {
-        String sql = "SELECT * FROM Estudantes WHERE numero_mec = ?";
+        String sql = SELECT_BASE + " WHERE e.numeroMec = ?";
         ArrayList<Estudante> lista = db.select(sql, estudanteMapper, numeroMec);
         return lista.isEmpty() ? null : lista.get(0);
     }
 
     @Override
     public Resultado<Estudante> atualizarEstudante(Estudante estudante) {
-        String sql = "UPDATE Estudantes SET nome=?, morada=?, nif=?, data_nascimento=?, email=?, hash_senha=?, curso=?, ativo=? " +
-                     "WHERE numero_mec=?";
+        // Resolve cursoId a partir do nome do curso
+        String sqlCurso = "SELECT id FROM Curso WHERE nome = ?";
+        ArrayList<Integer> ids = db.select(sqlCurso, rs -> rs.getInt("id"), estudante.getNomeCurso());
+        Integer cursoId = ids.isEmpty() ? null : ids.get(0);
+
+        String sql = "UPDATE Estudante SET nome=?, morada=?, nif=?, dataNascimento=?, email=?, hashSenha=?, ativo=?, cursoId=?, anoLetivo=? " +
+                     "WHERE numeroMec=?";
 
         int rows = db.execute(sql,
                 estudante.getNome(),
@@ -69,8 +86,9 @@ public class EstudanteSqlDAO implements IEstudanteDAO {
                 Date.valueOf(estudante.getDataNascimento()),
                 estudante.getEmail(),
                 estudante.getHash(),
-                estudante.getNomeCurso(),
                 estudante.isAtivo(),
+                cursoId,
+                estudante.getAnoLetivo(),
                 estudante.getNumeroMec()
         );
 
@@ -80,33 +98,28 @@ public class EstudanteSqlDAO implements IEstudanteDAO {
 
     @Override
     public Resultado<Estudante> atualizarSenha(Estudante estudante) {
-        String sql = "UPDATE Estudantes SET hash_senha=? WHERE numero_mec=?";
-
+        String sql = "UPDATE Estudante SET hashSenha=? WHERE numeroMec=?";
         int rows = db.execute(sql, estudante.getHash(), estudante.getNumeroMec());
-
         if (rows > 0) return new Resultado<>(estudante, true);
         return new Resultado<>(false, "Erro ao atualizar senha na base de dados.");
     }
 
     @Override
     public Resultado<Estudante> eliminarEstudante(int numeroMec) {
-        String sql = "DELETE FROM Estudantes WHERE numero_mec=?";
-
+        String sql = "DELETE FROM Estudante WHERE numeroMec=?";
         int rows = db.execute(sql, numeroMec);
-
         if (rows > 0) return new Resultado<>(null, true);
         return new Resultado<>(false, "Estudante não encontrado na base de dados.");
     }
 
     @Override
     public List<Estudante> getEstudantes() {
-        String sql = "SELECT * FROM Estudantes";
-        return db.select(sql, estudanteMapper, (Object[]) null);
+        return db.select(SELECT_BASE, estudanteMapper, (Object[]) null);
     }
 
     @Override
     public Estudante procurarPorNif(int nif) {
-        String sql = "SELECT * FROM Estudantes WHERE nif = ?";
+        String sql = SELECT_BASE + " WHERE e.nif = ?";
         ArrayList<Estudante> lista = db.select(sql, estudanteMapper, nif);
         return lista.isEmpty() ? null : lista.get(0);
     }
@@ -118,9 +131,8 @@ public class EstudanteSqlDAO implements IEstudanteDAO {
         int prefixo = 1000000 + (yy * 10000);
         int max = prefixo + 9999;
 
-        String sql = "SELECT MAX(numero_mec) AS max_mec FROM Estudantes WHERE numero_mec >= ? AND numero_mec <= ?";
-
-        ArrayList<Integer> resultado = db.select(sql, rs -> rs.getInt("max_mec"), prefixo, max);
+        String sql = "SELECT MAX(numeroMec) AS maxMec FROM Estudante WHERE numeroMec >= ? AND numeroMec <= ?";
+        ArrayList<Integer> resultado = db.select(sql, rs -> rs.getInt("maxMec"), prefixo, max);
 
         if (!resultado.isEmpty() && resultado.get(0) > 0) {
             return resultado.get(0) + 1;

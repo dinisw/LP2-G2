@@ -2,7 +2,6 @@ package DAL.DB;
 
 import io.github.cdimascio.dotenv.Dotenv;
 
-import java.security.Security;
 import java.sql.*;
 import java.util.ArrayList;
 
@@ -19,10 +18,6 @@ public class DatabaseConnection {
     private Connection connection;
 
     public DatabaseConnection() {
-        // Garante compatibilidade TLS com SQL Server 2016 (Java 17 desativou TLS 1.0/1.1)
-        Security.setProperty("jdk.tls.disabledAlgorithms", "");
-        System.setProperty("jdk.tls.client.protocols", "TLSv1,TLSv1.1,TLSv1.2,TLSv1.3");
-
         Dotenv dotenv = Dotenv.configure()
                 .directory("src/main/resources")
                 .ignoreIfMalformed()

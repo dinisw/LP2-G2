@@ -12,16 +12,20 @@ public class GestorSqlDAO implements IGestorDAO {
 
     private final DatabaseConnection db;
 
-    private final RowMapper<Gestor> gestorMapper = rs -> new Gestor(
-            rs.getInt("id"),
-            rs.getString("nome"),
-            rs.getString("morada"),
-            rs.getInt("nif"),
-            rs.getDate("data_nascimento").toLocalDate(),
-            rs.getString("email"),
-            rs.getString("hash_senha"),
-            rs.getString("cargo")
-    );
+    private final RowMapper<Gestor> gestorMapper = rs -> {
+        Gestor g = new Gestor(
+                rs.getInt("id"),
+                rs.getString("nome"),
+                rs.getString("morada"),
+                rs.getInt("nif"),
+                rs.getDate("dataNascimento").toLocalDate(),
+                rs.getString("email"),
+                rs.getString("hash"),
+                rs.getString("cargo")
+        );
+        g.setAtivo(rs.getBoolean("ativo"));
+        return g;
+    };
 
     public GestorSqlDAO() {
         this.db = new DatabaseConnection();
@@ -29,7 +33,7 @@ public class GestorSqlDAO implements IGestorDAO {
 
     @Override
     public boolean registarGestor(Gestor gestor) {
-        String sql = "INSERT INTO Gestores (nome, morada, nif, data_nascimento, email, hash_senha, cargo) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Gestor (nome, morada, nif, dataNascimento, email, hash, cargo, ativo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         int idGerado = db.create(sql,
                 gestor.getNome(),
                 gestor.getMorada(),
@@ -37,7 +41,8 @@ public class GestorSqlDAO implements IGestorDAO {
                 Date.valueOf(gestor.getDataNascimento()),
                 gestor.getEmail(),
                 gestor.getHash(),
-                gestor.getCargo()
+                gestor.getCargo(),
+                gestor.isAtivo()
         );
         if (idGerado > 0) {
             gestor.setId(idGerado);
@@ -48,24 +53,24 @@ public class GestorSqlDAO implements IGestorDAO {
 
     @Override
     public List<Gestor> getGestores() {
-        return db.select("SELECT * FROM Gestores", gestorMapper, (Object[]) null);
+        return db.select("SELECT * FROM Gestor", gestorMapper, (Object[]) null);
     }
 
     @Override
     public Gestor procurarPorEmail(String email) {
-        ArrayList<Gestor> lista = db.select("SELECT * FROM Gestores WHERE email=?", gestorMapper, email);
+        ArrayList<Gestor> lista = db.select("SELECT * FROM Gestor WHERE email=?", gestorMapper, email);
         return lista.isEmpty() ? null : lista.get(0);
     }
 
     @Override
     public Gestor procurarPorNif(int nif) {
-        ArrayList<Gestor> lista = db.select("SELECT * FROM Gestores WHERE nif=?", gestorMapper, nif);
+        ArrayList<Gestor> lista = db.select("SELECT * FROM Gestor WHERE nif=?", gestorMapper, nif);
         return lista.isEmpty() ? null : lista.get(0);
     }
 
     @Override
     public boolean atualizarGestor(Gestor gestor) {
-        String sql = "UPDATE Gestores SET nome=?, morada=?, data_nascimento=?, email=?, hash_senha=?, cargo=? WHERE nif=?";
+        String sql = "UPDATE Gestor SET nome=?, morada=?, dataNascimento=?, email=?, hash=?, cargo=?, ativo=? WHERE nif=?";
         int rows = db.execute(sql,
                 gestor.getNome(),
                 gestor.getMorada(),
@@ -73,6 +78,7 @@ public class GestorSqlDAO implements IGestorDAO {
                 gestor.getEmail(),
                 gestor.getHash(),
                 gestor.getCargo(),
+                gestor.isAtivo(),
                 gestor.getNif()
         );
         return rows > 0;
@@ -80,12 +86,12 @@ public class GestorSqlDAO implements IGestorDAO {
 
     @Override
     public boolean eliminarGestor(int nif) {
-        return db.execute("DELETE FROM Gestores WHERE nif=?", nif) > 0;
+        return db.execute("DELETE FROM Gestor WHERE nif=?", nif) > 0;
     }
 
     @Override
     public Gestor getGestorPorID(int id) {
-        ArrayList<Gestor> lista = db.select("SELECT * FROM Gestores WHERE id=?", gestorMapper, id);
+        ArrayList<Gestor> lista = db.select("SELECT * FROM Gestor WHERE id=?", gestorMapper, id);
         return lista.isEmpty() ? null : lista.get(0);
     }
 }
