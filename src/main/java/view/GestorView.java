@@ -93,7 +93,7 @@ public class GestorView {
     public void exibirMenuGestores() {
         String opcao;
         ArrayList<String> opcoes = new ArrayList<>();
-        opcoes.add("1. Gerir Gestores");
+        opcoes.add("1. Registar Gestores");
         opcoes.add("2. Gerir Docentes");
         opcoes.add("3. Gerir Estudantes");
         opcoes.add("4. Gerir Cursos");
@@ -113,31 +113,22 @@ public class GestorView {
 
                 switch (opcao) {
                     case "1":
-                        exibirMenuGestores();
+                        registarGestor();
                         break;
                     case "2":
-                        exibirMenuDocentes();
+                        listarGestores();
                         break;
                     case "3":
-                        exibirMenuEstudantes();
+                        procurarGestor();
                         break;
                     case "4":
-                        cursoView.exibirMenuCursos();
+                        atualizarGestor();
                         break;
                     case "5":
-                        departamentoView.exibirMenuDepartamentos();
-                        break;
-                    case "6":
-                        unidadeCurricularView.exibirMenuUnidadesCurriculares();
-                        break;
-                    case "7":
-                        consultarAlunosEmDivida();
-                        break;
-                    case "8":
-                        simularPassagemDeAno();
+                        eliminarGestor();
                         break;
                     case "0":
-                        System.out.println(GetYellow() + "\nA efetuar logout e a voltar ao ecrã de Login..." + GetReset());
+                        System.out.println(GetYellow() + "\nA voltar ao menu principal..." + GetReset());
                         return;
                     default:
                         System.out.println(GetRed() + "Opção inválida! Por favor, escolha uma opção da lista." + GetReset());
