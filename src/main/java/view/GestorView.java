@@ -1600,8 +1600,10 @@ public class GestorView {
             if (res.sucesso) {
                 System.out.println(GetGreen() + "\n====== RELATÓRIO DE TRANSIÇÃO ======" + GetReset());
                 for (String log : res.dados) {
-                    if(log.contains("[SUCESSO]")) {
+                    if (log.contains("[CONCLUÍDO]") || log.contains("[AVANÇOU]")) {
                         System.out.println(GetGreen() + log + GetReset());
+                    } else if (log.contains("[RETIDO]")) {
+                        System.out.println(GetRed() + log + GetReset());
                     } else {
                         System.out.println(GetCyanBold() + log + GetReset());
                     }
