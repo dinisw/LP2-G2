@@ -1,0 +1,194 @@
+package DAL.DB;
+
+import io.github.cdimascio.dotenv.Dotenv;
+
+import java.sql.*;
+import java.util.ArrayList;
+
+public class DatabaseConnection {
+
+    private static boolean erroConexao = false;
+
+    public static boolean houveErroConexao() { return erroConexao; }
+
+    private String serverName;
+    private String databaseName;
+    private String username;
+    private String password;
+    private Connection connection;
+
+    public DatabaseConnection() {
+        Dotenv dotenv = Dotenv.configure()
+                .directory("src/main/resources")
+                .ignoreIfMalformed()
+                .ignoreIfMissing()
+                .load();
+
+        this.serverName   = dotenv.get("DB_SERVER");
+        this.databaseName = dotenv.get("DB_DATABASE");
+        this.username     = dotenv.get("DB_USER");
+        this.password     = dotenv.get("DB_PASSWORD");
+    }
+
+    private Connection connect() {
+        try {
+            if (connection == null || connection.isClosed()) {
+                String connectionUrl = "jdbc:sqlserver://" + serverName +
+                        ";databaseName=" + databaseName +
+                        ";user=" + username +
+                        ";password=" + password +
+                        ";encrypt=false";
+                connection = DriverManager.getConnection(connectionUrl);
+                erroConexao = false;
+            }
+            return connection;
+        }
+        catch (Exception ex) {
+            erroConexao = true;
+            System.out.println("Erro ao ligar à base de dados: " + ex.getMessage());
+        }
+        return null;
+    }
+
+    private boolean disconnect() {
+        boolean disconnected = false;
+        try {
+            if (connection != null && !connection.isClosed()) {
+                connection.close();
+                disconnected = true;
+            }
+        }
+        catch (Exception ex) {
+            //System.out.println(ex.getMessage());
+        }
+        return disconnected;
+    }
+
+    private boolean beginTransaction() {
+        boolean isTransactionActive = false;
+        try {
+            if (connection != null && !connection.isClosed()) {
+                connection.setAutoCommit(false);
+                isTransactionActive = true;
+            }
+        }
+        catch (Exception ex) {
+            //System.out.println(ex.getMessage());
+        }
+        return isTransactionActive;
+    }
+
+    private boolean commitTransaction() {
+        boolean isTransactionActive = false;
+        try {
+            if (connection != null && !connection.isClosed()) {
+                connection.commit();
+                isTransactionActive = true;
+            }
+        }
+        catch (Exception ex) {
+            //System.out.println(ex.getMessage());
+        }
+        return isTransactionActive;
+    }
+
+    private boolean rollbackTransaction() {
+        boolean isTransactionClosed = false;
+        try {
+            if (connection != null && !connection.isClosed()) {
+                connection.rollback();
+                isTransactionClosed = true;
+            }
+        }
+        catch (Exception ex) {
+            //System.out.println(ex.getMessage());
+        }
+        return isTransactionClosed;
+    }
+
+    // SELECT — devolve lista mapeada
+    public <T> ArrayList<T> select(String sql, RowMapper<T> mapper, Object... params) {
+        ArrayList<T> results = new ArrayList<>();
+        Connection conn = connect();
+        if (conn == null) return results;
+        try {
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                if (params != null) {
+                    for (int i = 0; i < params.length; i++) {
+                        stmt.setObject(i + 1, params[i]);
+                    }
+                }
+                ResultSet rs = stmt.executeQuery();
+                while (rs.next()) {
+                    results.add(mapper.mapRow(rs));
+                }
+            }
+        }
+        catch (Exception ex) {
+            System.out.println("Erro ao executar SELECT: " + ex.getMessage());
+        }
+        finally {
+            disconnect();
+        }
+        return results;
+    }
+
+    // INSERT com chave gerada automaticamente — devolve o ID gerado
+    public int create(String sql, Object... params) {
+        int result = 0;
+        Connection conn = connect();
+        if (conn == null) return result;
+        try {
+            conn.setAutoCommit(false);
+            try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                if (params != null) {
+                    for (int i = 0; i < params.length; i++) {
+                        stmt.setObject(i + 1, params[i]);
+                    }
+                }
+                stmt.executeUpdate();
+                try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        result = generatedKeys.getInt(1);
+                    }
+                }
+                conn.commit();
+            }
+        }
+        catch (SQLException e) {
+            System.out.println("Erro ao executar INSERT: " + e.getMessage());
+            try { conn.rollback(); } catch (SQLException ignored) {}
+        }
+        finally {
+            disconnect();
+        }
+        return result;
+    }
+
+    // INSERT / UPDATE / DELETE sem chave gerada — devolve linhas afetadas
+    public int execute(String sql, Object... params) {
+        int rowsAffected = 0;
+        Connection conn = connect();
+        if (conn == null) return rowsAffected;
+        try {
+            conn.setAutoCommit(false);
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                if (params != null) {
+                    for (int i = 0; i < params.length; i++) {
+                        stmt.setObject(i + 1, params[i]);
+                    }
+                }
+                rowsAffected = stmt.executeUpdate();
+                conn.commit();
+            }
+        }
+        catch (SQLException e) {
+            System.out.println("Erro ao executar UPDATE/DELETE: " + e.getMessage());
+            try { conn.rollback(); } catch (SQLException ignored) {}
+        }
+        finally {
+            disconnect();
+        }
+        return rowsAffected;
+    }
+}

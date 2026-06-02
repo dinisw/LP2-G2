@@ -24,6 +24,14 @@ public class Estudante extends Utilizador {
         return numeroMec;
     }
 
+    public int getAnoLetivo() {
+        return anoLetivo;
+    }
+
+    public void setAnoLetivo(int anoLetivo) {
+        this.anoLetivo = anoLetivo;
+    }
+
     public void setListaAvaliacoes(List<Avaliacao> listaAvaliacoes) {
         this.listaAvaliacoes = listaAvaliacoes;
     }

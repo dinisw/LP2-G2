@@ -7,7 +7,7 @@ import model.UnidadeCurricular;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class AvaliacaoCRUD extends AbstractCsvCRUD<Avaliacao> {
+public class AvaliacaoCRUD extends AbstractCsvCRUD<Avaliacao> implements IAvaliacaoDAO {
 
     public AvaliacaoCRUD() {
         super("avaliacoes.csv");
@@ -24,7 +24,7 @@ public class AvaliacaoCRUD extends AbstractCsvCRUD<Avaliacao> {
             UnidadeCurricularCRUD ucCRUD = new UnidadeCurricularCRUD();
             UnidadeCurricular uc = ucCRUD.procurarPorNome(nomeUC);
 
-            EstudanteCRUD estudanteCRUD = new EstudanteCRUD();
+            EstudanteCsvDAO estudanteCRUD = new EstudanteCsvDAO();
             Estudante estudante = estudanteCRUD.lerEstudante(numMec);
 
             if (uc != null && estudante != null) {

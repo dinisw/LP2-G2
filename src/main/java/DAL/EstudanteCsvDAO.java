@@ -5,9 +5,9 @@ import model.Resultado;
 import java.time.LocalDate;
 import java.util.List;
 
-public class EstudanteCRUD extends AbstractCsvCRUD<Estudante> {
+public class EstudanteCsvDAO extends AbstractCsvCRUD<Estudante> implements IEstudanteDAO {
 
-    public EstudanteCRUD() {
+    public EstudanteCsvDAO() {
         super("estudantes.csv");
     }
 
