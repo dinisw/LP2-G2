@@ -209,6 +209,7 @@ public class EstudanteController {
             int anoPorNotas = BLL.EstudanteCalculo.calcularAnoDesbloqueado(estudante, curso);
             int anoReal = anoPorNotas;
             String motivo = "";
+            String prefixo = "";
 
             if (anoPorNotas >= 2 && !propinaController.isPropinaPaga(estudante.getNumeroMec(), 1)) {
                 anoReal = 1;
@@ -241,7 +242,6 @@ public class EstudanteController {
                 propinaController.gerarPropinaAnual(estudante.getNumeroMec(), anoReal);
             }
             boolean isConcluido = verificarSeCursoConcluido(estudante);
-
             if (isConcluido) {
                 prefixo = "[CONCLUÍDO]";
                 motivo = "Concluiu o curso com todas as UCs aprovadas e propinas pagas.";
