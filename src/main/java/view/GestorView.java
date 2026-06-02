@@ -10,6 +10,7 @@ import controller.*;
 import model.*;
 import service.EmailService;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeParseException;
@@ -1549,12 +1550,16 @@ public class GestorView {
 
                 for (Estudante e : devedores) {
                     List<Propina> propinas = propinaController.consultarPropinasEstudante(e.getNumeroMec());
-                    double dividaTotal = 0.0;
+
+                    // CORREÇÃO 1: Usar BigDecimal.ZERO
+                    BigDecimal dividaTotal = BigDecimal.ZERO;
                     StringBuilder situacaoAnos = new StringBuilder();
 
                     for (Propina p : propinas) {
                         if (!p.isTotalmentePaga()) {
-                            dividaTotal += p.getValorEmDivida();
+                            // CORREÇÃO 2: Usar o método .add() em vez de +=
+                            dividaTotal = dividaTotal.add(p.getValorEmDivida());
+
                             if (situacaoAnos.length() > 0) situacaoAnos.append(", ");
                             situacaoAnos.append(p.getAnoLetivo()).append("º Ano");
                         }
@@ -1567,6 +1572,7 @@ public class GestorView {
                     String anosStr = situacaoAnos.toString();
                     if(anosStr.length() > 25) anosStr = anosStr.substring(0, 22) + "...";
 
+                    // CORREÇÃO 3: Quando imprimimos BigDecimal formatado com String.format, passamos o próprio objeto
                     System.out.printf(" %-12d | %-25s | %-20s | %-15s | %-25s \n",
                             e.getNumeroMec(), nome, curso, String.format("%.2f€", dividaTotal), anosStr);
                 }

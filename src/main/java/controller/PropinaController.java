@@ -9,6 +9,7 @@ import model.Estudante;
 import model.Propina;
 import model.Resultado;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -16,7 +17,9 @@ import java.util.Set;
 
 public class PropinaController {
     private final IPropinaDAO propinaDAO;
-    private final double VALOR_PROPINA_PADRAO = 1000.0;
+
+    // CORREÇÃO: Transformar o valor padrão num BigDecimal
+    private final BigDecimal VALOR_PROPINA_PADRAO = BigDecimal.valueOf(1000.0);
 
     public PropinaController() {
         this.propinaDAO = DAOFactory.getPropinaDAO();
@@ -27,35 +30,49 @@ public class PropinaController {
             return new Resultado<>(false, "A propina para o " + anoLetivo + "º ano já foi gerada.");
         }
 
-        double precoAConfigurar = VALOR_PROPINA_PADRAO;
+        BigDecimal precoAConfigurar = VALOR_PROPINA_PADRAO;
         IEstudanteDAO estudanteDAO = DAOFactory.getEstudanteDAO();
         Estudante estudante = estudanteDAO.lerEstudante(numeroMec);
 
         if (estudante != null && estudante.getNomeCurso() != null) {
             ICursoDAO cursoDAO = DAOFactory.getCursoDAO();
             Curso curso = cursoDAO.procurarPorNome(estudante.getNomeCurso());
-            // Usa o preço configurado no curso; se não estiver definido (<= 0), mantém o valor por omissão
-            if (curso != null && curso.getPrecoAnual() > 0) precoAConfigurar = curso.getPrecoAnual();
+
+            // NOTA: Se na classe Curso o preço anual continuar a ser "double", usamos BigDecimal.valueOf() para converter
+            if (curso != null && curso.getPrecoAnual() > 0) {
+                precoAConfigurar = BigDecimal.valueOf(curso.getPrecoAnual());
+            }
         }
 
-        Propina novaPropina = new Propina(numeroMec, anoLetivo, precoAConfigurar, 0.0);
+        // CORREÇÃO: Substituir 0.0 por BigDecimal.ZERO na criação da propina
+        Propina novaPropina = new Propina(numeroMec, anoLetivo, precoAConfigurar, BigDecimal.ZERO);
+
         return propinaDAO.registarPropina(novaPropina)
                 ? new Resultado<>(novaPropina, true)
                 : new Resultado<>(false, "Erro ao gerar a propina na base de dados.");
     }
 
-    public Resultado<Propina> pagarPropina(int numeroMec, int anoLetivo, double valorPagamento) {
-        if (valorPagamento <= 0) return new Resultado<>(false, "O valor do pagamento deve ser superior a zero.");
+    public Resultado<Propina> pagarPropina(int numeroMec, int anoLetivo, BigDecimal valorPagamento) {
+
+        // CORREÇÃO: Usar .compareTo() para verificar se é menor ou igual a zero
+        if (valorPagamento == null || valorPagamento.compareTo(BigDecimal.ZERO) <= 0) {
+            return new Resultado<>(false, "O valor do pagamento deve ser superior a zero.");
+        }
 
         Propina propina = propinaDAO.procurarPropina(numeroMec, anoLetivo);
         if (propina == null) return new Resultado<>(false, "Propina não encontrada para o " + anoLetivo + "º ano.");
 
-        if (valorPagamento > propina.getValorEmDivida()) {
+        // CORREÇÃO: Usar .compareTo() para verificar se o pagamento é superior à dívida
+        if (valorPagamento.compareTo(propina.getValorEmDivida()) > 0) {
             return new Resultado<>(false, "Operação Recusada: O valor inserido (" + valorPagamento + "€) é superior à dívida atual (" + propina.getValorEmDivida() + "€).");
         }
+
         if (propina.isTotalmentePaga()) return new Resultado<>(false, "Esta propina já se encontra totalmente paga. Obrigado!");
 
+        // CORREÇÃO: O método da sua classe modelo deve bater certo (registrar vs registar).
+        // Verifique se o nome na classe Propina é registrarPagamento ou registarPagamento
         propina.registarPagamento(valorPagamento);
+
         return propinaDAO.atualizarPropina(propina)
                 ? new Resultado<>(propina, true)
                 : new Resultado<>(false, "Erro ao guardar o pagamento no sistema.");
