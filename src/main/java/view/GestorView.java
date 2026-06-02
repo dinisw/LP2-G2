@@ -94,13 +94,10 @@ public class GestorView {
         String opcao;
         ArrayList<String> opcoes = new ArrayList<>();
         opcoes.add("1. Registar Gestores");
-        opcoes.add("2. Gerir Docentes");
-        opcoes.add("3. Gerir Estudantes");
-        opcoes.add("4. Gerir Cursos");
-        opcoes.add("5. Gerir Departamentos");
-        opcoes.add("6. Gerir Unidades Curriculares");
-        opcoes.add("7. Consultar Alunos em Dívida (Tesouraria)");
-        opcoes.add("8. Simular Passagem de Ano Letivo (Global)");
+        opcoes.add("2. Listar Gestores");
+        opcoes.add("3. Procurar Gestores");
+        opcoes.add("4. Atualizar Gestores");
+        opcoes.add("5. Eliminar Gestores");
         opcoes.add("0. Logout");
 
         do {
