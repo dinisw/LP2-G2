@@ -22,9 +22,9 @@ public class AvaliacaoSqlDAO implements IAvaliacaoDAO {
         IEstudanteDAO estudanteDAO = DAOFactory.getEstudanteDAO();
         IUnidadeCurricularDAO ucDAO = DAOFactory.getUnidadeCurricularDAO();
         return rs -> {
-            String nomeUC = rs.getString("nome_uc");
-            int numeroMec = rs.getInt("numero_mec");
-            UnidadeCurricular uc = ucDAO.procurarPorNome(nomeUC);
+            int ucId = rs.getInt("ucId");
+            int numeroMec = rs.getInt("estudanteNumeroMec");
+            UnidadeCurricular uc = ucDAO.procurarPorId(ucId);
             Estudante estudante = estudanteDAO.lerEstudante(numeroMec);
 
             double notaRaw = rs.getDouble("nota");
@@ -36,31 +36,27 @@ public class AvaliacaoSqlDAO implements IAvaliacaoDAO {
 
     @Override
     public Resultado<Avaliacao> registarAvaliacao(Avaliacao avaliacao) {
-        // Upsert: se já existe o par (momento, nome_uc, numero_mec), atualiza a nota
-        String sqlCheck = "SELECT COUNT(*) AS total FROM Avaliacoes WHERE momento=? AND nome_uc=? AND numero_mec=?";
-        ArrayList<Integer> existe = db.select(sqlCheck,
+        // Resolve ucId a partir do nome da UC
+        int ucId = resolverUcId(avaliacao.getUnidadeCurricular().getNome());
+        int numeroMec = avaliacao.getEstudante().getNumeroMec();
+
+        // Upsert: se já existe, atualiza a nota
+        ArrayList<Integer> existe = db.select(
+                "SELECT COUNT(*) AS total FROM Avaliacao WHERE momento=? AND ucId=? AND estudanteNumeroMec=?",
                 rs -> rs.getInt("total"),
-                avaliacao.getMomento(),
-                avaliacao.getUnidadeCurricular().getNome(),
-                avaliacao.getEstudante().getNumeroMec()
+                avaliacao.getMomento(), ucId, numeroMec
         );
 
         int rows;
         if (!existe.isEmpty() && existe.get(0) > 0) {
-            String sqlUpdate = "UPDATE Avaliacoes SET nota=? WHERE momento=? AND nome_uc=? AND numero_mec=?";
-            rows = db.execute(sqlUpdate,
-                    avaliacao.getNota(),
-                    avaliacao.getMomento(),
-                    avaliacao.getUnidadeCurricular().getNome(),
-                    avaliacao.getEstudante().getNumeroMec()
+            rows = db.execute(
+                    "UPDATE Avaliacao SET nota=? WHERE momento=? AND ucId=? AND estudanteNumeroMec=?",
+                    avaliacao.getNota(), avaliacao.getMomento(), ucId, numeroMec
             );
         } else {
-            String sqlInsert = "INSERT INTO Avaliacoes (momento, nota, nome_uc, numero_mec) VALUES (?, ?, ?, ?)";
-            rows = db.execute(sqlInsert,
-                    avaliacao.getMomento(),
-                    avaliacao.getNota(),
-                    avaliacao.getUnidadeCurricular().getNome(),
-                    avaliacao.getEstudante().getNumeroMec()
+            rows = db.execute(
+                    "INSERT INTO Avaliacao (momento, nota, ucId, estudanteNumeroMec) VALUES (?, ?, ?, ?)",
+                    avaliacao.getMomento(), avaliacao.getNota(), ucId, numeroMec
             );
         }
 
@@ -70,11 +66,25 @@ public class AvaliacaoSqlDAO implements IAvaliacaoDAO {
 
     @Override
     public List<Avaliacao> listarPorEstudante(int numeroMec) {
-        return db.select("SELECT * FROM Avaliacoes WHERE numero_mec=?", avaliacaoMapper(), numeroMec);
+        return db.select(
+                "SELECT * FROM Avaliacao WHERE estudanteNumeroMec=?",
+                avaliacaoMapper(), numeroMec);
     }
 
     @Override
     public List<Avaliacao> listarPorUnidadeCurricular(String nomeUC) {
-        return db.select("SELECT * FROM Avaliacoes WHERE nome_uc=?", avaliacaoMapper(), nomeUC);
+        int ucId = resolverUcId(nomeUC);
+        if (ucId <= 0) return new ArrayList<>();
+        return db.select(
+                "SELECT * FROM Avaliacao WHERE ucId=?",
+                avaliacaoMapper(), ucId);
+    }
+
+    private int resolverUcId(String nomeUC) {
+        ArrayList<Integer> ids = db.select(
+                "SELECT id FROM UnidadeCurricular WHERE nome=?",
+                rs -> rs.getInt("id"), nomeUC
+        );
+        return ids.isEmpty() ? 0 : ids.get(0);
     }
 }

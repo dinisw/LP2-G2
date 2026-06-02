@@ -12,10 +12,10 @@ public class PropinaSqlDAO implements IPropinaDAO {
     private final DatabaseConnection db;
 
     private final RowMapper<Propina> propinaMapper = rs -> new Propina(
-            rs.getInt("numero_mec"),
-            rs.getInt("ano_letivo"),
-            rs.getDouble("valor_total"),
-            rs.getDouble("valor_pago")
+            rs.getInt("numeroMecEstudante"),
+            rs.getInt("anoLetivo"),
+            rs.getDouble("valorTotal"),
+            rs.getDouble("valorPago")
     );
 
     public PropinaSqlDAO() {
@@ -24,7 +24,7 @@ public class PropinaSqlDAO implements IPropinaDAO {
 
     @Override
     public boolean registarPropina(Propina propina) {
-        String sql = "INSERT INTO Propinas (numero_mec, ano_letivo, valor_total, valor_pago) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO Propina (numeroMecEstudante, anoLetivo, valorTotal, valorPago) VALUES (?, ?, ?, ?)";
         int rows = db.execute(sql,
                 propina.getNumeroMecEstudante(),
                 propina.getAnoLetivo(),
@@ -37,14 +37,14 @@ public class PropinaSqlDAO implements IPropinaDAO {
     @Override
     public Propina procurarPropina(int numeroMec, int anoLetivo) {
         ArrayList<Propina> lista = db.select(
-                "SELECT * FROM Propinas WHERE numero_mec=? AND ano_letivo=?",
+                "SELECT * FROM Propina WHERE numeroMecEstudante=? AND anoLetivo=?",
                 propinaMapper, numeroMec, anoLetivo);
         return lista.isEmpty() ? null : lista.get(0);
     }
 
     @Override
     public boolean atualizarPropina(Propina propinaAtualizada) {
-        String sql = "UPDATE Propinas SET valor_total=?, valor_pago=? WHERE numero_mec=? AND ano_letivo=?";
+        String sql = "UPDATE Propina SET valorTotal=?, valorPago=? WHERE numeroMecEstudante=? AND anoLetivo=?";
         int rows = db.execute(sql,
                 propinaAtualizada.getValorTotal(),
                 propinaAtualizada.getValorPago(),
@@ -56,11 +56,11 @@ public class PropinaSqlDAO implements IPropinaDAO {
 
     @Override
     public List<Propina> listarPropinasPorEstudante(int numeroMec) {
-        return db.select("SELECT * FROM Propinas WHERE numero_mec=?", propinaMapper, numeroMec);
+        return db.select("SELECT * FROM Propina WHERE numeroMecEstudante=?", propinaMapper, numeroMec);
     }
 
     @Override
     public List<Propina> getTodasPropinas() {
-        return db.select("SELECT * FROM Propinas", propinaMapper, (Object[]) null);
+        return db.select("SELECT * FROM Propina", propinaMapper, (Object[]) null);
     }
 }
