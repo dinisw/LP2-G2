@@ -92,7 +92,7 @@ public class LoginView {
                         docenteView.exibirMenuPessoalDocente((Docente) utilizador);
                     } else if (utilizador instanceof Gestor) {
                         GestorView gestorView = new GestorView();
-                        gestorView.exibirMenuGestao();
+                        gestorView.exibirMenuGestao((Gestor) utilizador);
                     }
                 }
 
