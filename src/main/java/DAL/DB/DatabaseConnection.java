@@ -2,22 +2,25 @@ package DAL.DB;
 
 import io.github.cdimascio.dotenv.Dotenv;
 
+import java.security.Security;
 import java.sql.*;
 import java.util.ArrayList;
 
 public class DatabaseConnection {
 
     private static boolean erroConexao = false;
-
     public static boolean houveErroConexao() { return erroConexao; }
 
-    private String serverName;
-    private String databaseName;
-    private String username;
-    private String password;
-    private Connection connection;
+    private final String serverName;
+    private final String databaseName;
+    private final String username;
+    private final String password;
 
     public DatabaseConnection() {
+        // Garante compatibilidade TLS com SQL Server 2016 no Java 17
+        Security.setProperty("jdk.tls.disabledAlgorithms", "");
+        System.setProperty("jdk.tls.client.protocols", "TLSv1,TLSv1.1,TLSv1.2,TLSv1.3");
+
         Dotenv dotenv = Dotenv.configure()
                 .directory("src/main/resources")
                 .ignoreIfMalformed()
@@ -30,164 +33,87 @@ public class DatabaseConnection {
         this.password     = dotenv.get("DB_PASSWORD");
     }
 
-    private Connection connect() {
+    /**
+     * Abre uma ligação nova e independente.
+     * Cada operação (select/create/execute) usa a sua própria Connection
+     * para evitar que queries aninhadas fechem a ligação da query exterior.
+     */
+    private Connection openConnection() {
         try {
-            if (connection == null || connection.isClosed()) {
-                String connectionUrl = "jdbc:sqlserver://" + serverName +
-                        ";databaseName=" + databaseName +
-                        ";user=" + username +
-                        ";password=" + password +
-                        ";encrypt=false";
-                connection = DriverManager.getConnection(connectionUrl);
-                erroConexao = false;
-            }
-            return connection;
-        }
-        catch (Exception ex) {
+            String url = "jdbc:sqlserver://" + serverName +
+                    ";databaseName=" + databaseName +
+                    ";user="         + username +
+                    ";password="     + password +
+                    ";encrypt=false";
+            Connection conn = DriverManager.getConnection(url);
+            erroConexao = false;
+            return conn;
+        } catch (Exception ex) {
             erroConexao = true;
             System.out.println("Erro ao ligar à base de dados: " + ex.getMessage());
+            return null;
         }
-        return null;
     }
 
-    private boolean disconnect() {
-        boolean disconnected = false;
-        try {
-            if (connection != null && !connection.isClosed()) {
-                connection.close();
-                disconnected = true;
-            }
-        }
-        catch (Exception ex) {
-            //System.out.println(ex.getMessage());
-        }
-        return disconnected;
-    }
-
-    private boolean beginTransaction() {
-        boolean isTransactionActive = false;
-        try {
-            if (connection != null && !connection.isClosed()) {
-                connection.setAutoCommit(false);
-                isTransactionActive = true;
-            }
-        }
-        catch (Exception ex) {
-            //System.out.println(ex.getMessage());
-        }
-        return isTransactionActive;
-    }
-
-    private boolean commitTransaction() {
-        boolean isTransactionActive = false;
-        try {
-            if (connection != null && !connection.isClosed()) {
-                connection.commit();
-                isTransactionActive = true;
-            }
-        }
-        catch (Exception ex) {
-            //System.out.println(ex.getMessage());
-        }
-        return isTransactionActive;
-    }
-
-    private boolean rollbackTransaction() {
-        boolean isTransactionClosed = false;
-        try {
-            if (connection != null && !connection.isClosed()) {
-                connection.rollback();
-                isTransactionClosed = true;
-            }
-        }
-        catch (Exception ex) {
-            //System.out.println(ex.getMessage());
-        }
-        return isTransactionClosed;
-    }
-
-    // SELECT — devolve lista mapeada
+    // ── SELECT ───────────────────────────────────────────────────────────────
     public <T> ArrayList<T> select(String sql, RowMapper<T> mapper, Object... params) {
         ArrayList<T> results = new ArrayList<>();
-        Connection conn = connect();
+        Connection conn = openConnection();
         if (conn == null) return results;
-        try {
+        try (conn) {
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 if (params != null) {
-                    for (int i = 0; i < params.length; i++) {
-                        stmt.setObject(i + 1, params[i]);
-                    }
+                    for (int i = 0; i < params.length; i++) stmt.setObject(i + 1, params[i]);
                 }
-                ResultSet rs = stmt.executeQuery();
-                while (rs.next()) {
-                    results.add(mapper.mapRow(rs));
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) results.add(mapper.mapRow(rs));
                 }
             }
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             System.out.println("Erro ao executar SELECT: " + ex.getMessage());
-        }
-        finally {
-            disconnect();
         }
         return results;
     }
 
-    // INSERT com chave gerada automaticamente — devolve o ID gerado
+    // ── INSERT com chave gerada ───────────────────────────────────────────────
     public int create(String sql, Object... params) {
         int result = 0;
-        Connection conn = connect();
+        Connection conn = openConnection();
         if (conn == null) return result;
-        try {
+        try (conn) {
             conn.setAutoCommit(false);
             try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 if (params != null) {
-                    for (int i = 0; i < params.length; i++) {
-                        stmt.setObject(i + 1, params[i]);
-                    }
+                    for (int i = 0; i < params.length; i++) stmt.setObject(i + 1, params[i]);
                 }
                 stmt.executeUpdate();
-                try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
-                    if (generatedKeys.next()) {
-                        result = generatedKeys.getInt(1);
-                    }
+                try (ResultSet keys = stmt.getGeneratedKeys()) {
+                    if (keys.next()) result = keys.getInt(1);
                 }
                 conn.commit();
             }
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             System.out.println("Erro ao executar INSERT: " + e.getMessage());
-            try { conn.rollback(); } catch (SQLException ignored) {}
-        }
-        finally {
-            disconnect();
         }
         return result;
     }
 
-    // INSERT / UPDATE / DELETE sem chave gerada — devolve linhas afetadas
+    // ── UPDATE / DELETE ───────────────────────────────────────────────────────
     public int execute(String sql, Object... params) {
         int rowsAffected = 0;
-        Connection conn = connect();
+        Connection conn = openConnection();
         if (conn == null) return rowsAffected;
-        try {
+        try (conn) {
             conn.setAutoCommit(false);
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 if (params != null) {
-                    for (int i = 0; i < params.length; i++) {
-                        stmt.setObject(i + 1, params[i]);
-                    }
+                    for (int i = 0; i < params.length; i++) stmt.setObject(i + 1, params[i]);
                 }
                 rowsAffected = stmt.executeUpdate();
                 conn.commit();
             }
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             System.out.println("Erro ao executar UPDATE/DELETE: " + e.getMessage());
-            try { conn.rollback(); } catch (SQLException ignored) {}
-        }
-        finally {
-            disconnect();
         }
         return rowsAffected;
     }
