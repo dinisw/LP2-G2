@@ -2,10 +2,15 @@ package DAL.DB;
 
 import io.github.cdimascio.dotenv.Dotenv;
 
+import java.security.Security;
 import java.sql.*;
 import java.util.ArrayList;
 
 public class DatabaseConnection {
+
+    private static boolean erroConexao = false;
+
+    public static boolean houveErroConexao() { return erroConexao; }
 
     private String serverName;
     private String databaseName;
@@ -14,8 +19,12 @@ public class DatabaseConnection {
     private Connection connection;
 
     public DatabaseConnection() {
+        // Garante compatibilidade TLS com SQL Server 2016 (Java 17 desativou TLS 1.0/1.1)
+        Security.setProperty("jdk.tls.disabledAlgorithms", "");
+        System.setProperty("jdk.tls.client.protocols", "TLSv1,TLSv1.1,TLSv1.2,TLSv1.3");
+
         Dotenv dotenv = Dotenv.configure()
-                .directory("./")
+                .directory("src/main/resources")
                 .ignoreIfMalformed()
                 .ignoreIfMissing()
                 .load();
@@ -29,18 +38,19 @@ public class DatabaseConnection {
     private Connection connect() {
         try {
             if (connection == null || connection.isClosed()) {
-                Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
                 String connectionUrl = "jdbc:sqlserver://" + serverName +
                         ";databaseName=" + databaseName +
                         ";user=" + username +
                         ";password=" + password +
-                        ";encryption=true;trustServerCertificate=true";
+                        ";encrypt=false";
                 connection = DriverManager.getConnection(connectionUrl);
+                erroConexao = false;
             }
             return connection;
         }
         catch (Exception ex) {
-            //System.out.println(ex.getMessage());
+            erroConexao = true;
+            System.out.println("Erro ao ligar à base de dados: " + ex.getMessage());
         }
         return null;
     }
@@ -104,9 +114,10 @@ public class DatabaseConnection {
     // SELECT — devolve lista mapeada
     public <T> ArrayList<T> select(String sql, RowMapper<T> mapper, Object... params) {
         ArrayList<T> results = new ArrayList<>();
+        Connection conn = connect();
+        if (conn == null) return results;
         try {
-            connect();
-            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 if (params != null) {
                     for (int i = 0; i < params.length; i++) {
                         stmt.setObject(i + 1, params[i]);
@@ -119,7 +130,7 @@ public class DatabaseConnection {
             }
         }
         catch (Exception ex) {
-            //System.out.println(ex.getMessage());
+            System.out.println("Erro ao executar SELECT: " + ex.getMessage());
         }
         finally {
             disconnect();
@@ -130,10 +141,11 @@ public class DatabaseConnection {
     // INSERT com chave gerada automaticamente — devolve o ID gerado
     public int create(String sql, Object... params) {
         int result = 0;
+        Connection conn = connect();
+        if (conn == null) return result;
         try {
-            connect();
-            beginTransaction();
-            try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            conn.setAutoCommit(false);
+            try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 if (params != null) {
                     for (int i = 0; i < params.length; i++) {
                         stmt.setObject(i + 1, params[i]);
@@ -145,14 +157,12 @@ public class DatabaseConnection {
                         result = generatedKeys.getInt(1);
                     }
                 }
-                commitTransaction();
+                conn.commit();
             }
         }
         catch (SQLException e) {
-            rollbackTransaction();
-        }
-        catch (Exception ex) {
-            //System.out.println(ex.getMessage());
+            System.out.println("Erro ao executar INSERT: " + e.getMessage());
+            try { conn.rollback(); } catch (SQLException ignored) {}
         }
         finally {
             disconnect();
@@ -163,24 +173,23 @@ public class DatabaseConnection {
     // INSERT / UPDATE / DELETE sem chave gerada — devolve linhas afetadas
     public int execute(String sql, Object... params) {
         int rowsAffected = 0;
+        Connection conn = connect();
+        if (conn == null) return rowsAffected;
         try {
-            connect();
-            beginTransaction();
-            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            conn.setAutoCommit(false);
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 if (params != null) {
                     for (int i = 0; i < params.length; i++) {
                         stmt.setObject(i + 1, params[i]);
                     }
                 }
                 rowsAffected = stmt.executeUpdate();
-                commitTransaction();
+                conn.commit();
             }
         }
         catch (SQLException e) {
-            rollbackTransaction();
-        }
-        catch (Exception ex) {
-            //System.out.println(ex.getMessage());
+            System.out.println("Erro ao executar UPDATE/DELETE: " + e.getMessage());
+            try { conn.rollback(); } catch (SQLException ignored) {}
         }
         finally {
             disconnect();
