@@ -8,6 +8,8 @@ import common.utils.SenhaUtils;
 import DAL.CursoCRUD;
 import controller.*;
 import model.*;
+import service.EmailService;
+
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeParseException;
@@ -1505,7 +1507,7 @@ public class GestorView {
             if (res.sucesso) {
                 System.out.println(GetGreen() + "\nPassword do estudante alterada com sucesso!" + GetReset());
                 System.out.println(GetYellow() + "A enviar email de notificação ao aluno..." + GetReset());
-                model.EmailService emailService = new model.EmailService();
+                EmailService emailService = new EmailService();
                 var resEmail = emailService.enviarEmailRecuperacaoDeSenha(estudanteSelecionado.getEmail(), novaPass);
 
                 if (resEmail.sucesso) {

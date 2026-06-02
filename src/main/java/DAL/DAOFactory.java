@@ -49,7 +49,7 @@ public class DAOFactory {
 
     // ── Estudante ──────────────────────────────────────────────────────────────
     public static IEstudanteDAO getEstudanteDAO() {
-        return isSql() ? new EstudanteSqlDAO() : new EstudanteCsvDAO();
+        return isSql() ? new EstudanteSqlDAO() : new EstudanteCRUD();
     }
 
     // ── Docente ────────────────────────────────────────────────────────────────

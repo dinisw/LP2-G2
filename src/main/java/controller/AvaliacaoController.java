@@ -64,9 +64,9 @@ public class AvaliacaoController {
             }
         }
 
-        if (contagemNotas == 0) return new Resultado<>("Sem classificação atribuída", true);
+        if (notasEncontradas == 0) return new Resultado<>("Sem classificação atribuída", true);
 
-        double media = Math.round((somaNotas / contagemNotas) * 100.0) / 100.0;
+        double media = Math.round((somaNotas / notasEncontradas) * 100.0) / 100.0;
         String estado = (media >= 9.5) ? "APROVADO" : "REPROVADO";
         return new Resultado<>(String.format("Média: %.2f valores - %s", media, estado), true);
     }
