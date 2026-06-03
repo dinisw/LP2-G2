@@ -43,7 +43,7 @@ public class GestorView {
         opcoes.add("5. Gerir Departamentos");
         opcoes.add("6. Gerir Unidades Curriculares");
         opcoes.add("7. Consultar Alunos em Dívida (Tesouraria)");
-        opcoes.add("8. Simular Passagem de Ano Letivo (Global)");
+        opcoes.add("8. Gerir Ano Letivo (Global)");
         opcoes.add("0. Logout");
 
         do {
@@ -75,7 +75,7 @@ public class GestorView {
                         consultarAlunosEmDivida();
                         break;
                     case "8":
-                        simularPassagemDeAno();
+                        exibirMenuAnoLetivo();
                         break;
                     case "0":
                         System.out.println(GetYellow() + "\nA voltar ao menu principal..." + GetReset());
@@ -1638,6 +1638,51 @@ public class GestorView {
     private void mostrarErroMenu() {
         System.out.println(GetRed() + "Opção inválida ou indisponível de momento. Por favor, escolha uma opção visível na lista." + GetReset());
         MenuUtils.pressionarEnter(scanner);
+    }
+
+    public void exibirMenuAnoLetivo() {
+        String opcao;
+        ArrayList<String> opcoes = new ArrayList<>();
+        opcoes.add("1. Verificar Ano Letivo Atual");
+        opcoes.add("2. Buscar por Ano Letivo");
+        opcoes.add("3. Simular Passagem de Ano");
+        opcoes.add("0. Voltar");
+
+        do {
+            try {
+                MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL", opcoes);
+                System.out.print("\nSelecione uma opção: ");
+                opcao = scanner.nextLine().trim();
+
+                switch (opcao) {
+                    case "1":
+                        verificarAnoLetivoAtual();
+                        break;
+                    case "2":
+                        buscarPorAnoLetivo();
+                        break;
+                    case "3":
+                        simularPassagemDeAno();
+                        break;
+                    case "0":
+                        return;
+                    default:
+                        System.out.println(GetRed() + "Opção inválida! Por favor, escolha uma opção da lista." + GetReset());
+                        MenuUtils.pressionarEnter(scanner);
+                }
+            } catch (Exception e) {
+                System.out.println("\n" + GetRed() + "Ocorreu um erro na navegação: " + e.getMessage() + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+            }
+        } while (true);
+    }
+
+
+    private void verificarAnoLetivoAtual(){
+
+    }
+    private void buscarPorAnoLetivo(){
+
     }
     private void simularPassagemDeAno() {
         System.out.println(GetBlue() + "\n--- SIMULADOR DE PASSAGEM DE ANO LETIVO ---" + GetReset());
