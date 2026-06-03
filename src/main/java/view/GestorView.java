@@ -16,6 +16,7 @@ import java.time.Period;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Scanner;
 
 import static common.utils.DesignUtils.*;
@@ -202,8 +203,8 @@ public class GestorView {
             String email = "";
             boolean emailValido = false;
             while (!emailValido) {
-                System.out.println("Email: ");
-                email = scanner.nextLine().trim();
+                System.out.print("Email: ");
+                email = scanner.nextLine().toLowerCase().trim();
                 if (email.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
                 emailValido = BackendUtils.emailISSMFGestorValido(email);
                 if (!emailValido)
