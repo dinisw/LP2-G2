@@ -5,6 +5,8 @@ import model.*;
 import java.util.List;
 
 public interface IAnoLetivoDAO {
+    /** Retorna true se as tabelas de AnoLetivo existem na BD. */
+    boolean tabelasExistem();
     boolean registarAnoLetivo(AnoLetivo anoLetivo);
     AnoLetivo obterAnoAtual();
     List<AnoLetivo> listarTodos();

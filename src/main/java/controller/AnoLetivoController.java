@@ -30,7 +30,13 @@ public class AnoLetivoController {
 
     // ── Obter / criar ano atual ────────────────────────────────
 
+    /** Retorna true se as tabelas AnoLetivo existem na BD. False = script não foi executado. */
+    public boolean bdPreparada() {
+        return anoLetivoDAO.tabelasExistem();
+    }
+
     public AnoLetivo obterOuCriarAnoAtual() {
+        if (!bdPreparada()) return null;
         AnoLetivo atual = anoLetivoDAO.obterAnoAtual();
         if (atual == null) {
             int mes = LocalDate.now().getMonthValue();
@@ -43,14 +49,17 @@ public class AnoLetivoController {
     }
 
     public AnoLetivo obterAnoAtual() {
+        if (!bdPreparada()) return null;
         return anoLetivoDAO.obterAnoAtual();
     }
 
     public List<AnoLetivo> listarTodos() {
+        if (!bdPreparada()) return new ArrayList<>();
         return anoLetivoDAO.listarTodos();
     }
 
     public AnoLetivo buscarPorAno(int anoCalendario) {
+        if (!bdPreparada()) return null;
         return anoLetivoDAO.obterPorAnoCalendario(anoCalendario);
     }
 
@@ -65,6 +74,17 @@ public class AnoLetivoController {
         List<String> bloqueios = new ArrayList<>();
 
         List<Curso> cursos = cursoDAO.getCursos();
+
+        // Verifica se existe pelo menos um curso com actividade letiva iniciada
+        boolean existeCursoIniciado = cursos.stream()
+                .anyMatch(c -> c.getAnosIniciados() != null && !c.getAnosIniciados().isEmpty());
+
+        if (!existeCursoIniciado) {
+            bloqueios.add("[SEM ACTIVIDADE] Nenhum curso foi ainda iniciado. "
+                    + "Use 'Gerir Cursos > Iniciar Ano Letivo' antes de avançar o ano letivo global.");
+            return new Resultado<>(bloqueios, false);
+        }
+
         for (Curso curso : cursos) {
             if (curso.getAnosIniciados() == null || curso.getAnosIniciados().isEmpty()) continue;
 

@@ -28,6 +28,11 @@ public class AnoLetivoSqlDAO implements IAnoLetivoDAO {
         this.db = new DatabaseConnection();
     }
 
+    @Override
+    public boolean tabelasExistem() {
+        return db.tabelaExiste("AnoLetivo");
+    }
+
     // ── AnoLetivo principal ────────────────────────────────────
 
     @Override

@@ -7,32 +7,60 @@ import java.util.ArrayList;
 
 public class DatabaseConnection {
 
-    // ── Configuração carregada UMA ÚNICA VEZ ao arranque da JVM ──────────────
-    private static final String serverName;
-    private static final String databaseName;
-    private static final String username;
-    private static final String password;
+    // ── Config estática: carregada UMA VEZ, na primeira instanciação ─────────
+    // (não num bloco static{} — evita NoClassDefFoundError se dotenv falhar
+    //  antes do class-loading estar completo)
+    private static volatile String serverName;
+    private static volatile String databaseName;
+    private static volatile String username;
+    private static volatile String password;
+    private static volatile boolean configCarregada = false;
 
-    static {
-        Dotenv dotenv = Dotenv.configure()
-                .directory("src/main/resources")
-                .ignoreIfMalformed()
-                .ignoreIfMissing()
-                .load();
-        serverName   = nvl(dotenv.get("DB_SERVER"));
-        databaseName = nvl(dotenv.get("DB_DATABASE"));
-        username     = nvl(dotenv.get("DB_USER"));
-        password     = nvl(dotenv.get("DB_PASSWORD"));
-    }
-
-    // ── Estado de erro de ligação (visível na view de login) ─────────────────
     private static boolean erroConexao = false;
     public static boolean houveErroConexao() { return erroConexao; }
 
+    public DatabaseConnection() {
+        // Double-checked locking: config lida apenas uma vez por JVM
+        if (!configCarregada) {
+            synchronized (DatabaseConnection.class) {
+                if (!configCarregada) {
+                    carregarConfig();
+                    configCarregada = true;
+                }
+            }
+        }
+    }
+
+    private static void carregarConfig() {
+        try {
+            Dotenv dotenv = Dotenv.configure()
+                    .directory("src/main/resources")
+                    .ignoreIfMalformed()
+                    .ignoreIfMissing()
+                    .load();
+            serverName   = nvl(dotenv.get("DB_SERVER"));
+            databaseName = nvl(dotenv.get("DB_DATABASE"));
+            username     = nvl(dotenv.get("DB_USER"));
+            password     = nvl(dotenv.get("DB_PASSWORD"));
+        } catch (Exception e) {
+            System.err.println("Aviso: Não foi possível carregar configurações da BD: " + e.getMessage());
+            serverName = databaseName = username = password = "";
+        }
+    }
+
     private static String nvl(String s) { return s != null ? s : ""; }
 
-    public DatabaseConnection() {
-        // Construtor vazio — configuração já carregada estaticamente
+    /** Verifica se uma tabela existe na BD actual (SQL Server). Não imprime erros. */
+    public boolean tabelaExiste(String nomeTabela) {
+        try {
+            ArrayList<Integer> result = select(
+                    "SELECT COUNT(*) AS total FROM INFORMATION_SCHEMA.TABLES " +
+                    "WHERE TABLE_TYPE='BASE TABLE' AND TABLE_NAME=?",
+                    rs -> rs.getInt("total"), nomeTabela);
+            return !result.isEmpty() && result.get(0) > 0;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     // ── Interface funcional para transações ──────────────────────────────────
@@ -130,7 +158,6 @@ public class DatabaseConnection {
     /**
      * Executa múltiplas operações numa única transação.
      * Se qualquer operação falhar, todas são revertidas (rollback).
-     * Uso: db.runTransaction(conn -> { INSERT...; INSERT...; });
      */
     public boolean runTransaction(TransactionConsumer work) {
         Connection conn = openConnection();

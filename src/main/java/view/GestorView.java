@@ -6,6 +6,9 @@ import common.utils.DesignUtils;
 import common.utils.MenuUtils;
 import common.utils.SenhaUtils;
 import controller.*;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 import model.*;
 import service.EmailService;
 
@@ -34,55 +37,97 @@ public class GestorView {
     }
 
     public void exibirMenuGestao(Gestor gestorLog) {
-        String opcao;
-        ArrayList<String> opcoes = new ArrayList<>();
-        opcoes.add("1. Gerir Gestores");
-        opcoes.add("2. Gerir Docentes");
-        opcoes.add("3. Gerir Estudantes");
-        opcoes.add("4. Gerir Cursos");
-        opcoes.add("5. Gerir Departamentos");
-        opcoes.add("6. Gerir Unidades Curriculares");
-        opcoes.add("7. Consultar Alunos em Dívida (Tesouraria)");
-        opcoes.add("8. Gerir Ano Letivo (Global)");
-        opcoes.add("0. Logout");
-
         do {
             try {
-                MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL", opcoes);
-                System.out.print("\nSelecione uma opção: ");
-                opcao = scanner.nextLine().trim();
+                MenuUtils.limparTela();
 
-                switch (opcao) {
-                    case "1":
-                        exibirMenuGestores(gestorLog);
-                        break;
-                    case "2":
-                        exibirMenuDocentes();
-                        break;
-                    case "3":
-                        exibirMenuEstudantes();
-                        break;
-                    case "4":
-                        cursoView.exibirMenuCursos();
-                        break;
-                    case "5":
-                        departamentoView.exibirMenuDepartamentos();
-                        break;
-                    case "6":
-                        unidadeCurricularView.exibirMenuUnidadesCurriculares();
-                        break;
-                    case "7":
-                        consultarAlunosEmDivida();
-                        break;
-                    case "8":
-                        exibirMenuAnoLetivo();
-                        break;
-                    case "0":
-                        System.out.println(GetYellow() + "\nA voltar ao menu principal..." + GetReset());
-                        return;
-                    default:
+                // ── Verificar dependências ────────────────────────────────
+                DepartamentoController depCtrl  = new DepartamentoController();
+                CursoController        cursoCtrl = new CursoController();
+                DocenteController      docCtrl   = new DocenteController();
+                EstudanteController    estCtrl   = new EstudanteController();
+
+                boolean temDepartamentos = !depCtrl.listarTodosDepartamentos().isEmpty();
+                boolean temCursos        = temDepartamentos && !cursoCtrl.listarCursos().isEmpty();
+                boolean temDocentes      = !docCtrl.listarDocentes().isEmpty();
+                boolean temEstudantes    = !estCtrl.listarEstudantes().isEmpty();
+
+                // ── Construir menu dinâmico ───────────────────────────────
+                ArrayList<String>      opcoes = new ArrayList<>();
+                Map<Integer, Runnable> acoes  = new LinkedHashMap<>();
+                int n = 1;
+
+                // Sempre disponível
+                opcoes.add(n + ". Gerir Gestores");
+                final int nGestores = n; acoes.put(n++, () -> exibirMenuGestores(gestorLog));
+
+                opcoes.add(n + ". Gerir Docentes");
+                acoes.put(n++, () -> exibirMenuDocentes());
+
+                // Sempre disponível (base da hierarquia)
+                opcoes.add(n + ". Gerir Departamentos");
+                acoes.put(n++, () -> departamentoView.exibirMenuDepartamentos());
+
+                // Requer Departamentos
+                if (temDepartamentos) {
+                    opcoes.add(n + ". Gerir Cursos");
+                    acoes.put(n++, () -> cursoView.exibirMenuCursos());
+                }
+
+                // Requer Cursos
+                if (temCursos) {
+                    opcoes.add(n + ". Gerir Unidades Curriculares");
+                    acoes.put(n++, () -> unidadeCurricularView.exibirMenuUnidadesCurriculares());
+
+                    opcoes.add(n + ". Gerir Estudantes");
+                    acoes.put(n++, () -> exibirMenuEstudantes());
+                }
+
+                // Requer Estudantes
+                if (temEstudantes) {
+                    opcoes.add(n + ". Consultar Alunos em Dívida (Tesouraria)");
+                    acoes.put(n++, () -> consultarAlunosEmDivida());
+                }
+
+                // Requer Cursos
+                if (temCursos) {
+                    opcoes.add(n + ". Gerir Ano Letivo (Global)");
+                    acoes.put(n++, () -> exibirMenuAnoLetivo());
+                }
+
+                opcoes.add("0. Logout");
+
+                MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL", opcoes);
+
+                // Dica sobre o que está bloqueado
+                if (!temDepartamentos) {
+                    System.out.println(GetYellow() + "  ℹ  Crie pelo menos um Departamento para desbloquear: Cursos, UCs, Estudantes, Ano Letivo." + GetReset());
+                } else if (!temCursos) {
+                    System.out.println(GetYellow() + "  ℹ  Crie pelo menos um Curso para desbloquear: UCs, Estudantes, Ano Letivo." + GetReset());
+                } else if (!temEstudantes) {
+                    System.out.println(GetYellow() + "  ℹ  Registe Estudantes para desbloquear: Tesouraria." + GetReset());
+                }
+
+                System.out.print("\nSelecione uma opção: ");
+                String opcao = scanner.nextLine().trim();
+
+                if (opcao.equals("0")) {
+                    System.out.println(GetYellow() + "\nA terminar sessão..." + GetReset());
+                    return;
+                }
+
+                try {
+                    int numOpcao = Integer.parseInt(opcao);
+                    Runnable acao = acoes.get(numOpcao);
+                    if (acao != null) {
+                        acao.run();
+                    } else {
                         System.out.println(GetRed() + "Opção inválida! Por favor, escolha uma opção da lista." + GetReset());
                         MenuUtils.pressionarEnter(scanner);
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println(GetRed() + "Opção inválida! Por favor, escolha uma opção da lista." + GetReset());
+                    MenuUtils.pressionarEnter(scanner);
                 }
             } catch (Exception e) {
                 System.out.println("\n" + GetRed() + "Ocorreu um erro na navegação: " + e.getMessage() + GetReset());
@@ -214,18 +259,8 @@ public class GestorView {
                     System.out.println(GetRed() + "EMAIL deve ter o formato xxxx.gestor@issmf.ipp.pt. Tente novamente." + GetReset());
             }
 
-            String passDigitada = "";
-            boolean senhaValida = false;
-            while (!senhaValida) {
-                passDigitada = BackendUtils.lerSenhaOculta("Senha: ", scanner);
-                if (passDigitada.equals("0")) {
-                    throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
-                }
-                senhaValida = BackendUtils.isSenhaValida(passDigitada);
-                if (!senhaValida) {
-                    System.out.println(GetRed() + "SENHA deve conter pelo menos uma letra maiúscula, um número e um caracter especial. Tente novamente." + GetReset());
-                }
-            }
+            String passDigitada = BackendUtils.lerSenhaComConfirmacao(
+                    "Senha: ", "Confirmar Senha: ", scanner);
 
             SenhaUtils su = new SenhaUtils();
             String hash = su.gerarHashComSalt(passDigitada);
@@ -477,24 +512,14 @@ public class GestorView {
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
 
 
-            String novaPass = "";
-            boolean senhaValida = false;
-            while (!senhaValida) {
-                novaPass = BackendUtils.lerSenhaOculta("Nova senha: ", scanner);
-
-                if (novaPass.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
-
-                senhaValida = BackendUtils.isSenhaValida(novaPass);
-                if(!senhaValida) {
-                    System.out.println(GetRed() + "SENHA deve conter pelo menos uma letra maiúscula, um número e um caracter especial. Tente novamente." + GetReset());
-                }
-            }
+            String novaPass = BackendUtils.lerSenhaComConfirmacao(
+                    "Nova senha: ", "Confirmar Nova senha: ", scanner);
 
             SenhaUtils su = new SenhaUtils();
             String passHash = su.gerarHashComSalt(novaPass);
 
             GestorController gestorControllerAtualizado = new GestorController();
-            Resultado <Gestor> resultado = gestorControllerAtualizado.alterarPassword(gestor.getNif(), passHash);
+            Resultado<Gestor> resultado = gestorControllerAtualizado.alterarPassword(gestor.getNif(), passHash);
 
             if (resultado.sucesso) {
                 System.out.println(GetGreen() + "\nPassword alterada com sucesso!" + GetReset());
@@ -686,37 +711,57 @@ public class GestorView {
             }
 
             System.out.println("\n" + GetBlue() + "--- Unidades Curriculares Disponíveis ---" + GetReset());
-            UnidadeCurricularController unidadeCurricularControllerAtualizado = new UnidadeCurricularController();
-            List<UnidadeCurricular> unidadeCurriculars = unidadeCurricularControllerAtualizado.listarTodasUCs();
+            UnidadeCurricularController ucCtrl = new UnidadeCurricularController();
+            List<UnidadeCurricular> todasUCs = ucCtrl.listarTodasUCs();
             List<String> nomesUC = new ArrayList<>();
-            if (unidadeCurriculars.isEmpty()) {
+
+            if (todasUCs.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhuma UC registada. Docente será registado sem UCs associadas." + GetReset());
             } else {
-                for (UnidadeCurricular unidadeCurricular : unidadeCurriculars) {
-                    System.out.println("- " + unidadeCurricular.getNome());
+                // Mostrar tabela numerada
+                System.out.println(GetCyanBold() + "  Nº  | Nome                          | Ano | Docente actual" + GetReset());
+                System.out.println(GetCyanBold() + "------+-------------------------------+-----+--------------------" + GetReset());
+                for (int i = 0; i < todasUCs.size(); i++) {
+                    UnidadeCurricular uc = todasUCs.get(i);
+                    String docenteAtual = (uc.getDocente() != null)
+                            ? uc.getDocente().getSigla()
+                            : "—";
+                    System.out.printf("  %-3d | %-29s | %-3d | %s%n",
+                            i + 1, uc.getNome(), uc.getAnoCurricular(), docenteAtual);
                 }
-                String input = BackendUtils.lerInputString(scanner, "Digite os nomes das UCs a associar (separados por vírgula, ou Enter para nenhuma): ");
+                System.out.println();
+
+                System.out.println(GetYellow() + "[Digite os IDs separados por espaço, ex: 1 3 5 | ENTER para nenhuma]" + GetReset());
+                System.out.print(GetWhiteBold() + "IDs das UCs a associar: " + GetReset());
+                String input = scanner.nextLine().trim();
+
                 if (!input.isEmpty()) {
-                    String[] parts = input.split(",");
-                    for (String part : parts) {
-                        String nomeUC = part.trim();
-                        UnidadeCurricular unidadeCurricularCheck = unidadeCurricularControllerAtualizado.procurarUCPorNome(nomeUC);
-
-                        if (unidadeCurricularCheck != null) {
-
-
-                            if (unidadeCurricularCheck.getDocente() != null) {
-                                String resp = BackendUtils.lerInputString(scanner, GetYellow() + "Aviso: A UC '" + nomeUC + "' já tem o docente " + unidadeCurricularCheck.getDocente().getSigla() + " atribuído. Deseja substituir pelo novo docente? (S/N): " + GetReset());
+                    String[] partes = input.split("[\\s,]+");
+                    for (String parte : partes) {
+                        try {
+                            int idx = Integer.parseInt(parte.trim());
+                            if (idx < 1 || idx > todasUCs.size()) {
+                                System.out.println(GetRed() + "  ID " + idx + " inválido — ignorado." + GetReset());
+                                continue;
+                            }
+                            UnidadeCurricular ucEscolhida = todasUCs.get(idx - 1);
+                            if (ucEscolhida.getDocente() != null) {
+                                String resp = BackendUtils.lerInputString(scanner,
+                                        GetYellow() + "  A UC '" + ucEscolhida.getNome() + "' já tem o docente "
+                                        + ucEscolhida.getDocente().getSigla()
+                                        + " atribuído. Substituir? (S/N): " + GetReset());
                                 if (resp.equalsIgnoreCase("S")) {
-                                    nomesUC.add(nomeUC);
+                                    nomesUC.add(ucEscolhida.getNome());
+                                    System.out.println(GetGreen() + "  ✓ " + ucEscolhida.getNome() + " adicionada (substituição)." + GetReset());
                                 } else {
-                                    System.out.println(GetYellow() + "Atribuição da UC '" + nomeUC + "' ignorada." + GetReset());
+                                    System.out.println(GetYellow() + "  Ignorada: " + ucEscolhida.getNome() + GetReset());
                                 }
                             } else {
-                                nomesUC.add(nomeUC);
+                                nomesUC.add(ucEscolhida.getNome());
+                                System.out.println(GetGreen() + "  ✓ " + ucEscolhida.getNome() + " adicionada." + GetReset());
                             }
-                        } else {
-                            System.out.println(GetRed() + "Erro: A UC '" + nomeUC + "' não existe no sistema." + GetReset());
+                        } catch (NumberFormatException e) {
+                            System.out.println(GetRed() + "  '" + parte + "' não é um número válido — ignorado." + GetReset());
                         }
                     }
                 }
@@ -929,17 +974,8 @@ public class GestorView {
 
             Docente docente = listaDocentes.get(escolha - 1);
 
-            String novaPass = "";
-            boolean senhaValida = false;
-            while (!senhaValida) {
-                novaPass = BackendUtils.lerSenhaOculta("Nova senha: ", scanner);
-
-                if (novaPass.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
-                senhaValida = BackendUtils.isSenhaValida(novaPass);
-                if (!senhaValida) {
-                    System.out.println(GetRed() + "SENHA deve conter pelo menos uma letra maiúscula, um número e um caracter especial. Tente novamente." + GetReset());
-                }
-            }
+            String novaPass = BackendUtils.lerSenhaComConfirmacao(
+                    "Nova senha: ", "Confirmar Nova senha: ", scanner);
 
             SenhaUtils su = new SenhaUtils();
             String novoHash = su.gerarHashComSalt(novaPass);
@@ -1558,20 +1594,10 @@ public class GestorView {
 
             Estudante estudanteSelecionado = listaEstudantes.get(escolha - 1);
 
-            String novaPass = "";
-            boolean senhaValida = false;
-            while (!senhaValida) {
-                novaPass = BackendUtils.lerSenhaOculta("Nova Senha: ", scanner);
+            String novaPass = BackendUtils.lerSenhaComConfirmacao(
+                    "Nova Senha: ", "Confirmar Nova Senha: ", scanner);
 
-                if (novaPass.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
-
-                senhaValida = BackendUtils.isSenhaValida(novaPass);
-                if (!senhaValida) {
-                    System.out.println(GetRed() + "SENHA deve conter pelo menos uma letra maiúscula, um número e um caracter especial. Tente novamente." + GetReset());
-                }
-            }
-
-            common.utils.SenhaUtils su = new common.utils.SenhaUtils();
+            SenhaUtils su = new SenhaUtils();
             String novoHash = su.gerarHashComSalt(novaPass);
 
             Resultado<Estudante> res = ec.alterarPassword(estudanteSelecionado.getNumeroMec(), novoHash);
@@ -1701,11 +1727,24 @@ public class GestorView {
     }
 
 
+    private static final String MSG_MIGRACAO =
+            "As tabelas de Ano Letivo ainda não existem na base de dados.\n" +
+            "Execute o script SQL antes de usar esta funcionalidade:\n" +
+            "  Ficheiro: sql/AnoLetivo_Migration.sql\n" +
+            "  Ferramenta: SQL Server Management Studio";
+
     private void verificarAnoLetivoAtual() {
         try {
             System.out.println(GetBlue() + "\n--- SITUAÇÃO DO ANO LETIVO ATUAL ---" + GetReset());
 
             controller.AnoLetivoController alc = new controller.AnoLetivoController();
+
+            if (!alc.bdPreparada()) {
+                System.out.println(GetYellow() + "\n" + MSG_MIGRACAO + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
             model.AnoLetivo anoAtual = alc.obterOuCriarAnoAtual();
 
             if (anoAtual != null) {
@@ -1742,6 +1781,13 @@ public class GestorView {
             System.out.println(GetBlue() + "\n--- BUSCAR ANO LETIVO ---" + GetReset());
 
             controller.AnoLetivoController alc = new controller.AnoLetivoController();
+
+            if (!alc.bdPreparada()) {
+                System.out.println(GetYellow() + "\n" + MSG_MIGRACAO + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
             List<model.AnoLetivo> todos = alc.listarTodos();
 
             if (todos.isEmpty()) {
@@ -1825,6 +1871,13 @@ public class GestorView {
         System.out.println(GetWhiteBold() + "\nA verificar condições..." + GetReset());
 
         controller.AnoLetivoController alc = new controller.AnoLetivoController();
+
+        if (!alc.bdPreparada()) {
+            System.out.println(GetYellow() + "\n" + MSG_MIGRACAO + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+            return;
+        }
+
         Resultado<List<String>> verificacao = alc.verificarCondicioesSaltoDeAno();
 
         if (!verificacao.sucesso) {
@@ -1835,6 +1888,8 @@ public class GestorView {
             for (String bloqueio : verificacao.dados) {
                 if (bloqueio.startsWith("[PROPINA]")) {
                     System.out.println(GetRed() + "  💰 " + bloqueio + GetReset());
+                } else if (bloqueio.startsWith("[SEM ACTIVIDADE]")) {
+                    System.out.println(GetYellow() + "  ⚠  " + bloqueio + GetReset());
                 } else {
                     System.out.println(GetYellow() + "  📋 " + bloqueio + GetReset());
                 }

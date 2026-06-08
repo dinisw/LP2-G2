@@ -21,6 +21,11 @@ public class AnoLetivoMemDAO implements IAnoLetivoDAO {
     private static final AtomicInteger notaSeq = new AtomicInteger(1);
 
     @Override
+    public boolean tabelasExistem() {
+        return true; // modo CSV/memória — sempre disponível
+    }
+
+    @Override
     public boolean registarAnoLetivo(AnoLetivo al) {
         if (obterPorAnoCalendario(al.getAnoCalendario()) != null) return false;
         al.setId(anoSeq.getAndIncrement());

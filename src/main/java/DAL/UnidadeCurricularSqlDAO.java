@@ -48,8 +48,9 @@ public class UnidadeCurricularSqlDAO implements IUnidadeCurricularDAO {
     }
 
     private List<String> obterMomentos(int ucId) {
+        // A coluna FK na tabela UnidadeCurricularMomento chama-se 'id' na BD actual
         return db.select(
-                "SELECT momento FROM UnidadeCurricularMomento WHERE ucId=?",
+                "SELECT momento FROM UnidadeCurricularMomento WHERE id=?",
                 rs -> rs.getString("momento"),
                 ucId
         );
@@ -90,10 +91,11 @@ public class UnidadeCurricularSqlDAO implements IUnidadeCurricularDAO {
 
     private void guardarMomentos(int ucId, List<String> momentos) {
         if (momentos == null) return;
-        db.execute("DELETE FROM UnidadeCurricularMomento WHERE ucId=?", ucId);
+        // Coluna FK chama-se 'id' na tabela UnidadeCurricularMomento
+        db.execute("DELETE FROM UnidadeCurricularMomento WHERE id=?", ucId);
         for (String momento : momentos) {
             if (momento != null && !momento.trim().isEmpty()) {
-                db.execute("INSERT INTO UnidadeCurricularMomento (ucId, momento) VALUES (?, ?)", ucId, momento.trim());
+                db.execute("INSERT INTO UnidadeCurricularMomento (id, momento) VALUES (?, ?)", ucId, momento.trim());
             }
         }
     }
