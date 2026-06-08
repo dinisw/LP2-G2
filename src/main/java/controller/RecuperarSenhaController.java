@@ -20,9 +20,11 @@ public class RecuperarSenhaController {
         if (email == null || email.trim().isEmpty()) {
             return new Resultado<>(false, "O email não pode estar vazio.");
         }
+        // Normaliza antes de usar
+        String emailNorm = email.trim().toLowerCase();
         try {
             String token = SenhaUtils.gerarPalavraPasseAleatoria();
-            Resultado<String> resEmail = emailService.enviarEmailRecuperacaoDeSenha(email, token);
+            Resultado<String> resEmail = emailService.enviarEmailRecuperacaoDeSenha(emailNorm, token);
             if (resEmail.sucesso) return new Resultado<>(token, true);
             return new Resultado<>(false, "Falha no servidor de email: " + resEmail.mensagemErro);
         } catch (Exception e) {
@@ -35,30 +37,33 @@ public class RecuperarSenhaController {
             return new Resultado<>(false, "Dados inválidos para atualizar a senha.");
         }
 
+        // Normaliza email
+        String emailNorm = email.trim().toLowerCase();
+
         SenhaUtils su = new SenhaUtils();
         String hash = su.gerarHashComSalt(senhaCruaGerada);
 
-        if (BackendUtils.emailISSMFEstudanteValido(email)) {
+        if (BackendUtils.emailISSMFEstudanteValido(emailNorm)) {
             IEstudanteDAO estudanteDAO = DAOFactory.getEstudanteDAO();
             for (Estudante e : estudanteDAO.getEstudantes()) {
-                if (e.getEmail().equalsIgnoreCase(email)) {
+                if (e.getEmail() != null && e.getEmail().equalsIgnoreCase(emailNorm)) {
                     EstudanteController ec = new EstudanteController();
                     var res = ec.alterarPassword(e.getNumeroMec(), hash);
                     return new Resultado<>(res.sucesso ? "Senha atualizada" : null, res.sucesso);
                 }
             }
-        } else if (BackendUtils.emailISSMFDocenteValido(email)) {
+        } else if (BackendUtils.emailISSMFDocenteValido(emailNorm)) {
             IDocenteDAO docenteDAO = DAOFactory.getDocenteDAO();
             for (Docente d : docenteDAO.getDocentes()) {
-                if (d.getEmail().equalsIgnoreCase(email)) {
+                if (d.getEmail() != null && d.getEmail().equalsIgnoreCase(emailNorm)) {
                     DocenteController dc = new DocenteController();
                     var res = dc.alterarPassword(d.getNif(), hash);
                     return new Resultado<>(res.sucesso ? "Senha atualizada" : null, res.sucesso);
                 }
             }
-        } else if (BackendUtils.emailISSMFGestorValido(email)) {
+        } else if (BackendUtils.emailISSMFGestorValido(emailNorm)) {
             IGestorDAO gestorDAO = DAOFactory.getGestorDAO();
-            Gestor g = gestorDAO.procurarPorEmail(email);
+            Gestor g = gestorDAO.procurarPorEmail(emailNorm);
             if (g != null) {
                 GestorController gc = new GestorController();
                 var res = gc.alterarPassword(g.getNif(), hash);

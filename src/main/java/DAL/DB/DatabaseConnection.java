@@ -2,49 +2,52 @@ package DAL.DB;
 
 import io.github.cdimascio.dotenv.Dotenv;
 
-import java.security.Security;
 import java.sql.*;
 import java.util.ArrayList;
 
 public class DatabaseConnection {
 
-    private static boolean erroConexao = false;
-    public static boolean houveErroConexao() { return erroConexao; }
+    // ── Configuração carregada UMA ÚNICA VEZ ao arranque da JVM ──────────────
+    private static final String serverName;
+    private static final String databaseName;
+    private static final String username;
+    private static final String password;
 
-    private final String serverName;
-    private final String databaseName;
-    private final String username;
-    private final String password;
-
-    public DatabaseConnection() {
-        // Garante compatibilidade TLS com SQL Server 2016 no Java 17
-        Security.setProperty("jdk.tls.disabledAlgorithms", "");
-        System.setProperty("jdk.tls.client.protocols", "TLSv1,TLSv1.1,TLSv1.2,TLSv1.3");
-
+    static {
         Dotenv dotenv = Dotenv.configure()
                 .directory("src/main/resources")
                 .ignoreIfMalformed()
                 .ignoreIfMissing()
                 .load();
-
-        this.serverName   = dotenv.get("DB_SERVER");
-        this.databaseName = dotenv.get("DB_DATABASE");
-        this.username     = dotenv.get("DB_USER");
-        this.password     = dotenv.get("DB_PASSWORD");
+        serverName   = nvl(dotenv.get("DB_SERVER"));
+        databaseName = nvl(dotenv.get("DB_DATABASE"));
+        username     = nvl(dotenv.get("DB_USER"));
+        password     = nvl(dotenv.get("DB_PASSWORD"));
     }
 
-    /**
-     * Abre uma ligação nova e independente.
-     * Cada operação (select/create/execute) usa a sua própria Connection
-     * para evitar que queries aninhadas fechem a ligação da query exterior.
-     */
+    // ── Estado de erro de ligação (visível na view de login) ─────────────────
+    private static boolean erroConexao = false;
+    public static boolean houveErroConexao() { return erroConexao; }
+
+    private static String nvl(String s) { return s != null ? s : ""; }
+
+    public DatabaseConnection() {
+        // Construtor vazio — configuração já carregada estaticamente
+    }
+
+    // ── Interface funcional para transações ──────────────────────────────────
+    @FunctionalInterface
+    public interface TransactionConsumer {
+        void execute(Connection conn) throws SQLException;
+    }
+
     private Connection openConnection() {
         try {
-            String url = "jdbc:sqlserver://" + serverName +
-                    ";databaseName=" + databaseName +
-                    ";user="         + username +
-                    ";password="     + password +
-                    ";encrypt=false";
+            String url = "jdbc:sqlserver://" + serverName
+                    + ";databaseName=" + databaseName
+                    + ";user="         + username
+                    + ";password="     + password
+                    + ";encrypt=false";
             Connection conn = DriverManager.getConnection(url);
             erroConexao = false;
             return conn;
@@ -55,7 +58,7 @@ public class DatabaseConnection {
         }
     }
 
-    // ── SELECT ───────────────────────────────────────────────────────────────
+    // ── SELECT ────────────────────────────────────────────────────────────────
     public <T> ArrayList<T> select(String sql, RowMapper<T> mapper, Object... params) {
         ArrayList<T> results = new ArrayList<>();
         Connection conn = openConnection();
@@ -91,9 +94,12 @@ public class DatabaseConnection {
                     if (keys.next()) result = keys.getInt(1);
                 }
                 conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                System.out.println("Erro ao executar INSERT (rollback efectuado): " + e.getMessage());
             }
         } catch (SQLException e) {
-            System.out.println("Erro ao executar INSERT: " + e.getMessage());
+            System.out.println("Erro de ligação: " + e.getMessage());
         }
         return result;
     }
@@ -111,10 +117,38 @@ public class DatabaseConnection {
                 }
                 rowsAffected = stmt.executeUpdate();
                 conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                System.out.println("Erro ao executar UPDATE/DELETE (rollback efectuado): " + e.getMessage());
             }
         } catch (SQLException e) {
-            System.out.println("Erro ao executar UPDATE/DELETE: " + e.getMessage());
+            System.out.println("Erro de ligação: " + e.getMessage());
         }
         return rowsAffected;
+    }
+
+    /**
+     * Executa múltiplas operações numa única transação.
+     * Se qualquer operação falhar, todas são revertidas (rollback).
+     * Uso: db.runTransaction(conn -> { INSERT...; INSERT...; });
+     */
+    public boolean runTransaction(TransactionConsumer work) {
+        Connection conn = openConnection();
+        if (conn == null) return false;
+        try (conn) {
+            conn.setAutoCommit(false);
+            try {
+                work.execute(conn);
+                conn.commit();
+                return true;
+            } catch (SQLException e) {
+                conn.rollback();
+                System.out.println("Erro na transação (rollback efectuado): " + e.getMessage());
+                return false;
+            }
+        } catch (SQLException e) {
+            System.out.println("Erro de ligação: " + e.getMessage());
+            return false;
+        }
     }
 }

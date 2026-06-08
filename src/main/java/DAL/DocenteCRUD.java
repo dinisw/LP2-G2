@@ -83,4 +83,12 @@ public class DocenteCRUD extends AbstractCsvCRUD<Docente> implements IDocenteDAO
     public Docente procurarPorNif(int nif) {
         return dados.stream().filter(d -> d.getNif() == nif).findFirst().orElse(null);
     }
+
+    @Override
+    public Docente procurarPorEmail(String email) {
+        if (email == null) return null;
+        return dados.stream()
+                .filter(d -> d.getEmail() != null && d.getEmail().equalsIgnoreCase(email))
+                .findFirst().orElse(null);
+    }
 }

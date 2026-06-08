@@ -49,7 +49,7 @@ public class UnidadeCurricularSqlDAO implements IUnidadeCurricularDAO {
 
     private List<String> obterMomentos(int ucId) {
         return db.select(
-                "SELECT momento FROM UnidadeCurricularMomento WHERE id=?",
+                "SELECT momento FROM UnidadeCurricularMomento WHERE ucId=?",
                 rs -> rs.getString("momento"),
                 ucId
         );
@@ -90,9 +90,11 @@ public class UnidadeCurricularSqlDAO implements IUnidadeCurricularDAO {
 
     private void guardarMomentos(int ucId, List<String> momentos) {
         if (momentos == null) return;
-        db.execute("DELETE FROM UnidadeCurricularMomento WHERE id=?", ucId);
+        db.execute("DELETE FROM UnidadeCurricularMomento WHERE ucId=?", ucId);
         for (String momento : momentos) {
-            db.execute("INSERT INTO UnidadeCurricularMomento (id, momento) VALUES (?, ?)", ucId, momento);
+            if (momento != null && !momento.trim().isEmpty()) {
+                db.execute("INSERT INTO UnidadeCurricularMomento (ucId, momento) VALUES (?, ?)", ucId, momento.trim());
+            }
         }
     }
 

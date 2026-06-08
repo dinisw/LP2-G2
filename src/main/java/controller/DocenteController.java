@@ -4,6 +4,7 @@ import DAL.DAOFactory;
 import DAL.IAvaliacaoDAO;
 import DAL.IDocenteDAO;
 import DAL.IUnidadeCurricularDAO;
+import model.UnidadeCurricular;
 import model.Avaliacao;
 import model.Docente;
 import model.Estudante;
@@ -48,7 +49,11 @@ public class DocenteController {
         if (docenteDAO.procurarPorNif(nif) != null) return new Resultado<>(false, "Já existe um docente com este NIF.");
         if (docenteDAO.procurarPorSigla(sigla) != null) return new Resultado<>(false, "Já existe um docente com esta sigla.");
 
-        Docente docente = new Docente(nome, morada, nif, dataNascimento, email, hash, sigla, new ArrayList<>(), new ArrayList<>());
+        // Normaliza email e sigla para minúsculas antes de guardar
+        String emailNorm = email.trim().toLowerCase();
+        String siglaNorm = sigla.trim().toLowerCase();
+
+        Docente docente = new Docente(nome, morada, nif, dataNascimento, emailNorm, hash, siglaNorm, new ArrayList<>(), new ArrayList<>());
         return docenteDAO.registarDocente(docente);
     }
 
@@ -74,10 +79,38 @@ public class DocenteController {
     }
 
     public Resultado<String> eliminarDocente(int nif) {
-        if (docenteDAO.procurarPorNif(nif) == null) return new Resultado<>(false, "Docente não encontrado.");
+        Docente docente = docenteDAO.procurarPorNif(nif);
+        if (docente == null) return new Resultado<>(false, "Docente não encontrado.");
+
+        // Verifica se o docente está atribuído a alguma UC
+        IUnidadeCurricularDAO ucDAO = DAOFactory.getUnidadeCurricularDAO();
+        boolean temUCsAtribuidas = ucDAO.getUnidadeCurriculars().stream()
+                .anyMatch(uc -> uc.getDocente() != null
+                        && uc.getDocente().getSigla().equalsIgnoreCase(docente.getSigla()));
+
+        if (temUCsAtribuidas) {
+            // Soft-delete: inativa em vez de eliminar (mantém integridade referencial)
+            docente.setAtivo(false);
+            Resultado<Docente> res = docenteDAO.atualizarDocente(docente);
+            return res.sucesso
+                    ? new Resultado<>("INATIVADO", true)
+                    : new Resultado<>(false, "Erro ao desativar o docente.");
+        }
+
+        // Hard-delete: sem UCs associadas, pode eliminar
         return docenteDAO.eliminarDocente(nif).sucesso
                 ? new Resultado<>("ELIMINADO", true)
                 : new Resultado<>(false, "Erro ao eliminar docente.");
+    }
+
+    public Resultado<Docente> ativarDesativarDocente(int nif, boolean ativar) {
+        Docente existente = docenteDAO.procurarPorNif(nif);
+        if (existente == null) return new Resultado<>(false, "Docente não encontrado.");
+        if (existente.isAtivo() == ativar) {
+            return new Resultado<>(false, "O docente já se encontra " + (ativar ? "ativo" : "inativo") + ".");
+        }
+        existente.setAtivo(ativar);
+        return docenteDAO.atualizarDocente(existente);
     }
 
     public List<Docente> listarDocentes() { return docenteDAO.getDocentes(); }

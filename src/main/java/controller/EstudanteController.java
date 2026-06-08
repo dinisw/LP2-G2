@@ -11,7 +11,6 @@ import model.Resultado;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import DAL.IEstudanteDAO;
 
 public class EstudanteController {
     private final IEstudanteDAO estudanteDAO;
@@ -117,7 +116,8 @@ public class EstudanteController {
         if (dataNascimento == null) return new Resultado<>(false, "A data de nascimento fornecida é inválida.");
 
         int numeroMec = estudanteDAO.gerarNumeroMecanografico();
-        String email = numeroMec + "@issmf.ipp.pt";
+        // Email gerado automaticamente — sempre minúsculas por construção
+        String email = (numeroMec + "@issmf.ipp.pt").toLowerCase();
 
         Estudante estudante = new Estudante(nome, morada, nif, dataNascimento, email, numeroMec, hash, curso, true);
 
@@ -182,6 +182,16 @@ public class EstudanteController {
 
         Resultado<Estudante> res = estudanteDAO.eliminarEstudante(numeroMec);
         return res.sucesso ? new Resultado<>("ELIMINADO", true) : new Resultado<>(false, res.mensagemErro);
+    }
+
+    public Resultado<Estudante> ativarDesativarEstudante(int numeroMec, boolean ativar) {
+        Estudante existente = estudanteDAO.lerEstudante(numeroMec);
+        if (existente == null) return new Resultado<>(false, "Estudante não encontrado.");
+        if (existente.isAtivo() == ativar) {
+            return new Resultado<>(false, "O estudante já se encontra " + (ativar ? "ativo" : "inativo") + ".");
+        }
+        existente.setAtivo(ativar);
+        return estudanteDAO.atualizarEstudante(existente);
     }
 
     public List<Estudante> listarEstudantes() { return estudanteDAO.getEstudantes(); }
@@ -257,6 +267,13 @@ public class EstudanteController {
                 prefixo = "[RETIDO]";
                 motivo = "Não atingiu 60% de aprovações nas UCs do " + anoAnterior + "º ano — ficou no " + anoAnterior + "º ano.";
             }
+
+            // Persistir o novo anoLetivo se o estudante avançou
+            if (anoReal != anoAnterior) {
+                estudante.setAnoLetivo(anoReal);
+                estudanteDAO.atualizarEstudante(estudante);
+            }
+
             relatorio.add(prefixo + " Mec: " + estudante.getNumeroMec() + " (" + estudante.getNome() + ") -> " + motivo);
         }
         return new Resultado<>(relatorio, true);

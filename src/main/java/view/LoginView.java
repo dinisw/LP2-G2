@@ -31,7 +31,7 @@ public class LoginView {
 
                 while (!emailValido) {
                     System.out.print("\nEmail: ");
-                    email = scanner.nextLine().trim();
+                    email = scanner.nextLine().trim().toLowerCase();
 
                     if (email.equals("0")) {
                         System.out.println(GetYellow() + "\nA encerrar o sistema..." + GetReset());
@@ -73,6 +73,9 @@ public class LoginView {
                     if (utilizador == null) {
                         if (DatabaseConnection.houveErroConexao()) {
                             System.out.println(GetRed() + "Não foi possível ligar à base de dados. Verifique a ligação e tente novamente." + GetReset());
+                        } else if (loginController.getUltimoErro() == controller.LoginController.ErroLogin.CONTA_INATIVA) {
+                            System.out.println(GetRed() + "Esta conta está desativada. Contacte o gestor do sistema." + GetReset());
+                            break; // não adianta tentar outra senha — conta inativa
                         } else {
                             System.out.println(GetRed() + "Credenciais inválidas! Tente novamente (ou digite '0' para voltar)." + GetReset());
                         }

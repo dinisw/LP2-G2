@@ -4,6 +4,10 @@ import common.exceptions.CancelarRegistoException;
 import controller.DocenteController;
 import controller.EstudanteController;
 import controller.GestorController;
+import org.jline.reader.LineReader;
+import org.jline.reader.LineReaderBuilder;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
 
 import java.util.Scanner;
 import java.util.regex.Pattern;
@@ -78,17 +82,40 @@ public class BackendUtils {
         return lerSenhaOculta(prompt, null);
     }
 
+    /**
+     * Lê uma senha sem a mostrar no terminal.
+     * Ordem de tentativas:
+     *   1. JLine — abre /dev/tty diretamente, funciona em Maven, IDE e terminal normal.
+     *   2. System.console() — fallback nativo da JVM.
+     *   3. Scanner visível — último recurso (IDE sem TTY), sem mascaramento.
+     */
     public static String lerSenhaOculta(String prompt, java.util.Scanner scannerExistente) {
+        // Tentativa 1: JLine (não conflitua com Scanner — usa /dev/tty no Unix)
+        try {
+            Terminal terminal = TerminalBuilder.builder()
+                    .system(true)
+                    .build();
+            try {
+                LineReader reader = LineReaderBuilder.builder()
+                        .terminal(terminal)
+                        .build();
+                String pass = reader.readLine(prompt, '*');
+                return pass != null ? pass.trim() : "";
+            } finally {
+                terminal.close();
+            }
+        } catch (Exception ignored) {}
+
+        // Tentativa 2: System.console() nativo
         if (System.console() != null) {
             char[] pass = System.console().readPassword(prompt);
-            return (pass != null) ? new String(pass).trim() : "";
-        } else {
-            System.out.print(prompt);
-            if (scannerExistente != null) {
-                return scannerExistente.nextLine().trim();
-            }
-            return new java.util.Scanner(System.in).nextLine().trim();
+            return pass != null ? new String(pass).trim() : "";
         }
+
+        // Fallback: input visível (IDE sem TTY)
+        System.out.print(prompt + "[sem mascaramento] ");
+        if (scannerExistente != null) return scannerExistente.nextLine().trim();
+        return new java.util.Scanner(System.in).nextLine().trim();
     }
 
     public static boolean isNomeValido (String nome) {

@@ -5,7 +5,6 @@ import common.utils.BackendUtils;
 import common.utils.DesignUtils;
 import common.utils.MenuUtils;
 import common.utils.SenhaUtils;
-import DAL.CursoCRUD;
 import controller.*;
 import model.*;
 import service.EmailService;
@@ -102,6 +101,7 @@ public class GestorView {
         opcoes.add("4. Atualizar Gestores");
         opcoes.add("5. Eliminar Gestores");
         opcoes.add("6. Alterar a minha Password");
+        opcoes.add("7. Ativar / Desativar Gestor");
         opcoes.add("0. Voltar ao Menu Principal");
 
         do {
@@ -132,6 +132,9 @@ public class GestorView {
                         break;
                     case "6":
                         alterarPassword(gestor);
+                        break;
+                    case "7":
+                        ativarDesativarGestor();
                         break;
                     case "0":
                         System.out.println(GetYellow() + "\nA voltar ao menu principal..." + GetReset());
@@ -528,6 +531,7 @@ public class GestorView {
                     opcoes.add("4. Atualizar Docente");
                     opcoes.add("5. Alterar Password");
                     opcoes.add("6. Eliminar Docente");
+                    opcoes.add("7. Ativar / Desativar Docente");
                 }
                 opcoes.add("0. Voltar ao Menu Principal");
 
@@ -558,6 +562,10 @@ public class GestorView {
                         break;
                     case "6":
                         if (temDocentes) eliminarDocente();
+                        else mostrarErroMenu();
+                        break;
+                    case "7":
+                        if (temDocentes) ativarDesativarDocente();
                         else mostrarErroMenu();
                         break;
                     case "0":
@@ -1010,7 +1018,12 @@ public class GestorView {
             Resultado<String> resultado = docenteControllerAtualizado.eliminarDocente(docente.getNif());
 
             if (resultado.sucesso) {
-                System.out.println(GetGreen() + "\nDocente eliminado com sucesso!" + GetReset());
+                if ("INATIVADO".equals(resultado.dados)) {
+                    System.out.println(GetYellow() + "\nDocente desativado com sucesso." + GetReset());
+                    System.out.println(GetYellow() + "(O docente está atribuído a UCs — o registo foi mantido como inativo em vez de eliminado.)" + GetReset());
+                } else {
+                    System.out.println(GetGreen() + "\nDocente eliminado com sucesso!" + GetReset());
+                }
             } else {
                 System.out.println(GetRed() + "\nErro ao eliminar: " + resultado.mensagemErro + GetReset());
             }
@@ -1045,6 +1058,7 @@ public class GestorView {
                     opcoes.add("4. Atualizar Estudante (Número Mec)");
                     opcoes.add("5. Eliminar Estudante (Número Mec)");
                     opcoes.add("6. Alterar Password do Estudante");
+                    opcoes.add("7. Ativar / Desativar Estudante");
                 }
                 opcoes.add("0. Voltar");
 
@@ -1078,6 +1092,10 @@ public class GestorView {
                         if (temEstudantes) alterarPasswordEstudante();
                         else mostrarErroMenu();
                         break;
+                    case "7":
+                        if (temEstudantes) ativarDesativarEstudante();
+                        else mostrarErroMenu();
+                        break;
                     case "0":
                         return;
                     default:
@@ -1095,16 +1113,16 @@ public class GestorView {
         try {
             System.out.println(GetBlue() + "\n--- REGISTO DE ESTUDANTE ---" + GetReset());
 
-            DAL.IDepartamentoDAO departamentoCRUD = DAL.DAOFactory.getDepartamentoDAO();
-            if (departamentoCRUD.getDepartamentos().isEmpty()) {
+            DepartamentoController depController = new DepartamentoController();
+            if (depController.listarTodosDepartamentos().isEmpty()) {
                 System.out.println(GetYellow() + "\nAviso: Não existem Departamentos registados no sistema." + GetReset());
                 System.out.println(GetRed() + "Por favor, vá a 'Gerir Departamentos' e crie um antes de registar estudantes." + GetReset());
                 MenuUtils.pressionarEnter(scanner);
                 return;
             }
 
-            DAL.ICursoDAO cc = DAL.DAOFactory.getCursoDAO();
-            List<Curso> cursos = cc.getCursos();
+            CursoController cursoCtrl = new CursoController();
+            List<Curso> cursos = cursoCtrl.listarCursos();
 
             if (cursos.isEmpty()) {
                 System.out.println(GetYellow() + "\nAviso: Não existem Cursos registados no sistema." + GetReset());
@@ -1378,8 +1396,7 @@ public class GestorView {
             String alterarCurso = scanner.nextLine().trim();
 
             if (alterarCurso.equalsIgnoreCase("S")) {
-                DAL.ICursoDAO cursoCRUD = DAL.DAOFactory.getCursoDAO();
-                List<Curso> cursos = cursoCRUD.getCursos();
+                List<Curso> cursos = new CursoController().listarCursos();
 
                 if (cursos.isEmpty()) {
                     System.out.println(GetYellow() + "Não existem cursos registados no sistema. O curso será mantido." + GetReset());
@@ -1480,10 +1497,15 @@ public class GestorView {
                 return;
             }
 
-            Resultado <String> resultado = estudanteControllerAtualizado.eliminarEstudante(estudanteAapagar.getNumeroMec());
+            Resultado<String> resultado = estudanteControllerAtualizado.eliminarEstudante(estudanteAapagar.getNumeroMec());
 
             if (resultado.sucesso) {
-                System.out.println(GetGreen() + "\nEstudante eliminado com sucesso!" + GetReset());
+                if ("INATIVADO".equals(resultado.dados)) {
+                    System.out.println(GetYellow() + "\nEstudante desativado com sucesso." + GetReset());
+                    System.out.println(GetYellow() + "(Curso já iniciado — o registo foi mantido como inativo em vez de eliminado.)" + GetReset());
+                } else {
+                    System.out.println(GetGreen() + "\nEstudante eliminado com sucesso!" + GetReset());
+                }
             } else {
                 System.out.println(GetRed() + "\nErro ao eliminar: " + resultado.mensagemErro + GetReset());
             }
@@ -1679,43 +1701,358 @@ public class GestorView {
     }
 
 
-    private void verificarAnoLetivoAtual(){
+    private void verificarAnoLetivoAtual() {
+        try {
+            System.out.println(GetBlue() + "\n--- SITUAÇÃO DO ANO LETIVO ATUAL ---" + GetReset());
 
-    }
-    private void buscarPorAnoLetivo(){
+            controller.AnoLetivoController alc = new controller.AnoLetivoController();
+            model.AnoLetivo anoAtual = alc.obterOuCriarAnoAtual();
 
+            if (anoAtual != null) {
+                System.out.println(GetCyanBold() + "Ano Letivo: " + anoAtual.getDescricao()
+                        + " | Início: " + anoAtual.getDataInicio()
+                        + " | Estado: " + anoAtual.getEstado() + GetReset());
+            }
+            System.out.println();
+
+            List<String> relatorio = alc.gerarRelatorioAnoAtual();
+            for (String linha : relatorio) {
+                if (linha.startsWith("══")) {
+                    System.out.println(GetCyanBold() + linha + GetReset());
+                } else if (linha.startsWith("  Alunos") || linha.startsWith("  Unidades") || linha.startsWith("──")) {
+                    System.out.println(GetWhiteBold() + linha + GetReset());
+                } else if (linha.startsWith("    •")) {
+                    System.out.println(GetGreen() + linha + GetReset());
+                } else if (linha.startsWith("    [")) {
+                    System.out.println(linha);
+                } else {
+                    System.out.println(linha);
+                }
+            }
+
+            MenuUtils.pressionarEnter(scanner);
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Erro ao carregar situação do ano letivo: " + e.getMessage() + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        }
     }
+
+    private void buscarPorAnoLetivo() {
+        try {
+            System.out.println(GetBlue() + "\n--- BUSCAR ANO LETIVO ---" + GetReset());
+
+            controller.AnoLetivoController alc = new controller.AnoLetivoController();
+            List<model.AnoLetivo> todos = alc.listarTodos();
+
+            if (todos.isEmpty()) {
+                System.out.println(GetYellow() + "Não existem anos letivos registados no sistema." + GetReset());
+                System.out.println(GetYellow() + "Inicie a gestão do ano letivo para criar o primeiro registo." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            int anoMinimo = todos.stream().mapToInt(model.AnoLetivo::getAnoCalendario).min().orElse(0);
+
+            System.out.println(GetWhiteBold() + "\nAnos letivos disponíveis:" + GetReset());
+            for (int i = 0; i < todos.size(); i++) {
+                model.AnoLetivo al = todos.get(i);
+                String estado = al.isAtivo() ? GetGreen() + "[ATUAL]" + GetReset() : "[CONCLUÍDO]";
+                String dataFimStr = al.getDataFim() != null ? al.getDataFim().toString() : "em curso";
+                System.out.printf("  %d. %s %s | %s → %s%n",
+                        i + 1, al.getDescricao(), estado, al.getDataInicio(), dataFimStr);
+            }
+
+            System.out.println(GetYellow() + "\n[Ano mínimo disponível: " + anoMinimo + "]" + GetReset());
+            System.out.print(GetWhiteBold() + "Introduza o ano de início (ex: " + anoMinimo + " para " + anoMinimo + "/" + (anoMinimo + 1) + "): " + GetReset());
+            String input = scanner.nextLine().trim();
+            if (input.equals("0")) return;
+
+            int anoEscolhido;
+            try {
+                anoEscolhido = Integer.parseInt(input);
+            } catch (NumberFormatException ex) {
+                System.out.println(GetRed() + "Valor inválido." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            if (anoEscolhido < anoMinimo) {
+                System.out.println(GetRed() + "Não existem dados anteriores a " + anoMinimo + "." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            model.AnoLetivo encontrado = alc.buscarPorAno(anoEscolhido);
+            if (encontrado == null) {
+                System.out.println(GetYellow() + "Nenhum registo encontrado para o ano " + anoEscolhido + "/" + (anoEscolhido + 1) + "." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            System.out.println(GetCyanBold() + "\n══ Ano Letivo " + encontrado.getDescricao() + " ══" + GetReset());
+            System.out.println("  Início: " + encontrado.getDataInicio());
+            System.out.println("  Fim:    " + (encontrado.getDataFim() != null ? encontrado.getDataFim() : "em curso"));
+            System.out.println("  Estado: " + encontrado.getEstado());
+            System.out.println();
+
+            List<String> relatorio = alc.gerarRelatorioAnoPorCalendario(anoEscolhido);
+            for (String linha : relatorio) {
+                if (linha.startsWith("══")) {
+                    System.out.println(GetCyanBold() + linha + GetReset());
+                } else if (linha.startsWith("  Alunos")) {
+                    System.out.println(GetWhiteBold() + linha + GetReset());
+                } else if (linha.startsWith("    •")) {
+                    System.out.println(linha);
+                } else {
+                    System.out.println(linha);
+                }
+            }
+
+            MenuUtils.pressionarEnter(scanner);
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Erro ao buscar ano letivo: " + e.getMessage() + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        }
+    }
+
     private void simularPassagemDeAno() {
         System.out.println(GetBlue() + "\n--- SIMULADOR DE PASSAGEM DE ANO LETIVO ---" + GetReset());
-        System.out.println(GetYellow() + "Esta ação irá simular a viragem do ano letivo no sistema." + GetReset());
-        System.out.println(GetYellow() + "O sistema vai avaliar as notas de todos os alunos, aplicar a regra dos 60%," + GetReset());
-        System.out.println(GetYellow() + "verificar dívidas e faturar as propinas do novo ano para quem transitar." + GetReset());
+        System.out.println(GetYellow() + "Esta ação irá verificar todas as condições necessárias para avançar o ano letivo:" + GetReset());
+        System.out.println(GetYellow() + "  • Todas as notas lançadas em todos os momentos de avaliação" + GetReset());
+        System.out.println(GetYellow() + "  • Todas as propinas pagas por todos os alunos ativos" + GetReset());
+        System.out.println(GetYellow() + "Apenas avança se tudo estiver em conformidade." + GetReset());
 
-        String confirmacao = BackendUtils.lerInputString(scanner, GetWhiteBold() + "\nDeseja prosseguir com a simulação global? (S/N): " + GetReset());
+        System.out.println(GetWhiteBold() + "\nA verificar condições..." + GetReset());
 
-        if (confirmacao.equalsIgnoreCase("S")) {
-            EstudanteController ec = new EstudanteController();
-            Resultado<List<String>> res = ec.simularTransicaoAnoLetivoGlobal();
+        controller.AnoLetivoController alc = new controller.AnoLetivoController();
+        Resultado<List<String>> verificacao = alc.verificarCondicioesSaltoDeAno();
 
-            if (res.sucesso) {
-                System.out.println(GetGreen() + "\n====== RELATÓRIO DE TRANSIÇÃO ======" + GetReset());
-                for (String log : res.dados) {
-                    if (log.contains("[CONCLUÍDO]") || log.contains("[AVANÇOU]")) {
-                        System.out.println(GetGreen() + log + GetReset());
-                    } else if (log.contains("[RETIDO]")) {
-                        System.out.println(GetRed() + log + GetReset());
-                    } else {
-                        System.out.println(GetCyanBold() + log + GetReset());
-                    }
+        if (!verificacao.sucesso) {
+            System.out.println(GetRed() + "\n╔══ BLOQUEIOS ENCONTRADOS — NÃO É POSSÍVEL AVANÇAR O ANO LETIVO ══╗" + GetReset());
+            System.out.println(GetRed() + "  Total de bloqueios: " + verificacao.dados.size() + GetReset());
+            System.out.println(GetRed() + "╠═════════════════════════════════════════════════════════════════╣" + GetReset());
+
+            for (String bloqueio : verificacao.dados) {
+                if (bloqueio.startsWith("[PROPINA]")) {
+                    System.out.println(GetRed() + "  💰 " + bloqueio + GetReset());
+                } else {
+                    System.out.println(GetYellow() + "  📋 " + bloqueio + GetReset());
                 }
-                System.out.println(GetGreen() + "====================================" + GetReset());
-                System.out.println(GetWhiteBold() + "Transição concluída. Vá à tesouraria ou às fichas para confirmar o resultado!" + GetReset());
-            } else {
-                System.out.println(GetRed() + "\nErro ao simular transição: " + res.mensagemErro + GetReset());
             }
-        } else {
-            System.out.println(GetYellow() + "Simulação cancelada pelo utilizador." + GetReset());
+
+            System.out.println(GetRed() + "╚═════════════════════════════════════════════════════════════════╝" + GetReset());
+            System.out.println(GetYellow() + "\nResolva todos os bloqueios acima antes de avançar o ano letivo." + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+            return;
         }
+
+        System.out.println(GetGreen() + "✓ Todas as condições verificadas com sucesso!" + GetReset());
+
+        String confirmacao = BackendUtils.lerInputString(scanner, GetWhiteBold() + "\nDeseja prosseguir com a passagem de ano letivo? (S/N): " + GetReset());
+
+        if (!confirmacao.equalsIgnoreCase("S")) {
+            System.out.println(GetYellow() + "Passagem de ano cancelada pelo utilizador." + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+            return;
+        }
+
+        EstudanteController ec = new EstudanteController();
+        Resultado<List<String>> res = ec.simularTransicaoAnoLetivoGlobal();
+
+        if (res.sucesso) {
+            boolean avancouAno = alc.avancarAnoLetivo();
+            model.AnoLetivo novoAno = alc.obterAnoAtual();
+
+            System.out.println(GetGreen() + "\n====== RELATÓRIO DE TRANSIÇÃO ======" + GetReset());
+            for (String log : res.dados) {
+                if (log.contains("[CONCLUÍDO]") || log.contains("[AVANÇOU]")) {
+                    System.out.println(GetGreen() + log + GetReset());
+                } else if (log.contains("[RETIDO]")) {
+                    System.out.println(GetRed() + log + GetReset());
+                } else {
+                    System.out.println(GetCyanBold() + log + GetReset());
+                }
+            }
+            System.out.println(GetGreen() + "====================================" + GetReset());
+
+            if (avancouAno && novoAno != null) {
+                System.out.println(GetGreen() + "Novo ano letivo iniciado: " + novoAno.getDescricao() + GetReset());
+            }
+            System.out.println(GetWhiteBold() + "Transição concluída. Consulte a tesouraria ou as fichas para confirmar." + GetReset());
+        } else {
+            System.out.println(GetRed() + "\nErro ao processar a transição: " + res.mensagemErro + GetReset());
+        }
+
         MenuUtils.pressionarEnter(scanner);
     }
+
+    //region Ativar/Desativar utilizadores
+    private void ativarDesativarGestor() {
+        try {
+            System.out.println(GetBlue() + "\n--- ATIVAR / DESATIVAR GESTOR ---" + GetReset());
+            System.out.println(GetYellow() + "[Digite '0' para cancelar]" + GetReset());
+
+            GestorController gc = new GestorController();
+            List<Gestor> lista = gc.listarGestores();
+            if (lista.isEmpty()) {
+                System.out.println(GetYellow() + "Não há gestores registados." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            System.out.println("\n" + GetWhiteBold() + "Gestores:" + GetReset());
+            for (int i = 0; i < lista.size(); i++) {
+                Gestor g = lista.get(i);
+                String estado = g.isAtivo() ? GetGreen() + "[ATIVO]" + GetReset() : GetRed() + "[INATIVO]" + GetReset();
+                System.out.printf("  %d - %s (NIF: %d) %s%n", i + 1, g.getNome(), g.getNif(), estado);
+            }
+
+            int escolha = -1;
+            while (escolha < 1 || escolha > lista.size()) {
+                try {
+                    String op = BackendUtils.lerInputString(scanner, "\nEscolha o gestor: ");
+                    if (op.equals("0")) return;
+                    escolha = Integer.parseInt(op);
+                    if (escolha < 1 || escolha > lista.size())
+                        System.out.println(GetRed() + "Opção inválida." + GetReset());
+                } catch (NumberFormatException e) {
+                    System.out.println(GetRed() + "Digite um número." + GetReset());
+                }
+            }
+
+            Gestor gestor = lista.get(escolha - 1);
+            String acao = gestor.isAtivo() ? "desativar" : "ativar";
+            String conf = BackendUtils.lerInputString(scanner, GetYellow() + "Deseja " + acao + " o gestor " + gestor.getNome() + "? (S/N): " + GetReset());
+            if (!conf.equalsIgnoreCase("S")) {
+                System.out.println(GetYellow() + "Operação cancelada." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            Resultado<Gestor> res = gc.ativarDesativarGestor(gestor.getNif(), !gestor.isAtivo());
+            if (res.sucesso) {
+                System.out.println(GetGreen() + "\nGestor " + (res.dados.isAtivo() ? "ativado" : "desativado") + " com sucesso!" + GetReset());
+            } else {
+                System.out.println(GetRed() + "\nErro: " + res.mensagemErro + GetReset());
+            }
+            MenuUtils.pressionarEnter(scanner);
+
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Erro inesperado: " + e.getMessage() + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        }
+    }
+
+    private void ativarDesativarDocente() {
+        try {
+            System.out.println(GetBlue() + "\n--- ATIVAR / DESATIVAR DOCENTE ---" + GetReset());
+            System.out.println(GetYellow() + "[Digite '0' para cancelar]" + GetReset());
+
+            DocenteController dc = new DocenteController();
+            List<Docente> lista = dc.listarDocentes();
+            if (lista.isEmpty()) {
+                System.out.println(GetYellow() + "Não há docentes registados." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            System.out.println("\n" + GetWhiteBold() + "Docentes:" + GetReset());
+            for (int i = 0; i < lista.size(); i++) {
+                Docente d = lista.get(i);
+                String estado = d.isAtivo() ? GetGreen() + "[ATIVO]" + GetReset() : GetRed() + "[INATIVO]" + GetReset();
+                System.out.printf("  %d - %s (%s) %s%n", i + 1, d.getNome(), d.getSigla(), estado);
+            }
+
+            int escolha = -1;
+            while (escolha < 1 || escolha > lista.size()) {
+                try {
+                    String op = BackendUtils.lerInputString(scanner, "\nEscolha o docente: ");
+                    if (op.equals("0")) return;
+                    escolha = Integer.parseInt(op);
+                    if (escolha < 1 || escolha > lista.size())
+                        System.out.println(GetRed() + "Opção inválida." + GetReset());
+                } catch (NumberFormatException e) {
+                    System.out.println(GetRed() + "Digite um número." + GetReset());
+                }
+            }
+
+            Docente docente = lista.get(escolha - 1);
+            String acao = docente.isAtivo() ? "desativar" : "ativar";
+            String conf = BackendUtils.lerInputString(scanner, GetYellow() + "Deseja " + acao + " o docente " + docente.getNome() + "? (S/N): " + GetReset());
+            if (!conf.equalsIgnoreCase("S")) {
+                System.out.println(GetYellow() + "Operação cancelada." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            Resultado<Docente> res = dc.ativarDesativarDocente(docente.getNif(), !docente.isAtivo());
+            if (res.sucesso) {
+                System.out.println(GetGreen() + "\nDocente " + (res.dados.isAtivo() ? "ativado" : "desativado") + " com sucesso!" + GetReset());
+            } else {
+                System.out.println(GetRed() + "\nErro: " + res.mensagemErro + GetReset());
+            }
+            MenuUtils.pressionarEnter(scanner);
+
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Erro inesperado: " + e.getMessage() + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        }
+    }
+
+    private void ativarDesativarEstudante() {
+        try {
+            System.out.println(GetBlue() + "\n--- ATIVAR / DESATIVAR ESTUDANTE ---" + GetReset());
+            System.out.println(GetYellow() + "[Digite '0' para cancelar]" + GetReset());
+
+            EstudanteController ec = new EstudanteController();
+            List<Estudante> lista = ec.listarEstudantes();
+            if (lista.isEmpty()) {
+                System.out.println(GetYellow() + "Não há estudantes registados." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            System.out.println("\n" + GetWhiteBold() + "Estudantes:" + GetReset());
+            for (int i = 0; i < lista.size(); i++) {
+                Estudante e = lista.get(i);
+                String estado = e.isAtivo() ? GetGreen() + "[ATIVO]" + GetReset() : GetRed() + "[INATIVO]" + GetReset();
+                System.out.printf("  %d - %s (Nº %d | %s) %s%n", i + 1, e.getNome(), e.getNumeroMec(), e.getNomeCurso(), estado);
+            }
+
+            int escolha = -1;
+            while (escolha < 1 || escolha > lista.size()) {
+                try {
+                    String op = BackendUtils.lerInputString(scanner, "\nEscolha o estudante: ");
+                    if (op.equals("0")) return;
+                    escolha = Integer.parseInt(op);
+                    if (escolha < 1 || escolha > lista.size())
+                        System.out.println(GetRed() + "Opção inválida." + GetReset());
+                } catch (NumberFormatException e) {
+                    System.out.println(GetRed() + "Digite um número." + GetReset());
+                }
+            }
+
+            Estudante estudante = lista.get(escolha - 1);
+            String acao = estudante.isAtivo() ? "desativar" : "ativar";
+            String conf = BackendUtils.lerInputString(scanner, GetYellow() + "Deseja " + acao + " o estudante " + estudante.getNome() + "? (S/N): " + GetReset());
+            if (!conf.equalsIgnoreCase("S")) {
+                System.out.println(GetYellow() + "Operação cancelada." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            Resultado<Estudante> res = ec.ativarDesativarEstudante(estudante.getNumeroMec(), !estudante.isAtivo());
+            if (res.sucesso) {
+                System.out.println(GetGreen() + "\nEstudante " + (res.dados.isAtivo() ? "ativado" : "desativado") + " com sucesso!" + GetReset());
+            } else {
+                System.out.println(GetRed() + "\nErro: " + res.mensagemErro + GetReset());
+            }
+            MenuUtils.pressionarEnter(scanner);
+
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Erro inesperado: " + e.getMessage() + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        }
+    }
+    //endregion
 }

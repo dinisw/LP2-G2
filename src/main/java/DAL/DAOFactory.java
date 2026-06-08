@@ -86,4 +86,9 @@ public class DAOFactory {
     public static IGestorDAO getGestorDAO() {
         return isSql() ? new GestorSqlDAO() : new GestorCRUD();
     }
+
+    // ── Ano Letivo ─────────────────────────────────────────────────────────────
+    public static IAnoLetivoDAO getAnoLetivoDAO() {
+        return isSql() ? new AnoLetivoSqlDAO() : new AnoLetivoMemDAO();
+    }
 }

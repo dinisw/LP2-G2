@@ -2,6 +2,7 @@ package controller;
 
 import DAL.DAOFactory;
 import DAL.IAvaliacaoDAO;
+import DAL.IUnidadeCurricularDAO;
 import model.Avaliacao;
 import model.Resultado;
 
@@ -44,8 +45,8 @@ public class AvaliacaoController {
             return new Resultado<>("Sem classificação atribuída", true);
         }
 
-        DAL.UnidadeCurricularCRUD unidadeCurricularCRUD = new DAL.UnidadeCurricularCRUD();
-        model.UnidadeCurricular unidadeCurricular = unidadeCurricularCRUD.procurarPorNome(nomeUC);
+        IUnidadeCurricularDAO unidadeCurricularDAO = DAOFactory.getUnidadeCurricularDAO();
+        model.UnidadeCurricular unidadeCurricular = unidadeCurricularDAO.procurarPorNome(nomeUC);
 
         if (unidadeCurricular == null || unidadeCurricular.getNome() == null || unidadeCurricular.getMomentosAvaliacao().isEmpty()) {
             return new Resultado<>("Erro: UC sem momentos de avaliação definidos.", false);
