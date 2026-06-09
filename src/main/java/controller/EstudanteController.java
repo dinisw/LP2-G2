@@ -4,8 +4,10 @@ import DAL.DAOFactory;
 import DAL.IAvaliacaoDAO;
 import DAL.ICursoDAO;
 import DAL.IEstudanteDAO;
+import DAL.IPropinaDAO;
 import model.Curso;
 import model.Estudante;
+import model.Propina;
 import model.Resultado;
 
 import java.math.BigDecimal;
@@ -124,7 +126,7 @@ public class EstudanteController {
         Resultado<Estudante> res = estudanteDAO.registarEstudante(estudante);
         if (res.sucesso) {
             // v1.1: ao inscrever o estudante num curso, criar a propina anual do 1.º ano
-            garantirPropinaPrimeiroAno(numeroMec);
+            garantirPropinaPrimeiroAno(numeroMec, curso);
             return new Resultado<>(numeroMec, true);
         }
 
@@ -147,7 +149,7 @@ public class EstudanteController {
 
         // v1.1: se o estudante passou a estar inscrito num curso, criar a propina anual do 1.º ano
         if (res.sucesso && !tinhaCurso && temCurso(estudante.getNomeCurso())) {
-            garantirPropinaPrimeiroAno(numeroMec);
+            garantirPropinaPrimeiroAno(numeroMec, estudante.getNomeCurso());
         }
         return res;
     }
@@ -281,12 +283,27 @@ public class EstudanteController {
 
     /**
      * v1.1 — Garante a existência da propina anual do 1.º ano para o estudante.
-     * É idempotente: {@code gerarPropinaAnual} não duplica caso a propina já exista.
+     * Usa {@code this.cursoDAO} (já carregado) para obter o preço correto do curso,
+     * evitando uma nova leitura do CSV que poderia ainda não refletir o curso recém-registado.
+     * É idempotente: se a propina do 1.º ano já existir, não a duplica.
      * Uma falha aqui não compromete o registo/inscrição do estudante (apenas regista aviso).
      */
-    private void garantirPropinaPrimeiroAno(int numeroMec) {
+    private void garantirPropinaPrimeiroAno(int numeroMec, String nomeCurso) {
         try {
-            new PropinaController().gerarPropinaAnual(numeroMec, 1);
+            IPropinaDAO propinaDAO = DAOFactory.getPropinaDAO();
+            // Idempotência: não criar duplicado se já existir
+            if (propinaDAO.procurarPropina(numeroMec, 1) != null) return;
+
+            // Determinar o preço via cursoDAO já carregado em memória
+            BigDecimal preco = BigDecimal.valueOf(1000.0);
+            if (nomeCurso != null && !nomeCurso.trim().isEmpty()) {
+                Curso c = cursoDAO.procurarPorNome(nomeCurso);
+                if (c != null && c.getPrecoAnual() > 0) {
+                    preco = BigDecimal.valueOf(c.getPrecoAnual());
+                }
+            }
+
+            propinaDAO.registarPropina(new Propina(numeroMec, 1, preco, BigDecimal.ZERO));
         } catch (Exception e) {
             System.err.println("Aviso: não foi possível gerar a propina do 1.º ano para o estudante "
                     + numeroMec + ": " + e.getMessage());

@@ -28,9 +28,15 @@ public class AnoLetivoSqlDAO implements IAnoLetivoDAO {
         this.db = new DatabaseConnection();
     }
 
+    // Cache: uma vez que as tabelas existam, não volta a fazer SELECT em cada menu
+    private static volatile boolean tabelasExistemCache = false;
+
     @Override
     public boolean tabelasExistem() {
-        return db.tabelaExiste("AnoLetivo");
+        if (tabelasExistemCache) return true;
+        boolean existe = db.tabelaExiste("AnoLetivo");
+        if (existe) tabelasExistemCache = true; // só guarda em cache resultado positivo
+        return existe;
     }
 
     // ── AnoLetivo principal ────────────────────────────────────

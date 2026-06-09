@@ -47,11 +47,13 @@ public class DocenteController {
         if (nif <= 0) return new Resultado<>(false, "NIF inválido.");
         if (dataNascimento == null) return new Resultado<>(false, "Data de nascimento inválida.");
         if (docenteDAO.procurarPorNif(nif) != null) return new Resultado<>(false, "Já existe um docente com este NIF.");
-        if (docenteDAO.procurarPorSigla(sigla) != null) return new Resultado<>(false, "Já existe um docente com esta sigla.");
+        // Verificar duplicado com sigla já normalizada para maiúsculas
+        String siglaNormCheck = sigla.trim().toUpperCase();
+        if (docenteDAO.procurarPorSigla(siglaNormCheck) != null) return new Resultado<>(false, "Já existe um docente com esta sigla.");
 
-        // Normaliza email e sigla para minúsculas antes de guardar
+        // Email → minúsculas; sigla → MAIÚSCULAS (norma de apresentação)
         String emailNorm = email.trim().toLowerCase();
-        String siglaNorm = sigla.trim().toLowerCase();
+        String siglaNorm = sigla.trim().toUpperCase();
 
         Docente docente = new Docente(nome, morada, nif, dataNascimento, emailNorm, hash, siglaNorm, new ArrayList<>(), new ArrayList<>());
         return docenteDAO.registarDocente(docente);
