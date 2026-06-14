@@ -37,13 +37,36 @@ public class SistemaE2EIntegrationTest {
     // ANTES DE TUDO: Garantir que não há lixo de testes anteriores
     @BeforeAll
     public static void limpezaInicial() {
+        DAOFactory.setModo("CSV"); // forçar CSV — testes usam CRUDs directos, SQL causaria FK violations
         System.out.println("--- LIMPANDO DADOS RESIDUAIS DE TESTES ANTERIORES ---");
-        gestorController.eliminarGestor(nifGestor);
-        docenteController.eliminarDocente(nifDocente);
-        estudanteController.eliminarEstudante(nifEstudante); // Caso o mec falhe, apagar por NIF
-        ucCRUD.eliminarUC(nomeUC);
-        cursoCRUD.eliminarCurso(nomeCurso);
-        depCRUD.eliminarDepartamento("DPT");
+        // Usar instâncias frescas para que o DAO carregue o CSV actual (não cache estático)
+        new GestorCRUD().eliminarGestor(nifGestor);
+        // Hard-delete via CRUD (o controller pode fazer soft-delete se docente tiver UCs)
+        new DocenteCRUD().eliminarDocente(nifDocente);
+        // Limpar estudante por NIF (não por mecNum — são valores distintos)
+        Estudante eStale = new EstudanteCRUD().procurarPorNif(nifEstudante);
+        if (eStale != null) {
+            new AvaliacaoCRUD().eliminarAvaliacoesPorEstudante(eStale.getNumeroMec());
+            new PropinaCRUD().eliminarPropinasPorEstudante(eStale.getNumeroMec());
+            new EstudanteCRUD().eliminarEstudante(eStale.getNumeroMec());
+        }
+        new UnidadeCurricularCRUD().eliminarUC(nomeUC);
+        new CursoCRUD().eliminarCurso(nomeCurso);
+        new DepartamentoCRUD().eliminarDepartamento("DPT");
+
+        // Reset do cache do DAOFactory após limpeza via CRUDs directos.
+        // Sem isto, os controllers seguintes receberiam DAOs em cache com dados obsoletos.
+        DAOFactory.resetarInstancias();
+
+        // Re-inicializar os controllers estáticos APÓS a limpeza, para que os seus DAOs
+        // internos carreguem o CSV limpo (e não o estado em memória pré-limpeza)
+        gestorController    = new GestorController();
+        docenteController   = new DocenteController();
+        estudanteController = new EstudanteController();
+        avaliacaoCRUD       = new AvaliacaoCRUD();
+        cursoCRUD           = new CursoCRUD();
+        ucCRUD              = new UnidadeCurricularCRUD();
+        depCRUD             = new DepartamentoCRUD();
     }
 
     @Test
@@ -102,5 +125,28 @@ public class SistemaE2EIntegrationTest {
 
         Avaliacao inscricao = new Avaliacao("Frequência", null, uc, estudante);
         assertTrue(avaliacaoCRUD.registarAvaliacao(inscricao).sucesso, "");
+    }
+
+    @AfterAll
+    public static void limpezaFinal() {
+        System.out.println("--- LIMPANDO DADOS RESIDUAIS APÓS TESTES E2E ---");
+        if (numeroMecGerado > 0) {
+            new AvaliacaoCRUD().eliminarAvaliacoesPorEstudante(numeroMecGerado);
+            new PropinaCRUD().eliminarPropinasPorEstudante(numeroMecGerado);
+            new EstudanteCRUD().eliminarEstudante(numeroMecGerado);
+        } else {
+            // Fallback: procurar por NIF
+            Estudante eStale = new EstudanteCRUD().procurarPorNif(nifEstudante);
+            if (eStale != null) {
+                new AvaliacaoCRUD().eliminarAvaliacoesPorEstudante(eStale.getNumeroMec());
+                new PropinaCRUD().eliminarPropinasPorEstudante(eStale.getNumeroMec());
+                new EstudanteCRUD().eliminarEstudante(eStale.getNumeroMec());
+            }
+        }
+        new UnidadeCurricularCRUD().eliminarUC(nomeUC);
+        new CursoCRUD().eliminarCurso(nomeCurso);
+        new DepartamentoCRUD().eliminarDepartamento("DPT");
+        new DocenteCRUD().eliminarDocente(nifDocente);
+        new GestorCRUD().eliminarGestor(nifGestor);
     }
 }

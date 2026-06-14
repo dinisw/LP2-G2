@@ -1,6 +1,7 @@
 package controller;
 
 import DAL.AvaliacaoCRUD;
+import DAL.DAOFactory;
 import DAL.EstudanteCRUD;
 import DAL.UnidadeCurricularCRUD;
 import model.*;
@@ -33,8 +34,11 @@ public class AvaliacaoFluxoTest {
 
     @BeforeAll
     static void setupGlobal() {
-        controller = new AvaliacaoController();
-        avaliacaoCRUD = new AvaliacaoCRUD();
+        DAOFactory.setModo("CSV"); // forçar CSV independentemente do config.properties
+        // Limpar dados residuais de execuções anteriores via CRUDs directos
+        new AvaliacaoCRUD().eliminarAvaliacoesPorEstudante(NUM_MEC);
+        new EstudanteCRUD().eliminarEstudante(NUM_MEC);
+        new UnidadeCurricularCRUD().eliminarUC(NOME_UC);
 
         // Criar UC de teste directamente no CSV
         UnidadeCurricularCRUD ucCRUD = new UnidadeCurricularCRUD();
@@ -49,20 +53,22 @@ public class AvaliacaoFluxoTest {
         estudanteTeste = new Estudante("Estudante Avaliacao Teste", "Rua Teste", NIF_ESTUDANTE,
                 LocalDate.of(2001, 1, 1), "avtest@issmf.ipp.pt", NUM_MEC, "Hash123!", "CursoTeste", true);
         estudanteCRUD.registarEstudante(estudanteTeste);
+
+        // Reset do cache após todos os writes directos: garante que controller
+        // e avaliacaoCRUD lêem o CSV limpo (sem avaliações residuais em memória)
+        DAOFactory.resetarInstancias();
+        controller = new AvaliacaoController();
+        avaliacaoCRUD = new AvaliacaoCRUD();
     }
 
     @AfterAll
     static void limpezaGlobal() {
         // Remover todos os registos de avaliação do estudante de teste
-        avaliacaoCRUD.listarPorEstudante(NUM_MEC)
-                .forEach(a -> { /* AvaliacaoCRUD não tem delete directo — ver nota abaixo */ });
+        new AvaliacaoCRUD().eliminarAvaliacoesPorEstudante(NUM_MEC);
 
         // Remover UC e estudante de teste
-        UnidadeCurricularCRUD ucCRUD = new UnidadeCurricularCRUD();
-        ucCRUD.eliminarUC(NOME_UC);
-
-        EstudanteCRUD estudanteCRUD = new EstudanteCRUD();
-        estudanteCRUD.eliminarEstudante(NUM_MEC);
+        new UnidadeCurricularCRUD().eliminarUC(NOME_UC);
+        new EstudanteCRUD().eliminarEstudante(NUM_MEC);
     }
 
     // ===== Validações de entrada =====

@@ -102,11 +102,6 @@ class EnunciadoComplianceTest {
 
         // Estudante 1 inscrito no curso
         EstudanteController ec = new EstudanteController();
-        // DIAG: check fresh CursoCRUD price lookup BEFORE registarEstudante
-        CursoCRUD freshCheck = new CursoCRUD();
-        Curso foundCheck = freshCheck.procurarPorNome(CURSO_NOME);
-        System.err.println("[DIAG] freshCursoCRUD found=" + (foundCheck == null ? "NULL" : "precoAnual=" + foundCheck.getPrecoAnual()));
-
         Resultado<Integer> res = ec.registarEstudante("Estudante Teste", "Rua B",
                 EST_NIF_BASE, LocalDate.of(2000, 3, 10), CURSO_NOME, su.gerarHashComSalt("Senha@123"));
         assertTrue(res.sucesso, "Setup falhou: não foi possível registar estudante de teste.");
@@ -598,6 +593,7 @@ class EnunciadoComplianceTest {
                 LocalDate.of(2001, 1, 1), (777888999 + RND) + "@issmf.ipp.pt",
                 991000 + RND, su.gerarHashComSalt("Senha@123"), CURSO_NOME, true);
         estCRUD.registarEstudante(estSemPropina);
+        DAOFactory.resetarInstancias(); // garante que controllers vêem o novo estudante
 
         // Não pagar nenhuma propina
         PropinaController pc = new PropinaController();
@@ -816,6 +812,7 @@ class EnunciadoComplianceTest {
         c.adicionarUnidadeCurricular(ucCRUD.procurarPorNome(UC2_NOME));
         c.adicionarUnidadeCurricular(ucCRUD.procurarPorNome(UC3_NOME));
         cursoCRUD.registarCurso(c);
+        DAOFactory.resetarInstancias(); // garante que o controller usa o novo curso (750€)
 
         EstudanteController ec = new EstudanteController();
         Resultado<Integer> res = ec.registarEstudante("Aluno Preco", "Rua F",

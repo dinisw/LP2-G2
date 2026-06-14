@@ -291,16 +291,25 @@ public class EstudanteController {
     private void garantirPropinaPrimeiroAno(int numeroMec, String nomeCurso) {
         try {
             IPropinaDAO propinaDAO = DAOFactory.getPropinaDAO();
-            // Idempotência: não criar duplicado se já existir
-            if (propinaDAO.procurarPropina(numeroMec, 1) != null) return;
 
-            // Determinar o preço via cursoDAO já carregado em memória
+            // Determinar o preço correto via cursoDAO já carregado em memória
             BigDecimal preco = BigDecimal.valueOf(1000.0);
             if (nomeCurso != null && !nomeCurso.trim().isEmpty()) {
                 Curso c = cursoDAO.procurarPorNome(nomeCurso);
                 if (c != null && c.getPrecoAnual() > 0) {
                     preco = BigDecimal.valueOf(c.getPrecoAnual());
                 }
+            }
+
+            Propina existente = propinaDAO.procurarPropina(numeroMec, 1);
+            if (existente != null) {
+                // Já existe: actualizar o valor total se ainda não foi paga e o preço está errado
+                if (existente.getValorTotal().compareTo(preco) != 0
+                        && existente.getValorPago().compareTo(BigDecimal.ZERO) == 0) {
+                    existente.setValorTotal(preco);
+                    propinaDAO.atualizarPropina(existente);
+                }
+                return;
             }
 
             propinaDAO.registarPropina(new Propina(numeroMec, 1, preco, BigDecimal.ZERO));

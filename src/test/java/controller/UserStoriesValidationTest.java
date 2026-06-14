@@ -1,10 +1,11 @@
 package controller;
 
+import DAL.*;
 import common.utils.SenhaUtils;
 import model.*;
 import org.junit.jupiter.api.*;
 
-import java.math.BigDecimal; // <-- ADICIONADO: Import necessário
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +30,49 @@ public class UserStoriesValidationTest {
     private static final String SIGLA_DOC = "DQA";
 
     private static int mecEstudante;
+
+    @BeforeAll
+    static void limpezaPrevia() {
+        DAOFactory.setModo("CSV"); // forçar CSV — testes usam CRUDs directos para limpeza
+        // Remover docente residual de execução anterior (sigla "DQA" é constante, pode colidir)
+        DocenteCRUD docCRUD = new DocenteCRUD();
+        Docente docStale = docCRUD.procurarPorSigla(SIGLA_DOC);
+        if (docStale != null) docCRUD.eliminarDocente(docStale.getNif());
+
+        // Remover departamento residual com mesma sigla
+        DepartamentoCRUD depCRUD = new DepartamentoCRUD();
+        if (depCRUD.procurarPorSigla("DQA") != null) depCRUD.eliminarDepartamento("DQA");
+
+        // Reset do cache após limpeza via CRUDs directos
+        DAOFactory.resetarInstancias();
+    }
+
+    @AfterAll
+    static void limpezaFinal() {
+        // Limpar avaliações e propinas do estudante criado nesta suite
+        if (mecEstudante > 0) {
+            new AvaliacaoCRUD().eliminarAvaliacoesPorEstudante(mecEstudante);
+            new PropinaCRUD().eliminarPropinasPorEstudante(mecEstudante);
+            new EstudanteCRUD().eliminarEstudante(mecEstudante);
+        }
+
+        // Limpar curso e UCs (nomes com ID aleatório — apenas cleanup desta execução)
+        new CursoCRUD().eliminarCurso(NOME_CURSO);
+        UnidadeCurricularCRUD ucCRUD = new UnidadeCurricularCRUD();
+        ucCRUD.eliminarUC(NOME_UC_Y1);
+        ucCRUD.eliminarUC(NOME_UC_Y2);
+        ucCRUD.eliminarUC(NOME_UC_Y3);
+
+        // Limpar docente
+        DocenteCRUD docCRUD = new DocenteCRUD();
+        Docente doc = docCRUD.procurarPorSigla(SIGLA_DOC);
+        if (doc == null) doc = docCRUD.procurarPorNif(100000000 + ID);
+        if (doc != null) docCRUD.eliminarDocente(doc.getNif());
+
+        // Limpar departamento
+        DepartamentoCRUD depCRUD = new DepartamentoCRUD();
+        if (depCRUD.procurarPorSigla("DQA") != null) depCRUD.eliminarDepartamento("DQA");
+    }
 
     @Test
     @Order(1)

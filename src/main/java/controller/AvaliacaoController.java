@@ -2,11 +2,15 @@ package controller;
 
 import DAL.DAOFactory;
 import DAL.IAvaliacaoDAO;
+import DAL.ICursoDAO;
 import DAL.IUnidadeCurricularDAO;
 import model.Avaliacao;
+import model.Curso;
 import model.Resultado;
+import model.UnidadeCurricular;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class AvaliacaoController {
     private final IAvaliacaoDAO avaliacaoDAO;
@@ -26,13 +30,30 @@ public class AvaliacaoController {
             return new Resultado<>(false, "O momento de avaliação é obrigatório.");
         }
 
+        // Bloquear lançamento de nota (não pré-inscrição com nota nula) se o ano ainda não foi iniciado
+        if (avaliacao.getNota() != null && deveBloquearPorAnoNaoIniciado(avaliacao.getUnidadeCurricular())) {
+            return new Resultado<>(false, "Bloqueado: O ano letivo desta UC ainda não foi iniciado.");
+        }
+
         List<Avaliacao> avaliacoesExistentes = avaliacaoDAO.listarPorUnidadeCurricular(avaliacao.getUnidadeCurricular().getNome());
         if (avaliacoesExistentes != null) {
-            long contagem = avaliacoesExistentes.stream()
+            // Filtrar as avaliações deste estudante nesta UC
+            List<Avaliacao> doEstudante = avaliacoesExistentes.stream()
                     .filter(a -> a.getEstudante().getNumeroMec() == avaliacao.getEstudante().getNumeroMec())
+                    .collect(Collectors.toList());
+
+            // Contar momentos DISTINTOS já usados (não o total de registos)
+            long momentosDistintos = doEstudante.stream()
+                    .map(a -> a.getMomento().toLowerCase().trim())
+                    .distinct()
                     .count();
-            if (contagem >= 3) {
-                return new Resultado<>(false, "O estudante já atingiu o limite máximo de 3 avaliações para esta UC.");
+
+            // O novo momento já existe → é um update (upsert), sempre permitido
+            boolean momentoJaExiste = doEstudante.stream()
+                    .anyMatch(a -> a.getMomento().trim().equalsIgnoreCase(avaliacao.getMomento().trim()));
+
+            if (momentosDistintos >= 3 && !momentoJaExiste) {
+                return new Resultado<>(false, "O estudante já atingiu o limite máximo de 3 momentos de avaliação para esta UC.");
             }
         }
 
@@ -74,5 +95,29 @@ public class AvaliacaoController {
 
     public List<Avaliacao> listarAvaliacoesPorUC(String nomeUC) {
         return (nomeUC == null || nomeUC.trim().isEmpty()) ? null : avaliacaoDAO.listarPorUnidadeCurricular(nomeUC);
+    }
+
+    /**
+     * Bloqueia o registo de avaliação se o ano letivo correspondente ainda não tiver sido
+     * iniciado para o curso que contém esta UC.
+     */
+    private boolean deveBloquearPorAnoNaoIniciado(UnidadeCurricular uc) {
+        try {
+            ICursoDAO cursoDAO = DAOFactory.getCursoDAO();
+            for (Curso curso : cursoDAO.getCursos()) {
+                boolean ucPertence = curso.getUnidadeCurriculars().stream()
+                        .anyMatch(u -> u.getNome().equalsIgnoreCase(uc.getNome()));
+                if (ucPertence) {
+                    // Se esta UC pertence a um curso, o ano curricular dela deve estar iniciado
+                    if (!curso.isAnoIniciado(uc.getAnoCurricular())) {
+                        return true;
+                    }
+                    return false; // encontrou o curso — ano iniciado, não bloquear
+                }
+            }
+        } catch (Exception e) {
+            // Em caso de erro ao consultar cursos, não bloquear (fail-open)
+        }
+        return false; // UC sem curso associado → não bloquear
     }
 }

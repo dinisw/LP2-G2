@@ -2,10 +2,11 @@ package controller;
 
 import DAL.DAOFactory;
 import DAL.IAvaliacaoDAO;
+import DAL.ICursoDAO;
 import DAL.IDocenteDAO;
 import DAL.IUnidadeCurricularDAO;
-import model.UnidadeCurricular;
 import model.Avaliacao;
+import model.Curso;
 import model.Docente;
 import model.Estudante;
 import model.Resultado;
@@ -32,6 +33,17 @@ public class DocenteController {
 
         if (uc.getDocente() == null || !uc.getDocente().getSigla().equalsIgnoreCase(siglaDocente)) {
             return new Resultado<>(false, "Acesso Negado: Não é o docente responsável por esta Unidade Curricular.");
+        }
+
+        // Bloquear se o ano letivo desta UC já foi iniciado em algum curso
+        ICursoDAO cursoDAO = DAOFactory.getCursoDAO();
+        for (Curso curso : cursoDAO.getCursos()) {
+            boolean ucPertence = curso.getUnidadeCurriculars().stream()
+                    .anyMatch(u -> u.getNome().equalsIgnoreCase(uc.getNome()));
+            if (ucPertence && curso.isAnoIniciado(uc.getAnoCurricular())) {
+                return new Resultado<>(false,
+                        "Bloqueado: Não é possível alterar os momentos de avaliação após o início do ano letivo.");
+            }
         }
 
         uc.setMomentosAvaliacao(momentos);
