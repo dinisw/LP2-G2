@@ -147,7 +147,6 @@ public class EstudanteController {
 
         Resultado<Estudante> res = estudanteDAO.atualizarEstudante(estudante);
 
-        // v1.1: se o estudante passou a estar inscrito num curso, criar a propina anual do 1.º ano
         if (res.sucesso && !tinhaCurso && temCurso(estudante.getNomeCurso())) {
             garantirPropinaPrimeiroAno(numeroMec, estudante.getNomeCurso());
         }
