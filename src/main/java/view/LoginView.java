@@ -23,11 +23,12 @@ public class LoginView {
             try {
                 MenuUtils.exibirTitulo();
                 System.out.println(GetCyanBold() + "LOGIN" + GetReset());
-                System.out.println(GetYellow() + "[Digite '0' para sair | Digite '9' para recuperar password]" + GetReset());
+                System.out.println(GetYellow() + "[Digite '0' para sair | Digite '9' para recuperar password | Digite 'login' para voltar ao menu de escolha]" + GetReset());
 
                 String email = "";
                 boolean emailValido = false;
                 boolean recuperarSenha = false;
+                boolean menuBDCSV = false;
 
                 while (!emailValido) {
                     System.out.print("\nEmail: ");
@@ -39,6 +40,10 @@ public class LoginView {
                         break;
                     } else if (email.equals("9")) {
                         recuperarSenha = true;
+                        break;
+                    }else if (email.equals("login")){
+                        System.out.println(GetYellow() + "\nA voltar ao menu de escolha..." + GetReset());
+                        menuBDCSV = true;
                         break;
                     } else {
                         emailValido = BackendUtils.emailISSMFGestorValido(email)
@@ -56,7 +61,10 @@ public class LoginView {
                     RecuperarSenhaView.RecuperarSenha();
                     continue;
                 }
-
+                if(menuBDCSV){
+                    SelecionarModoView.selecionar();
+                    continue;
+                }
                 Utilizador utilizador = null;
                 boolean senhaCorreta = false;
 

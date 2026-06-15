@@ -49,10 +49,18 @@ public class MenuUtils {
         System.out.println(GetCyanBold() + GetBordaMeio() + GetReset());
 
         for (String opcao2 : opcoes) {
-            System.out.println(GetCyanBold() + "║ " + GetReset() + String.format("%-" + (GetLargura() - 1) + "s", opcao2) + GetCyanBold() + "║" + GetReset());
+            int visivel = opcao2.replaceAll("\033\\[[;\\d]*m", "").length();
+            int padding = Math.max(0, GetLargura() - 1 - visivel);
+            System.out.println(GetCyanBold() + "║ " + GetReset() + opcao2 + " ".repeat(padding) + GetCyanBold() + "║" + GetReset());
         }
         System.out.println(GetCyanBold() + GetBordaInferior() + GetReset());
     }
+    public static void exibirLinhaBordada(String conteudo) {
+        int visivel = conteudo.replaceAll("\033\\[[;\\d]*m", "").length();
+        int padding = Math.max(0, GetLargura() - 1 - visivel);
+        System.out.println(GetCyanBold() + "║ " + GetReset() + conteudo + " ".repeat(padding) + GetCyanBold() + "║" + GetReset());
+    }
+
     public static void pressionarEnter(Scanner ler) {
         System.out.print("\nPressione " + GetWhiteBold() + "ENTER" + GetReset() + " para continuar...");
         ler.nextLine();
