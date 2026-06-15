@@ -31,9 +31,14 @@ public class DefinirMomentosAvaliacaoTest {
 
     @BeforeAll
     static void setup() {
-        docenteController = new DocenteController();
+        DAOFactory.setModo("CSV"); // forçar CSV independentemente do config.properties
         docenteCRUD = new DocenteCRUD();
         ucCRUD = new UnidadeCurricularCRUD();
+
+        // Pré-limpeza de dados residuais de execuções anteriores
+        ucCRUD.eliminarUC(NOME_UC);
+        docenteCRUD.eliminarDocente(NIF_DOC_A);
+        docenteCRUD.eliminarDocente(NIF_DOC_B);
 
         // Criar docente A (responsável pela UC)
         docenteA = new Docente("Docente A Momentos", "Gab A", NIF_DOC_A,
@@ -51,6 +56,11 @@ public class DefinirMomentosAvaliacaoTest {
         ucTeste = new UnidadeCurricular(NOME_UC, 1, 1, docenteA);
         ucCRUD.registarUC(ucTeste);
         ucTeste = ucCRUD.procurarPorNome(NOME_UC); // recarregar com ID atribuído
+
+        // Reset após todas as escritas directas: o docenteController deve ver
+        // os docentes recém-criados no CSV (e não um cache vazio/obsoleto)
+        DAOFactory.resetarInstancias();
+        docenteController = new DocenteController();
     }
 
     @AfterAll

@@ -35,13 +35,38 @@ class DocenteSqlDAOTest extends SetupBDTest {
 
     @BeforeEach
     void garantirAusencia() {
-        executarLimpeza("DELETE FROM Docente WHERE nif = ?", NIF_DOCENTE_TESTE);
+        eliminarDocenteComCascade(NIF_DOCENTE_TESTE);
     }
 
     @AfterAll
     static void teardown() {
-        new DocenteSqlDAOTest().executarLimpeza("DELETE FROM Docente WHERE nif = ?", NIF_DOCENTE_TESTE);
+        new DocenteSqlDAOTest().eliminarDocenteComCascade(NIF_DOCENTE_TESTE);
         System.out.println("[DOCENTE] Limpeza concluída.");
+    }
+
+    /** Remove o docente e todas as dependências FK em cascata (UCs, momentos, avaliações). */
+    private void eliminarDocenteComCascade(int nif) {
+        // 1. Avaliações que referenciam UCs deste docente
+        executarLimpeza(
+            "DELETE FROM Avaliacao WHERE ucId IN " +
+            "(SELECT id FROM UnidadeCurricular WHERE docenteId = " +
+            "(SELECT id FROM Docente WHERE nif = ?))", nif);
+        // 2. Momentos das UCs deste docente
+        executarLimpeza(
+            "DELETE FROM UnidadeCurricularMomento WHERE id IN " +
+            "(SELECT id FROM UnidadeCurricular WHERE docenteId = " +
+            "(SELECT id FROM Docente WHERE nif = ?))", nif);
+        // 3. Associações Curso↔UC das UCs deste docente
+        executarLimpeza(
+            "DELETE FROM CursoUnidadeCurricular WHERE UcId IN " +
+            "(SELECT id FROM UnidadeCurricular WHERE docenteId = " +
+            "(SELECT id FROM Docente WHERE nif = ?))", nif);
+        // 4. As próprias UCs
+        executarLimpeza(
+            "DELETE FROM UnidadeCurricular WHERE docenteId = " +
+            "(SELECT id FROM Docente WHERE nif = ?)", nif);
+        // 5. O docente
+        executarLimpeza("DELETE FROM Docente WHERE nif = ?", nif);
     }
 
     @Test @Order(1)

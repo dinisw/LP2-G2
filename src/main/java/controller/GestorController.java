@@ -28,14 +28,18 @@ public class GestorController {
         }
 
         IEstudanteDAO estudanteDAO = DAOFactory.getEstudanteDAO();
+        // Conta apenas os alunos ativos do curso QUE ESTÃO NO ANO ALVO
         long totalInscritos = estudanteDAO.getEstudantes().stream()
-                .filter(e -> e.getNomeCurso() != null && e.getNomeCurso().equalsIgnoreCase(nomeCurso) && e.isAtivo())
+                .filter(e -> e.getNomeCurso() != null
+                        && e.getNomeCurso().equalsIgnoreCase(nomeCurso)
+                        && e.isAtivo()
+                        && e.getAnoLetivo() == anoAlvo)
                 .count();
 
         if (anoAlvo == 1 && totalInscritos < 5) {
-            return new Resultado<>(false, "Bloqueado: Para iniciar o 1º ano, são necessários pelo menos 5 alunos. (Atuais: " + totalInscritos + ")");
+            return new Resultado<>(false, "Bloqueado: Para iniciar o 1º ano, são necessários pelo menos 5 alunos inscritos nesse ano. (Atuais: " + totalInscritos + ")");
         } else if (anoAlvo > 1 && totalInscritos < 1) {
-            return new Resultado<>(false, "Bloqueado: Para iniciar o " + anoAlvo + "º ano, é necessário pelo menos 1 aluno. (Atuais: 0)");
+            return new Resultado<>(false, "Bloqueado: Para iniciar o " + anoAlvo + "º ano, é necessário pelo menos 1 aluno nesse ano. (Atuais: 0)");
         }
 
         curso.adicionarAnoIniciado(anoAlvo);
@@ -49,10 +53,14 @@ public class GestorController {
         }
         if (nif <= 0) return new Resultado<>(false, "O NIF fornecido é inválido.");
         if (dataNascimento == null) return new Resultado<>(false, "A data de nascimento é inválida.");
-        if (gestorDAO.procurarPorNif(nif) != null) return new Resultado<>(false, "Já existe um gestor com este NIF.");
-        if (gestorDAO.procurarPorEmail(email) != null) return new Resultado<>(false, "Já existe um gestor com este email.");
 
-        Gestor gestor = new Gestor(nome, morada, nif, dataNascimento, email, hash, cargo);
+        // Normaliza email para minúsculas antes de guardar
+        String emailNorm = email.trim().toLowerCase();
+
+        if (gestorDAO.procurarPorNif(nif) != null) return new Resultado<>(false, "Já existe um gestor com este NIF.");
+        if (gestorDAO.procurarPorEmail(emailNorm) != null) return new Resultado<>(false, "Já existe um gestor com este email.");
+
+        Gestor gestor = new Gestor(nome, morada, nif, dataNascimento, emailNorm, hash, cargo);
         return gestorDAO.registarGestor(gestor)
                 ? new Resultado<>(gestor, true)
                 : new Resultado<>(false, "Ocorreu um erro na base de dados ao registar.");
@@ -68,6 +76,7 @@ public class GestorController {
         String cargoFinal = (novoCargo != null && !novoCargo.trim().isEmpty()) ? novoCargo : existente.getCargo();
 
         Gestor atualizado = new Gestor(existente.getNome(), moradaFinal, existente.getNif(), dataFinal, existente.getEmail(), existente.getHash(), cargoFinal);
+        atualizado.setAtivo(existente.isAtivo());
         return gestorDAO.atualizarGestor(atualizado)
                 ? new Resultado<>(atualizado, true)
                 : new Resultado<>(false, "Erro ao guardar alterações.");
@@ -80,6 +89,7 @@ public class GestorController {
 
         Gestor atualizado = new Gestor(existente.getNome(), existente.getMorada(), existente.getNif(),
                 existente.getDataNascimento(), existente.getEmail(), novoHash, existente.getCargo());
+        atualizado.setAtivo(existente.isAtivo());
         return gestorDAO.atualizarGestor(atualizado)
                 ? new Resultado<>(atualizado, true)
                 : new Resultado<>(false, "Erro ao atualizar a password.");
@@ -90,6 +100,18 @@ public class GestorController {
         return gestorDAO.eliminarGestor(nif)
                 ? new Resultado<>(null, true)
                 : new Resultado<>(false, "Erro ao tentar eliminar o gestor.");
+    }
+
+    public Resultado<Gestor> ativarDesativarGestor(int nif, boolean ativar) {
+        Gestor existente = gestorDAO.procurarPorNif(nif);
+        if (existente == null) return new Resultado<>(false, "Gestor não encontrado.");
+        if (existente.isAtivo() == ativar) {
+            return new Resultado<>(false, "O gestor já se encontra " + (ativar ? "ativo" : "inativo") + ".");
+        }
+        existente.setAtivo(ativar);
+        return gestorDAO.atualizarGestor(existente)
+                ? new Resultado<>(existente, true)
+                : new Resultado<>(false, "Erro ao atualizar o estado do gestor.");
     }
 
     public List<Gestor> listarGestores() { return gestorDAO.getGestores(); }

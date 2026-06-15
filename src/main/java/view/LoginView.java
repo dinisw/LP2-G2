@@ -23,15 +23,16 @@ public class LoginView {
             try {
                 MenuUtils.exibirTitulo();
                 System.out.println(GetCyanBold() + "LOGIN" + GetReset());
-                System.out.println(GetYellow() + "[Digite '0' para sair | Digite '9' para recuperar password]" + GetReset());
+                System.out.println(GetYellow() + "[Digite '0' para sair | Digite '9' para recuperar password | Digite 'login' para voltar ao menu de escolha]" + GetReset());
 
                 String email = "";
                 boolean emailValido = false;
                 boolean recuperarSenha = false;
+                boolean menuBDCSV = false;
 
                 while (!emailValido) {
                     System.out.print("\nEmail: ");
-                    email = scanner.nextLine().trim();
+                    email = scanner.nextLine().trim().toLowerCase();
 
                     if (email.equals("0")) {
                         System.out.println(GetYellow() + "\nA encerrar o sistema..." + GetReset());
@@ -39,6 +40,10 @@ public class LoginView {
                         break;
                     } else if (email.equals("9")) {
                         recuperarSenha = true;
+                        break;
+                    }else if (email.equals("login")){
+                        System.out.println(GetYellow() + "\nA voltar ao menu de escolha..." + GetReset());
+                        menuBDCSV = true;
                         break;
                     } else {
                         emailValido = BackendUtils.emailISSMFGestorValido(email)
@@ -56,7 +61,10 @@ public class LoginView {
                     RecuperarSenhaView.RecuperarSenha();
                     continue;
                 }
-
+                if(menuBDCSV){
+                    SelecionarModoView.selecionar();
+                    continue;
+                }
                 Utilizador utilizador = null;
                 boolean senhaCorreta = false;
 
@@ -73,6 +81,9 @@ public class LoginView {
                     if (utilizador == null) {
                         if (DatabaseConnection.houveErroConexao()) {
                             System.out.println(GetRed() + "Não foi possível ligar à base de dados. Verifique a ligação e tente novamente." + GetReset());
+                        } else if (loginController.getUltimoErro() == controller.LoginController.ErroLogin.CONTA_INATIVA) {
+                            System.out.println(GetRed() + "Esta conta está desativada. Contacte o gestor do sistema." + GetReset());
+                            break; // não adianta tentar outra senha — conta inativa
                         } else {
                             System.out.println(GetRed() + "Credenciais inválidas! Tente novamente (ou digite '0' para voltar)." + GetReset());
                         }

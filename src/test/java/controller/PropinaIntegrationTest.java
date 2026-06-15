@@ -1,6 +1,8 @@
 package controller;
 
+import DAL.DAOFactory;
 import model.Resultado;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal; // <-- ADICIONADO: Import necessário
@@ -9,7 +11,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class PropinaIntegrationTest {
 
-    private PropinaController controller = new PropinaController();
+    private PropinaController controller;
+
+    @BeforeEach
+    public void setup() {
+        DAOFactory.setModo("CSV"); // forçar CSV — estudante mecTeste=88888 não existe em SQL
+        controller = new PropinaController();
+    }
 
     @Test
     public void testarImpedirPagamentosNegativosOuZero() {

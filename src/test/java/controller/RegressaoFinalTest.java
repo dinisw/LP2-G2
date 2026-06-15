@@ -48,6 +48,7 @@ public class RegressaoFinalTest {
 
     @BeforeAll
     static void setup() {
+        DAOFactory.setModo("CSV"); // forçar CSV independentemente do config.properties
         limpar();
 
         // Departamento
@@ -86,6 +87,10 @@ public class RegressaoFinalTest {
         CursoCRUD cursoCRUD = new CursoCRUD();
         cursoCRUD.registarCurso(new Curso(NOME_CURSO, 3, dep));
 
+        // Após writes directos via new XxxCRUD(), o cache do DAOFactory está desatualizado.
+        // Reset garante que os controllers seguintes lêem o CSV actualizado.
+        DAOFactory.resetarInstancias();
+
         // Associar UCs ao curso (5 do ano 1, 1 do ano 2, 1 do ano 3)
         CursoController cursoController = new CursoController();
         for (String nomeUC : TODAS_UCS) {
@@ -106,18 +111,22 @@ public class RegressaoFinalTest {
 
     @AfterAll
     static void limpar() {
+        AvaliacaoCRUD avalCRUD = new AvaliacaoCRUD();
+        PropinaCRUD propCRUD = new PropinaCRUD();
         EstudanteCRUD estCRUD = new EstudanteCRUD();
+
         for (int i = 0; i < 7; i++) {
             int nif = NIF_BASE + i;
+            // Resolver mecNum: usar o valor armazenado (AfterAll) ou procurar por NIF (BeforeAll/pré-limpeza)
+            int mec = (numsMec != null && i < numsMec.length && numsMec[i] > 0)
+                    ? numsMec[i]
+                    : (estCRUD.procurarPorNif(nif) != null ? estCRUD.procurarPorNif(nif).getNumeroMec() : 0);
+            if (mec > 0) {
+                avalCRUD.eliminarAvaliacoesPorEstudante(mec);
+                propCRUD.eliminarPropinasPorEstudante(mec);
+            }
             Estudante e = estCRUD.procurarPorNif(nif);
             if (e != null) estCRUD.eliminarEstudante(e.getNumeroMec());
-        }
-
-        AvaliacaoCRUD avalCRUD = new AvaliacaoCRUD();
-        for (String nomeUC : TODAS_UCS) {
-            List<Avaliacao> avs = avalCRUD.listarPorUnidadeCurricular(nomeUC);
-            // Remove via re-save: zerar dados e guardar (não há método de remoção individual)
-            // Usamos o mecanismo indireto: eliminar UC depois de limpar avaliacoes
         }
 
         new CursoCRUD().eliminarCurso(NOME_CURSO);
@@ -426,6 +435,8 @@ public class RegressaoFinalTest {
         UnidadeCurricular ucExtra = new UnidadeCurricular(nomeUCExtra, 1, 2, docente);
         ucExtra.adicionarMomento("Teste");
         ucCRUD.registarUC(ucExtra);
+        // Reset após write directo: controller seguinte precisa de ver a nova UC no CSV
+        DAOFactory.resetarInstancias();
 
         try {
             Resultado<?> res = new CursoController().associarUCAoCurso(NOME_CURSO, nomeUCExtra);

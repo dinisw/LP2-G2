@@ -3,6 +3,7 @@ package view;
 import DAL.DAOFactory;
 import common.utils.MenuUtils;
 
+import java.security.Security;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -33,11 +34,7 @@ public class SelecionarModoView {
                     DAOFactory.setModo("CSV");
                     MenuUtils.limparTela();
                     System.out.println("\n" + GetCyanBold() + GetBordaSuperior() + GetReset());
-                    System.out.println(GetCyanBold() + "║ " + GetReset()
-                            + GetGreen() + "✔  Modo CSV selecionado." + GetReset()
-                            + " Os dados serão lidos dos ficheiros locais."
-                            + String.format("%" + (GetLargura() - 57) + "s", "")
-                            + GetCyanBold() + "║" + GetReset());
+                    MenuUtils.exibirLinhaBordada(GetGreen() + "✔  Modo CSV selecionado." + GetReset() + " Os dados serão lidos dos ficheiros locais.");
                     System.out.println(GetCyanBold() + GetBordaInferior() + GetReset());
                     aguardar(800);
                     return;
@@ -46,11 +43,7 @@ public class SelecionarModoView {
                     DAOFactory.setModo("SQL");
                     MenuUtils.limparTela();
                     System.out.println("\n" + GetCyanBold() + GetBordaSuperior() + GetReset());
-                    System.out.println(GetCyanBold() + "║ " + GetReset()
-                            + GetGreen() + "✔  Modo SQL Server selecionado." + GetReset()
-                            + " A ligar ao servidor remoto..."
-                            + String.format("%" + (GetLargura() - 58) + "s", "")
-                            + GetCyanBold() + "║" + GetReset());
+                    MenuUtils.exibirLinhaBordada(GetGreen() + "✔  Modo SQL Server selecionado." + GetReset() + " A ligar ao servidor remoto...");
                     System.out.println(GetCyanBold() + GetBordaInferior() + GetReset());
                     aguardar(800);
                     return;

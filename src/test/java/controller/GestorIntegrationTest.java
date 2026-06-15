@@ -1,5 +1,6 @@
 package controller;
 
+import DAL.DAOFactory;
 import DAL.GestorCRUD;
 import model.Gestor;
 import model.Resultado;
@@ -18,8 +19,19 @@ public class GestorIntegrationTest {
 
     @BeforeEach
     public void setup() {
-        controller = new GestorController();
+        DAOFactory.setModo("CSV"); // forçar CSV independentemente do config.properties
+        // Pré-limpeza ANTES de criar o controller, para que o seu DAO interno carregue CSV limpo
         crud = new GestorCRUD();
+        crud.eliminarGestor(999888777);
+        // Reset do cache após write directo via new GestorCRUD()
+        DAOFactory.resetarInstancias();
+        controller = new GestorController();
+    }
+
+    @AfterEach
+    public void teardown() {
+        // Limpeza robusta com instância fresca (o crud do setup pode estar desatualizado)
+        new GestorCRUD().eliminarGestor(999888777);
     }
 
     @Test

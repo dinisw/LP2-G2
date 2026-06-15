@@ -94,4 +94,12 @@ public class DocenteSqlDAO implements IDocenteDAO {
         ArrayList<Docente> lista = db.select("SELECT * FROM Docente WHERE nif=?", docenteMapper, nif);
         return lista.isEmpty() ? null : lista.get(0);
     }
+
+    @Override
+    public Docente procurarPorEmail(String email) {
+        ArrayList<Docente> lista = db.select(
+                "SELECT * FROM Docente WHERE LOWER(email) = ?", docenteMapper,
+                email != null ? email.toLowerCase() : "");
+        return lista.isEmpty() ? null : lista.get(0);
+    }
 }

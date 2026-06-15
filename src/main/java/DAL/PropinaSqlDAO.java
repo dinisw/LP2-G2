@@ -63,4 +63,10 @@ public class PropinaSqlDAO implements IPropinaDAO {
     public List<Propina> getTodasPropinas() {
         return db.select("SELECT * FROM Propina", propinaMapper, (Object[]) null);
     }
+
+    @Override
+    public boolean eliminarPropinasPorEstudante(int numeroMec) {
+        int rows = db.execute("DELETE FROM Propina WHERE numeroMecEstudante=?", numeroMec);
+        return rows > 0;
+    }
 }

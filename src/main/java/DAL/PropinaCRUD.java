@@ -87,4 +87,11 @@ public class PropinaCRUD extends AbstractCsvCRUD<Propina> implements IPropinaDAO
     public List<Propina> getTodasPropinas() {
         return dados;
     }
+
+    @Override
+    public boolean eliminarPropinasPorEstudante(int numeroMec) {
+        boolean removido = dados.removeIf(p -> p.getNumeroMecEstudante() == numeroMec);
+        if (removido) guardarTodosNoFicheiro();
+        return removido;
+    }
 }
