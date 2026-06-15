@@ -107,12 +107,13 @@ public class CursoController {
     }
 
     public Resultado<Curso> iniciarAnoLetivo(String nome, int anoLetivo) {
-        if (anoLetivo < 1 || anoLetivo > 3) {
-            return new Resultado<>(false, "Ano letivo inválido. Os cursos têm 3 anos curriculares.");
-        }
-
         Curso curso = cursoDAO.procurarPorNome(nome);
         if (curso == null) return new Resultado<>(false, "Curso não encontrado.");
+
+        if (anoLetivo < 1 || anoLetivo > curso.getDuracao()) {
+            return new Resultado<>(false, "Ano letivo inválido. Este curso tem " + curso.getDuracao() + " anos curriculares.");
+        }
+
         if (curso.isAnoIniciado(anoLetivo)) {
             return new Resultado<>(false, "O " + anoLetivo + "º ano deste curso já se encontra iniciado.");
         }

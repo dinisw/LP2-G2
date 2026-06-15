@@ -113,7 +113,7 @@ public class UserStoriesValidationTest {
 
         // NOTA: Tal como no outro teste, estou a assumir que o setPrecoAnual do curso
         // ainda recebe um double nativo. Se estiver a dar erro, mude para: c.setPrecoAnual(BigDecimal.valueOf(1000.0));
-        c.setPrecoAnual(1000.0);
+        c.setPrecoAnual(BigDecimal.valueOf(1000.0));
         cursoCtrl.registarCurso(c);
 
         // Associar todas as UCs ao Curso

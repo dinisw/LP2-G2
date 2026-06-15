@@ -11,6 +11,8 @@ import model.Departamento;
 import model.Resultado;
 import model.UnidadeCurricular;
 
+import javax.swing.*;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -167,7 +169,7 @@ public class CursoView {
             }
 
             Curso novoCurso = new Curso(nome, duracao, departamentoSelecionado);
-            novoCurso.setPrecoAnual(preco);
+            novoCurso.setPrecoAnual(BigDecimal.valueOf(preco));
 
             Resultado<Curso> resultado = new CursoController().registarCurso(novoCurso);
             if (resultado.sucesso) System.out.println(GetGreen() + "\nCurso registado com sucesso!" + GetReset());
@@ -286,11 +288,11 @@ public class CursoView {
             String nomeFinal = novoNome.isEmpty() ? nomeAtual : novoNome;
 
             String precoNovoStr = BackendUtils.lerInputString(scanner, "Novo Preço Anual (deixe em branco para manter): ");
-            double precoFinal = curso.getPrecoAnual();
+            BigDecimal precoFinal = curso.getPrecoAnual();
             if (!precoNovoStr.isEmpty()) {
                 try {
-                    double preco = Double.parseDouble(precoNovoStr.replace(",", "."));
-                    if(preco >= 0) precoFinal = preco;
+                    BigDecimal preco = new BigDecimal(precoNovoStr.replace(",", "."));
+                    if(preco.compareTo(BigDecimal.ZERO) >= 0) precoFinal = preco;
                     else System.out.println(GetRed() + "Preço ignorado (não pode ser negativo)." + GetReset());
                 } catch (NumberFormatException e) {
                     System.out.println(GetRed() + "Formato inválido. Preço não alterado." + GetReset());

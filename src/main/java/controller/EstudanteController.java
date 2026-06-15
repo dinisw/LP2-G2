@@ -270,7 +270,6 @@ public class EstudanteController {
                 motivo = "Não atingiu 60% de aprovações nas UCs do " + anoAnterior + "º ano — ficou no " + anoAnterior + "º ano.";
             }
 
-            // Persistir o novo anoLetivo se o estudante avançou
             if (anoReal != anoAnterior) {
                 estudante.setAnoLetivo(anoReal);
                 estudanteDAO.atualizarEstudante(estudante);
@@ -292,18 +291,16 @@ public class EstudanteController {
         try {
             IPropinaDAO propinaDAO = DAOFactory.getPropinaDAO();
 
-            // Determinar o preço correto via cursoDAO já carregado em memória
             BigDecimal preco = BigDecimal.valueOf(1000.0);
             if (nomeCurso != null && !nomeCurso.trim().isEmpty()) {
                 Curso c = cursoDAO.procurarPorNome(nomeCurso);
-                if (c != null && c.getPrecoAnual() > 0) {
-                    preco = BigDecimal.valueOf(c.getPrecoAnual());
+                if (c != null && c.getPrecoAnual().compareTo(BigDecimal.ZERO)  > 0) {
+                    preco = c.getPrecoAnual();
                 }
             }
 
             Propina existente = propinaDAO.procurarPropina(numeroMec, 1);
             if (existente != null) {
-                // Já existe: actualizar o valor total se ainda não foi paga e o preço está errado
                 if (existente.getValorTotal().compareTo(preco) != 0
                         && existente.getValorPago().compareTo(BigDecimal.ZERO) == 0) {
                     existente.setValorTotal(preco);

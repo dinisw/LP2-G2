@@ -4,6 +4,8 @@ import model.Curso;
 import model.Departamento;
 import model.Resultado;
 import model.UnidadeCurricular;
+
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,7 +21,7 @@ public class CursoCRUD extends AbstractCsvCRUD<Curso> implements ICursoDAO {
             String nomeCurso = colunas[0];
             int duracao = Integer.parseInt(colunas[1]);
             String siglaDep = colunas[2];
-            double precoAnual = Double.parseDouble(colunas[3].replace(",", "."));
+            BigDecimal precoAnual = new BigDecimal(colunas[3].replace(",", "."));
 
             DepartamentoCRUD depCRUD = new DepartamentoCRUD();
             Departamento departamento = depCRUD.procurarPorSigla(siglaDep);

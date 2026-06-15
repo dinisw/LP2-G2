@@ -38,9 +38,8 @@ public class PropinaController {
             ICursoDAO cursoDAO = DAOFactory.getCursoDAO();
             Curso curso = cursoDAO.procurarPorNome(estudante.getNomeCurso());
 
-            // NOTA: Se na classe Curso o preço anual continuar a ser "double", usamos BigDecimal.valueOf() para converter
-            if (curso != null && curso.getPrecoAnual() > 0) {
-                precoAConfigurar = BigDecimal.valueOf(curso.getPrecoAnual());
+            if (curso != null && curso.getPrecoAnual().compareTo(BigDecimal.ZERO)  > 0) {
+                precoAConfigurar = curso.getPrecoAnual();
             }
         }
 

@@ -94,7 +94,7 @@ class EnunciadoComplianceTest {
 
         // Curso com 3 UCs (1 por ano) e preço de propina
         Curso curso = new Curso(CURSO_NOME, 3, depCRUD.procurarPorSigla(DEP_SIGLA));
-        curso.setPrecoAnual(1200.0);
+        curso.setPrecoAnual(BigDecimal.valueOf(1200.0));
         curso.adicionarUnidadeCurricular(ucCRUD.procurarPorNome(UC1_NOME));
         curso.adicionarUnidadeCurricular(ucCRUD.procurarPorNome(UC2_NOME));
         curso.adicionarUnidadeCurricular(ucCRUD.procurarPorNome(UC3_NOME));
@@ -807,7 +807,7 @@ class EnunciadoComplianceTest {
         SenhaUtils su = new SenhaUtils();
         // Criar curso com preço diferente
         Curso c = new Curso("Curso Preço " + RND, 3, depCRUD.procurarPorSigla(DEP_SIGLA));
-        c.setPrecoAnual(750.0);
+        c.setPrecoAnual(BigDecimal.valueOf(750.0));
         c.adicionarUnidadeCurricular(ucCRUD.procurarPorNome(UC1_NOME));
         c.adicionarUnidadeCurricular(ucCRUD.procurarPorNome(UC2_NOME));
         c.adicionarUnidadeCurricular(ucCRUD.procurarPorNome(UC3_NOME));

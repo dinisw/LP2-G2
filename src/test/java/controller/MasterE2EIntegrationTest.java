@@ -92,7 +92,7 @@ public class MasterE2EIntegrationTest {
 
         // NOTA: Assumo que Curso ainda tem o precoAnual como "double".
         // Se mudou na classe Curso para BigDecimal, altere esta linha para: curso.setPrecoAnual(BigDecimal.valueOf(1000.0));
-        curso.setPrecoAnual(1000.0);
+        curso.setPrecoAnual(BigDecimal.valueOf(1000.0));
 
         CursoController cursoControllerWrite = new CursoController();
         assertTrue(cursoControllerWrite.registarCurso(curso).sucesso);
