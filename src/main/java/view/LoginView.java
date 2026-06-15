@@ -23,7 +23,7 @@ public class LoginView {
             try {
                 MenuUtils.exibirTitulo();
                 System.out.println(GetCyanBold() + "LOGIN" + GetReset());
-                System.out.println(GetYellow() + "[Digite '0' para sair | Digite '9' para recuperar password | Digite 'login' para voltar ao menu de escolha]" + GetReset());
+                System.out.println(GetYellow() + "[Digite '0' para sair | Digite '9' para recuperar password | Digite 'Modo' para voltar à escolha do modo de armazenamento]" + GetReset());
 
                 String email = "";
                 boolean emailValido = false;
@@ -41,7 +41,7 @@ public class LoginView {
                     } else if (email.equals("9")) {
                         recuperarSenha = true;
                         break;
-                    }else if (email.equals("login")){
+                    }else if (email.equals("modo")){
                         System.out.println(GetYellow() + "\nA voltar ao menu de escolha..." + GetReset());
                         menuBDCSV = true;
                         break;
