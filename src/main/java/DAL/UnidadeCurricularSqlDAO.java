@@ -19,7 +19,6 @@ public class UnidadeCurricularSqlDAO implements IUnidadeCurricularDAO {
     private RowMapper<UnidadeCurricular> ucMapper() {
         return rs -> {
             int docenteId = rs.getInt("docenteId");
-            // Resolve docente pelo id da BD (não pelo nif)
             ArrayList<Docente> listaDoc = db.select(
                     "SELECT * FROM Docente WHERE id=?",
                     rs2 -> {

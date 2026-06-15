@@ -43,6 +43,7 @@ public class GestorView {
         opcoes.add("6. Gerir Unidades Curriculares");
         opcoes.add("7. Consultar Alunos em Dívida (Tesouraria)");
         opcoes.add("8. Simular Passagem de Ano Letivo (Global)");
+        opcoes.add("9. Exportar Base de Dados para CSV");
         opcoes.add("0. Logout");
 
         do {
@@ -76,6 +77,10 @@ public class GestorView {
                         break;
                     case "8":
                         simularPassagemDeAno();
+                        break;
+                    case "9":
+                        common.utils.DbToCsvExporter.exportarTudo();
+                        MenuUtils.pressionarEnter(scanner);
                         break;
                     case "0":
                         System.out.println(GetYellow() + "\nA voltar ao menu principal..." + GetReset());

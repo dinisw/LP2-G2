@@ -121,7 +121,6 @@ public class EstudanteController {
 
         Resultado<Estudante> res = estudanteDAO.registarEstudante(estudante);
         if (res.sucesso) {
-            // v1.1: ao inscrever o estudante num curso, criar a propina anual do 1.º ano
             garantirPropinaPrimeiroAno(numeroMec);
             return new Resultado<>(numeroMec, true);
         }
@@ -143,7 +142,6 @@ public class EstudanteController {
 
         Resultado<Estudante> res = estudanteDAO.atualizarEstudante(estudante);
 
-        // v1.1: se o estudante passou a estar inscrito num curso, criar a propina anual do 1.º ano
         if (res.sucesso && !tinhaCurso && temCurso(estudante.getNomeCurso())) {
             garantirPropinaPrimeiroAno(numeroMec);
         }
@@ -260,11 +258,6 @@ public class EstudanteController {
         return new Resultado<>(relatorio, true);
     }
 
-    /**
-     * v1.1 — Garante a existência da propina anual do 1.º ano para o estudante.
-     * É idempotente: {@code gerarPropinaAnual} não duplica caso a propina já exista.
-     * Uma falha aqui não compromete o registo/inscrição do estudante (apenas regista aviso).
-     */
     private void garantirPropinaPrimeiroAno(int numeroMec) {
         try {
             new PropinaController().gerarPropinaAnual(numeroMec, 1);

@@ -13,7 +13,6 @@ public class EstudanteSqlDAO implements IEstudanteDAO {
 
     private final DatabaseConnection db;
 
-    // JOIN com Curso para obter o nomeCurso a partir do cursoId
     private static final String SELECT_BASE =
             "SELECT e.*, c.nome AS nomeCurso " +
             "FROM Estudante e " +
@@ -37,7 +36,6 @@ public class EstudanteSqlDAO implements IEstudanteDAO {
 
     @Override
     public Resultado<Estudante> registarEstudante(Estudante estudante) {
-        // Resolve cursoId a partir do nome do curso
         String sqlCurso = "SELECT id FROM Curso WHERE nome = ?";
         ArrayList<Integer> ids = db.select(sqlCurso, rs -> rs.getInt("id"), estudante.getNomeCurso());
         Integer cursoId = ids.isEmpty() ? null : ids.get(0);
@@ -71,7 +69,6 @@ public class EstudanteSqlDAO implements IEstudanteDAO {
 
     @Override
     public Resultado<Estudante> atualizarEstudante(Estudante estudante) {
-        // Resolve cursoId a partir do nome do curso
         String sqlCurso = "SELECT id FROM Curso WHERE nome = ?";
         ArrayList<Integer> ids = db.select(sqlCurso, rs -> rs.getInt("id"), estudante.getNomeCurso());
         Integer cursoId = ids.isEmpty() ? null : ids.get(0);

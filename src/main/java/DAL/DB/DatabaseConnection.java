@@ -59,7 +59,6 @@ public class DatabaseConnection {
             }
         }
         catch (Exception ex) {
-            //System.out.println(ex.getMessage());
         }
         return disconnected;
     }
@@ -73,7 +72,6 @@ public class DatabaseConnection {
             }
         }
         catch (Exception ex) {
-            //System.out.println(ex.getMessage());
         }
         return isTransactionActive;
     }
@@ -87,7 +85,6 @@ public class DatabaseConnection {
             }
         }
         catch (Exception ex) {
-            //System.out.println(ex.getMessage());
         }
         return isTransactionActive;
     }
@@ -101,12 +98,10 @@ public class DatabaseConnection {
             }
         }
         catch (Exception ex) {
-            //System.out.println(ex.getMessage());
         }
         return isTransactionClosed;
     }
 
-    // SELECT — devolve lista mapeada
     public <T> ArrayList<T> select(String sql, RowMapper<T> mapper, Object... params) {
         ArrayList<T> results = new ArrayList<>();
         Connection conn = connect();
@@ -133,7 +128,6 @@ public class DatabaseConnection {
         return results;
     }
 
-    // INSERT com chave gerada automaticamente — devolve o ID gerado
     public int create(String sql, Object... params) {
         int result = 0;
         Connection conn = connect();
@@ -165,7 +159,6 @@ public class DatabaseConnection {
         return result;
     }
 
-    // INSERT / UPDATE / DELETE sem chave gerada — devolve linhas afetadas
     public int execute(String sql, Object... params) {
         int rowsAffected = 0;
         Connection conn = connect();

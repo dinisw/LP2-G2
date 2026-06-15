@@ -66,7 +66,6 @@ public class CursoController {
 
         Resultado res = cursoDAO.atualizarCurso(nomeAntigo, cursoNovo);
         if (res.sucesso && !nomeAntigo.equalsIgnoreCase(cursoNovo.getNome())) {
-            // Sincronizar nome do curso nos perfis dos estudantes
             try {
                 IEstudanteDAO estudanteDAO = DAOFactory.getEstudanteDAO();
                 for (Estudante estudante : estudanteDAO.getEstudantes()) {
