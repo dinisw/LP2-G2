@@ -42,6 +42,9 @@ public class CursoCRUD extends AbstractCsvCRUD<Curso> implements ICursoDAO {
                     if (uc != null) curso.adicionarUnidadeCurricular(uc);
                 }
             }
+            if (colunas.length > 6) {
+                curso.setAtivo(!"false".equalsIgnoreCase(colunas[6].trim()));
+            }
             return curso;
         } catch (Exception e) {
             return null;
@@ -66,8 +69,8 @@ public class CursoCRUD extends AbstractCsvCRUD<Curso> implements ICursoDAO {
             ucsStr = String.join(",", ucs);
         }
 
-        return String.format("%s;%d;%s;%.2f;%s;%s",
-                curso.getNome(), curso.getDuracao(), siglaDep, curso.getPrecoAnual(), anosIniciadosStr, ucsStr);
+        return String.format("%s;%d;%s;%.2f;%s;%s;%s",
+                curso.getNome(), curso.getDuracao(), siglaDep, curso.getPrecoAnual(), anosIniciadosStr, ucsStr, curso.isAtivo());
     }
 
     public Resultado<Curso> registarCurso(Curso curso) {

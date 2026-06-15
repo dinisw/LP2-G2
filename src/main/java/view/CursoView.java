@@ -42,6 +42,7 @@ public class CursoView {
                     opcoes.add("7. Associar UC a Curso");
                     opcoes.add("8. Listar UCs do Curso");
                     opcoes.add("9. Listar Alunos por Curso e Ano");
+                    opcoes.add("10. Ativar / Desativar Curso");
                 }
                 opcoes.add("0. Voltar ao Menu de Gestão");
 
@@ -86,6 +87,10 @@ public class CursoView {
                         if (temCursos) listarAlunosPorCursoEAno();
                         else mostrarErroOpcao();
                         break;
+                    case "10":
+                        if (temCursos) ativarDesativarCurso();
+                        else mostrarErroOpcao();
+                        break;
                     case "0":
                         System.out.println(GetYellow() + "\nA voltar..." + GetReset());
                         return;
@@ -97,6 +102,66 @@ public class CursoView {
                 MenuUtils.pressionarEnter(scanner);
             }
         } while (true);
+    }
+
+    private void ativarDesativarCurso() {
+        try {
+            System.out.println(GetBlue() + "\n--- ATIVAR / DESATIVAR CURSO ---" + GetReset());
+            System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar a operação!]" + GetReset());
+
+            CursoController cursoController = new CursoController();
+            List<Curso> listaCursos = cursoController.listarCursos();
+
+            System.out.println();
+            for (int i = 0; i < listaCursos.size(); i++) {
+                Curso c = listaCursos.get(i);
+                String estadoStr = c.isAtivo() ? GetGreen() + "[ATIVO]" + GetReset() : GetRed() + "[INATIVO]" + GetReset();
+                System.out.printf("%d - %s  %s\n", i + 1, c.getNome(), estadoStr);
+            }
+
+            int escolha = -1;
+            while (escolha < 0 || escolha > listaCursos.size()) {
+                try {
+                    String op = BackendUtils.lerInputString(scanner, "\nDigite a opção desejada: ");
+                    escolha = Integer.parseInt(op);
+                    if (escolha == 0) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
+                    if (escolha < 1 || escolha > listaCursos.size()) {
+                        System.out.println(GetRed() + "Opção inválida." + GetReset());
+                        escolha = -1;
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println(GetRed() + "Por favor, digite apenas números." + GetReset());
+                    escolha = -1;
+                }
+            }
+
+            Curso curso = listaCursos.get(escolha - 1);
+            boolean novoEstado = !curso.isAtivo();
+            String acao = novoEstado ? "ativar" : "desativar";
+
+            String confirmacao = BackendUtils.lerInputString(scanner,
+                    GetWhiteBold() + "Tem a certeza que deseja " + acao + " o curso '" + curso.getNome() + "'? (S/N): " + GetReset());
+            if (!confirmacao.equalsIgnoreCase("S")) {
+                System.out.println(GetYellow() + "Operação cancelada." + GetReset());
+                MenuUtils.pressionarEnter(scanner);
+                return;
+            }
+
+            Resultado<Curso> resultado = cursoController.ativarDesativarCurso(curso.getNome(), novoEstado);
+            if (resultado.sucesso) {
+                System.out.println(GetGreen() + "\nCurso " + (novoEstado ? "ativado" : "desativado") + " com sucesso!" + GetReset());
+            } else {
+                System.out.println(GetRed() + "\nErro: " + resultado.mensagemErro + GetReset());
+            }
+            MenuUtils.pressionarEnter(scanner);
+
+        } catch (CancelarRegistoException e) {
+            System.out.println("\n" + GetYellow() + "Operação interrompida!" + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Ocorreu um erro inesperado: " + e.getMessage() + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+        }
     }
 
     private void mostrarErroOpcao() {

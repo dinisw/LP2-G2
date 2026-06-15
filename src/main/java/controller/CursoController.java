@@ -59,9 +59,10 @@ public class CursoController {
             boolean tentouMudarNome = !cursoOriginal.getNome().equalsIgnoreCase(cursoNovo.getNome());
             boolean tentouMudarDepartamento = cursoNovo.getDepartamento() != null && cursoNovo.getDepartamento().getSigla() != null
                     && !cursoOriginal.getDepartamento().getSigla().equalsIgnoreCase(cursoNovo.getDepartamento().getSigla());
+            boolean tentouMudarPreco = cursoNovo.getPrecoAnual() != cursoOriginal.getPrecoAnual();
 
-            if (tentouMudarNome || tentouMudarDepartamento) {
-                return new Resultado<>(false, "Bloqueado: Não é possível alterar o Nome ou o Departamento de um curso que já iniciou atividade letiva.");
+            if (tentouMudarNome || tentouMudarDepartamento || tentouMudarPreco) {
+                return new Resultado<>(false, "Bloqueado: Não é possível alterar o Nome, Departamento ou Preço de um curso que já iniciou atividade letiva.");
             }
         }
 
@@ -103,6 +104,17 @@ public class CursoController {
         }
 
         return cursoDAO.eliminarCurso(nomeAntigo);
+    }
+
+    public Resultado<Curso> ativarDesativarCurso(String nome, boolean ativar) {
+        Curso curso = cursoDAO.procurarPorNome(nome);
+        if (curso == null) return new Resultado<>(false, "Curso não encontrado.");
+        if (curso.isAtivo() == ativar) {
+            return new Resultado<>(false, "O curso já se encontra " + (ativar ? "ativo" : "inativo") + ".");
+        }
+        curso.setAtivo(ativar);
+        Resultado<Curso> res = cursoDAO.atualizarCurso(nome, curso);
+        return res.sucesso ? new Resultado<>(curso, true) : new Resultado<>(false, "Erro ao " + (ativar ? "ativar" : "desativar") + " o curso.");
     }
 
     public Resultado<Curso> iniciarAnoLetivo(String nome, int anoLetivo) {
