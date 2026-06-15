@@ -21,11 +21,9 @@ public class CursoSqlDAO implements ICursoDAO {
         this.db = new DatabaseConnection();
     }
 
-    // ── Mapper ───────────────────────────────────────────────────────────────
 
     private RowMapper<Curso> cursoMapper() {
         return rs -> {
-            // Departamento via JOIN
             Departamento dep = new Departamento(
                     rs.getString("depNome"),
                     rs.getString("depSigla")
@@ -35,13 +33,11 @@ public class CursoSqlDAO implements ICursoDAO {
 
             int cursoId = rs.getInt("id");
 
-            // Anos iniciados via CursoAnoIniciado
             List<Integer> anos = db.select(
                     "SELECT ano FROM CursoAnoIniciado WHERE curso=?",
                     r -> r.getInt("ano"), cursoId);
             curso.setAnosIniciados(anos);
 
-            // UCs via CursoUnidadeCurricular
             IUnidadeCurricularDAO ucDAO = DAOFactory.getUnidadeCurricularDAO();
             List<Integer> ucIds = db.select(
                     "SELECT UcId FROM CursoUnidadeCurricular WHERE cursoId=?",
@@ -61,7 +57,6 @@ public class CursoSqlDAO implements ICursoDAO {
             "FROM Curso c " +
             "LEFT JOIN Departamento d ON c.departamentoId = d.id";
 
-    // ── Helpers ──────────────────────────────────────────────────────────────
 
     private int resolverDepartamentoId(Departamento dep) {
         if (dep == null) return 0;
@@ -97,7 +92,6 @@ public class CursoSqlDAO implements ICursoDAO {
         }
     }
 
-    // ── CRUD ─────────────────────────────────────────────────────────────────
 
     @Override
     public Resultado<Curso> registarCurso(Curso curso) {

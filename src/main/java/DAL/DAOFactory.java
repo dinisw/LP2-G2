@@ -30,7 +30,6 @@ public class DAOFactory {
     private static IAnoLetivoDAO         anoLetivoDAO;
 
     static {
-        // Fallback: ler do config.properties caso setModo() não seja chamado
         String tipo = "CSV";
         try (InputStream input = DAOFactory.class.getClassLoader().getResourceAsStream("config.properties")) {
             if (input != null) {
@@ -82,56 +81,48 @@ public class DAOFactory {
     public static String getModo() { return tipoArmazenamento; }
     public static boolean isSql()  { return "SQL".equals(tipoArmazenamento); }
 
-    // ── Estudante ──────────────────────────────────────────────────────────────
     public static IEstudanteDAO getEstudanteDAO() {
         if (estudanteDAO == null)
             estudanteDAO = isSql() ? new EstudanteSqlDAO() : new EstudanteCRUD();
         return estudanteDAO;
     }
 
-    // ── Docente ────────────────────────────────────────────────────────────────
     public static IDocenteDAO getDocenteDAO() {
         if (docenteDAO == null)
             docenteDAO = isSql() ? new DocenteSqlDAO() : new DocenteCRUD();
         return docenteDAO;
     }
 
-    // ── Departamento ───────────────────────────────────────────────────────────
     public static IDepartamentoDAO getDepartamentoDAO() {
         if (departamentoDAO == null)
             departamentoDAO = isSql() ? new DepartamentoSqlDAO() : new DepartamentoCRUD();
         return departamentoDAO;
     }
 
-    // ── Unidade Curricular ─────────────────────────────────────────────────────
     public static IUnidadeCurricularDAO getUnidadeCurricularDAO() {
         if (unidadeCurricularDAO == null)
             unidadeCurricularDAO = isSql() ? new UnidadeCurricularSqlDAO() : new UnidadeCurricularCRUD();
         return unidadeCurricularDAO;
     }
 
-    // ── Curso ──────────────────────────────────────────────────────────────────
     public static ICursoDAO getCursoDAO() {
         if (cursoDAO == null)
             cursoDAO = isSql() ? new CursoSqlDAO() : new CursoCRUD();
         return cursoDAO;
     }
 
-    // ── Avaliação ──────────────────────────────────────────────────────────────
     public static IAvaliacaoDAO getAvaliacaoDAO() {
         if (avaliacaoDAO == null)
             avaliacaoDAO = isSql() ? new AvaliacaoSqlDAO() : new AvaliacaoCRUD();
         return avaliacaoDAO;
     }
 
-    // ── Propina ────────────────────────────────────────────────────────────────
     public static IPropinaDAO getPropinaDAO() {
         if (propinaDAO == null)
             propinaDAO = isSql() ? new PropinaSqlDAO() : new PropinaCRUD();
         return propinaDAO;
     }
 
-    // ── Gestor ─────────────────────────────────────────────────────────────────
     public static IGestorDAO getGestorDAO() {
         if (gestorDAO == null)
             gestorDAO = isSql() ? new GestorSqlDAO() : new GestorCRUD();
