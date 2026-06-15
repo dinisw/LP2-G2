@@ -1,13 +1,9 @@
-2;UC Y1 QA 619987;1;1;DQA;Frequência 1
-3;UC Y2 QA 619987;2;1;DQA;
-4;UC Y3 QA 619987;3;1;DQA;
-5;Algoritmos 101581;1;1;RAU;
-6;Base de Dados 101581;1;2;RAU;
-7;Cálculo 101581;1;1;RAU;
-8;Qualidade de Software;1;1;N/A;Frequência
-9;UC Y1 QA 482817;1;1;DQA;Frequência 1
-10;UC Y2 QA 482817;2;1;DQA;
-11;UC Y3 QA 482817;3;1;DQA;
-12;Algoritmos 159236;1;1;FHS;
-13;Base de Dados 159236;1;2;FHS;
-14;Cálculo 159236;1;1;FHS;
+1;Estatística;1;1;MPA;Teste1,teste2,teste3
+2;Algebra;1;1;MPA;Teste1,teste2,teste3
+3;Matemática Aplicada;1;1;MPA;Teste1,teste2,teste3
+4;Física Aplicada;1;1;AVA;Teste1,Teste2
+5;Robôtica I;1;1;AVV;Teste1,Teste2,Teste3
+6;Algoritmia e Programação;2;1;AVA;Teste1,Teste2
+7;Robôtica Ii;2;1;AVV;Teste1,Teste2,Teste3
+8;Inteligência Artificial;2;1;AVV;Teste1,Teste2,Teste3
+9;Projeto e Estágio;3;1;AVA;Teste1,Teste2
