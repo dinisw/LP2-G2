@@ -17,7 +17,6 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
@@ -680,16 +679,17 @@ public class GestorView {
             }
 
             String siglaFinal = siglaBase;
+            DocenteController dc = new DocenteController();
+            int counter = 1;
 
-            if (docenteControllerAtualizado.procurarDocentePorSigla(siglaFinal) != null) {
-                String prefixo = siglaBase.substring(0, siglaBase.length() - 1);
-                List<Character> letras = new ArrayList<>();
-                for (char c = 'A'; c <= 'Z'; c++) letras.add(c);
-                Collections.shuffle(letras);
-                for (char letra : letras) {
-                    siglaFinal = prefixo + letra;
-                    if (docenteControllerAtualizado.procurarDocentePorSigla(siglaFinal) == null) break;
+            while (docenteControllerAtualizado.procurarDocentePorSigla(siglaFinal) != null) {
+
+                if (siglaBase.length() >= 3) {
+                    siglaFinal = siglaBase.substring(0, 2) + counter;
+                } else {
+                    siglaFinal = siglaBase + counter;
                 }
+                counter++;
             }
             String email = siglaFinal.toLowerCase() + "@issmf.ipp.pt";
 
