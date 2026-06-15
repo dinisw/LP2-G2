@@ -7,6 +7,7 @@ import model.Avaliacao;
 import controller.EstudanteController;
 import common.exceptions.CancelarRegistoException;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -199,7 +200,7 @@ public class EstudanteView {
         List<model.Curso> cursosDisponiveis = new java.util.ArrayList<>();
 
         for (model.Curso curso : todosCursos) {
-            if(!curso.isIniciado() && !curso.getUnidadeCurriculars().isEmpty()) {
+            if (!curso.isIniciado() && !curso.getUnidadeCurriculars().isEmpty()) {
                 cursosDisponiveis.add(curso);
             }
         }
@@ -222,7 +223,7 @@ public class EstudanteView {
 
             if (escolha > 0 && escolha <= cursosDisponiveis.size()) {
                 String cursoEscolhido = cursosDisponiveis.get(escolha - 1).getNome();
-                if(estudanteController.atualizarEstudante(estudante.getNumeroMec(), null, null, cursoEscolhido).sucesso) {
+                if (estudanteController.atualizarEstudante(estudante.getNumeroMec(), null, null, cursoEscolhido).sucesso) {
                     estudante.setNomeCurso(cursoEscolhido);
                     System.out.println(GetGreen() + "\nParabéns! Inscrição no curso de " + cursoEscolhido + " realizada com sucesso!" + GetReset());
                 } else {
@@ -412,8 +413,8 @@ public class EstudanteView {
             return;
         }
 
-        double valorPagamento = -1;
-        while (valorPagamento <= 0) {
+        BigDecimal valorPagamento = BigDecimal.valueOf(-1);
+        while (valorPagamento.compareTo(BigDecimal.ZERO) <= 0) {
             System.out.print("\nIntroduza o valor a pagar agora (ex: 250.50 ou 250,50) ou '0' para cancelar: ");
             String inputValor = ler.nextLine().trim();
 
@@ -424,16 +425,16 @@ public class EstudanteView {
             }
 
             try {
-                valorPagamento = Double.parseDouble(inputValor.replace(",", "."));
-                if (valorPagamento <= 0) {
+                valorPagamento = new BigDecimal(inputValor.replace(",", "."));
+                if (valorPagamento.compareTo(BigDecimal.ZERO) <= 0) {
                     System.out.println(GetRed() + "O valor deve ser superior a zero." + GetReset());
-                } else if (valorPagamento > propinaSelecionada.getValorEmDivida()) {
+                } else if (valorPagamento.compareTo(propinaSelecionada.getValorEmDivida()) > 0) {
                     System.out.println(GetRed() + "Erro: O valor inserido (" + String.format("%.2f", valorPagamento) + " EUR) é superior ao valor em dívida (" + String.format("%.2f", propinaSelecionada.getValorEmDivida()) + " EUR). Tente novamente." + GetReset());
-                    valorPagamento = -1;
+                    valorPagamento = BigDecimal.valueOf(-1);
                 }
             } catch (NumberFormatException e) {
                 System.out.println(GetRed() + "Erro: Deve introduzir um valor numérico válido. Use ponto (.) ou vírgula (,) para separar os cêntimos." + GetReset());
-                valorPagamento = -1;
+                valorPagamento = BigDecimal.valueOf(-1);
             }
         }
 

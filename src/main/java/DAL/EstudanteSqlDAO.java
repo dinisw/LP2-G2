@@ -122,6 +122,14 @@ public class EstudanteSqlDAO implements IEstudanteDAO {
     }
 
     @Override
+    public Estudante procurarPorEmail(String email) {
+        String sql = SELECT_BASE + " WHERE LOWER(e.email) = ?";
+        ArrayList<Estudante> lista = db.select(sql, estudanteMapper,
+                email != null ? email.toLowerCase() : "");
+        return lista.isEmpty() ? null : lista.get(0);
+    }
+
+    @Override
     public int gerarNumeroMecanografico() {
         int anoAtual = java.time.LocalDate.now().getYear();
         int yy = anoAtual % 100;

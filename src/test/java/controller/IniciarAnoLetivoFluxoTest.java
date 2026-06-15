@@ -37,6 +37,7 @@ public class IniciarAnoLetivoFluxoTest {
 
     @BeforeAll
     static void setupGlobal() {
+        DAOFactory.setModo("CSV"); // forçar CSV independentemente do config.properties
         cursoCRUD = new CursoCRUD();
         depCRUD = new DepartamentoCRUD();
         ucCRUD = new UnidadeCurricularCRUD();
@@ -51,6 +52,9 @@ public class IniciarAnoLetivoFluxoTest {
                 LocalDate.of(1970, 1, 1), "doc.arranque@issmf.ipp.pt", "Hash123!",
                 SIGLA_DOC, List.of(), List.of());
         docenteCRUD.registarDocente(docenteTeste);
+
+        // Reset após escritas directas: controllers usados nos testes vêem dados actualizados
+        DAOFactory.resetarInstancias();
     }
 
     @AfterAll
@@ -92,18 +96,21 @@ public class IniciarAnoLetivoFluxoTest {
         curso.adicionarUnidadeCurricular(uc2);
         curso.adicionarUnidadeCurricular(uc3);
         cursoCRUD.registarCurso(curso);
+        // Reset para que o próximo new CursoController() leia o CSV actualizado
+        DAOFactory.resetarInstancias();
         return cursoCRUD.procurarPorNome(NOME_CURSO);
     }
 
     // Helper: regista N estudantes no curso
     private void registarEstudantes(String nomeCurso, int quantidade, int nifBase, int mecBase) {
-        EstudanteController ec = new EstudanteController();
         for (int i = 1; i <= quantidade; i++) {
             Estudante e = new Estudante("Aluno IAN " + i, "Rua " + i, nifBase + i,
                     LocalDate.of(2002, 1, 1), "aluno.ian" + i + "@issmf.ipp.pt",
                     mecBase + i, "Hash123!", nomeCurso, true);
             estudanteCRUD.registarEstudante(e);
         }
+        // Reset para que o próximo new EstudanteController()/CursoController() leia estudantes actualizados
+        DAOFactory.resetarInstancias();
     }
 
     // ===== Bloqueios =====
@@ -123,9 +130,11 @@ public class IniciarAnoLetivoFluxoTest {
         cursoCRUD.eliminarCurso(NOME_CURSO);
         Curso c = new Curso(NOME_CURSO, 3, depTeste);
         cursoCRUD.registarCurso(c);
+        DAOFactory.resetarInstancias();
 
         Resultado<Curso> res = new CursoController().iniciarAnoLetivo(NOME_CURSO, 0);
         assertFalse(res.sucesso, "Ano 0 é inválido.");
+        DAOFactory.resetarInstancias();
         cursoCRUD.eliminarCurso(NOME_CURSO);
     }
 
@@ -135,9 +144,11 @@ public class IniciarAnoLetivoFluxoTest {
         cursoCRUD.eliminarCurso(NOME_CURSO);
         Curso c = new Curso(NOME_CURSO, 3, depTeste);
         cursoCRUD.registarCurso(c);
+        DAOFactory.resetarInstancias();
 
         Resultado<Curso> res = new CursoController().iniciarAnoLetivo(NOME_CURSO, 4);
         assertFalse(res.sucesso, "Ano 4 ultrapassa duração de 3 anos.");
+        DAOFactory.resetarInstancias();
         cursoCRUD.eliminarCurso(NOME_CURSO);
     }
 
@@ -152,11 +163,13 @@ public class IniciarAnoLetivoFluxoTest {
         c.adicionarUnidadeCurricular(uc1);
         c.adicionarUnidadeCurricular(uc2);
         cursoCRUD.registarCurso(c);
+        DAOFactory.resetarInstancias(); // garante que o controller vê o CSV actualizado
 
         Resultado<Curso> res = new CursoController().iniciarAnoLetivo(NOME_CURSO, 1);
         assertFalse(res.sucesso, "Sem UC no 3º ano, estrutura curricular é inválida.");
         assertTrue(res.mensagemErro.contains("curricular") || res.mensagemErro.contains("UC"),
-                "Mensagem deve referir a estrutura curricular.");
+                "Mensagem deve referir a estrutura curricular. Actual=[" + res.mensagemErro + "]");
+        DAOFactory.resetarInstancias(); // limpa cache após leitura antes do próximo teste
         cursoCRUD.eliminarCurso(NOME_CURSO);
     }
 
@@ -178,6 +191,7 @@ public class IniciarAnoLetivoFluxoTest {
         c.adicionarUnidadeCurricular(uc2);
         c.adicionarUnidadeCurricular(uc3);
         cursoCRUD.registarCurso(c);
+        DAOFactory.resetarInstancias(); // garante que o controller vê o CSV actualizado
 
         Resultado<Curso> res = new CursoController().iniciarAnoLetivo(NOME_CURSO, 1);
         assertFalse(res.sucesso,

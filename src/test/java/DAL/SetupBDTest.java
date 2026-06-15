@@ -19,8 +19,9 @@ public abstract class SetupBDTest {
             ";encrypt=false;trustServerCertificate=true";
 
     // NIFs de teste — fora do range real para não colidir com dados reais
-    protected static final int  NIF_GESTOR_TESTE   = 987654321;
-    protected static final int  NIF_DOCENTE_TESTE  = 987654322;
+    // NOTA: 987654322 colide com "Maria Santos" (msa, id=27) na BD — mudado para 150000001
+    protected static final int  NIF_GESTOR_TESTE    = 987654321;
+    protected static final int  NIF_DOCENTE_TESTE   = 150000001;
     protected static final int  NIF_ESTUDANTE_TESTE = 987654323;
 
     @BeforeAll

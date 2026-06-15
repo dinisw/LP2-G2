@@ -4,12 +4,15 @@ import DAL.DAOFactory;
 import DAL.IAvaliacaoDAO;
 import DAL.ICursoDAO;
 import DAL.IEstudanteDAO;
+import DAL.IPropinaDAO;
 import model.Curso;
 import model.Estudante;
+import model.Propina;
 import model.Resultado;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import DAL.IEstudanteDAO;
 
 public class EstudanteController {
     private final IEstudanteDAO estudanteDAO;
@@ -34,10 +37,10 @@ public class EstudanteController {
 
         PropinaController propinaController = new PropinaController();
         List<model.Propina> propinas = propinaController.consultarPropinasEstudante(estudante.getNumeroMec());
-        double dividaTotal = 0;
+        BigDecimal dividaTotal = BigDecimal.valueOf(0);
         if (propinas != null) {
             for (model.Propina propina : propinas) {
-                dividaTotal += propina.getValorEmDivida();
+                dividaTotal = dividaTotal.add(propina.getValorEmDivida());
             }
         }
 
@@ -115,13 +118,15 @@ public class EstudanteController {
         if (dataNascimento == null) return new Resultado<>(false, "A data de nascimento fornecida é inválida.");
 
         int numeroMec = estudanteDAO.gerarNumeroMecanografico();
-        String email = numeroMec + "@issmf.ipp.pt";
+        // Email gerado automaticamente — sempre minúsculas por construção
+        String email = (numeroMec + "@issmf.ipp.pt").toLowerCase();
 
         Estudante estudante = new Estudante(nome, morada, nif, dataNascimento, email, numeroMec, hash, curso, true);
 
         Resultado<Estudante> res = estudanteDAO.registarEstudante(estudante);
         if (res.sucesso) {
-            garantirPropinaPrimeiroAno(numeroMec);
+            // v1.1: ao inscrever o estudante num curso, criar a propina anual do 1.º ano
+            garantirPropinaPrimeiroAno(numeroMec, curso);
             return new Resultado<>(numeroMec, true);
         }
 
@@ -143,7 +148,7 @@ public class EstudanteController {
         Resultado<Estudante> res = estudanteDAO.atualizarEstudante(estudante);
 
         if (res.sucesso && !tinhaCurso && temCurso(estudante.getNomeCurso())) {
-            garantirPropinaPrimeiroAno(numeroMec);
+            garantirPropinaPrimeiroAno(numeroMec, estudante.getNomeCurso());
         }
         return res;
     }
@@ -178,6 +183,16 @@ public class EstudanteController {
 
         Resultado<Estudante> res = estudanteDAO.eliminarEstudante(numeroMec);
         return res.sucesso ? new Resultado<>("ELIMINADO", true) : new Resultado<>(false, res.mensagemErro);
+    }
+
+    public Resultado<Estudante> ativarDesativarEstudante(int numeroMec, boolean ativar) {
+        Estudante existente = estudanteDAO.lerEstudante(numeroMec);
+        if (existente == null) return new Resultado<>(false, "Estudante não encontrado.");
+        if (existente.isAtivo() == ativar) {
+            return new Resultado<>(false, "O estudante já se encontra " + (ativar ? "ativo" : "inativo") + ".");
+        }
+        existente.setAtivo(ativar);
+        return estudanteDAO.atualizarEstudante(existente);
     }
 
     public List<Estudante> listarEstudantes() { return estudanteDAO.getEstudantes(); }
@@ -253,14 +268,50 @@ public class EstudanteController {
                 prefixo = "[RETIDO]";
                 motivo = "Não atingiu 60% de aprovações nas UCs do " + anoAnterior + "º ano — ficou no " + anoAnterior + "º ano.";
             }
+
+            // Persistir o novo anoLetivo se o estudante avançou
+            if (anoReal != anoAnterior) {
+                estudante.setAnoLetivo(anoReal);
+                estudanteDAO.atualizarEstudante(estudante);
+            }
+
             relatorio.add(prefixo + " Mec: " + estudante.getNumeroMec() + " (" + estudante.getNome() + ") -> " + motivo);
         }
         return new Resultado<>(relatorio, true);
     }
 
-    private void garantirPropinaPrimeiroAno(int numeroMec) {
+    /**
+     * v1.1 — Garante a existência da propina anual do 1.º ano para o estudante.
+     * Usa {@code this.cursoDAO} (já carregado) para obter o preço correto do curso,
+     * evitando uma nova leitura do CSV que poderia ainda não refletir o curso recém-registado.
+     * É idempotente: se a propina do 1.º ano já existir, não a duplica.
+     * Uma falha aqui não compromete o registo/inscrição do estudante (apenas regista aviso).
+     */
+    private void garantirPropinaPrimeiroAno(int numeroMec, String nomeCurso) {
         try {
-            new PropinaController().gerarPropinaAnual(numeroMec, 1);
+            IPropinaDAO propinaDAO = DAOFactory.getPropinaDAO();
+
+            // Determinar o preço correto via cursoDAO já carregado em memória
+            BigDecimal preco = BigDecimal.valueOf(1000.0);
+            if (nomeCurso != null && !nomeCurso.trim().isEmpty()) {
+                Curso c = cursoDAO.procurarPorNome(nomeCurso);
+                if (c != null && c.getPrecoAnual() > 0) {
+                    preco = BigDecimal.valueOf(c.getPrecoAnual());
+                }
+            }
+
+            Propina existente = propinaDAO.procurarPropina(numeroMec, 1);
+            if (existente != null) {
+                // Já existe: actualizar o valor total se ainda não foi paga e o preço está errado
+                if (existente.getValorTotal().compareTo(preco) != 0
+                        && existente.getValorPago().compareTo(BigDecimal.ZERO) == 0) {
+                    existente.setValorTotal(preco);
+                    propinaDAO.atualizarPropina(existente);
+                }
+                return;
+            }
+
+            propinaDAO.registarPropina(new Propina(numeroMec, 1, preco, BigDecimal.ZERO));
         } catch (Exception e) {
             System.err.println("Aviso: não foi possível gerar a propina do 1.º ano para o estudante "
                     + numeroMec + ": " + e.getMessage());

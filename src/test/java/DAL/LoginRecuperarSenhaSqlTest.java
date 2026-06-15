@@ -122,15 +122,20 @@ class LoginRecuperarSenhaSqlTest extends SetupBDTest {
     // ── 3. Hash coerência ────────────────────────────────────────────────────
 
     @Test @Order(5)
-    @DisplayName("Hash gerado é consistente com salt fixo")
+    @DisplayName("Hash com salt aleatório: verificação funciona, dois hashes são diferentes")
     void hash_consistenteComSalt() {
+        // gerarHashComSalt usa salt ALEATÓRIO — dois chamadas produzem hashes distintos.
+        // O que importa verificar é que cada hash é verificável com a senha correcta
+        // e rejeita a senha errada.
         String hash1 = senhaUtils.gerarHashComSalt("minhasenha");
         String hash2 = senhaUtils.gerarHashComSalt("minhasenha");
 
-        assertEquals(hash1, hash2, "O mesmo input deve gerar sempre o mesmo hash");
-        assertTrue(senhaUtils.verificarSenha("minhasenha", hash1));
-        assertFalse(senhaUtils.verificarSenha("outrasenha", hash1));
-        System.out.println("  ✅ Hash consistente: " + hash1);
+        assertNotEquals(hash1, hash2, "Salt aleatório: dois hashes do mesmo input devem ser diferentes");
+        assertTrue(senhaUtils.verificarSenha("minhasenha", hash1),  "hash1 deve ser verificável com a senha original");
+        assertTrue(senhaUtils.verificarSenha("minhasenha", hash2),  "hash2 deve ser verificável com a senha original");
+        assertFalse(senhaUtils.verificarSenha("outrasenha", hash1), "senha errada não deve validar hash1");
+        assertFalse(senhaUtils.verificarSenha("outrasenha", hash2), "senha errada não deve validar hash2");
+        System.out.println("  ✅ Hash aleatório verificável: " + hash1.substring(0, 20) + "...");
     }
 
     @Test @Order(6)

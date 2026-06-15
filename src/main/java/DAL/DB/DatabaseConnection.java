@@ -1,187 +1,210 @@
 package DAL.DB;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import io.github.cdimascio.dotenv.Dotenv;
 
 import java.sql.*;
 import java.util.ArrayList;
 
+/**
+ * Gestão de ligações à base de dados via HikariCP connection pool.
+ *
+ * Antes: cada query abria uma nova ligação TCP ao SQL Server → lento e dispendioso.
+ * Agora: o pool mantém 2-10 ligações reutilizáveis → muito mais rápido.
+ *
+ * A configuração (dotenv) é lida UMA ÚNICA VEZ na primeira instanciação.
+ */
 public class DatabaseConnection {
 
-    private static boolean erroConexao = false;
+    // ── Pool estático – partilhado por toda a JVM ─────────────────────────────
+    private static volatile HikariDataSource pool;
+    private static volatile boolean inicializado = false;
 
+    private static boolean erroConexao = false;
     public static boolean houveErroConexao() { return erroConexao; }
 
-    private String serverName;
-    private String databaseName;
-    private String username;
-    private String password;
-    private Connection connection;
-
     public DatabaseConnection() {
-        Dotenv dotenv = Dotenv.configure()
-                .directory("src/main/resources")
-                .ignoreIfMalformed()
-                .ignoreIfMissing()
-                .load();
-
-        this.serverName   = dotenv.get("DB_SERVER");
-        this.databaseName = dotenv.get("DB_DATABASE");
-        this.username     = dotenv.get("DB_USER");
-        this.password     = dotenv.get("DB_PASSWORD");
+        // Double-checked locking: pool criado uma única vez
+        if (!inicializado) {
+            synchronized (DatabaseConnection.class) {
+                if (!inicializado) {
+                    inicializarPool();
+                    inicializado = true;
+                }
+            }
+        }
     }
 
-    private Connection connect() {
+    private static void inicializarPool() {
         try {
-            if (connection == null || connection.isClosed()) {
-                String connectionUrl = "jdbc:sqlserver://" + serverName +
-                        ";databaseName=" + databaseName +
-                        ";user=" + username +
-                        ";password=" + password +
-                        ";encrypt=false";
-                connection = DriverManager.getConnection(connectionUrl);
-                erroConexao = false;
-            }
-            return connection;
+            Dotenv dotenv = Dotenv.configure()
+                    .directory("src/main/resources")
+                    .ignoreIfMalformed()
+                    .ignoreIfMissing()
+                    .load();
+
+            String server   = nvl(dotenv.get("DB_SERVER"));
+            String database = nvl(dotenv.get("DB_DATABASE"));
+            String user     = nvl(dotenv.get("DB_USER"));
+            String password = nvl(dotenv.get("DB_PASSWORD"));
+
+            HikariConfig cfg = new HikariConfig();
+            cfg.setJdbcUrl("jdbc:sqlserver://" + server
+                    + ";databaseName=" + database + ";encrypt=false");
+            cfg.setUsername(user);
+            cfg.setPassword(password);
+
+            cfg.setMaximumPoolSize(10);   // máximo de ligações em paralelo
+            cfg.setMinimumIdle(2);        // mínimo sempre prontas
+            cfg.setConnectionTimeout(30_000);   // 30 s para obter ligação do pool
+            cfg.setIdleTimeout(600_000);        // 10 min inactiva → devolve à BD
+            cfg.setMaxLifetime(1_800_000);      // 30 min máximo de vida de uma ligação
+            cfg.setAutoCommit(true);            // cada operação independente por defeito
+
+            pool = new HikariDataSource(cfg);
+
+        } catch (Exception e) {
+            System.err.println("Aviso: Não foi possível criar o pool de ligações: " + e.getMessage());
+            pool = null;
         }
-        catch (Exception ex) {
+    }
+
+    private static String nvl(String s) { return s != null ? s : ""; }
+
+    // ── Interface funcional para transações ──────────────────────────────────
+    @FunctionalInterface
+    public interface TransactionConsumer {
+        void execute(Connection conn) throws SQLException;
+    }
+
+    private Connection openConnection() {
+        if (pool == null) {
             erroConexao = true;
-            System.out.println("Erro ao ligar à base de dados: " + ex.getMessage());
+            return null;
         }
-        return null;
-    }
-
-    private boolean disconnect() {
-        boolean disconnected = false;
         try {
-            if (connection != null && !connection.isClosed()) {
-                connection.close();
-                disconnected = true;
-            }
+            Connection conn = pool.getConnection();
+            erroConexao = false;
+            return conn;
+        } catch (Exception ex) {
+            erroConexao = true;
+            System.out.println("Erro ao obter ligação do pool: " + ex.getMessage());
+            return null;
         }
-        catch (Exception ex) {
-        }
-        return disconnected;
     }
 
-    private boolean beginTransaction() {
-        boolean isTransactionActive = false;
+    /** Verifica se uma tabela existe na BD actual (SQL Server). */
+    public boolean tabelaExiste(String nomeTabela) {
         try {
-            if (connection != null && !connection.isClosed()) {
-                connection.setAutoCommit(false);
-                isTransactionActive = true;
-            }
+            ArrayList<Integer> result = select(
+                    "SELECT COUNT(*) AS total FROM INFORMATION_SCHEMA.TABLES " +
+                    "WHERE TABLE_TYPE='BASE TABLE' AND TABLE_NAME=?",
+                    rs -> rs.getInt("total"), nomeTabela);
+            return !result.isEmpty() && result.get(0) > 0;
+        } catch (Exception e) {
+            return false;
         }
-        catch (Exception ex) {
-        }
-        return isTransactionActive;
     }
 
-    private boolean commitTransaction() {
-        boolean isTransactionActive = false;
-        try {
-            if (connection != null && !connection.isClosed()) {
-                connection.commit();
-                isTransactionActive = true;
-            }
-        }
-        catch (Exception ex) {
-        }
-        return isTransactionActive;
-    }
-
-    private boolean rollbackTransaction() {
-        boolean isTransactionClosed = false;
-        try {
-            if (connection != null && !connection.isClosed()) {
-                connection.rollback();
-                isTransactionClosed = true;
-            }
-        }
-        catch (Exception ex) {
-        }
-        return isTransactionClosed;
-    }
-
+    // ── SELECT ────────────────────────────────────────────────────────────────
     public <T> ArrayList<T> select(String sql, RowMapper<T> mapper, Object... params) {
         ArrayList<T> results = new ArrayList<>();
-        Connection conn = connect();
+        Connection conn = openConnection();
         if (conn == null) return results;
-        try {
+        try (conn) {
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 if (params != null) {
-                    for (int i = 0; i < params.length; i++) {
-                        stmt.setObject(i + 1, params[i]);
-                    }
+                    for (int i = 0; i < params.length; i++) stmt.setObject(i + 1, params[i]);
                 }
-                ResultSet rs = stmt.executeQuery();
-                while (rs.next()) {
-                    results.add(mapper.mapRow(rs));
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) results.add(mapper.mapRow(rs));
                 }
             }
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             System.out.println("Erro ao executar SELECT: " + ex.getMessage());
-        }
-        finally {
-            disconnect();
         }
         return results;
     }
 
+    // ── INSERT com chave gerada ───────────────────────────────────────────────
     public int create(String sql, Object... params) {
         int result = 0;
-        Connection conn = connect();
+        Connection conn = openConnection();
         if (conn == null) return result;
-        try {
+        try (conn) {
             conn.setAutoCommit(false);
             try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 if (params != null) {
-                    for (int i = 0; i < params.length; i++) {
-                        stmt.setObject(i + 1, params[i]);
-                    }
+                    for (int i = 0; i < params.length; i++) stmt.setObject(i + 1, params[i]);
                 }
                 stmt.executeUpdate();
-                try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
-                    if (generatedKeys.next()) {
-                        result = generatedKeys.getInt(1);
-                    }
+                try (ResultSet keys = stmt.getGeneratedKeys()) {
+                    if (keys.next()) result = keys.getInt(1);
                 }
                 conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                System.out.println("Erro ao executar INSERT (rollback efectuado): " + e.getMessage());
+            } finally {
+                conn.setAutoCommit(true); // repõe antes de devolver ao pool
             }
-        }
-        catch (SQLException e) {
-            System.out.println("Erro ao executar INSERT: " + e.getMessage());
-            try { conn.rollback(); } catch (SQLException ignored) {}
-        }
-        finally {
-            disconnect();
+        } catch (SQLException e) {
+            System.out.println("Erro de ligação: " + e.getMessage());
         }
         return result;
     }
 
+    // ── UPDATE / DELETE / INSERT simples ─────────────────────────────────────
     public int execute(String sql, Object... params) {
         int rowsAffected = 0;
-        Connection conn = connect();
+        Connection conn = openConnection();
         if (conn == null) return rowsAffected;
-        try {
+        try (conn) {
             conn.setAutoCommit(false);
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 if (params != null) {
-                    for (int i = 0; i < params.length; i++) {
-                        stmt.setObject(i + 1, params[i]);
-                    }
+                    for (int i = 0; i < params.length; i++) stmt.setObject(i + 1, params[i]);
                 }
                 rowsAffected = stmt.executeUpdate();
                 conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                System.out.println("Erro ao executar UPDATE/DELETE (rollback efectuado): " + e.getMessage());
+            } finally {
+                conn.setAutoCommit(true); // repõe antes de devolver ao pool
             }
-        }
-        catch (SQLException e) {
-            System.out.println("Erro ao executar UPDATE/DELETE: " + e.getMessage());
-            try { conn.rollback(); } catch (SQLException ignored) {}
-        }
-        finally {
-            disconnect();
+        } catch (SQLException e) {
+            System.out.println("Erro de ligação: " + e.getMessage());
         }
         return rowsAffected;
+    }
+
+    /**
+     * Executa múltiplas operações numa única transação ACID.
+     * Se qualquer operação falhar, todas são revertidas (rollback).
+     *
+     * Uso: db.runTransaction(conn -> { INSERT…; INSERT…; });
+     */
+    public boolean runTransaction(TransactionConsumer work) {
+        Connection conn = openConnection();
+        if (conn == null) return false;
+        try (conn) {
+            conn.setAutoCommit(false);
+            try {
+                work.execute(conn);
+                conn.commit();
+                return true;
+            } catch (SQLException e) {
+                conn.rollback();
+                System.out.println("Erro na transação (rollback efectuado): " + e.getMessage());
+                return false;
+            } finally {
+                conn.setAutoCommit(true); // repõe antes de devolver ao pool
+            }
+        } catch (SQLException e) {
+            System.out.println("Erro de ligação: " + e.getMessage());
+            return false;
+        }
     }
 }

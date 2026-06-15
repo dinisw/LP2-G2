@@ -22,10 +22,13 @@ public class DepartamentoController {
             return new Resultado<>(false, "O nome e a sigla do departamento são obrigatórios.");
         }
 
-        Departamento novo = new Departamento(nome, sigla);
+        // Sigla sempre em MAIÚSCULAS
+        String siglaNorm = sigla.trim().toUpperCase();
+
+        Departamento novo = new Departamento(nome, siglaNorm);
         return departamentoDAO.registarDepartamento(novo)
                 ? new Resultado<>(novo, true)
-                : new Resultado<>(false, "Já existe um departamento registado com a sigla '" + sigla + "'.");
+                : new Resultado<>(false, "Já existe um departamento registado com a sigla '" + siglaNorm + "'.");
     }
 
     public List<Departamento> listarTodosDepartamentos() {

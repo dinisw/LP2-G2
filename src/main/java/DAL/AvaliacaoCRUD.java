@@ -68,4 +68,11 @@ public class AvaliacaoCRUD extends AbstractCsvCRUD<Avaliacao> implements IAvalia
     public List<Avaliacao> listarPorUnidadeCurricular(String nomeUC) {
         return dados.stream().filter(a -> a.getUnidadeCurricular().getNome().equalsIgnoreCase(nomeUC)).collect(Collectors.toList());
     }
+
+    @Override
+    public boolean eliminarAvaliacoesPorEstudante(int numeroMec) {
+        boolean removido = dados.removeIf(a -> a.getEstudante().getNumeroMec() == numeroMec);
+        if (removido) guardarTodosNoFicheiro();
+        return removido;
+    }
 }

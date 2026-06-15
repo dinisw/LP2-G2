@@ -4,6 +4,10 @@ import common.exceptions.CancelarRegistoException;
 import controller.DocenteController;
 import controller.EstudanteController;
 import controller.GestorController;
+import org.jline.reader.LineReader;
+import org.jline.reader.LineReaderBuilder;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
 
 import java.util.Scanner;
 import java.util.regex.Pattern;
@@ -78,17 +82,68 @@ public class BackendUtils {
         return lerSenhaOculta(prompt, null);
     }
 
+    /**
+     * Lê uma senha com confirmação: pede duas vezes e só aceita quando coincidem.
+     * Também valida o formato (maiúscula + número + especial).
+     * Lança CancelarRegistoException se o utilizador digitar "0".
+     */
+    public static String lerSenhaComConfirmacao(String promptSenha, String promptConfirmacao, java.util.Scanner scanner) {
+        while (true) {
+            String senha = lerSenhaOculta(promptSenha, scanner);
+            if (senha.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
+
+            if (!isSenhaValida(senha)) {
+                System.out.println(DesignUtils.GetRed()
+                        + "SENHA deve conter pelo menos uma letra maiúscula, um número e um carácter especial. Tente novamente."
+                        + DesignUtils.GetReset());
+                continue;
+            }
+
+            String confirmacao = lerSenhaOculta(promptConfirmacao, scanner);
+            if (confirmacao.equals("0")) throw new CancelarRegistoException("Operação cancelada pelo utilizador.");
+
+            if (senha.equals(confirmacao)) return senha;
+
+            System.out.println(DesignUtils.GetRed()
+                    + "As senhas não coincidem. Tente novamente."
+                    + DesignUtils.GetReset());
+        }
+    }
+
+    /**
+     * Lê uma senha sem a mostrar no terminal.
+     * Ordem de tentativas:
+     *   1. JLine — abre /dev/tty diretamente, funciona em Maven, IDE e terminal normal.
+     *   2. System.console() — fallback nativo da JVM.
+     *   3. Scanner visível — último recurso (IDE sem TTY), sem mascaramento.
+     */
     public static String lerSenhaOculta(String prompt, java.util.Scanner scannerExistente) {
+        // Tentativa 1: JLine (não conflitua com Scanner — usa /dev/tty no Unix)
+        try {
+            Terminal terminal = TerminalBuilder.builder()
+                    .system(true)
+                    .build();
+            try {
+                LineReader reader = LineReaderBuilder.builder()
+                        .terminal(terminal)
+                        .build();
+                String pass = reader.readLine(prompt, '*');
+                return pass != null ? pass.trim() : "";
+            } finally {
+                terminal.close();
+            }
+        } catch (Exception ignored) {}
+
+        // Tentativa 2: System.console() nativo
         if (System.console() != null) {
             char[] pass = System.console().readPassword(prompt);
-            return (pass != null) ? new String(pass).trim() : "";
-        } else {
-            System.out.print(prompt);
-            if (scannerExistente != null) {
-                return scannerExistente.nextLine().trim();
-            }
-            return new java.util.Scanner(System.in).nextLine().trim();
+            return pass != null ? new String(pass).trim() : "";
         }
+
+        // Fallback: input visível (IDE sem TTY)
+        System.out.print(prompt + "[sem mascaramento] ");
+        if (scannerExistente != null) return scannerExistente.nextLine().trim();
+        return new java.util.Scanner(System.in).nextLine().trim();
     }
 
     public static boolean isNomeValido (String nome) {

@@ -2,6 +2,8 @@ package DAL;
 
 import model.Propina;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,9 +19,12 @@ public class PropinaCRUD extends AbstractCsvCRUD<Propina> implements IPropinaDAO
         try {
             int numMec = Integer.parseInt(colunas[0]);
             int ano = Integer.parseInt(colunas[1]);
-            double total = Double.parseDouble(colunas[2].replace(",", "."));
-            double pago = Double.parseDouble(colunas[3].replace(",", "."));
 
+            // CORREÇÃO: Converter a string do ficheiro CSV diretamente para BigDecimal
+            BigDecimal total = new BigDecimal(colunas[2].replace(",", "."));
+            BigDecimal pago = new BigDecimal(colunas[3].replace(",", "."));
+
+            // Agora o construtor já recebe os parâmetros corretos
             Propina propina = new Propina(numMec, ano, total, pago);
 
             if (colunas.length > 4 && !colunas[4].isEmpty()) {
@@ -42,8 +47,15 @@ public class PropinaCRUD extends AbstractCsvCRUD<Propina> implements IPropinaDAO
         if (p.getHistoricoPagamentos() != null && !p.getHistoricoPagamentos().isEmpty()) {
             historico = String.join("|", p.getHistoricoPagamentos());
         }
-        return String.format("%d;%d;%.2f;%.2f;%s",
-                p.getNumeroMecEstudante(), p.getAnoLetivo(), p.getValorTotal(), p.getValorPago(), historico);
+
+        // CORREÇÃO: Formatar o BigDecimal para uma String segura (.toPlainString())
+        // com exatamente 2 casas decimais. Evita problemas de pontuação (, vs .)
+        String totalFormatado = p.getValorTotal().setScale(2, RoundingMode.HALF_UP).toPlainString();
+        String pagoFormatado = p.getValorPago().setScale(2, RoundingMode.HALF_UP).toPlainString();
+
+        // Alterámos de %.2f para %s porque agora estamos a passar Strings pré-formatadas
+        return String.format("%d;%d;%s;%s;%s",
+                p.getNumeroMecEstudante(), p.getAnoLetivo(), totalFormatado, pagoFormatado, historico);
     }
 
     public boolean registarPropina(Propina propina) {
@@ -74,5 +86,12 @@ public class PropinaCRUD extends AbstractCsvCRUD<Propina> implements IPropinaDAO
 
     public List<Propina> getTodasPropinas() {
         return dados;
+    }
+
+    @Override
+    public boolean eliminarPropinasPorEstudante(int numeroMec) {
+        boolean removido = dados.removeIf(p -> p.getNumeroMecEstudante() == numeroMec);
+        if (removido) guardarTodosNoFicheiro();
+        return removido;
     }
 }

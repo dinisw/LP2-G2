@@ -3,9 +3,31 @@ package DAL;
 import java.io.InputStream;
 import java.util.Properties;
 
+/**
+ * Fábrica central de DAOs com cache singleton por tipo.
+ *
+ * <p>Em modo CSV, cada DAO lê o ficheiro uma única vez (no primeiro acesso) e mantém
+ * os dados em memória. Todas as escritas atualizam a memória E o CSV em simultâneo
+ * (comportamento de {@link AbstractCsvCRUD}), pelo que nunca há dados desatualizados.</p>
+ *
+ * <p>O modo é definido no arranque via {@link #setModo(String)}.
+ * Mudar de modo descarta as instâncias em cache para que novos DAOs do tipo correto
+ * sejam criados na próxima chamada.</p>
+ */
 public class DAOFactory {
 
     private static String tipoArmazenamento;
+
+    // ── Instâncias singleton (uma por tipo, criadas no primeiro acesso) ─────────
+    private static IEstudanteDAO         estudanteDAO;
+    private static IDocenteDAO           docenteDAO;
+    private static IDepartamentoDAO      departamentoDAO;
+    private static IUnidadeCurricularDAO unidadeCurricularDAO;
+    private static ICursoDAO             cursoDAO;
+    private static IAvaliacaoDAO         avaliacaoDAO;
+    private static IPropinaDAO           propinaDAO;
+    private static IGestorDAO            gestorDAO;
+    private static IAnoLetivoDAO         anoLetivoDAO;
 
     static {
         String tipo = "CSV";
@@ -21,49 +43,96 @@ public class DAOFactory {
         tipoArmazenamento = tipo;
     }
 
+    /**
+     * Define o modo de armazenamento em runtime.
+     * Deve ser chamado UMA VEZ no arranque da aplicação, antes de qualquer DAO ser instanciado.
+     * Se for chamado após instâncias já existirem (mudança de modo), descarta a cache.
+     *
+     * @param modo "CSV" ou "SQL"
+     */
     public static void setModo(String modo) {
         if (modo != null && (modo.equalsIgnoreCase("CSV") || modo.equalsIgnoreCase("SQL"))) {
             tipoArmazenamento = modo.toUpperCase();
+            // Sempre descarta a cache ao definir o modo:
+            // • Em produção é chamado uma vez antes de qualquer acesso → sem custo real
+            // • Em testes, chamar setModo("CSV") serve como reset explícito da cache
+            resetarInstancias();
         }
     }
 
-    public static String getModo() {
-        return tipoArmazenamento;
+    /**
+     * Descarta todas as instâncias em cache.
+     * <p>Chamado automaticamente quando o modo muda. Em testes, deve ser invocado
+     * explicitamente após escritas directas via {@code new XxxCRUD()} para garantir
+     * que o próximo {@code DAOFactory.getXxxDAO()} lê o CSV actualizado.</p>
+     */
+    public static void resetarInstancias() {
+        estudanteDAO         = null;
+        docenteDAO           = null;
+        departamentoDAO      = null;
+        unidadeCurricularDAO = null;
+        cursoDAO             = null;
+        avaliacaoDAO         = null;
+        propinaDAO           = null;
+        gestorDAO            = null;
+        anoLetivoDAO         = null;
     }
 
-    public static boolean isSql() {
-        return "SQL".equals(tipoArmazenamento);
-    }
+    public static String getModo() { return tipoArmazenamento; }
+    public static boolean isSql()  { return "SQL".equals(tipoArmazenamento); }
 
     public static IEstudanteDAO getEstudanteDAO() {
-        return isSql() ? new EstudanteSqlDAO() : new EstudanteCRUD();
+        if (estudanteDAO == null)
+            estudanteDAO = isSql() ? new EstudanteSqlDAO() : new EstudanteCRUD();
+        return estudanteDAO;
     }
 
     public static IDocenteDAO getDocenteDAO() {
-        return isSql() ? new DocenteSqlDAO() : new DocenteCRUD();
+        if (docenteDAO == null)
+            docenteDAO = isSql() ? new DocenteSqlDAO() : new DocenteCRUD();
+        return docenteDAO;
     }
 
     public static IDepartamentoDAO getDepartamentoDAO() {
-        return isSql() ? new DepartamentoSqlDAO() : new DepartamentoCRUD();
+        if (departamentoDAO == null)
+            departamentoDAO = isSql() ? new DepartamentoSqlDAO() : new DepartamentoCRUD();
+        return departamentoDAO;
     }
 
     public static IUnidadeCurricularDAO getUnidadeCurricularDAO() {
-        return isSql() ? new UnidadeCurricularSqlDAO() : new UnidadeCurricularCRUD();
+        if (unidadeCurricularDAO == null)
+            unidadeCurricularDAO = isSql() ? new UnidadeCurricularSqlDAO() : new UnidadeCurricularCRUD();
+        return unidadeCurricularDAO;
     }
 
     public static ICursoDAO getCursoDAO() {
-        return isSql() ? new CursoSqlDAO() : new CursoCRUD();
+        if (cursoDAO == null)
+            cursoDAO = isSql() ? new CursoSqlDAO() : new CursoCRUD();
+        return cursoDAO;
     }
 
     public static IAvaliacaoDAO getAvaliacaoDAO() {
-        return isSql() ? new AvaliacaoSqlDAO() : new AvaliacaoCRUD();
+        if (avaliacaoDAO == null)
+            avaliacaoDAO = isSql() ? new AvaliacaoSqlDAO() : new AvaliacaoCRUD();
+        return avaliacaoDAO;
     }
 
     public static IPropinaDAO getPropinaDAO() {
-        return isSql() ? new PropinaSqlDAO() : new PropinaCRUD();
+        if (propinaDAO == null)
+            propinaDAO = isSql() ? new PropinaSqlDAO() : new PropinaCRUD();
+        return propinaDAO;
     }
 
     public static IGestorDAO getGestorDAO() {
-        return isSql() ? new GestorSqlDAO() : new GestorCRUD();
+        if (gestorDAO == null)
+            gestorDAO = isSql() ? new GestorSqlDAO() : new GestorCRUD();
+        return gestorDAO;
+    }
+
+    // ── Ano Letivo ─────────────────────────────────────────────────────────────
+    public static IAnoLetivoDAO getAnoLetivoDAO() {
+        if (anoLetivoDAO == null)
+            anoLetivoDAO = isSql() ? new AnoLetivoSqlDAO() : new AnoLetivoMemDAO();
+        return anoLetivoDAO;
     }
 }

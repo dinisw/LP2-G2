@@ -78,6 +78,12 @@ public class AvaliacaoSqlDAO implements IAvaliacaoDAO {
                 avaliacaoMapper(), ucId);
     }
 
+    @Override
+    public boolean eliminarAvaliacoesPorEstudante(int numeroMec) {
+        int rows = db.execute("DELETE FROM Avaliacao WHERE numeroMecEstudante=?", numeroMec);
+        return rows > 0;
+    }
+
     private int resolverUcId(String nomeUC) {
         ArrayList<Integer> ids = db.select(
                 "SELECT id FROM UnidadeCurricular WHERE nome=?",

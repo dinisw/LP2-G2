@@ -7,6 +7,9 @@ import model.Departamento;
 import model.Resultado;
 import model.UnidadeCurricular;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -98,16 +101,51 @@ public class CursoSqlDAO implements ICursoDAO {
         int depId = resolverDepartamentoId(curso.getDepartamento());
         if (depId <= 0) return new Resultado<>(false, "Departamento não encontrado na base de dados.");
 
-        String sql = "INSERT INTO Curso (nome, duracao, departamentoId, precoAnual) VALUES (?, ?, ?, ?)";
-        int id = db.create(sql,
-                curso.getNome(), curso.getDuracao(), depId, curso.getPrecoAnual());
+        final int[] idGerado = {0};
+        boolean ok = db.runTransaction(conn -> {
+            // 1. INSERT Curso
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "INSERT INTO Curso (nome, duracao, departamentoId, precoAnual) VALUES (?, ?, ?, ?)",
+                    Statement.RETURN_GENERATED_KEYS)) {
+                ps.setString(1, curso.getNome());
+                ps.setInt(2, curso.getDuracao());
+                ps.setInt(3, depId);
+                ps.setDouble(4, curso.getPrecoAnual());
+                ps.executeUpdate();
+                try (ResultSet keys = ps.getGeneratedKeys()) {
+                    if (keys.next()) idGerado[0] = keys.getInt(1);
+                }
+            }
+            if (idGerado[0] <= 0) throw new java.sql.SQLException("ID do curso não foi gerado.");
 
-        if (id > 0) {
-            guardarAnosIniciados(id, curso.getAnosIniciados());
-            guardarUCs(id, curso.getUnidadeCurriculars());
-            return new Resultado<>(curso, true);
-        }
-        return new Resultado<>(false, "Erro ao registar curso.");
+            // 2. INSERT CursoAnoIniciado
+            if (curso.getAnosIniciados() != null) {
+                for (int ano : curso.getAnosIniciados()) {
+                    try (PreparedStatement ps = conn.prepareStatement(
+                            "INSERT INTO CursoAnoIniciado (curso, ano) VALUES (?, ?)")) {
+                        ps.setInt(1, idGerado[0]);
+                        ps.setInt(2, ano);
+                        ps.executeUpdate();
+                    }
+                }
+            }
+
+            // 3. INSERT CursoUnidadeCurricular
+            if (curso.getUnidadeCurriculars() != null) {
+                for (UnidadeCurricular uc : curso.getUnidadeCurriculars()) {
+                    if (uc.getId() > 0) {
+                        try (PreparedStatement ps = conn.prepareStatement(
+                                "INSERT INTO CursoUnidadeCurricular (cursoId, UcId) VALUES (?, ?)")) {
+                            ps.setInt(1, idGerado[0]);
+                            ps.setInt(2, uc.getId());
+                            ps.executeUpdate();
+                        }
+                    }
+                }
+            }
+        });
+
+        return ok ? new Resultado<>(curso, true) : new Resultado<>(false, "Erro ao registar curso (transação revertida).");
     }
 
     @Override
@@ -130,16 +168,52 @@ public class CursoSqlDAO implements ICursoDAO {
         int depId = resolverDepartamentoId(cursoNovo.getDepartamento());
         if (depId <= 0) return new Resultado<>(false, "Departamento não encontrado na base de dados.");
 
-        String sql = "UPDATE Curso SET nome=?, duracao=?, departamentoId=?, precoAnual=? WHERE id=?";
-        int rows = db.execute(sql,
-                cursoNovo.getNome(), cursoNovo.getDuracao(), depId, cursoNovo.getPrecoAnual(), id);
+        final int cursoId = id;
+        boolean ok = db.runTransaction(conn -> {
+            // 1. UPDATE Curso
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "UPDATE Curso SET nome=?, duracao=?, departamentoId=?, precoAnual=? WHERE id=?")) {
+                ps.setString(1, cursoNovo.getNome());
+                ps.setInt(2, cursoNovo.getDuracao());
+                ps.setInt(3, depId);
+                ps.setDouble(4, cursoNovo.getPrecoAnual());
+                ps.setInt(5, cursoId);
+                int rows = ps.executeUpdate();
+                if (rows == 0) throw new java.sql.SQLException("Curso não encontrado para atualizar.");
+            }
 
-        if (rows > 0) {
-            guardarAnosIniciados(id, cursoNovo.getAnosIniciados());
-            guardarUCs(id, cursoNovo.getUnidadeCurriculars());
-            return new Resultado<>(cursoNovo, true);
-        }
-        return new Resultado<>(false, "Erro ao atualizar curso.");
+            // 2. Substituir CursoAnoIniciado
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "DELETE FROM CursoAnoIniciado WHERE curso=?")) {
+                ps.setInt(1, cursoId); ps.executeUpdate();
+            }
+            if (cursoNovo.getAnosIniciados() != null) {
+                for (int ano : cursoNovo.getAnosIniciados()) {
+                    try (PreparedStatement ps = conn.prepareStatement(
+                            "INSERT INTO CursoAnoIniciado (curso, ano) VALUES (?, ?)")) {
+                        ps.setInt(1, cursoId); ps.setInt(2, ano); ps.executeUpdate();
+                    }
+                }
+            }
+
+            // 3. Substituir CursoUnidadeCurricular
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "DELETE FROM CursoUnidadeCurricular WHERE cursoId=?")) {
+                ps.setInt(1, cursoId); ps.executeUpdate();
+            }
+            if (cursoNovo.getUnidadeCurriculars() != null) {
+                for (UnidadeCurricular uc : cursoNovo.getUnidadeCurriculars()) {
+                    if (uc.getId() > 0) {
+                        try (PreparedStatement ps = conn.prepareStatement(
+                                "INSERT INTO CursoUnidadeCurricular (cursoId, UcId) VALUES (?, ?)")) {
+                            ps.setInt(1, cursoId); ps.setInt(2, uc.getId()); ps.executeUpdate();
+                        }
+                    }
+                }
+            }
+        });
+
+        return ok ? new Resultado<>(cursoNovo, true) : new Resultado<>(false, "Erro ao atualizar curso (transação revertida).");
     }
 
     @Override

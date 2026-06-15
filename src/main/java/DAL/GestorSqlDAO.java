@@ -58,7 +58,9 @@ public class GestorSqlDAO implements IGestorDAO {
 
     @Override
     public Gestor procurarPorEmail(String email) {
-        ArrayList<Gestor> lista = db.select("SELECT * FROM Gestor WHERE email=?", gestorMapper, email);
+        String emailNorm = email != null ? email.trim().toLowerCase() : "";
+        ArrayList<Gestor> lista = db.select(
+                "SELECT * FROM Gestor WHERE LOWER(email) = ?", gestorMapper, emailNorm);
         return lista.isEmpty() ? null : lista.get(0);
     }
 

@@ -1,6 +1,7 @@
 package controller;
 
 import DAL.DAOFactory;
+import DAL.IAvaliacaoDAO;
 import DAL.ICursoDAO;
 import DAL.IDepartamentoDAO;
 import DAL.IEstudanteDAO;
@@ -140,7 +141,32 @@ public class CursoController {
         }
 
         curso.adicionarAnoIniciado(anoLetivo);
-        return cursoDAO.registarArranqueAno(curso.getNome(), curso);
+        Resultado<Curso> resultado = cursoDAO.registarArranqueAno(curso.getNome(), curso);
+
+        // Auto-criar registos de avaliação nulos para cada estudante × UC do ano × momento
+        if (resultado.sucesso) {
+            try {
+                IAvaliacaoDAO avaliacaoDAO = DAOFactory.getAvaliacaoDAO();
+                List<UnidadeCurricular> ucsDoAno = curso.getUnidadeCurriculars().stream()
+                        .filter(uc -> uc.getAnoCurricular() == anoLetivo)
+                        .collect(Collectors.toList());
+                for (Estudante estudante : todosEstudantes) {
+                    if (estudante.getNomeCurso() != null
+                            && estudante.getNomeCurso().equalsIgnoreCase(curso.getNome())
+                            && estudanteController.obterAnoDesbloqueado(estudante) == anoLetivo) {
+                        for (UnidadeCurricular uc : ucsDoAno) {
+                            for (String momento : uc.getMomentosAvaliacao()) {
+                                avaliacaoDAO.registarAvaliacao(new Avaliacao(momento, null, uc, estudante));
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("Aviso: erro ao auto-criar avaliações para o ano " + anoLetivo + ": " + e.getMessage());
+            }
+        }
+
+        return resultado;
     }
 
     public Resultado<Curso> associarUCAoCurso(String nomeCurso, String nomeUC) {

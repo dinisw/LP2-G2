@@ -105,4 +105,12 @@ public class EstudanteCRUD extends AbstractCsvCRUD<Estudante> implements IEstuda
     public Estudante lerEstudante(int numeroMec) {
         return dados.stream().filter(e -> e.getNumeroMec() == numeroMec).findFirst().orElse(null);
     }
+
+    @Override
+    public Estudante procurarPorEmail(String email) {
+        if (email == null) return null;
+        return dados.stream()
+                .filter(e -> e.getEmail() != null && e.getEmail().equalsIgnoreCase(email))
+                .findFirst().orElse(null);
+    }
 }
