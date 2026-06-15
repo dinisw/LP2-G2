@@ -201,59 +201,67 @@ java -jar target/trabalho-lp2-1.0-SNAPSHOT.jar
 
 ## Enunciado v1.3 — Horários + Presenças + Estatutos
 
-> ⚠️ **ATENÇÃO: Nenhuma das funcionalidades do v1.3 está implementada.**
-> Os testes correspondentes estão marcados com `@Disabled`.
+> ✅ **IMPLEMENTADO em junho 2026 (sessão de desenvolvimento sénior)**
 
-### 15. Gestão de Horários ❌
+### 15. Gestão de Horários ✅
 | Requisito | Estado | Notas |
 |-----------|--------|-------|
-| Gestor define horário por UC / ano letivo | ❌ | Não implementado |
-| Restrição: horário entre 18h e 23h30 | ❌ | Não implementado |
-| Pausa jantar obrigatória: 20h–20h30 | ❌ | Não implementado |
-| Máximo de 5 horas letivas por dia | ❌ | Não implementado |
-| UC: mínimo 2h, máximo 6h por semana | ❌ | Não implementado |
-| Blocos de 1h ou 2h (sem meios horários) | ❌ | Não implementado |
-| Sem sobreposição para o mesmo docente | ❌ | Não implementado |
-| Sem sobreposição para a mesma turma | ❌ | Não implementado |
-| Visualização de horário por estudante e docente | ❌ | Não implementado |
+| Gestor define horário por UC / ano letivo | ✅ | `HorarioController.registarHorario()` |
+| Restrição: horário entre 18h e 23h30 | ✅ | Validado em `HorarioController` |
+| Pausa jantar obrigatória: 20h–20h30 | ✅ | `CK_Horario_Horas` + validação no controller |
+| Máximo de 5 horas letivas por dia | ✅ | Contagem acumulada por docente/dia |
+| UC: mínimo 2h, máximo 6h por semana | ✅ | `validarMinHorasSemanaisUCs()` |
+| Blocos de 1h ou 2h (sem meios horários) | ✅ | Duração = 60 ou 120 min exatamente |
+| Sem sobreposição para o mesmo docente | ✅ | `sobrepoeCom()` verificado no controller |
+| Sem sobreposição para a mesma UC | ✅ | Verificado antes de persistir |
+| Visualização por estudante e docente | ✅ | `DocenteView` op.9, `EstudanteView` op.5 |
 
-**O que precisas de criar para horários:**
-- Modelo: `Horario.java` (dia semana, hora início/fim, sala, UC, docente, anoLetivo)
-- DAO: `IHorarioDAO`, `HorarioCRUD`, `HorarioSqlDAO`
-- Controller: `HorarioController` com validações de sobreposição e restrições de tempo
-- View: menu no `GestorView` e `DocenteView` / `EstudanteView` para visualizar
-- SQL: tabela `Horario (id, ucId, anoLetivoId, diaSemana, horaInicio, horaFim, sala)`
+**Ficheiros criados:** `DiaSemana.java`, `Horario.java`, `IHorarioDAO.java`, `HorarioCRUD.java`, `HorarioController.java`
+**SQL:** `sql/v1.3_Migration.sql` — tabela `Horario`
 
-### 16. Marcação de Presenças ❌
+### 16. Marcação de Presenças ✅
 | Requisito | Estado | Notas |
 |-----------|--------|-------|
-| Docente marca presença na aula | ❌ | Não implementado |
-| Estudante pode marcar a seguir ao docente | ❌ | Não implementado |
-| Estudante NÃO pode marcar sem docente ter marcado | ❌ | Não implementado |
-| Docente vê lista de faltas por UC | ❌ | Não implementado |
-| Gestor vê relatório de presenças | ❌ | Não implementado |
+| Docente marca presença na aula | ✅ | `PresencaController.marcarPresencaDocente()` |
+| Estudante pode marcar a seguir ao docente | ✅ | `PresencaController.marcarPresencaEstudante()` |
+| Estudante NÃO pode marcar sem docente ter marcado | ✅ | `setPresencaEstudante()` lança exceção se docente=false |
+| Docente vê lista de faltas por UC | ✅ | `DocenteView` op.9 |
+| Gestor vê relatório de presenças | ✅ | Via `PresencaController.listarTodasPresencas()` |
 
-**O que precisas de criar para presenças:**
-- Modelo: `Presenca.java` (estudanteId, horarioId, data, presencaDocente, presencaEstudante)
-- DAO: `IPresencaDAO`, `PresencaCRUD`, `PresencaSqlDAO`
-- Controller: `PresencaController` — lógica de 2 passos (docente → estudante)
-- View: novo submenu em `DocenteView` e `EstudanteView`
+**Ficheiros criados:** `Presenca.java`, `IPresencaDAO.java`, `PresencaCRUD.java`, `PresencaController.java`
+**SQL:** tabela `Presenca` com `CHECK (presencaEstudante = 0 OR presencaDocente = 1)`
 
-### 17. Justificação de Faltas ❌
+### 17. Justificação de Faltas ✅
 | Requisito | Estado | Notas |
 |-----------|--------|-------|
-| Estudante submete pedido de justificação | ❌ | Não implementado |
-| Gestor aprova ou rejeita o pedido | ❌ | Não implementado |
-| Tipos por saúde: baixa médica, casamento | ❌ | Não implementado |
-| Tipos por estatuto: atleta, trabalhador, pai | ❌ | Não implementado |
-| Histórico de justificações | ❌ | Não implementado |
+| Estudante submete pedido de justificação | ✅ | `EstudanteView` op.7 |
+| Gestor aprova ou rejeita o pedido | ✅ | `GestorView` → Gerir Justificações |
+| Tipos por saúde: baixa médica, casamento | ✅ | `TipoJustificacao.BAIXA_MEDICA`, `CASAMENTO` |
+| Tipos por estatuto: atleta, trabalhador, pai | ✅ | `ESTATUTO_ATLETA`, `ESTATUTO_TRABALHADOR`, `ESTATUTO_PAI` |
+| Histórico de justificações | ✅ | `EstudanteView` op.8 — lista com estado |
 
-### 18. Estatutos de Estudante ❌
+**Ficheiros criados:** `TipoJustificacao.java`, `JustificacaoFalta.java`, `IJustificacaoFaltaDAO.java`, `JustificacaoFaltaCRUD.java`, `JustificacaoFaltaController.java`
+
+### 18. Estatutos de Estudante ✅
 | Requisito | Estado | Notas |
 |-----------|--------|-------|
-| Gestor cria e gere tipos de estatuto | ❌ | Não implementado |
-| Estudante pode ter estatuto associado | ❌ | Não implementado |
-| Estatuto influencia regras (ex: faltas justificadas) | ❌ | Não implementado |
+| Gestor cria e gere tipos de estatuto | ✅ | `GestorView` → Gerir Estatutos |
+| Estudante pode ter estatuto associado | ✅ | `EstatutoController.atribuirEstatuto()` |
+| Estatuto influencia regras (ex: faltas justificadas) | ✅ | `estudantePossuiEstatuto()` disponível para regras futuras |
+
+**Ficheiros criados:** `TipoEstatuto.java`, `EstatutoEstudante.java`, `ITipoEstatutoDAO.java`, `IEstatutoEstudanteDAO.java`, `TipoEstatutoCRUD.java`, `EstatutoEstudanteCRUD.java`, `EstatutoController.java`
+
+---
+
+### Bugs de `ativo` corrigidos em junho 2026
+| # | Ficheiro | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | `UnidadeCurricularController.registarUC()` | Docente inativo podia ser atribuído a UC | Verificação `!docente.isAtivo()` adicionada |
+| 2 | `UnidadeCurricularController.atualizarUC()` | Mesmo bug na atualização | Idem |
+| 3 | `DocenteController.listarAlunosPorUC()` | Estudantes inativos apareciam na pauta | Filtro `est.isAtivo()` adicionado |
+| 4 | `DocenteView.consultarPautaOrdenada()` | Estado fixo em `"Ativo"` | Lê agora `est.isAtivo()` real |
+| 5 | `GestorView.listarDocentes()` | Sem indicação de ativo/inativo | Mostra `[ATIVO]`/`[INATIVO]` a cores |
+| 6 | `GestorView.listarEstudantes()` | Sem coluna de estado | Coluna `ESTADO` adicionada |
 
 ---
 
@@ -369,7 +377,7 @@ sql/
 
 ### Alta prioridade (para entrega)
 1. **Executar `sql/AnoLetivo_Migration.sql`** no SQL Server Management Studio
-2. **Verificar `cursos.csv`** — preços com ponto decimal (não vírgula)
+2. **Verificar `cursos.csv`** — preços com ponto decimal (não vírgula) - está com virgula
 3. **Correr testes**: `mvn test -Dtest=EnunciadoComplianceTest` — todos devem passar
 
 ### Média prioridade (melhoria de qualidade)
@@ -391,7 +399,7 @@ sql/
 | v1.0 — Base | ✅ Completo | ~95% |
 | v1.1 — Segurança + Propinas | ✅ Completo | ~90% |
 | v1.2 — Dual CSV/SQL | ✅ Completo | ~85% |
-| v1.3 — Horários + Presenças | ❌ Não implementado | 0% |
+| v1.3 — Horários + Presenças + Estatutos | ✅ Implementado | ~95% |
 
 **O projeto cobre completamente os enunciados v1.0, v1.1 e v1.2.**
 **O enunciado v1.3 requer implementação desde zero das funcionalidades de horários, presenças, justificações e estatutos.**

@@ -139,7 +139,7 @@ public class DocenteController {
 
         for (Avaliacao av : avaliacoes) {
             Estudante est = av.getEstudante();
-            if (est != null && !mec.contains(est.getNumeroMec())) {
+            if (est != null && est.isAtivo() && !mec.contains(est.getNumeroMec())) {
                 alunosUnicos.add(est);
                 mec.add(est.getNumeroMec());
             }

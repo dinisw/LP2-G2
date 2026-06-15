@@ -95,6 +95,21 @@ public class GestorView {
                     acoes.put(n++, () -> exibirMenuAnoLetivo());
                 }
 
+                // v1.3 — Requer Cursos e Docentes
+                if (temCursos && temDocentes) {
+                    opcoes.add(n + ". Gerir Horários (v1.3)");
+                    acoes.put(n++, () -> exibirMenuHorarios());
+                }
+
+                // v1.3 — Requer Estudantes
+                if (temEstudantes) {
+                    opcoes.add(n + ". Gerir Justificações de Falta (v1.3)");
+                    acoes.put(n++, () -> exibirMenuJustificacoes());
+
+                    opcoes.add(n + ". Gerir Estatutos de Estudante (v1.3)");
+                    acoes.put(n++, () -> exibirMenuEstatutos());
+                }
+
                 opcoes.add("0. Logout");
 
                 MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL", opcoes);
@@ -803,7 +818,8 @@ public class GestorView {
             } else {
                 for (int i = 0; i < docentes.size(); i++) {
                     Docente docente = docentes.get(i);
-                    System.out.println("ID: " + (i + 1) + " | NIF: " + docente.getNif() + " | Nome: " + docente.getNome() + " | Sigla: " + docente.getSigla());
+                    String estadoDocente = docente.isAtivo() ? GetGreen() + "[ATIVO]" + GetReset() : GetRed() + "[INATIVO]" + GetReset();
+                    System.out.println("ID: " + (i + 1) + " | NIF: " + docente.getNif() + " | Nome: " + docente.getNome() + " | Sigla: " + docente.getSigla() + " | " + estadoDocente);
                 }
             }
             MenuUtils.pressionarEnter(scanner);
@@ -1301,14 +1317,15 @@ public class GestorView {
             if (lista.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhum estudante registado no sistema." + GetReset());
             } else {
-                System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
-                System.out.printf(GetWhiteBold() + " %-5s | %-15s | %-30s | %-25s \n" + GetReset(), "ID", "Nº MEC", "NOME", "CURSO");
-                System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
+                System.out.println(GetCyanBold() + "----------------------------------------------------------------------------------------" + GetReset());
+                System.out.printf(GetWhiteBold() + " %-5s | %-15s | %-30s | %-25s | %-10s\n" + GetReset(), "ID", "Nº MEC", "NOME", "CURSO", "ESTADO");
+                System.out.println(GetCyanBold() + "----------------------------------------------------------------------------------------" + GetReset());
                 for (int i = 0; i < lista.size(); i++) {
                     Estudante e = lista.get(i);
-                    System.out.printf(" %-5d | %-15d | %-30s | %-25s \n", (i + 1), e.getNumeroMec(), e.getNome(), e.getNomeCurso());
+                    String estadoEst = e.isAtivo() ? GetGreen() + "Ativo" + GetReset() : GetRed() + "Inativo" + GetReset();
+                    System.out.printf(" %-5d | %-15d | %-30s | %-25s | %-10s\n", (i + 1), e.getNumeroMec(), e.getNome(), e.getNomeCurso(), estadoEst);
                 }
-                System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
+                System.out.println(GetCyanBold() + "----------------------------------------------------------------------------------------" + GetReset());
             }
 
             MenuUtils.pressionarEnter(scanner);
@@ -2110,4 +2127,358 @@ public class GestorView {
         }
     }
     //endregion
+
+    // ══════════════════════════════════════════════════════════════
+    //  v1.3 — HORÁRIOS
+    // ══════════════════════════════════════════════════════════════
+    private void exibirMenuHorarios() {
+        String opcao;
+        do {
+            ArrayList<String> opcoes = new ArrayList<>();
+            opcoes.add("1. Definir Horário de UC");
+            opcoes.add("2. Listar Horários por UC");
+            opcoes.add("3. Listar Horários do Ano Letivo Atual");
+            opcoes.add("4. Eliminar Horário");
+            opcoes.add("0. Voltar");
+
+            MenuUtils.exibirSubTitulo("GESTOR > HORÁRIOS", opcoes);
+            System.out.print("\nSelecione uma opção: ");
+            opcao = scanner.nextLine().trim();
+
+            switch (opcao) {
+                case "1": definirHorario(); break;
+                case "2": listarHorariosPorUC(); break;
+                case "3": listarHorariosAnoLetivo(); break;
+                case "4": eliminarHorario(); break;
+                case "0": return;
+                default:
+                    System.out.println(GetRed() + "Opção inválida." + GetReset());
+                    MenuUtils.pressionarEnter(scanner);
+            }
+        } while (true);
+    }
+
+    private void definirHorario() {
+        try {
+            System.out.println(GetBlue() + "\n--- DEFINIR HORÁRIO ---" + GetReset());
+            System.out.println(GetYellow() + "[Digite '0' para cancelar]" + GetReset());
+
+            UnidadeCurricularController ucc = new UnidadeCurricularController();
+            List<model.UnidadeCurricular> ucs = ucc.listarTodasUCs();
+            if (ucs.isEmpty()) {
+                System.out.println(GetYellow() + "Não existem UCs registadas." + GetReset());
+                MenuUtils.pressionarEnter(scanner); return;
+            }
+            System.out.println(GetWhiteBold() + "\nUCs disponíveis:" + GetReset());
+            for (int i = 0; i < ucs.size(); i++) {
+                model.UnidadeCurricular uc = ucs.get(i);
+                String docNome = uc.getDocente() != null ? uc.getDocente().getSigla() : "sem docente";
+                System.out.printf("%d. %s (Ano %d) — Docente: %s%n", i+1, uc.getNome(), uc.getAnoCurricular(), docNome);
+            }
+
+            String input = BackendUtils.lerInputString(scanner, "\nEscolha a UC (número): ");
+            if (input.equals("0")) return;
+            int ucIdx = Integer.parseInt(input) - 1;
+            if (ucIdx < 0 || ucIdx >= ucs.size()) { System.out.println(GetRed() + "Opção inválida." + GetReset()); MenuUtils.pressionarEnter(scanner); return; }
+            model.UnidadeCurricular ucEscolhida = ucs.get(ucIdx);
+
+            // Ano letivo atual
+            controller.AnoLetivoController alCtrl = new controller.AnoLetivoController();
+            model.AnoLetivo anoAtual = alCtrl.obterOuCriarAnoAtual();
+            if (anoAtual == null) { System.out.println(GetRed() + "Não existe ano letivo ativo (modo SQL necessário)." + GetReset()); MenuUtils.pressionarEnter(scanner); return; }
+
+            // Dia da semana
+            System.out.println(GetWhiteBold() + "\nDias da semana:" + GetReset());
+            model.DiaSemana[] dias = model.DiaSemana.values();
+            for (int i = 0; i < dias.length; i++) System.out.printf("%d. %s%n", i+1, dias[i].getDescricao());
+            input = BackendUtils.lerInputString(scanner, "Escolha o dia: ");
+            if (input.equals("0")) return;
+            int diaIdx = Integer.parseInt(input) - 1;
+            if (diaIdx < 0 || diaIdx >= dias.length) { System.out.println(GetRed() + "Dia inválido." + GetReset()); MenuUtils.pressionarEnter(scanner); return; }
+            model.DiaSemana dia = dias[diaIdx];
+
+            // Hora início
+            String horaInicioStr = BackendUtils.lerInputString(scanner, "Hora de início (HH:MM, ex: 18:00): ");
+            if (horaInicioStr.equals("0")) return;
+            java.time.LocalTime horaInicio = java.time.LocalTime.parse(horaInicioStr);
+
+            // Duração
+            System.out.println("Duração: 1. 1 hora   2. 2 horas");
+            input = BackendUtils.lerInputString(scanner, "Escolha (1 ou 2): ");
+            if (input.equals("0")) return;
+            int horas = Integer.parseInt(input);
+            if (horas != 1 && horas != 2) { System.out.println(GetRed() + "Duração deve ser 1h ou 2h." + GetReset()); MenuUtils.pressionarEnter(scanner); return; }
+            java.time.LocalTime horaFim = horaInicio.plusHours(horas);
+
+            String sala = BackendUtils.lerInputString(scanner, "Sala: ");
+            if (sala.equals("0")) return;
+
+            HorarioController hCtrl = new HorarioController();
+            model.Resultado<model.Horario> res = hCtrl.registarHorario(ucEscolhida.getId(), anoAtual.getId(), dia, horaInicio, horaFim, sala);
+
+            if (res.sucesso) {
+                System.out.println(GetGreen() + "\nHorário registado: " + res.dados + GetReset());
+            } else {
+                System.out.println(GetRed() + "\nErro: " + res.mensagemErro + GetReset());
+            }
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Erro: " + e.getMessage() + GetReset());
+        }
+        MenuUtils.pressionarEnter(scanner);
+    }
+
+    private void listarHorariosPorUC() {
+        try {
+            System.out.println(GetBlue() + "\n--- HORÁRIOS POR UC ---" + GetReset());
+            UnidadeCurricularController ucc = new UnidadeCurricularController();
+            List<model.UnidadeCurricular> ucs = ucc.listarTodasUCs();
+            if (ucs.isEmpty()) { System.out.println(GetYellow() + "Sem UCs registadas." + GetReset()); MenuUtils.pressionarEnter(scanner); return; }
+            for (int i = 0; i < ucs.size(); i++) System.out.printf("%d. %s%n", i+1, ucs.get(i).getNome());
+
+            String input = BackendUtils.lerInputString(scanner, "\nEscolha a UC: ");
+            int idx = Integer.parseInt(input) - 1;
+            if (idx < 0 || idx >= ucs.size()) { System.out.println(GetRed() + "Opção inválida." + GetReset()); MenuUtils.pressionarEnter(scanner); return; }
+
+            HorarioController hCtrl = new HorarioController();
+            List<model.Horario> horarios = hCtrl.listarHorariosPorUC(ucs.get(idx).getId());
+            if (horarios.isEmpty()) {
+                System.out.println(GetYellow() + "Sem horários definidos para esta UC." + GetReset());
+            } else {
+                horarios.forEach(h -> System.out.println("  " + h));
+            }
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Erro: " + e.getMessage() + GetReset());
+        }
+        MenuUtils.pressionarEnter(scanner);
+    }
+
+    private void listarHorariosAnoLetivo() {
+        try {
+            System.out.println(GetBlue() + "\n--- HORÁRIOS DO ANO LETIVO ATUAL ---" + GetReset());
+            controller.AnoLetivoController alCtrl = new controller.AnoLetivoController();
+            model.AnoLetivo anoAtual = alCtrl.obterOuCriarAnoAtual();
+            if (anoAtual == null) { System.out.println(GetRed() + "Modo SQL necessário para aceder ao Ano Letivo." + GetReset()); MenuUtils.pressionarEnter(scanner); return; }
+
+            HorarioController hCtrl = new HorarioController();
+            List<model.Horario> horarios = hCtrl.listarHorariosPorAnoLetivo(anoAtual.getId());
+            if (horarios.isEmpty()) {
+                System.out.println(GetYellow() + "Sem horários definidos para o ano letivo atual." + GetReset());
+            } else {
+                model.DiaSemana diaAtual = null;
+                for (model.Horario h : horarios.stream().sorted(java.util.Comparator.comparing(model.Horario::getDiaSemana).thenComparing(model.Horario::getHoraInicio)).collect(java.util.stream.Collectors.toList())) {
+                    if (h.getDiaSemana() != diaAtual) {
+                        diaAtual = h.getDiaSemana();
+                        System.out.println(GetCyanBold() + "\n" + diaAtual.getDescricao() + GetReset());
+                    }
+                    System.out.printf("  %s–%s | %s | Sala %s%n", h.getHoraInicio(), h.getHoraFim(),
+                            h.getUnidadeCurricular() != null ? h.getUnidadeCurricular().getNome() : "?", h.getSala());
+                }
+            }
+            String aviso = hCtrl.validarMinHorasSemanaisUCs(anoAtual.getId());
+            if (!aviso.isEmpty()) System.out.println(GetYellow() + "\nAvisos:\n" + aviso + GetReset());
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Erro: " + e.getMessage() + GetReset());
+        }
+        MenuUtils.pressionarEnter(scanner);
+    }
+
+    private void eliminarHorario() {
+        try {
+            controller.AnoLetivoController alCtrl = new controller.AnoLetivoController();
+            model.AnoLetivo anoAtual = alCtrl.obterOuCriarAnoAtual();
+            if (anoAtual == null) { System.out.println(GetRed() + "Modo SQL necessário." + GetReset()); MenuUtils.pressionarEnter(scanner); return; }
+
+            HorarioController hCtrl = new HorarioController();
+            List<model.Horario> horarios = hCtrl.listarHorariosPorAnoLetivo(anoAtual.getId());
+            if (horarios.isEmpty()) { System.out.println(GetYellow() + "Sem horários para eliminar." + GetReset()); MenuUtils.pressionarEnter(scanner); return; }
+
+            for (int i = 0; i < horarios.size(); i++) System.out.printf("%d. %s%n", i+1, horarios.get(i));
+            String input = BackendUtils.lerInputString(scanner, "\nEscolha o horário a eliminar (0 para cancelar): ");
+            if (input.equals("0")) return;
+            int idx = Integer.parseInt(input) - 1;
+            if (idx < 0 || idx >= horarios.size()) { System.out.println(GetRed() + "Opção inválida." + GetReset()); MenuUtils.pressionarEnter(scanner); return; }
+
+            model.Resultado<String> res = hCtrl.eliminarHorario(horarios.get(idx).getId());
+            System.out.println(res.sucesso ? GetGreen() + res.dados + GetReset() : GetRed() + res.mensagemErro + GetReset());
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Erro: " + e.getMessage() + GetReset());
+        }
+        MenuUtils.pressionarEnter(scanner);
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  v1.3 — JUSTIFICAÇÕES DE FALTA
+    // ══════════════════════════════════════════════════════════════
+    private void exibirMenuJustificacoes() {
+        String opcao;
+        do {
+            ArrayList<String> opcoes = new ArrayList<>();
+            opcoes.add("1. Ver Justificações Pendentes");
+            opcoes.add("2. Aprovar Justificação");
+            opcoes.add("3. Rejeitar Justificação");
+            opcoes.add("4. Ver Todas as Justificações");
+            opcoes.add("0. Voltar");
+
+            MenuUtils.exibirSubTitulo("GESTOR > JUSTIFICAÇÕES DE FALTA", opcoes);
+            System.out.print("\nSelecione uma opção: ");
+            opcao = scanner.nextLine().trim();
+
+            JustificacaoFaltaController jCtrl = new JustificacaoFaltaController();
+            switch (opcao) {
+                case "1": listarJustificacoesPendentes(jCtrl); break;
+                case "2": decidirJustificacao(jCtrl, true); break;
+                case "3": decidirJustificacao(jCtrl, false); break;
+                case "4": listarTodasJustificacoes(jCtrl); break;
+                case "0": return;
+                default: System.out.println(GetRed() + "Opção inválida." + GetReset()); MenuUtils.pressionarEnter(scanner);
+            }
+        } while (true);
+    }
+
+    private void listarJustificacoesPendentes(JustificacaoFaltaController jCtrl) {
+        System.out.println(GetBlue() + "\n--- JUSTIFICAÇÕES PENDENTES ---" + GetReset());
+        List<model.JustificacaoFalta> pendentes = jCtrl.listarPendentes();
+        if (pendentes.isEmpty()) {
+            System.out.println(GetGreen() + "Não há justificações pendentes." + GetReset());
+        } else {
+            pendentes.forEach(j -> System.out.println(GetYellow() + "[ID:" + j.getId() + "] " + GetReset() + j));
+        }
+        MenuUtils.pressionarEnter(scanner);
+    }
+
+    private void decidirJustificacao(JustificacaoFaltaController jCtrl, boolean aprovar) {
+        try {
+            List<model.JustificacaoFalta> pendentes = jCtrl.listarPendentes();
+            if (pendentes.isEmpty()) { System.out.println(GetYellow() + "Não há justificações pendentes." + GetReset()); MenuUtils.pressionarEnter(scanner); return; }
+            pendentes.forEach(j -> System.out.println("[ID:" + j.getId() + "] " + j));
+            String idStr = BackendUtils.lerInputString(scanner, "\nID da justificação (0 para cancelar): ");
+            if (idStr.equals("0")) return;
+            int id = Integer.parseInt(idStr);
+            String obs = BackendUtils.lerInputString(scanner, "Observação (opcional): ");
+            model.Resultado<model.JustificacaoFalta> res = aprovar ? jCtrl.aprovarJustificacao(id, obs) : jCtrl.rejeitarJustificacao(id, obs);
+            System.out.println(res.sucesso ? GetGreen() + "Justificação " + (aprovar ? "aprovada" : "rejeitada") + " com sucesso." + GetReset() : GetRed() + res.mensagemErro + GetReset());
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Erro: " + e.getMessage() + GetReset());
+        }
+        MenuUtils.pressionarEnter(scanner);
+    }
+
+    private void listarTodasJustificacoes(JustificacaoFaltaController jCtrl) {
+        System.out.println(GetBlue() + "\n--- TODAS AS JUSTIFICAÇÕES ---" + GetReset());
+        List<model.JustificacaoFalta> todas = jCtrl.listarTodas();
+        if (todas.isEmpty()) { System.out.println(GetYellow() + "Sem justificações registadas." + GetReset()); }
+        else todas.forEach(j -> System.out.println("[ID:" + j.getId() + "|" + j.getEstado() + "] " + j));
+        MenuUtils.pressionarEnter(scanner);
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  v1.3 — ESTATUTOS DE ESTUDANTE
+    // ══════════════════════════════════════════════════════════════
+    private void exibirMenuEstatutos() {
+        String opcao;
+        do {
+            ArrayList<String> opcoes = new ArrayList<>();
+            opcoes.add("1. Criar Tipo de Estatuto");
+            opcoes.add("2. Listar Tipos de Estatuto");
+            opcoes.add("3. Atribuir Estatuto a Estudante");
+            opcoes.add("4. Ver Estatutos de Estudante");
+            opcoes.add("5. Remover Estatuto de Estudante");
+            opcoes.add("6. Eliminar Tipo de Estatuto");
+            opcoes.add("0. Voltar");
+
+            MenuUtils.exibirSubTitulo("GESTOR > ESTATUTOS DE ESTUDANTE", opcoes);
+            System.out.print("\nSelecione uma opção: ");
+            opcao = scanner.nextLine().trim();
+
+            EstatutoController eCtrl = new EstatutoController();
+            switch (opcao) {
+                case "1": criarTipoEstatuto(eCtrl); break;
+                case "2": listarTiposEstatuto(eCtrl); break;
+                case "3": atribuirEstatuto(eCtrl); break;
+                case "4": verEstatutosEstudante(eCtrl); break;
+                case "5": removerEstatuto(eCtrl); break;
+                case "6": eliminarTipoEstatuto(eCtrl); break;
+                case "0": return;
+                default: System.out.println(GetRed() + "Opção inválida." + GetReset()); MenuUtils.pressionarEnter(scanner);
+            }
+        } while (true);
+    }
+
+    private void criarTipoEstatuto(EstatutoController eCtrl) {
+        try {
+            System.out.println(GetBlue() + "\n--- CRIAR TIPO DE ESTATUTO ---" + GetReset());
+            String nome = BackendUtils.lerInputString(scanner, "Nome do estatuto (0 para cancelar): ");
+            if (nome.equals("0")) return;
+            String desc = BackendUtils.lerInputString(scanner, "Descrição: ");
+            model.Resultado<model.TipoEstatuto> res = eCtrl.registarTipoEstatuto(nome, desc);
+            System.out.println(res.sucesso ? GetGreen() + "Tipo criado: " + res.dados + GetReset() : GetRed() + res.mensagemErro + GetReset());
+        } catch (Exception e) { System.out.println(GetRed() + "Erro: " + e.getMessage() + GetReset()); }
+        MenuUtils.pressionarEnter(scanner);
+    }
+
+    private void listarTiposEstatuto(EstatutoController eCtrl) {
+        System.out.println(GetBlue() + "\n--- TIPOS DE ESTATUTO ---" + GetReset());
+        List<model.TipoEstatuto> tipos = eCtrl.listarTiposEstatuto();
+        if (tipos.isEmpty()) System.out.println(GetYellow() + "Nenhum tipo criado ainda." + GetReset());
+        else tipos.forEach(t -> System.out.println("[ID:" + t.getId() + "] " + t));
+        MenuUtils.pressionarEnter(scanner);
+    }
+
+    private void atribuirEstatuto(EstatutoController eCtrl) {
+        try {
+            System.out.println(GetBlue() + "\n--- ATRIBUIR ESTATUTO ---" + GetReset());
+            List<model.TipoEstatuto> tipos = eCtrl.listarTiposEstatuto();
+            if (tipos.isEmpty()) { System.out.println(GetYellow() + "Crie primeiro um tipo de estatuto." + GetReset()); MenuUtils.pressionarEnter(scanner); return; }
+
+            String mecStr = BackendUtils.lerInputString(scanner, "Nº Mecanográfico do estudante (0 para cancelar): ");
+            if (mecStr.equals("0")) return;
+            int mec = Integer.parseInt(mecStr);
+
+            tipos.forEach(t -> System.out.printf("[%d] %s%n", t.getId(), t.getNome()));
+            String tipoStr = BackendUtils.lerInputString(scanner, "ID do tipo de estatuto: ");
+            int tipoId = Integer.parseInt(tipoStr);
+
+            String inicioStr = BackendUtils.lerInputString(scanner, "Data de início (AAAA-MM-DD): ");
+            LocalDate inicio = LocalDate.parse(inicioStr);
+            String fimStr = BackendUtils.lerInputString(scanner, "Data de fim (AAAA-MM-DD ou 'sem fim'): ");
+            LocalDate fim = fimStr.equalsIgnoreCase("sem fim") ? null : LocalDate.parse(fimStr);
+
+            model.Resultado<model.EstatutoEstudante> res = eCtrl.atribuirEstatuto(mec, tipoId, inicio, fim);
+            System.out.println(res.sucesso ? GetGreen() + "Estatuto atribuído com sucesso." + GetReset() : GetRed() + res.mensagemErro + GetReset());
+        } catch (Exception e) { System.out.println(GetRed() + "Erro: " + e.getMessage() + GetReset()); }
+        MenuUtils.pressionarEnter(scanner);
+    }
+
+    private void verEstatutosEstudante(EstatutoController eCtrl) {
+        try {
+            String mecStr = BackendUtils.lerInputString(scanner, "Nº Mecanográfico (0 para cancelar): ");
+            if (mecStr.equals("0")) return;
+            int mec = Integer.parseInt(mecStr);
+            List<model.EstatutoEstudante> estatutos = eCtrl.listarEstatutosPorEstudante(mec);
+            if (estatutos.isEmpty()) System.out.println(GetYellow() + "Este estudante não possui estatutos." + GetReset());
+            else estatutos.forEach(e -> System.out.println("[ID:" + e.getId() + "] " + e + (e.isAtivo() ? GetGreen() + " [ATIVO]" + GetReset() : GetRed() + " [EXPIRADO]" + GetReset())));
+        } catch (Exception e) { System.out.println(GetRed() + "Erro: " + e.getMessage() + GetReset()); }
+        MenuUtils.pressionarEnter(scanner);
+    }
+
+    private void removerEstatuto(EstatutoController eCtrl) {
+        try {
+            String idStr = BackendUtils.lerInputString(scanner, "ID do estatuto a remover (0 para cancelar): ");
+            if (idStr.equals("0")) return;
+            model.Resultado<String> res = eCtrl.removerEstatuto(Integer.parseInt(idStr));
+            System.out.println(res.sucesso ? GetGreen() + res.dados + GetReset() : GetRed() + res.mensagemErro + GetReset());
+        } catch (Exception e) { System.out.println(GetRed() + "Erro: " + e.getMessage() + GetReset()); }
+        MenuUtils.pressionarEnter(scanner);
+    }
+
+    private void eliminarTipoEstatuto(EstatutoController eCtrl) {
+        try {
+            listarTiposEstatuto(eCtrl);
+            String idStr = BackendUtils.lerInputString(scanner, "ID do tipo a eliminar (0 para cancelar): ");
+            if (idStr.equals("0")) return;
+            model.Resultado<String> res = eCtrl.eliminarTipoEstatuto(Integer.parseInt(idStr));
+            System.out.println(res.sucesso ? GetGreen() + res.dados + GetReset() : GetRed() + res.mensagemErro + GetReset());
+        } catch (Exception e) { System.out.println(GetRed() + "Erro: " + e.getMessage() + GetReset()); }
+        MenuUtils.pressionarEnter(scanner);
+    }
 }

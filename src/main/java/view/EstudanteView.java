@@ -2,12 +2,16 @@ package view;
 
 import common.utils.BackendUtils;
 import common.utils.MenuUtils;
-import model.Estudante;
-import model.Avaliacao;
+import controller.EstatutoController;
 import controller.EstudanteController;
+import controller.HorarioController;
+import controller.JustificacaoFaltaController;
+import controller.PresencaController;
 import common.exceptions.CancelarRegistoException;
+import model.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -25,6 +29,11 @@ public class EstudanteView {
         opcoes.add("2. Verificar Notas de Avaliação");
         opcoes.add("3. Consultar Propinas");
         opcoes.add("4. Pagar Propinas");
+        opcoes.add("5. Ver Meu Horário (v1.3)");
+        opcoes.add("6. Marcar Minha Presença (v1.3)");
+        opcoes.add("7. Submeter Justificação de Falta (v1.3)");
+        opcoes.add("8. Ver Minhas Justificações (v1.3)");
+        opcoes.add("9. Ver Meus Estatutos (v1.3)");
         opcoes.add("0. Logout");
 
         do {
@@ -50,6 +59,21 @@ public class EstudanteView {
                         break;
                     case "4":
                         pagarPropinas(estudante, ler);
+                        break;
+                    case "5":
+                        verMeuHorario(estudante, ler);
+                        break;
+                    case "6":
+                        marcarMinhaPresenca(estudante, ler);
+                        break;
+                    case "7":
+                        submeterJustificacao(estudante, ler);
+                        break;
+                    case "8":
+                        verMinhasJustificacoes(estudante, ler);
+                        break;
+                    case "9":
+                        verMeusEstatutos(estudante, ler);
                         break;
                     case "0":
                         System.out.println(GetYellow() + "\nA efetuar logout..." + GetReset());
@@ -444,6 +468,167 @@ public class EstudanteView {
             System.out.println(GetGreen() + "\nPagamento de " + String.format("%.2f", valorPagamento) + " EUR processado com sucesso!" + GetReset());
         } else {
             System.out.println(GetRed() + "\nErro: " + resultado.mensagemErro + GetReset());
+        }
+        MenuUtils.pressionarEnter(ler);
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  v1.3 — HORÁRIO
+    // ══════════════════════════════════════════════════════════════
+    private static void verMeuHorario(Estudante estudante, Scanner ler) {
+        try {
+            System.out.println(GetBlue() + "\n--- MEU HORÁRIO ---" + GetReset());
+            HorarioController hCtrl = new HorarioController();
+            // Usa AnoLetivo atual se disponível; caso contrário lista todos
+            List<Horario> horarios = hCtrl.listarTodos().stream()
+                    .filter(h -> {
+                        if (h.getUnidadeCurricular() == null) return false;
+                        // Verifica se o estudante tem avaliação (inscrição) nesta UC
+                        return estudante.getListaAvaliacoes() != null &&
+                               estudante.getListaAvaliacoes().stream()
+                                   .anyMatch(av -> av.getUnidadeCurricular() != null &&
+                                       av.getUnidadeCurricular().getNome()
+                                           .equalsIgnoreCase(h.getUnidadeCurricular().getNome()));
+                    })
+                    .sorted(java.util.Comparator.comparing(Horario::getDiaSemana)
+                            .thenComparing(Horario::getHoraInicio))
+                    .collect(java.util.stream.Collectors.toList());
+
+            if (horarios.isEmpty()) {
+                System.out.println(GetYellow() + "Não tem horários atribuídos às suas UCs." + GetReset());
+            } else {
+                DiaSemana diaAtual = null;
+                for (Horario h : horarios) {
+                    if (h.getDiaSemana() != diaAtual) {
+                        diaAtual = h.getDiaSemana();
+                        System.out.println(GetCyanBold() + "\n" + diaAtual.getDescricao() + GetReset());
+                    }
+                    System.out.printf("  %s–%s | %s | Sala %s%n",
+                            h.getHoraInicio(), h.getHoraFim(),
+                            h.getUnidadeCurricular().getNome(), h.getSala());
+                }
+            }
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Erro: " + e.getMessage() + GetReset());
+        }
+        MenuUtils.pressionarEnter(ler);
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  v1.3 — PRESENÇA
+    // ══════════════════════════════════════════════════════════════
+    private static void marcarMinhaPresenca(Estudante estudante, Scanner ler) {
+        try {
+            System.out.println(GetBlue() + "\n--- MARCAR MINHA PRESENÇA ---" + GetReset());
+            HorarioController hCtrl = new HorarioController();
+            List<Horario> horarios = hCtrl.listarTodos().stream()
+                    .filter(h -> h.getUnidadeCurricular() != null &&
+                            estudante.getListaAvaliacoes() != null &&
+                            estudante.getListaAvaliacoes().stream().anyMatch(av ->
+                                av.getUnidadeCurricular() != null &&
+                                av.getUnidadeCurricular().getNome()
+                                    .equalsIgnoreCase(h.getUnidadeCurricular().getNome())))
+                    .collect(java.util.stream.Collectors.toList());
+
+            if (horarios.isEmpty()) { System.out.println(GetYellow() + "Sem horários disponíveis." + GetReset()); MenuUtils.pressionarEnter(ler); return; }
+
+            for (int i = 0; i < horarios.size(); i++) System.out.printf("%d. %s%n", i+1, horarios.get(i));
+            String input = BackendUtils.lerInputString(ler, "Escolha a aula (0 para cancelar): ");
+            if (input.equals("0")) return;
+            Horario h = horarios.get(Integer.parseInt(input) - 1);
+
+            String dataStr = BackendUtils.lerInputString(ler, "Data da aula (AAAA-MM-DD, Enter = hoje): ");
+            LocalDate data = dataStr.trim().isEmpty() ? LocalDate.now() : LocalDate.parse(dataStr);
+
+            PresencaController pCtrl = new PresencaController();
+            Resultado<Presenca> res = pCtrl.marcarPresencaEstudante(h.getId(), estudante.getNumeroMec(), data);
+            System.out.println(res.sucesso
+                    ? GetGreen() + "Presença confirmada com sucesso!" + GetReset()
+                    : GetRed() + "Erro: " + res.mensagemErro + GetReset());
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Erro: " + e.getMessage() + GetReset());
+        }
+        MenuUtils.pressionarEnter(ler);
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  v1.3 — JUSTIFICAÇÕES
+    // ══════════════════════════════════════════════════════════════
+    private static void submeterJustificacao(Estudante estudante, Scanner ler) {
+        try {
+            System.out.println(GetBlue() + "\n--- SUBMETER JUSTIFICAÇÃO DE FALTA ---" + GetReset());
+
+            PresencaController pCtrl = new PresencaController();
+            List<Presenca> faltas = pCtrl.listarPresencasPorEstudante(estudante.getNumeroMec()).stream()
+                    .filter(Presenca::isFalta).collect(java.util.stream.Collectors.toList());
+
+            if (faltas.isEmpty()) { System.out.println(GetGreen() + "Não tem faltas por justificar." + GetReset()); MenuUtils.pressionarEnter(ler); return; }
+
+            System.out.println(GetWhiteBold() + "As suas faltas:" + GetReset());
+            for (int i = 0; i < faltas.size(); i++) System.out.printf("%d. [ID:%d] %s%n", i+1, faltas.get(i).getId(), faltas.get(i));
+
+            String input = BackendUtils.lerInputString(ler, "Escolha a falta a justificar (0 para cancelar): ");
+            if (input.equals("0")) return;
+            Presenca faltaEscolhida = faltas.get(Integer.parseInt(input) - 1);
+
+            System.out.println(GetWhiteBold() + "\nTipos de justificação:" + GetReset());
+            TipoJustificacao[] tipos = TipoJustificacao.values();
+            for (int i = 0; i < tipos.length; i++) System.out.printf("%d. %s%n", i+1, tipos[i].getDescricao());
+            input = BackendUtils.lerInputString(ler, "Escolha o tipo: ");
+            TipoJustificacao tipo = tipos[Integer.parseInt(input) - 1];
+
+            String desc = BackendUtils.lerInputString(ler, "Descrição/motivo: ");
+
+            JustificacaoFaltaController jCtrl = new JustificacaoFaltaController();
+            Resultado<JustificacaoFalta> res = jCtrl.submeterJustificacao(
+                    faltaEscolhida.getId(), estudante.getNumeroMec(), tipo, desc);
+            System.out.println(res.sucesso
+                    ? GetGreen() + "Pedido submetido com sucesso. Aguarde aprovação do gestor." + GetReset()
+                    : GetRed() + "Erro: " + res.mensagemErro + GetReset());
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Erro: " + e.getMessage() + GetReset());
+        }
+        MenuUtils.pressionarEnter(ler);
+    }
+
+    private static void verMinhasJustificacoes(Estudante estudante, Scanner ler) {
+        try {
+            System.out.println(GetBlue() + "\n--- MINHAS JUSTIFICAÇÕES ---" + GetReset());
+            JustificacaoFaltaController jCtrl = new JustificacaoFaltaController();
+            List<JustificacaoFalta> lista = jCtrl.listarPorEstudante(estudante.getNumeroMec());
+            if (lista.isEmpty()) {
+                System.out.println(GetYellow() + "Não submeteu nenhuma justificação." + GetReset());
+            } else {
+                lista.forEach(j -> {
+                    String cor = j.getEstado() == JustificacaoFalta.Estado.APROVADA ? GetGreen()
+                            : j.getEstado() == JustificacaoFalta.Estado.REJEITADA ? GetRed() : GetYellow();
+                    System.out.println(cor + "[" + j.getEstado() + "] " + GetReset() + j);
+                    if (j.getObservacaoGestor() != null && !j.getObservacaoGestor().isEmpty())
+                        System.out.println("  Observação do gestor: " + j.getObservacaoGestor());
+                });
+            }
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Erro: " + e.getMessage() + GetReset());
+        }
+        MenuUtils.pressionarEnter(ler);
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    //  v1.3 — ESTATUTOS
+    // ══════════════════════════════════════════════════════════════
+    private static void verMeusEstatutos(Estudante estudante, Scanner ler) {
+        try {
+            System.out.println(GetBlue() + "\n--- MEUS ESTATUTOS ---" + GetReset());
+            EstatutoController eCtrl = new EstatutoController();
+            List<EstatutoEstudante> estatutos = eCtrl.listarEstatutosPorEstudante(estudante.getNumeroMec());
+            if (estatutos.isEmpty()) {
+                System.out.println(GetYellow() + "Não possui nenhum estatuto especial." + GetReset());
+            } else {
+                estatutos.forEach(e -> System.out.println(
+                        (e.isAtivo() ? GetGreen() + "[ATIVO] " : GetRed() + "[EXPIRADO] ") + GetReset() + e));
+            }
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Erro: " + e.getMessage() + GetReset());
         }
         MenuUtils.pressionarEnter(ler);
     }
