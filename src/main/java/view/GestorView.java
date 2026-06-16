@@ -96,6 +96,13 @@ public class GestorView {
                     acoes.put(n++, () -> exibirMenuAnoLetivo());
                 }
 
+                // Sempre disponível
+                opcoes.add(n + ". Exportar Base de Dados para CSV");
+                acoes.put(n++, () -> {
+                    common.utils.DbToCsvExporter.exportarTudo();
+                    MenuUtils.pressionarEnter(scanner);
+                });
+
                 opcoes.add("0. Logout");
 
                 MenuUtils.exibirSubTitulo("PORTAL GESTOR > MENU PRINCIPAL", opcoes);

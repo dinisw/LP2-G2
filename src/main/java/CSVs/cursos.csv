@@ -1,8 +1,4 @@
-Curso QA 619987;3;DQA;1000,00;Nenhum Curso Iniciado;UC Y1 QA 619987,UC Y2 QA 619987,UC Y3 QA 619987
-Engenharia E2E 101581;3;SUT;1000,00;Nenhum Curso Iniciado;Algoritmos 101581,Base de Dados 101581,Cálculo 101581
-Curso Preço 64286;3;N/A;750,00;Nenhum Curso Iniciado;
-Curso Preço 47366;3;N/A;750,00;Nenhum Curso Iniciado;
-Curso Preço 55068;3;N/A;750,00;Nenhum Curso Iniciado;
-Engenharia de Testes;3;DPT;0,00;Nenhum Curso Iniciado;Qualidade de Software
-Curso QA 482817;3;DQA;1000,00;Nenhum Curso Iniciado;UC Y1 QA 482817,UC Y2 QA 482817,UC Y3 QA 482817
-Engenharia E2E 159236;3;ELG;1000,00;Nenhum Curso Iniciado;Algoritmos 159236,Base de Dados 159236,Cálculo 159236
+Eletrônica e Computadores;3;EET;1200.00;Nenhum Curso Iniciado;;true
+Eletrônica e Robôtica;3;EET;1100.00;Nenhum Curso Iniciado;;true
+Engenharia Informática;3;INF;1000.00;1,2;Estatística,Algebra,Matemática Aplicada,Física Aplicada,Robôtica I,Algoritmia e Programação,Robôtica Ii,Inteligência Artificial,Projeto e Estágio;true
+Mecanização de Robôs;3;EEM;1200.00;Nenhum Curso Iniciado;;true

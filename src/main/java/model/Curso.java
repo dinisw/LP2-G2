@@ -10,6 +10,7 @@ public class Curso {
     private final List<UnidadeCurricular> unidadeCurriculars;
     private List<Integer> anosIniciados;
     private double precoAnual;
+    private boolean ativo = true;
 
     public Curso(String nome, int duracao, Departamento departamento) {
         this.nome = nome;
@@ -54,6 +55,9 @@ public class Curso {
     public void setPrecoAnual(double precoAnual) {
         this.precoAnual = precoAnual;
     }
+
+    public boolean isAtivo() { return ativo; }
+    public void setAtivo(boolean ativo) { this.ativo = ativo; }
 
     public boolean isIniciado() {
         return !anosIniciados.isEmpty();
@@ -104,7 +108,7 @@ public class Curso {
     @Override
     public String toString() {
         String nomeDepartamento = (departamento != null) ? departamento.getNome() : "Sem Departamento Associado";
-        String estado = isIniciado() ? "Em curso (Anos ativos: " + anosIniciados.toString() + ")" : "Não iniciado (Inscrições Abertas)";
+        String estado = !ativo ? "INATIVO" : isIniciado() ? "Em curso (Anos ativos: " + anosIniciados.toString() + ")" : "Não iniciado (Inscrições Abertas)";
 
         return String.format("Curso: %s | Duração: %d anos | Departamento: %s | UCs Inseridas: %d | Estado: %s",
                 nome, duracao, nomeDepartamento, unidadeCurriculars.size(), estado);
