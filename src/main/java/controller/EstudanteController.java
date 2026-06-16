@@ -5,13 +5,16 @@ import DAL.IAvaliacaoDAO;
 import DAL.ICursoDAO;
 import DAL.IEstudanteDAO;
 import DAL.IPropinaDAO;
+import model.Avaliacao;
 import model.Curso;
 import model.Estudante;
 import model.Propina;
 import model.Resultado;
+import model.UnidadeCurricular;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 public class EstudanteController {
@@ -77,6 +80,36 @@ public class EstudanteController {
             anoReal = 2;
         }
         return anoReal;
+    }
+
+    /**
+     * Bug 2: UCs em que o estudante se pode (re)inscrever.
+     * <p>Uma UC está disponível se pertencer ao ano desbloqueado (ou anterior) e ainda
+     * NÃO estiver aprovada — aprovação avaliada pela <b>média de todos os momentos</b> via
+     * {@link BLL.EstudanteCalculo#isUCAprovada(List, String)}. Assim, uma UC reprovada
+     * volta a ficar disponível, ao contrário do filtro antigo da view que a escondia caso
+     * tivesse qualquer registo de nota {@code null} ("a aguardar") ou um único momento &ge; 9.5.</p>
+     */
+    public List<UnidadeCurricular> listarUCsDisponiveisParaInscricao(Estudante estudante) {
+        List<UnidadeCurricular> disponiveis = new ArrayList<>();
+        if (estudante == null || estudante.getNomeCurso() == null) return disponiveis;
+
+        Curso curso = cursoDAO.procurarPorNome(estudante.getNomeCurso());
+        if (curso == null) return disponiveis;
+
+        IAvaliacaoDAO avaliacaoDAO = DAOFactory.getAvaliacaoDAO();
+        List<Avaliacao> avaliacoes = avaliacaoDAO.listarPorEstudante(estudante.getNumeroMec());
+        estudante.setListaAvaliacoes(avaliacoes);
+
+        int anoDesbloqueado = obterAnoDesbloqueado(estudante);
+
+        for (UnidadeCurricular uc : curso.getUnidadeCurriculars()) {
+            if (uc.getAnoCurricular() <= anoDesbloqueado
+                    && !BLL.EstudanteCalculo.isUCAprovada(avaliacoes, uc.getNome())) {
+                disponiveis.add(uc);
+            }
+        }
+        return disponiveis;
     }
 
     public boolean verificarSeCursoConcluido(Estudante estudante) {
@@ -269,6 +302,10 @@ public class EstudanteController {
             } else {
                 prefixo = "[RETIDO]";
                 motivo = "Não atingiu 60% de aprovações nas UCs do " + anoAnterior + "º ano — ficou no " + anoAnterior + "º ano.";
+                // Bug 1: ao repetir o ano por reprovação, a propina desse ano volta a ficar por pagar.
+                if (propinaController.reporPropinaParaRepeticao(estudante.getNumeroMec(), anoAnterior)) {
+                    motivo += " A propina do " + anoAnterior + "º ano foi reposta para novo pagamento.";
+                }
             }
 
             if (anoReal != anoAnterior) {

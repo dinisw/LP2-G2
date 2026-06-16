@@ -432,7 +432,21 @@ public class DocenteView {
                 System.out.printf(" %-30s | %-15d | %-15s | %-10s | %-10s\n", nomeEstudante, mec, epoca, notaStr, estadoInscricao);
             }
             System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
-            System.out.println(GetWhiteBold() + "Total de estudantes inscritos na pauta: " + avaliacoesUC.size() + GetReset());
+            // Média de cada estudante na UC (uma linha por aluno, não por momento)
+            java.util.LinkedHashMap<Integer, String> nomePorMec = new java.util.LinkedHashMap<>();
+            for (Avaliacao a : avaliacoesUC) {
+                if (a.getEstudante() != null) {
+                    nomePorMec.putIfAbsent(a.getEstudante().getNumeroMec(), a.getEstudante().getNome());
+                }
+            }
+            System.out.println("\n" + GetWhiteBold() + "Média de cada estudante:" + GetReset());
+            System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
+            for (java.util.Map.Entry<Integer, String> e : nomePorMec.entrySet()) {
+                Resultado<String> status = avaliacaoController.obterStatusAprovacao(e.getKey(), ucSelecionada.getNome());
+                System.out.printf(" %-30s | %-15d | %s%n", e.getValue(), e.getKey(), status.dados);
+            }
+            System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
+            System.out.println(GetWhiteBold() + "Total de estudantes na pauta: " + nomePorMec.size() + GetReset());
             MenuUtils.pressionarEnter(scanner);
         }
         catch (Exception e) {

@@ -8,7 +8,7 @@ import java.util.List;
 
 public class EstudanteCalculo {
 
-    private  static boolean isUCAprovada (List<Avaliacao> avaliacoes, String nomeUC) {
+    public static boolean isUCAprovada (List<Avaliacao> avaliacoes, String nomeUC) {
         List<Avaliacao> avaliacoesDestaUC = avaliacoes.stream().filter(a -> a.getUnidadeCurricular().getNome().equalsIgnoreCase(nomeUC) && a.getNota() != null).toList();
 
         if (avaliacoesDestaUC.isEmpty()) {
