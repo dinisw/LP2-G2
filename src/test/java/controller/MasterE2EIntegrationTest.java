@@ -1,5 +1,6 @@
 package controller;
 
+import DAL.*;
 import common.utils.SenhaUtils;
 import model.*;
 import org.junit.jupiter.api.*;
@@ -145,5 +146,30 @@ public class MasterE2EIntegrationTest {
     public void test06_Avaliacoes_E_Medias() {
         System.out.println("6. Lançando Notas e Validando Aprovações...");
         EstudanteController estController = new EstudanteController();
+
+        // Marcar o ano 1 do curso como iniciado (via DAL) para permitir o lançamento de notas
+        // — bypassa o mínimo de alunos exigido por CursoController.iniciarAnoLetivo(), irrelevante
+        // para o que este teste valida (cálculo de médias e aprovação).
+        CursoCRUD cursoCRUDLocal = new CursoCRUD();
+        Curso curso = cursoCRUDLocal.procurarPorNome(NOME_CURSO);
+        curso.adicionarAnoIniciado(1);
+        cursoCRUDLocal.atualizarCurso(NOME_CURSO, curso);
+
+        UnidadeCurricularCRUD ucCRUDLocal = new UnidadeCurricularCRUD();
+        UnidadeCurricular ucAlgoritmos = ucCRUDLocal.procurarPorNome(UC_ALGORITMOS);
+        ucAlgoritmos.adicionarMomento("Exame");
+        ucCRUDLocal.atualizarUC(ucAlgoritmos);
+        DAOFactory.resetarInstancias();
+
+        Estudante joao = estController.procurarEstudantePorNumeroMec(mecJoao);
+        UnidadeCurricular ucFresca = new UnidadeCurricularController().procurarUCPorNome(UC_ALGORITMOS);
+        AvaliacaoController avalController = new AvaliacaoController();
+
+        Resultado<Avaliacao> r = avalController.registarAvaliacao(new Avaliacao("Exame", 16.0, ucFresca, joao));
+        assertTrue(r.sucesso, "Erro ao lançar nota: " + r.mensagemErro);
+
+        Resultado<String> status = avalController.obterStatusAprovacao(mecJoao, UC_ALGORITMOS);
+        assertTrue(status.sucesso);
+        assertTrue(status.dados.contains("APROVADO"), "Nota 16.0 deveria resultar em APROVADO: " + status.dados);
     }
 }

@@ -59,11 +59,15 @@ public class IniciarAnoLetivoFluxoTest {
 
     @AfterAll
     static void limpezaGlobal() {
-        // Remover estudantes de teste
+        // Remover estudantes de teste (e respectivas propinas)
         for (int i = 1; i <= 10; i++) {
             int nif = 27800000 + i;
             Estudante e = estudanteCRUD.procurarPorNif(nif);
-            if (e != null) estudanteCRUD.eliminarEstudante(e.getNumeroMec());
+            if (e != null) {
+                new PropinaCRUD().eliminarPropinasPorEstudante(e.getNumeroMec());
+                new AvaliacaoCRUD().eliminarAvaliacoesPorEstudante(e.getNumeroMec());
+                estudanteCRUD.eliminarEstudante(e.getNumeroMec());
+            }
         }
         // Remover UCs de teste (loop para apagar eventuais duplicados)
         for (String nome : List.of("UC_ANO1_IAN", "UC_ANO2_IAN", "UC_ANO3_IAN", "UC_SEM_MOMENTO_IAN")) {
@@ -237,5 +241,31 @@ public class IniciarAnoLetivoFluxoTest {
         assertFalse(res.sucesso, "Ano já iniciado não pode ser iniciado de novo.");
         assertTrue(res.mensagemErro.contains("iniciado"),
                 "Mensagem deve indicar que o ano já foi iniciado.");
+    }
+
+    @Test
+    @Order(12)
+    void ano2ComApenas1AlunoElegivel_DeveSerIniciado() {
+        // Regra (v1.1): para anos > 1, basta 1 aluno apto (vs. 5 exigidos para o 1º ano).
+        // Tornar o aluno NIF 27800001 elegível para o 2º ano: aprovar a UC do 1º ano
+        // e liquidar a propina do 1º ano (obterAnoDesbloqueado só avança de ano se a
+        // propina do ano anterior estiver paga).
+        Estudante aluno = estudanteCRUD.procurarPorNif(27800001);
+        assertNotNull(aluno, "Aluno de referência (NIF 27800001) deve existir.");
+
+        PropinaController pc = new PropinaController();
+        pc.gerarPropinaAnual(aluno.getNumeroMec(), 1);
+        Propina propinaAno1 = pc.consultarPropinasEstudante(aluno.getNumeroMec()).stream()
+                .filter(p -> p.getAnoLetivo() == 1).findFirst().orElse(null);
+        assertNotNull(propinaAno1, "Propina do 1º ano deve poder ser gerada.");
+        pc.pagarPropina(aluno.getNumeroMec(), 1, propinaAno1.getValorTotal());
+
+        UnidadeCurricular uc1 = ucCRUD.procurarPorNome("UC_ANO1_IAN");
+        new AvaliacaoCRUD().registarAvaliacao(new Avaliacao("Frequência", 15.0, uc1, aluno));
+        DAOFactory.resetarInstancias();
+
+        Resultado<Curso> res = new CursoController().iniciarAnoLetivo(NOME_CURSO, 2);
+        assertTrue(res.sucesso,
+                "Com 1 aluno elegível (mínimo exigido para anos > 1), o 2º ano deve poder ser iniciado. Erro: " + res.mensagemErro);
     }
 }

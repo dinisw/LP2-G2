@@ -38,7 +38,7 @@ public class PropinaController {
             ICursoDAO cursoDAO = DAOFactory.getCursoDAO();
             Curso curso = cursoDAO.procurarPorNome(estudante.getNomeCurso());
 
-            if (curso != null && curso.getPrecoAnual().compareTo(BigDecimal.ZERO)  > 0) {
+            if (curso != null && curso.getPrecoAnual() != null && curso.getPrecoAnual().compareTo(BigDecimal.ZERO)  > 0) {
                 precoAConfigurar = curso.getPrecoAnual();
             }
         }

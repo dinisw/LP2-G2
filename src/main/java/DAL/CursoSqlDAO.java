@@ -30,7 +30,7 @@ public class CursoSqlDAO implements ICursoDAO {
                     rs.getString("depSigla")
             );
             Curso curso = new Curso(rs.getString("nome"), rs.getInt("duracao"), dep);
-            curso.setPrecoAnual(BigDecimal.valueOf(rs.getDouble("precoAnual")));
+            curso.setPrecoAnual(rs.getBigDecimal("precoAnual"));
 
             int cursoId = rs.getInt("id");
 

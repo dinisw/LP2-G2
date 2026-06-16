@@ -780,23 +780,29 @@ class EnunciadoComplianceTest {
     }
 
     @Test @Order(402)
-    @DisplayName("E3 – Alteração de curso bloqueada quando tem estudantes inscritos (v1.0)")
+    @DisplayName("E3 – Alteração de curso bloqueada quando já iniciou atividade letiva (v1.0)")
     void curso_ImutalvelComEstudantes() {
         CursoController cc = new CursoController();
         Curso cursoAtual = cursoCRUD.procurarPorNome(CURSO_NOME);
         assertNotNull(cursoAtual);
 
-        // Tentar mudar o departamento com estudante inscrito deve ser bloqueado
+        // Marcar o curso como iniciado: já tem estudantes e professores alocados
+        // (sem isto o teste não verificava nada — via DAL diretamente para não
+        //  depender do mínimo de 5 alunos exigido por CursoController.iniciarAnoLetivo)
+        cursoAtual.adicionarAnoIniciado(1);
+        cursoCRUD.atualizarCurso(CURSO_NOME, cursoAtual);
+
+        // Tentar mudar o departamento de um curso já iniciado deve ser bloqueado
         Departamento novoDep = new Departamento("Outro Dept", "ODT");
         depCRUD.registarDepartamento(novoDep);
 
         Curso cursoNovo = new Curso(CURSO_NOME, 3, novoDep);
         Resultado<Curso> res = cc.atualizarCurso(CURSO_NOME, cursoNovo);
 
-        // Deve bloquear porque há estudantes e o curso está iniciado
-        // (se não iniciado, pode mudar nome/dept)
-        // Esta regra é: "Sempre que existam estudantes alocados, o curso não pode ser alterado"
-        // O CursoController implementa esta regra no atualizarCurso
+        assertFalse(res.sucesso,
+                "Não deve ser possível alterar o departamento de um curso já iniciado.");
+        assertTrue(res.mensagemErro != null && res.mensagemErro.contains("Bloqueado"),
+                "Mensagem deve indicar bloqueio: " + res.mensagemErro);
 
         depCRUD.eliminarDepartamento("ODT");
     }

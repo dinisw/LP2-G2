@@ -80,7 +80,7 @@ public class AvaliacaoSqlDAO implements IAvaliacaoDAO {
 
     @Override
     public boolean eliminarAvaliacoesPorEstudante(int numeroMec) {
-        int rows = db.execute("DELETE FROM Avaliacao WHERE numeroMecEstudante=?", numeroMec);
+        int rows = db.execute("DELETE FROM Avaliacao WHERE estudanteNumeroMec=?", numeroMec);
         return rows > 0;
     }
 

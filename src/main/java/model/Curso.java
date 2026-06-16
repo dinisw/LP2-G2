@@ -10,7 +10,7 @@ public class Curso {
     private Departamento departamento;
     private final List<UnidadeCurricular> unidadeCurriculars;
     private List<Integer> anosIniciados;
-    private double precoAnual;
+    private BigDecimal precoAnual;
     private boolean ativo = true;
 
     public Curso(String nome, int duracao, Departamento departamento) {

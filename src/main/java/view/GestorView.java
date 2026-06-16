@@ -41,7 +41,6 @@ public class GestorView {
             try {
                 MenuUtils.limparTela();
 
-                // ── Verificar dependências ────────────────────────────────
                 DepartamentoController depCtrl  = new DepartamentoController();
                 CursoController        cursoCtrl = new CursoController();
                 DocenteController      docCtrl   = new DocenteController();
@@ -52,12 +51,10 @@ public class GestorView {
                 boolean temDocentes      = !docCtrl.listarDocentes().isEmpty();
                 boolean temEstudantes    = !estCtrl.listarEstudantes().isEmpty();
 
-                // ── Construir menu dinâmico ───────────────────────────────
                 ArrayList<String>      opcoes = new ArrayList<>();
                 Map<Integer, Runnable> acoes  = new LinkedHashMap<>();
                 int n = 1;
 
-                // Sempre disponível
                 opcoes.add(n + ". Gerir Gestores");
                 final int nGestores = n; acoes.put(n++, () -> exibirMenuGestores(gestorLog));
 

@@ -1,7 +1,9 @@
 package controller;
 
 import DAL.DAOFactory;
+import DAL.PropinaCRUD;
 import model.Resultado;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -17,6 +19,13 @@ public class PropinaIntegrationTest {
     public void setup() {
         DAOFactory.setModo("CSV"); // forçar CSV — estudante mecTeste=88888 não existe em SQL
         controller = new PropinaController();
+    }
+
+    @AfterEach
+    public void teardown() {
+        // Remove a propina fictícia (ano 99) criada em testarImpedirPagamentoSuperiorADivida,
+        // evitando poluir propinas.csv entre execuções (eliminarPropinasPorEstudante já existe em PropinaCRUD).
+        new PropinaCRUD().eliminarPropinasPorEstudante(88888);
     }
 
     @Test
@@ -43,8 +52,5 @@ public class PropinaIntegrationTest {
 
         // CORREÇÃO: A mensagem no seu Controller usa a palavra "superior" e não "excede"
         assertTrue(resExcesso.mensagemErro.contains("superior"), "A mensagem deve avisar que o valor excede a dívida.");
-
-        // NOTA: Como não fizeste um método de "Eliminar Propina", esta propina do ano 99 vai ficar no teu CSV.
-        // Podes apagá-la à mão do ficheiro 'propinas.csv' depois de correres o teste!
     }
 }

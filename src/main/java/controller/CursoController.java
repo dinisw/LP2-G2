@@ -59,7 +59,12 @@ public class CursoController {
             boolean tentouMudarNome = !cursoOriginal.getNome().equalsIgnoreCase(cursoNovo.getNome());
             boolean tentouMudarDepartamento = cursoNovo.getDepartamento() != null && cursoNovo.getDepartamento().getSigla() != null
                     && !cursoOriginal.getDepartamento().getSigla().equalsIgnoreCase(cursoNovo.getDepartamento().getSigla());
-            boolean tentouMudarPreco = cursoNovo.getPrecoAnual() != cursoOriginal.getPrecoAnual();
+            boolean tentouMudarPreco;
+            if (cursoOriginal.getPrecoAnual() == null || cursoNovo.getPrecoAnual() == null) {
+                tentouMudarPreco = cursoOriginal.getPrecoAnual() != cursoNovo.getPrecoAnual();
+            } else {
+                tentouMudarPreco = cursoOriginal.getPrecoAnual().compareTo(cursoNovo.getPrecoAnual()) != 0;
+            }
 
             if (tentouMudarNome || tentouMudarDepartamento || tentouMudarPreco) {
                 return new Resultado<>(false, "Bloqueado: Não é possível alterar o Nome, Departamento ou Preço de um curso que já iniciou atividade letiva.");
