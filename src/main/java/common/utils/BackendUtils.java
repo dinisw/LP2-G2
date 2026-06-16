@@ -150,4 +150,30 @@ public class BackendUtils {
         if (nome == null || nome.trim().isEmpty()) return false;
         return nome.matches("^[\\p{L} \\.'\\-]+$");
     }
+
+    /**
+     * Aceita horas em formato flexível: "18", "18:00", "18:30", "1830", "9", "09:30".
+     * Lança IllegalArgumentException se o formato não for reconhecido.
+     */
+    public static java.time.LocalTime parseHoraFlexivel(String input) {
+        if (input == null || input.trim().isEmpty())
+            throw new IllegalArgumentException("Hora em branco.");
+        input = input.trim();
+        try {
+            if (input.matches("\\d{1,2}")) {
+                return java.time.LocalTime.of(Integer.parseInt(input), 0);
+            }
+            if (input.matches("\\d{3,4}")) {
+                int total = Integer.parseInt(input);
+                return java.time.LocalTime.of(total / 100, total % 100);
+            }
+            if (input.matches("\\d{1,2}:\\d{2}")) {
+                String[] p = input.split(":");
+                return java.time.LocalTime.of(Integer.parseInt(p[0]), Integer.parseInt(p[1]));
+            }
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Hora inválida: '" + input + "'.");
+        }
+        throw new IllegalArgumentException("Formato de hora não reconhecido: '" + input + "'. Use HH:MM ou HH (ex: 18:00 ou 18).");
+    }
 }
