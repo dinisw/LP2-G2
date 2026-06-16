@@ -106,28 +106,11 @@ public class EstudanteView {
             System.out.println(GetYellow() + "Apenas estão disponíveis disciplinas em atraso ou do seu nível atual (" + anoDesbloqueado + "º Ano)." + GetReset());
         }
 
-        List<model.UnidadeCurricular> disponiveis = new ArrayList<>();
-        List<model.UnidadeCurricular> todasUCsCurso = curso.getUnidadeCurriculars();
-
-        for (model.UnidadeCurricular unidadeCurricular : todasUCsCurso) {
-            boolean aAguardarNota = false;
-            boolean aprovado = false;
-            for (model.Avaliacao avaliacao : avaliacoes) {
-                if (avaliacao.getUnidadeCurricular().getNome().equalsIgnoreCase(unidadeCurricular.getNome())) {
-                    if (avaliacao.getNota() == null) {
-                        aAguardarNota = true;
-                    } else if (avaliacao.getNota() >= 9.5) {
-                        aprovado = true;
-                    }
-                }
-            }
-
-            if (aprovado || aAguardarNota) continue;
-
-            if (unidadeCurricular.getAnoCurricular() <= anoDesbloqueado) {
-                disponiveis.add(unidadeCurricular);
-            }
-        }
+        // Bug 2 corrigido: a lista de UCs disponíveis passa a ser calculada no controller,
+        // com aprovação avaliada pela média de todos os momentos (EstudanteCalculo.isUCAprovada).
+        // Assim, UCs reprovadas voltam a ficar disponíveis para nova inscrição.
+        List<model.UnidadeCurricular> disponiveis =
+                estudanteController.listarUCsDisponiveisParaInscricao(estudante);
 
         if (disponiveis.isEmpty()) {
             System.out.println(GetYellow() + "\nNão existem Unidades Curriculares disponíveis para inscrição de momento." + GetReset());

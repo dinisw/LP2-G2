@@ -10,6 +10,7 @@ import model.Propina;
 import model.Resultado;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -50,6 +51,37 @@ public class PropinaController {
         return propinaDAO.registarPropina(novaPropina)
                 ? new Resultado<>(novaPropina, true)
                 : new Resultado<>(false, "Erro ao gerar a propina na base de dados.");
+    }
+
+    /**
+     * Bug 1: quando um estudante repete o ano por reprovação, a propina desse ano
+     * tem de voltar a estar por pagar (uma propina é anual, paga por cada ano de frequência).
+     *
+     * <ul>
+     *   <li>Se a propina não existir, gera uma nova (por pagar).</li>
+     *   <li>Se existir e estiver totalmente paga, repõe o valor pago a zero
+     *       (mantendo o histórico, com uma marca de reposição) e devolve {@code true}.</li>
+     *   <li>Se já estiver por pagar, não faz nada e devolve {@code false}.</li>
+     * </ul>
+     *
+     * @return {@code true} apenas se uma propina paga foi efetivamente reposta para pagamento.
+     */
+    public boolean reporPropinaParaRepeticao(int numeroMec, int anoLetivo) {
+        Propina propina = propinaDAO.procurarPropina(numeroMec, anoLetivo);
+        if (propina == null) {
+            gerarPropinaAnual(numeroMec, anoLetivo);
+            return false;
+        }
+        if (propina.isTotalmentePaga()) {
+            propina.setValorPago(BigDecimal.ZERO);
+            if (propina.getHistoricoPagamentos() != null) {
+                propina.getHistoricoPagamentos().add(
+                        LocalDate.now() + " -> Ano repetido: propina reposta para novo pagamento");
+            }
+            propinaDAO.atualizarPropina(propina);
+            return true;
+        }
+        return false;
     }
 
     public Resultado<Propina> pagarPropina(int numeroMec, int anoLetivo, BigDecimal valorPagamento) {
