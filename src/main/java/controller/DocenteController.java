@@ -4,6 +4,7 @@ import DAL.DAOFactory;
 import DAL.IAvaliacaoDAO;
 import DAL.ICursoDAO;
 import DAL.IDocenteDAO;
+import DAL.IEstudanteDAO;
 import DAL.IUnidadeCurricularDAO;
 import model.Avaliacao;
 import model.Curso;
@@ -133,18 +134,51 @@ public class DocenteController {
 
     public List<Estudante> listarAlunosPorUC(String nomeUC) {
         if (nomeUC == null || nomeUC.trim().isEmpty()) return new ArrayList<>();
-        List<Avaliacao> avaliacoes = avaliacaoDAO.listarPorUnidadeCurricular(nomeUC);
-        List<Estudante> alunosUnicos = new ArrayList<>();
+
+        // Procurar a UC para saber o ano curricular
+        IUnidadeCurricularDAO ucDAO = DAOFactory.getUnidadeCurricularDAO();
+        UnidadeCurricular uc = ucDAO.procurarPorNome(nomeUC);
+        if (uc == null) return new ArrayList<>();
+        int anoCurricular = uc.getAnoCurricular();
+
+        // Encontrar os cursos que têm esta UC
+        ICursoDAO cursoDAO = DAOFactory.getCursoDAO();
+        List<String> nomesDosCursos = new ArrayList<>();
+        for (model.Curso curso : cursoDAO.getCursos()) {
+            boolean temUC = curso.getUnidadeCurriculars().stream()
+                    .anyMatch(u -> u.getNome().equalsIgnoreCase(nomeUC));
+            if (temUC) nomesDosCursos.add(curso.getNome());
+        }
+
+        // Listar estudantes ativos nesses cursos que estão no ano correto
+        IEstudanteDAO estudanteDAO = DAOFactory.getEstudanteDAO();
+        EstudanteController estCtrl = new EstudanteController();
+        List<Estudante> alunosElegiveis = new ArrayList<>();
         List<Integer> mec = new ArrayList<>();
 
-        for (Avaliacao av : avaliacoes) {
-            Estudante est = av.getEstudante();
-            if (est != null && est.isAtivo() && !mec.contains(est.getNumeroMec())) {
-                alunosUnicos.add(est);
+        for (Estudante est : estudanteDAO.getEstudantes()) {
+            if (!est.isAtivo()) continue;
+            if (est.getNomeCurso() == null) continue;
+            boolean cursoCorreto = nomesDosCursos.stream()
+                    .anyMatch(c -> c.equalsIgnoreCase(est.getNomeCurso()));
+            if (!cursoCorreto) continue;
+            int anoEstudante = estCtrl.obterAnoDesbloqueado(est);
+            if (anoEstudante == anoCurricular && !mec.contains(est.getNumeroMec())) {
+                alunosElegiveis.add(est);
                 mec.add(est.getNumeroMec());
             }
         }
-        alunosUnicos.sort((a, b) -> a.getNome().compareToIgnoreCase(b.getNome()));
-        return alunosUnicos;
+
+        // Incluir também estudantes que já têm avaliações nesta UC (anos anteriores / repetentes)
+        for (Avaliacao av : avaliacaoDAO.listarPorUnidadeCurricular(nomeUC)) {
+            Estudante est = av.getEstudante();
+            if (est != null && !mec.contains(est.getNumeroMec())) {
+                alunosElegiveis.add(est);
+                mec.add(est.getNumeroMec());
+            }
+        }
+
+        alunosElegiveis.sort((a, b) -> a.getNome().compareToIgnoreCase(b.getNome()));
+        return alunosElegiveis;
     }
 }

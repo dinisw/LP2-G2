@@ -147,7 +147,6 @@ public class EstudanteController {
 
         Resultado<Estudante> res = estudanteDAO.atualizarEstudante(estudante);
 
-        // v1.1: se o estudante passou a estar inscrito num curso, criar a propina anual do 1.º ano
         if (res.sucesso && !tinhaCurso && temCurso(estudante.getNomeCurso())) {
             garantirPropinaPrimeiroAno(numeroMec, estudante.getNomeCurso());
         }
@@ -259,6 +258,8 @@ public class EstudanteController {
             if (isConcluido) {
                 prefixo = "[CONCLUÍDO]";
                 motivo = "Concluiu o curso com todas as UCs aprovadas e propinas pagas.";
+                estudante.setAtivo(false);
+                estudanteDAO.atualizarEstudante(estudante);
             } else if (anoReal > anoAnterior) {
                 prefixo = "[AVANÇOU]";
                 motivo = "Progrediu do " + anoAnterior + "º para o " + anoReal + "º ano.";

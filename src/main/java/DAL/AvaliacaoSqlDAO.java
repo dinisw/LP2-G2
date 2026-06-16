@@ -36,11 +36,9 @@ public class AvaliacaoSqlDAO implements IAvaliacaoDAO {
 
     @Override
     public Resultado<Avaliacao> registarAvaliacao(Avaliacao avaliacao) {
-        // Resolve ucId a partir do nome da UC
         int ucId = resolverUcId(avaliacao.getUnidadeCurricular().getNome());
         int numeroMec = avaliacao.getEstudante().getNumeroMec();
 
-        // Upsert: se já existe, atualiza a nota
         ArrayList<Integer> existe = db.select(
                 "SELECT COUNT(*) AS total FROM Avaliacao WHERE momento=? AND ucId=? AND estudanteNumeroMec=?",
                 rs -> rs.getInt("total"),
