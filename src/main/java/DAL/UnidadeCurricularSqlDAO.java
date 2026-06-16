@@ -12,25 +12,31 @@ public class UnidadeCurricularSqlDAO implements IUnidadeCurricularDAO {
 
     private final DatabaseConnection db;
 
+    // JOIN para trazer dados do docente sem query extra por linha (elimina N+1)
+    private static final String SELECT_UC =
+            "SELECT uc.id, uc.nome, uc.anoCurricular, uc.semestre, uc.docenteId, " +
+            "d.nome AS docNome, d.morada AS docMorada, d.nif AS docNif, " +
+            "d.dataNascimento AS docDataNasc, d.email AS docEmail, d.hash AS docHash, " +
+            "d.sigla AS docSigla, d.ativo AS docAtivo " +
+            "FROM UnidadeCurricular uc " +
+            "LEFT JOIN Docente d ON uc.docenteId = d.id";
+
     public UnidadeCurricularSqlDAO() {
         this.db = new DatabaseConnection();
     }
 
     private RowMapper<UnidadeCurricular> ucMapper() {
         return rs -> {
-            int docenteId = rs.getInt("docenteId");
-            ArrayList<Docente> listaDoc = db.select(
-                    "SELECT * FROM Docente WHERE id=?",
-                    rs2 -> {
-                        Docente d = new Docente(
-                                rs2.getString("nome"), rs2.getString("morada"),
-                                rs2.getInt("nif"), rs2.getDate("dataNascimento").toLocalDate(),
-                                rs2.getString("email"), rs2.getString("hash"),
-                                rs2.getString("sigla"), new ArrayList<>(), new ArrayList<>());
-                        d.setAtivo(rs2.getBoolean("ativo"));
-                        return d;
-                    }, docenteId);
-            Docente docente = listaDoc.isEmpty() ? null : listaDoc.get(0);
+            Docente docente = null;
+            String docNome = rs.getString("docNome");
+            if (docNome != null) {
+                docente = new Docente(
+                        docNome, rs.getString("docMorada"),
+                        rs.getInt("docNif"), rs.getDate("docDataNasc").toLocalDate(),
+                        rs.getString("docEmail"), rs.getString("docHash"),
+                        rs.getString("docSigla"), new ArrayList<>(), new ArrayList<>());
+                docente.setAtivo(rs.getBoolean("docAtivo"));
+            }
 
             int ucId = rs.getInt("id");
             List<String> momentos = obterMomentos(ucId);
@@ -47,7 +53,6 @@ public class UnidadeCurricularSqlDAO implements IUnidadeCurricularDAO {
     }
 
     private List<String> obterMomentos(int ucId) {
-        // A coluna FK na tabela UnidadeCurricularMomento chama-se 'id' na BD actual
         return db.select(
                 "SELECT momento FROM UnidadeCurricularMomento WHERE id=?",
                 rs -> rs.getString("momento"),
@@ -62,6 +67,13 @@ public class UnidadeCurricularSqlDAO implements IUnidadeCurricularDAO {
                 rs -> rs.getInt("id"),
                 docente.getNif()
         );
+        return ids.isEmpty() ? 0 : ids.get(0);
+    }
+
+    private int obterIdPorNome(String nome) {
+        ArrayList<Integer> ids = db.select(
+                "SELECT id FROM UnidadeCurricular WHERE nome=?",
+                rs -> rs.getInt("id"), nome);
         return ids.isEmpty() ? 0 : ids.get(0);
     }
 
@@ -101,28 +113,28 @@ public class UnidadeCurricularSqlDAO implements IUnidadeCurricularDAO {
 
     @Override
     public List<UnidadeCurricular> getUnidadeCurriculars() {
-        return db.select("SELECT * FROM UnidadeCurricular", ucMapper(), (Object[]) null);
+        return db.select(SELECT_UC, ucMapper(), (Object[]) null);
     }
 
     @Override
     public UnidadeCurricular procurarPorNome(String nome) {
         ArrayList<UnidadeCurricular> lista = db.select(
-                "SELECT * FROM UnidadeCurricular WHERE nome=?", ucMapper(), nome);
+                SELECT_UC + " WHERE uc.nome=?", ucMapper(), nome);
         return lista.isEmpty() ? null : lista.get(0);
     }
 
     @Override
     public UnidadeCurricular procurarPorId(int id) {
         ArrayList<UnidadeCurricular> lista = db.select(
-                "SELECT * FROM UnidadeCurricular WHERE id=?", ucMapper(), id);
+                SELECT_UC + " WHERE uc.id=?", ucMapper(), id);
         return lista.isEmpty() ? null : lista.get(0);
     }
 
     @Override
     public boolean atualizarUC(String nomeAtual, UnidadeCurricular uc) {
-        UnidadeCurricular existente = procurarPorNome(nomeAtual);
-        if (existente == null) return false;
-        return atualizarUCPorId(existente.getId(), uc);
+        int id = obterIdPorNome(nomeAtual);
+        if (id <= 0) return false;
+        return atualizarUCPorId(id, uc);
     }
 
     @Override
@@ -152,8 +164,8 @@ public class UnidadeCurricularSqlDAO implements IUnidadeCurricularDAO {
 
     @Override
     public boolean eliminarUC(String nome) {
-        UnidadeCurricular uc = procurarPorNome(nome);
-        if (uc == null) return false;
-        return eliminarUCPorId(uc.getId());
+        int id = obterIdPorNome(nome);
+        if (id <= 0) return false;
+        return eliminarUCPorId(id);
     }
 }

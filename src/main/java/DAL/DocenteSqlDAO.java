@@ -35,9 +35,6 @@ public class DocenteSqlDAO implements IDocenteDAO {
 
     @Override
     public Resultado<Docente> registarDocente(Docente docente) {
-        if (procurarPorNif(docente.getNif()) != null) {
-            return new Resultado<>(false, "NIF já existe.");
-        }
         String sql = "INSERT INTO Docente (nome, morada, nif, dataNascimento, email, hash, sigla, ativo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         int rows = db.execute(sql,
                 docente.getNome(),

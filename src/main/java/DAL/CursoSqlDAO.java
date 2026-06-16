@@ -96,7 +96,10 @@ public class CursoSqlDAO implements ICursoDAO {
 
     @Override
     public Resultado<Curso> registarCurso(Curso curso) {
-        if (procurarPorNome(curso.getNome()) != null)
+        ArrayList<Integer> existe = db.select(
+                "SELECT COUNT(*) AS total FROM Curso WHERE nome=?",
+                rs -> rs.getInt("total"), curso.getNome());
+        if (!existe.isEmpty() && existe.get(0) > 0)
             return new Resultado<>(false, "Já existe um curso com esse nome.");
 
         int depId = resolverDepartamentoId(curso.getDepartamento());

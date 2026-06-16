@@ -132,25 +132,16 @@ public class DatabaseConnection {
         int result = 0;
         Connection conn = openConnection();
         if (conn == null) return result;
-        try (conn) {
-            conn.setAutoCommit(false);
-            try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-                if (params != null) {
-                    for (int i = 0; i < params.length; i++) stmt.setObject(i + 1, params[i]);
-                }
-                stmt.executeUpdate();
-                try (ResultSet keys = stmt.getGeneratedKeys()) {
-                    if (keys.next()) result = keys.getInt(1);
-                }
-                conn.commit();
-            } catch (SQLException e) {
-                conn.rollback();
-                System.out.println("Erro ao executar INSERT (rollback efectuado): " + e.getMessage());
-            } finally {
-                conn.setAutoCommit(true); // repõe antes de devolver ao pool
+        try (conn; PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            if (params != null) {
+                for (int i = 0; i < params.length; i++) stmt.setObject(i + 1, params[i]);
+            }
+            stmt.executeUpdate();
+            try (ResultSet keys = stmt.getGeneratedKeys()) {
+                if (keys.next()) result = keys.getInt(1);
             }
         } catch (SQLException e) {
-            System.out.println("Erro de ligação: " + e.getMessage());
+            System.out.println("Erro ao executar INSERT: " + e.getMessage());
         }
         return result;
     }
@@ -160,22 +151,13 @@ public class DatabaseConnection {
         int rowsAffected = 0;
         Connection conn = openConnection();
         if (conn == null) return rowsAffected;
-        try (conn) {
-            conn.setAutoCommit(false);
-            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                if (params != null) {
-                    for (int i = 0; i < params.length; i++) stmt.setObject(i + 1, params[i]);
-                }
-                rowsAffected = stmt.executeUpdate();
-                conn.commit();
-            } catch (SQLException e) {
-                conn.rollback();
-                System.out.println("Erro ao executar UPDATE/DELETE (rollback efectuado): " + e.getMessage());
-            } finally {
-                conn.setAutoCommit(true); // repõe antes de devolver ao pool
+        try (conn; PreparedStatement stmt = conn.prepareStatement(sql)) {
+            if (params != null) {
+                for (int i = 0; i < params.length; i++) stmt.setObject(i + 1, params[i]);
             }
+            rowsAffected = stmt.executeUpdate();
         } catch (SQLException e) {
-            System.out.println("Erro de ligação: " + e.getMessage());
+            System.out.println("Erro ao executar UPDATE/DELETE: " + e.getMessage());
         }
         return rowsAffected;
     }
