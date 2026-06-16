@@ -258,6 +258,8 @@ public class EstudanteController {
             if (isConcluido) {
                 prefixo = "[CONCLUÍDO]";
                 motivo = "Concluiu o curso com todas as UCs aprovadas e propinas pagas.";
+                estudante.setAtivo(false);
+                estudanteDAO.atualizarEstudante(estudante);
             } else if (anoReal > anoAnterior) {
                 prefixo = "[AVANÇOU]";
                 motivo = "Progrediu do " + anoAnterior + "º para o " + anoReal + "º ano.";
