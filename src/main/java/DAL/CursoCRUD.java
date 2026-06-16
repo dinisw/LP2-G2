@@ -21,7 +21,10 @@ public class CursoCRUD extends AbstractCsvCRUD<Curso> implements ICursoDAO {
             String nomeCurso = colunas[0];
             int duracao = Integer.parseInt(colunas[1]);
             String siglaDep = colunas[2];
-            BigDecimal precoAnual = new BigDecimal(colunas[3].replace(",", "."));
+            String precoStr = colunas[3] == null ? "" : colunas[3].trim();
+            BigDecimal precoAnual = (precoStr.isEmpty() || "null".equalsIgnoreCase(precoStr))
+                    ? null
+                    : new BigDecimal(precoStr.replace(",", "."));
 
             DepartamentoCRUD depCRUD = new DepartamentoCRUD();
             Departamento departamento = depCRUD.procurarPorSigla(siglaDep);
@@ -71,8 +74,12 @@ public class CursoCRUD extends AbstractCsvCRUD<Curso> implements ICursoDAO {
             ucsStr = String.join(",", ucs);
         }
 
-        return String.format("%s;%d;%s;%.2f;%s;%s;%s",
-                curso.getNome(), curso.getDuracao(), siglaDep, curso.getPrecoAnual(), anosIniciadosStr, ucsStr, curso.isAtivo());
+        String precoAnualStr = curso.getPrecoAnual() != null
+                ? String.format("%.2f", curso.getPrecoAnual())
+                : "";
+
+        return String.format("%s;%d;%s;%s;%s;%s;%s",
+                curso.getNome(), curso.getDuracao(), siglaDep, precoAnualStr, anosIniciadosStr, ucsStr, curso.isAtivo());
     }
 
     public Resultado<Curso> registarCurso(Curso curso) {

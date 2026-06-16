@@ -782,7 +782,6 @@ class EnunciadoComplianceTest {
     @Test @Order(402)
     @DisplayName("E3 – Alteração de curso bloqueada quando já iniciou atividade letiva (v1.0)")
     void curso_ImutalvelComEstudantes() {
-        CursoController cc = new CursoController();
         Curso cursoAtual = cursoCRUD.procurarPorNome(CURSO_NOME);
         assertNotNull(cursoAtual);
 
@@ -791,6 +790,11 @@ class EnunciadoComplianceTest {
         //  depender do mínimo de 5 alunos exigido por CursoController.iniciarAnoLetivo)
         cursoAtual.adicionarAnoIniciado(1);
         cursoCRUD.atualizarCurso(CURSO_NOME, cursoAtual);
+
+        // Escrita feita diretamente via CursoCRUD (bypassa a cache do DAOFactory).
+        // Reset obrigatório para que o CursoController seguinte leia o estado atualizado.
+        DAOFactory.resetarInstancias();
+        CursoController cc = new CursoController();
 
         // Tentar mudar o departamento de um curso já iniciado deve ser bloqueado
         Departamento novoDep = new Departamento("Outro Dept", "ODT");

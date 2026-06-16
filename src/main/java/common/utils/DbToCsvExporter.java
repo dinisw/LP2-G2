@@ -82,8 +82,9 @@ public class DbToCsvExporter {
                     String ucs = (c.getUnidadeCurriculars() == null || c.getUnidadeCurriculars().isEmpty())
                             ? ""
                             : c.getUnidadeCurriculars().stream().map(UnidadeCurricular::getNome).collect(Collectors.joining(","));
-                    return String.format("%s;%d;%s;%.2f;%s;%s",
-                            san(c.getNome()), c.getDuracao(), siglaDep, c.getPrecoAnual(), anos, ucs);
+                    String preco = c.getPrecoAnual() != null ? String.format("%.2f", c.getPrecoAnual()) : "";
+                    return String.format("%s;%d;%s;%s;%s;%s",
+                            san(c.getNome()), c.getDuracao(), siglaDep, preco, anos, ucs);
                 })
                 .collect(Collectors.toList()));
         System.out.println("  cursos.csv — " + lista.size() + " registos");
