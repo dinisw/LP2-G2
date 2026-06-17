@@ -332,7 +332,7 @@ public class EstudanteController {
             BigDecimal preco = BigDecimal.valueOf(1000.0);
             if (nomeCurso != null && !nomeCurso.trim().isEmpty()) {
                 Curso c = cursoDAO.procurarPorNome(nomeCurso);
-                if (c != null && c.getPrecoAnual().compareTo(BigDecimal.ZERO)  > 0) {
+                if (c != null && c.getPrecoAnual() != null && c.getPrecoAnual().compareTo(BigDecimal.ZERO) > 0) {
                     preco = c.getPrecoAnual();
                 }
             }

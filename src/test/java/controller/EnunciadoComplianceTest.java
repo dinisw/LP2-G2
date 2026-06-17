@@ -8,6 +8,7 @@ import org.junit.jupiter.api.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -45,6 +46,12 @@ class EnunciadoComplianceTest {
     private static final int    EST_NIF_BASE  = 200000000 + RND;
 
     private static int mecEstudante1;
+
+    // ── Estado partilhado entre testes Secção D ────────────────────────────
+    private static final int D_ANO_LETIVO = 9999; // ID único para não colidir com dados reais
+    private static int d_horarioId1 = -1;
+    private static int d_horarioId3 = -1;
+    private static int d_horarioId5 = -1;
 
     // DAOs em modo CSV
     private static DepartamentoCRUD      depCRUD;
@@ -691,53 +698,190 @@ class EnunciadoComplianceTest {
     // ════════════════════════════════════════════════════════════════════════
 
     @Test @Order(300)
-    @DisplayName("D1 – [TODO v1.3] Gestão de horários ainda não implementada")
-    @Disabled("Funcionalidade prevista no enunciado v1.3 — ainda não implementada")
+    @DisplayName("D1 – Gestor define horário com regras de negócio (v1.3)")
     void horarios_GestorDefineHorario() {
-        // TODO: O gestor define horário de cada ano letivo por UC
-        // Regras: 18h-23h30, máx 5h/dia, pausa jantar 20h-20h30
-        // UC: min 2h, max 6h, blocos de 1h ou 2h
-        fail("Não implementado — enunciado v1.3");
+        HorarioController hc = new HorarioController();
+        UnidadeCurricular uc1 = ucCRUD.procurarPorNome(UC1_NOME);
+        assertNotNull(uc1, "UC1 deve existir para testar horários.");
+
+        // Horário válido: bloco de 1h dentro do intervalo 18:00–23:30
+        Resultado<Horario> ok = hc.registarHorario(uc1.getId(), D_ANO_LETIVO,
+                DiaSemana.SEGUNDA, LocalTime.of(18, 0), LocalTime.of(19, 0), "Sala D1");
+        assertTrue(ok.sucesso, "Horário válido deve ser aceite.");
+        d_horarioId1 = ok.dados.getId();
+
+        // Fora do intervalo permitido (começa às 17h)
+        Resultado<Horario> r1 = hc.registarHorario(uc1.getId(), D_ANO_LETIVO,
+                DiaSemana.TERCA, LocalTime.of(17, 0), LocalTime.of(18, 0), "Sala D1");
+        assertFalse(r1.sucesso, "Horário antes das 18h deve ser rejeitado.");
+
+        // Bloco de 30 min — inválido (só 1h ou 2h permitidos)
+        Resultado<Horario> r2 = hc.registarHorario(uc1.getId(), D_ANO_LETIVO,
+                DiaSemana.TERCA, LocalTime.of(21, 0), LocalTime.of(21, 30), "Sala D1");
+        assertFalse(r2.sucesso, "Bloco de 30 minutos deve ser rejeitado.");
+
+        // Sobreposição com a pausa de jantar (19:30–20:30 atravessa 20:00–20:30)
+        Resultado<Horario> r3 = hc.registarHorario(uc1.getId(), D_ANO_LETIVO,
+                DiaSemana.TERCA, LocalTime.of(19, 30), LocalTime.of(20, 30), "Sala D1");
+        assertFalse(r3.sucesso, "Horário que atravessa a pausa de jantar deve ser rejeitado.");
     }
 
     @Test @Order(301)
-    @DisplayName("D2 – [TODO v1.3] Sobreposição de horários deve ser bloqueada")
-    @Disabled("Funcionalidade prevista no enunciado v1.3 — ainda não implementada")
+    @DisplayName("D2 – Sobreposição de horários de docente é bloqueada (v1.3)")
     void horarios_SemSobreposicao() {
-        // TODO: Um docente não pode ter 2 aulas ao mesmo tempo no mesmo dia
-        fail("Não implementado — enunciado v1.3");
+        HorarioController hc = new HorarioController();
+        // UC2 tem o mesmo docente que UC1 (DOC_NIF/TDD)
+        UnidadeCurricular uc2 = ucCRUD.procurarPorNome(UC2_NOME);
+        assertNotNull(uc2, "UC2 deve existir.");
+
+        // Tentar criar na mesma hora que D1 (SEGUNDA 18-19) → mesmo docente → sobreposição
+        Resultado<Horario> overlap = hc.registarHorario(uc2.getId(), D_ANO_LETIVO,
+                DiaSemana.SEGUNDA, LocalTime.of(18, 0), LocalTime.of(19, 0), "Sala D2");
+        assertFalse(overlap.sucesso, "Sobreposição de docente no mesmo bloco deve ser bloqueada.");
+
+        // Horário diferente (TERCA) → deve ser aceite
+        Resultado<Horario> ok = hc.registarHorario(uc2.getId(), D_ANO_LETIVO,
+                DiaSemana.TERCA, LocalTime.of(18, 0), LocalTime.of(19, 0), "Sala D2");
+        assertTrue(ok.sucesso, "Horário sem sobreposição deve ser aceite.");
+        // Limpar imediatamente — não necessário para testes seguintes
+        if (ok.dados != null) new HorarioCRUD().eliminarHorario(ok.dados.getId());
     }
 
     @Test @Order(310)
-    @DisplayName("D3 – [TODO v1.3] Marcação de presenças pelo docente")
-    @Disabled("Funcionalidade prevista no enunciado v1.3 — ainda não implementada")
+    @DisplayName("D3 – Docente marca presença; estudante confirma a seguir (v1.3)")
     void presencas_DocenteMarcaPrimeiro() {
-        // TODO: Docente marca presença → estudante pode marcar a seguir
-        fail("Não implementado — enunciado v1.3");
+        HorarioController hc = new HorarioController();
+        PresencaController pc = new PresencaController();
+        UnidadeCurricular uc1 = ucCRUD.procurarPorNome(UC1_NOME);
+        assertNotNull(uc1);
+
+        // Criar horário dedicado a D3 (dia diferente para não conflituar com D1)
+        Resultado<Horario> rh = hc.registarHorario(uc1.getId(), D_ANO_LETIVO,
+                DiaSemana.QUARTA, LocalTime.of(18, 0), LocalTime.of(19, 0), "Sala D3");
+        assertTrue(rh.sucesso, "Deve criar horário para D3.");
+        d_horarioId3 = rh.dados.getId();
+
+        LocalDate aula = LocalDate.of(2026, 1, 7); // quarta-feira fictícia
+
+        // Passo 1: docente marca → cria registo com presencaEstudante=false
+        Resultado<Presenca> rd = pc.marcarPresencaDocente(d_horarioId3, mecEstudante1, aula);
+        assertTrue(rd.sucesso, "Docente deve conseguir marcar presença.");
+        assertTrue(rd.dados.isPresencaDocente(), "presencaDocente deve ser true.");
+        assertFalse(rd.dados.isPresencaEstudante(), "presencaEstudante deve ser false antes de o estudante marcar.");
+
+        // Passo 2: estudante confirma
+        Resultado<Presenca> re = pc.marcarPresencaEstudante(d_horarioId3, mecEstudante1, aula);
+        assertTrue(re.sucesso, "Estudante deve conseguir confirmar presença.");
+        assertTrue(re.dados.isPresencaEstudante(), "presencaEstudante deve ser true após confirmação.");
+        assertFalse(re.dados.isFalta(), "Não deve ser contabilizada como falta.");
     }
 
     @Test @Order(311)
-    @DisplayName("D4 – [TODO v1.3] Estudante não pode marcar presença sem docente ter marcado")
-    @Disabled("Funcionalidade prevista no enunciado v1.3 — ainda não implementada")
+    @DisplayName("D4 – Estudante bloqueado se docente ainda não marcou (v1.3)")
     void presencas_EstudanteBloqueadoSemDocente() {
-        fail("Não implementado — enunciado v1.3");
+        HorarioController hc = new HorarioController();
+        PresencaController pc = new PresencaController();
+        UnidadeCurricular uc1 = ucCRUD.procurarPorNome(UC1_NOME);
+        assertNotNull(uc1);
+
+        // Horário sem marcação do docente
+        Resultado<Horario> rh = hc.registarHorario(uc1.getId(), D_ANO_LETIVO,
+                DiaSemana.QUINTA, LocalTime.of(18, 0), LocalTime.of(19, 0), "Sala D4");
+        assertTrue(rh.sucesso, "Deve criar horário para D4.");
+        int horarioD4 = rh.dados.getId();
+
+        LocalDate aula = LocalDate.of(2026, 1, 8); // quinta-feira fictícia
+
+        // Estudante tenta marcar sem o docente ter marcado → deve falhar
+        Resultado<Presenca> re = pc.marcarPresencaEstudante(horarioD4, mecEstudante1, aula);
+        assertFalse(re.sucesso, "Estudante não deve marcar presença sem marcação prévia do docente.");
+
+        // Limpar horário (não é preciso para testes seguintes)
+        new HorarioCRUD().eliminarHorario(horarioD4);
     }
 
     @Test @Order(320)
-    @DisplayName("D5 – [TODO v1.3] Justificação de faltas com aprovação do gestor")
-    @Disabled("Funcionalidade prevista no enunciado v1.3 — ainda não implementada")
+    @DisplayName("D5 – Justificação de falta aprovada pelo gestor (v1.3)")
     void faltas_JustificacaoAprovadaPeloGestor() {
-        // TODO: Estudante submete pedido → gestor aprova/rejeita
-        // Tipos: saúde, estatuto de estudante (atleta, trabalhador, pai)
-        fail("Não implementado — enunciado v1.3");
+        HorarioController hc = new HorarioController();
+        PresencaController pc = new PresencaController();
+        JustificacaoFaltaController jc = new JustificacaoFaltaController();
+        UnidadeCurricular uc1 = ucCRUD.procurarPorNome(UC1_NOME);
+        assertNotNull(uc1);
+
+        // Criar horário dedicado a D5
+        Resultado<Horario> rh = hc.registarHorario(uc1.getId(), D_ANO_LETIVO,
+                DiaSemana.SEXTA, LocalTime.of(18, 0), LocalTime.of(19, 0), "Sala D5");
+        assertTrue(rh.sucesso, "Deve criar horário para D5.");
+        d_horarioId5 = rh.dados.getId();
+
+        LocalDate aula = LocalDate.of(2026, 1, 9); // sexta-feira fictícia
+
+        // Docente marca — estudante NÃO confirma → falta
+        Resultado<Presenca> rd = pc.marcarPresencaDocente(d_horarioId5, mecEstudante1, aula);
+        assertTrue(rd.sucesso, "Docente deve marcar presença.");
+        int presencaId = rd.dados.getId();
+        assertTrue(rd.dados.isFalta(), "Deve ser falta: docente marcou, estudante não confirmou.");
+
+        // Estudante submete justificação
+        Resultado<JustificacaoFalta> rj = jc.submeterJustificacao(
+                presencaId, mecEstudante1, TipoJustificacao.BAIXA_MEDICA, "Consulta médica urgente");
+        assertTrue(rj.sucesso, "Justificação deve ser submetida com sucesso.");
+        assertEquals(JustificacaoFalta.Estado.PENDENTE, rj.dados.getEstado(), "Estado inicial deve ser PENDENTE.");
+        int justId = rj.dados.getId();
+
+        // Deve aparecer na lista de pendentes
+        List<JustificacaoFalta> pendentes = jc.listarPendentes();
+        assertTrue(pendentes.stream().anyMatch(j -> j.getId() == justId),
+                "Justificação deve constar nas pendentes.");
+
+        // Gestor aprova
+        Resultado<JustificacaoFalta> ra = jc.aprovarJustificacao(justId, "Documento verificado.");
+        assertTrue(ra.sucesso, "Gestor deve conseguir aprovar a justificação.");
+        assertEquals(JustificacaoFalta.Estado.APROVADA, ra.dados.getEstado(), "Estado deve ser APROVADA.");
+
+        // Estado persistido — verificar via listagem do estudante
+        List<JustificacaoFalta> porEstudante = jc.listarPorEstudante(mecEstudante1);
+        assertTrue(porEstudante.stream()
+                .anyMatch(j -> j.getId() == justId && j.getEstado() == JustificacaoFalta.Estado.APROVADA),
+                "Justificação aprovada deve constar na lista do estudante.");
     }
 
     @Test @Order(321)
-    @DisplayName("D6 – [TODO v1.3] Gestão de estatutos de estudante pelo gestor")
-    @Disabled("Funcionalidade prevista no enunciado v1.3 — ainda não implementada")
+    @DisplayName("D6 – Gestor cria e gere estatutos de estudante (v1.3)")
     void estatutos_GestorCriaEGere() {
-        // TODO: Gestor cria tipos de estatuto (atleta, trabalhador, pai, etc.)
-        fail("Não implementado — enunciado v1.3");
+        EstatutoController ec = new EstatutoController();
+        String nomeEstatuto = "Atleta TST " + RND;
+
+        // Criar tipo de estatuto
+        Resultado<TipoEstatuto> rt = ec.registarTipoEstatuto(nomeEstatuto, "Estatuto de atleta de alta competição");
+        assertTrue(rt.sucesso, "Tipo de estatuto deve ser criado com sucesso.");
+        int tipoId = rt.dados.getId();
+
+        // Atribuir ao estudante de teste
+        Resultado<EstatutoEstudante> ra = ec.atribuirEstatuto(mecEstudante1, tipoId,
+                LocalDate.now(), LocalDate.now().plusYears(1));
+        assertTrue(ra.sucesso, "Estatuto deve ser atribuído ao estudante.");
+        int estatutoId = ra.dados.getId();
+
+        // Verificar existência
+        assertTrue(ec.estudantePossuiEstatuto(mecEstudante1, nomeEstatuto),
+                "estudantePossuiEstatuto deve retornar true.");
+        List<EstatutoEstudante> lista = ec.listarEstatutosPorEstudante(mecEstudante1);
+        assertTrue(lista.stream().anyMatch(e -> e.getId() == estatutoId),
+                "Estatuto deve constar na lista do estudante.");
+
+        // Remover estatuto e tipo
+        ec.removerEstatuto(estatutoId);
+        ec.eliminarTipoEstatuto(tipoId);
+        assertFalse(ec.estudantePossuiEstatuto(mecEstudante1, nomeEstatuto),
+                "Após remoção, estudantePossuiEstatuto deve ser false.");
+
+        // Limpar horários criados nos testes D1, D3, D5
+        HorarioCRUD hCRUD = new HorarioCRUD();
+        if (d_horarioId1 > 0) hCRUD.eliminarHorario(d_horarioId1);
+        if (d_horarioId3 > 0) hCRUD.eliminarHorario(d_horarioId3);
+        if (d_horarioId5 > 0) hCRUD.eliminarHorario(d_horarioId5);
     }
 
     // ════════════════════════════════════════════════════════════════════════

@@ -94,6 +94,16 @@ public class DatabaseConnection {
         }
     }
 
+    /**
+     * Devolve uma ligação do pool para uso em testes.
+     * O chamador é responsável por fechar a ligação (devolve ao pool).
+     */
+    public static Connection getPooledConnection() throws SQLException {
+        if (!inicializado) new DatabaseConnection();
+        if (pool == null) throw new SQLException("Pool de ligações não disponível.");
+        return pool.getConnection();
+    }
+
     /** Verifica se uma tabela existe na BD actual (SQL Server). */
     public boolean tabelaExiste(String nomeTabela) {
         try {

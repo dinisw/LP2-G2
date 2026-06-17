@@ -1368,8 +1368,36 @@ public class GestorView {
             }
 
             Estudante estudante = listaEstudantes.get(escolha - 1);
+            DAL.IAvaliacaoDAO avaliacaoDAO = DAL.DAOFactory.getAvaliacaoDAO();
+            estudante.setListaAvaliacoes(avaliacaoDAO.listarPorEstudante(estudante.getNumeroMec()));
+
             System.out.println(GetGreen() + "\nDados encontrados:" + GetReset());
             System.out.println(estudante.toString());
+
+            System.out.println("\n" + GetWhiteBold() + "--- Unidades Curriculares ---" + GetReset());
+            List<Avaliacao> avsEst = estudante.getListaAvaliacoes();
+            if (avsEst == null || avsEst.isEmpty()) {
+                System.out.println(GetYellow() + "Sem UCs inscritas." + GetReset());
+            } else {
+                System.out.printf(GetWhiteBold() + " %-35s | %-5s | %-8s | %-10s%n" + GetReset(), "UNIDADE CURRICULAR", "ANO", "SEM", "NOTA");
+                System.out.println(GetCyanBold() + "─".repeat(65) + GetReset());
+                for (Avaliacao a : avsEst) {
+                    if (a.getUnidadeCurricular() == null) continue;
+                    String nomeUC = a.getUnidadeCurricular().getNome();
+                    int anoUC = a.getUnidadeCurricular().getAnoCurricular();
+                    int semUC = a.getUnidadeCurricular().getSemestre();
+                    String notaStr;
+                    if (a.getNota() == null) {
+                        notaStr = GetYellow() + "Pendente" + GetReset();
+                    } else if (a.getNota() >= 9.5) {
+                        notaStr = GetGreen() + String.format("%.1f", a.getNota()) + GetReset();
+                    } else {
+                        notaStr = GetRed() + String.format("%.1f", a.getNota()) + GetReset();
+                    }
+                    System.out.printf(" %-35s | %-5d | %-8d | %s%n", nomeUC, anoUC, semUC, notaStr);
+                }
+                System.out.println(GetCyanBold() + "─".repeat(65) + GetReset());
+            }
             MenuUtils.pressionarEnter(scanner);
 
         } catch (CancelarRegistoException e) {

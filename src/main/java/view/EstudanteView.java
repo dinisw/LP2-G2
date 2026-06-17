@@ -40,6 +40,8 @@ public class EstudanteView {
             try {
                 EstudanteController ec = new EstudanteController();
                 Estudante estudante = ec.procurarEstudantePorNumeroMec(estudanteLogado.getNumeroMec());
+                DAL.IAvaliacaoDAO avaliacaoDAO = DAL.DAOFactory.getAvaliacaoDAO();
+                estudante.setListaAvaliacoes(avaliacaoDAO.listarPorEstudante(estudante.getNumeroMec()));
 
                 MenuUtils.exibirTitulo();
                 MenuUtils.exibirSubTitulo("PORTAL ESTUDANTE > " + estudante.getNome().toUpperCase(), opcoes);
