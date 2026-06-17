@@ -103,21 +103,49 @@ public class EstudanteView {
 
             System.out.println(controller.obterFichaEstudanteFormatada(estudante));
 
-            System.out.println("\n" + GetWhiteBold() + "--- Unidades Curriculares Inscritas ---" + GetReset());
+            // Carregar avaliações e curso para mostrar UCs com notas
+            DAL.IAvaliacaoDAO avaliacaoDAO = DAL.DAOFactory.getAvaliacaoDAO();
+            estudante.setListaAvaliacoes(avaliacaoDAO.listarPorEstudante(estudante.getNumeroMec()));
             List<Avaliacao> avaliacoes = estudante.getListaAvaliacoes();
-            boolean temInscricoes = false;
 
-            if (avaliacoes != null) {
-                for (Avaliacao a : avaliacoes) {
-                    if (a.getNota() == null) {
-                        System.out.println("- " + a.getUnidadeCurricular().getNome() + " (" + a.getUnidadeCurricular().getAnoCurricular() + "º Ano)");
-                        temInscricoes = true;
+            DAL.ICursoDAO cursoDAO = DAL.DAOFactory.getCursoDAO();
+            model.Curso curso = cursoDAO.procurarPorNome(estudante.getNomeCurso());
+
+            System.out.println("\n" + GetWhiteBold() + "--- Unidades Curriculares do Curso ---" + GetReset());
+
+            if (curso == null || curso.getUnidadeCurriculars() == null || curso.getUnidadeCurriculars().isEmpty()) {
+                System.out.println(GetYellow() + "Nenhuma UC atribuída ao curso de momento." + GetReset());
+            } else {
+                int anoAtual = -1;
+                for (model.UnidadeCurricular uc : curso.getUnidadeCurriculars()) {
+                    if (uc.getAnoCurricular() != anoAtual) {
+                        anoAtual = uc.getAnoCurricular();
+                        System.out.println(GetCyanBold() + "\n  " + anoAtual + "º Ano:" + GetReset());
                     }
-                }
-            }
 
-            if (!temInscricoes) {
-                System.out.println(GetYellow() + "Nenhuma inscrição ativa de momento." + GetReset());
+                    // Calcular média da UC a partir das avaliações do aluno
+                    List<Avaliacao> avsUC = new java.util.ArrayList<>();
+                    if (avaliacoes != null) {
+                        for (Avaliacao a : avaliacoes) {
+                            if (a.getUnidadeCurricular() != null
+                                    && a.getUnidadeCurricular().getNome().equalsIgnoreCase(uc.getNome())
+                                    && a.getNota() != null) {
+                                avsUC.add(a);
+                            }
+                        }
+                    }
+
+                    String estadoUC;
+                    if (avsUC.isEmpty()) {
+                        estadoUC = GetYellow() + "Aguarda avaliação" + GetReset();
+                    } else {
+                        double soma = avsUC.stream().mapToDouble(Avaliacao::getNota).sum();
+                        double media = soma / uc.getMomentosAvaliacao().size();
+                        String cor = media >= 9.5 ? GetGreen() : GetRed();
+                        estadoUC = cor + String.format("Média: %.1f  %s", media, media >= 9.5 ? "✓ Aprovado" : "✗ Reprovado") + GetReset();
+                    }
+                    System.out.println("    • " + uc.getNome() + "  —  " + estadoUC);
+                }
             }
 
             MenuUtils.pressionarEnter(ler);

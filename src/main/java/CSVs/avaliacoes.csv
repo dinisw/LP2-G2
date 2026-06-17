@@ -82,43 +82,43 @@ Teste2;4.0;Física Aplicada;1260008
 Teste1;5.0;Robôtica I;1260008
 Teste2;4.0;Robôtica I;1260008
 Teste3;3.0;Robôtica I;1260008
-Teste1;null;Algoritmia e Programação;1260003
-Teste2;null;Algoritmia e Programação;1260003
-Teste1;null;Robôtica Ii;1260003
-Teste2;null;Robôtica Ii;1260003
-Teste3;null;Robôtica Ii;1260003
-Teste1;null;Inteligência Artificial;1260003
-Teste2;null;Inteligência Artificial;1260003
-Teste3;null;Inteligência Artificial;1260003
-Teste1;null;Algoritmia e Programação;1260004
-Teste2;null;Algoritmia e Programação;1260004
-Teste1;null;Robôtica Ii;1260004
-Teste2;null;Robôtica Ii;1260004
-Teste3;null;Robôtica Ii;1260004
-Teste1;null;Inteligência Artificial;1260004
-Teste2;null;Inteligência Artificial;1260004
-Teste3;null;Inteligência Artificial;1260004
-Teste1;null;Algoritmia e Programação;1260005
-Teste2;null;Algoritmia e Programação;1260005
-Teste1;null;Robôtica Ii;1260005
-Teste2;null;Robôtica Ii;1260005
-Teste3;null;Robôtica Ii;1260005
-Teste1;null;Inteligência Artificial;1260005
-Teste2;null;Inteligência Artificial;1260005
-Teste3;null;Inteligência Artificial;1260005
-Teste1;null;Algoritmia e Programação;1260006
-Teste2;null;Algoritmia e Programação;1260006
-Teste1;null;Robôtica Ii;1260006
-Teste2;null;Robôtica Ii;1260006
-Teste3;null;Robôtica Ii;1260006
-Teste1;null;Inteligência Artificial;1260006
-Teste2;null;Inteligência Artificial;1260006
-Teste3;null;Inteligência Artificial;1260006
-Teste1;null;Algoritmia e Programação;1260008
-Teste2;null;Algoritmia e Programação;1260008
-Teste1;null;Robôtica Ii;1260008
-Teste2;null;Robôtica Ii;1260008
-Teste3;null;Robôtica Ii;1260008
-Teste1;null;Inteligência Artificial;1260008
-Teste2;null;Inteligência Artificial;1260008
-Teste3;null;Inteligência Artificial;1260008
+Teste1;4.0;Algoritmia e Programação;1260003
+Teste2;3.0;Algoritmia e Programação;1260003
+Teste1;5.0;Robôtica Ii;1260003
+Teste2;4.0;Robôtica Ii;1260003
+Teste3;3.0;Robôtica Ii;1260003
+Teste1;4.0;Inteligência Artificial;1260003
+Teste2;5.0;Inteligência Artificial;1260003
+Teste3;3.0;Inteligência Artificial;1260003
+Teste1;12.0;Algoritmia e Programação;1260004
+Teste2;13.0;Algoritmia e Programação;1260004
+Teste1;11.0;Robôtica Ii;1260004
+Teste2;12.0;Robôtica Ii;1260004
+Teste3;13.0;Robôtica Ii;1260004
+Teste1;14.0;Inteligência Artificial;1260004
+Teste2;13.0;Inteligência Artificial;1260004
+Teste3;12.0;Inteligência Artificial;1260004
+Teste1;10.0;Algoritmia e Programação;1260005
+Teste2;11.0;Algoritmia e Programação;1260005
+Teste1;10.0;Robôtica Ii;1260005
+Teste2;11.0;Robôtica Ii;1260005
+Teste3;12.0;Robôtica Ii;1260005
+Teste1;11.0;Inteligência Artificial;1260005
+Teste2;12.0;Inteligência Artificial;1260005
+Teste3;13.0;Inteligência Artificial;1260005
+Teste1;13.0;Algoritmia e Programação;1260006
+Teste2;12.0;Algoritmia e Programação;1260006
+Teste1;12.0;Robôtica Ii;1260006
+Teste2;13.0;Robôtica Ii;1260006
+Teste3;11.0;Robôtica Ii;1260006
+Teste1;13.0;Inteligência Artificial;1260006
+Teste2;14.0;Inteligência Artificial;1260006
+Teste3;12.0;Inteligência Artificial;1260006
+Teste1;11.0;Algoritmia e Programação;1260008
+Teste2;10.0;Algoritmia e Programação;1260008
+Teste1;13.0;Robôtica Ii;1260008
+Teste2;12.0;Robôtica Ii;1260008
+Teste3;11.0;Robôtica Ii;1260008
+Teste1;12.0;Inteligência Artificial;1260008
+Teste2;13.0;Inteligência Artificial;1260008
+Teste3;14.0;Inteligência Artificial;1260008

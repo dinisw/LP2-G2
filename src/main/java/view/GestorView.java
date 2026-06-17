@@ -1314,15 +1314,16 @@ public class GestorView {
             if (lista.isEmpty()) {
                 System.out.println(GetYellow() + "Nenhum estudante registado no sistema." + GetReset());
             } else {
-                System.out.println(GetCyanBold() + "----------------------------------------------------------------------------------------" + GetReset());
-                System.out.printf(GetWhiteBold() + " %-5s | %-15s | %-30s | %-25s | %-10s\n" + GetReset(), "ID", "Nº MEC", "NOME", "CURSO", "ESTADO");
-                System.out.println(GetCyanBold() + "----------------------------------------------------------------------------------------" + GetReset());
+                System.out.println(GetCyanBold() + "---------------------------------------------------------------------------------------------------" + GetReset());
+                System.out.printf(GetWhiteBold() + " %-5s | %-15s | %-30s | %-25s | %-6s | %-10s\n" + GetReset(), "ID", "Nº MEC", "NOME", "CURSO", "ANO", "ESTADO");
+                System.out.println(GetCyanBold() + "---------------------------------------------------------------------------------------------------" + GetReset());
                 for (int i = 0; i < lista.size(); i++) {
                     Estudante e = lista.get(i);
                     String estadoEst = e.isAtivo() ? GetGreen() + "Ativo" + GetReset() : GetRed() + "Inativo" + GetReset();
-                    System.out.printf(" %-5d | %-15d | %-30s | %-25s | %-10s\n", (i + 1), e.getNumeroMec(), e.getNome(), e.getNomeCurso(), estadoEst);
+                    String anoStr = e.getAnoLetivo() + "º";
+                    System.out.printf(" %-5d | %-15d | %-30s | %-25s | %-6s | %-10s\n", (i + 1), e.getNumeroMec(), e.getNome(), e.getNomeCurso(), anoStr, estadoEst);
                 }
-                System.out.println(GetCyanBold() + "----------------------------------------------------------------------------------------" + GetReset());
+                System.out.println(GetCyanBold() + "---------------------------------------------------------------------------------------------------" + GetReset());
             }
 
             MenuUtils.pressionarEnter(scanner);
