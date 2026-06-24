@@ -1954,13 +1954,27 @@ public class GestorView {
             return;
         }
 
+        // ── Ordem crítica da passagem de ano ───────────────────────────────
+        // 1.º) Fechar o ano que termina e gravar o snapshot histórico ENQUANTO os
+        //      estudantes ainda estão no ano de origem. Só assim o snapshot regista
+        //      o anoCurricularInicio correto e o resultado (TRANSICAO/RETIDO/CONCLUIDO).
+        // 2.º) Só depois aplicar a transição global — UMA única vez — que atualiza
+        //      estudante.anoLetivo e gera/repõe propinas.
+        // Inverter esta ordem (transitar antes do snapshot) faz o gravarSnapshotAno
+        // ler o ano já avançado e marcar como RETIDO quem afinal transitou.
+        boolean avancouAno = alc.avancarAnoLetivo();
+        if (!avancouAno) {
+            System.out.println(GetRed() + "\nFalha ao fechar o ano letivo atual. "
+                    + "Transição abortada — nenhum estudante foi alterado." + GetReset());
+            MenuUtils.pressionarEnter(scanner);
+            return;
+        }
+
         EstudanteController ec = new EstudanteController();
         Resultado<List<String>> res = ec.simularTransicaoAnoLetivoGlobal();
+        model.AnoLetivo novoAno = alc.obterAnoAtual();
 
         if (res.sucesso) {
-            boolean avancouAno = alc.avancarAnoLetivo();
-            model.AnoLetivo novoAno = alc.obterAnoAtual();
-
             System.out.println(GetGreen() + "\n====== RELATÓRIO DE TRANSIÇÃO ======" + GetReset());
             for (String log : res.dados) {
                 if (log.contains("[CONCLUÍDO]") || log.contains("[AVANÇOU]")) {
@@ -1973,7 +1987,7 @@ public class GestorView {
             }
             System.out.println(GetGreen() + "====================================" + GetReset());
 
-            if (avancouAno && novoAno != null) {
+            if (novoAno != null) {
                 System.out.println(GetGreen() + "Novo ano letivo iniciado: " + novoAno.getDescricao() + GetReset());
             }
             System.out.println(GetWhiteBold() + "Transição concluída. Consulte a tesouraria ou as fichas para confirmar." + GetReset());
