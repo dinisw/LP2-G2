@@ -7,6 +7,7 @@ import java.util.List;
 import java.time.LocalDate;
 
 public class Propina {
+    private int id;
     private int numeroMecEstudante;
     private int anoLetivo;
     private BigDecimal valorTotal;
@@ -20,6 +21,9 @@ public class Propina {
         this.valorPago = valorPago;
         this.historicoPagamentos = new ArrayList<>();
     }
+
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
     public int getNumeroMecEstudante() { return numeroMecEstudante; }
     public void setNumeroMecEstudante(int numeroMecEstudante) { this.numeroMecEstudante = numeroMecEstudante; }
