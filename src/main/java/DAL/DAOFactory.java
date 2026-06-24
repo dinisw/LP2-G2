@@ -19,15 +19,21 @@ public class DAOFactory {
     private static String tipoArmazenamento;
 
     // ── Instâncias singleton (uma por tipo, criadas no primeiro acesso) ─────────
-    private static IEstudanteDAO         estudanteDAO;
-    private static IDocenteDAO           docenteDAO;
-    private static IDepartamentoDAO      departamentoDAO;
-    private static IUnidadeCurricularDAO unidadeCurricularDAO;
-    private static ICursoDAO             cursoDAO;
-    private static IAvaliacaoDAO         avaliacaoDAO;
-    private static IPropinaDAO           propinaDAO;
-    private static IGestorDAO            gestorDAO;
-    private static IAnoLetivoDAO         anoLetivoDAO;
+    private static IEstudanteDAO           estudanteDAO;
+    private static IDocenteDAO             docenteDAO;
+    private static IDepartamentoDAO        departamentoDAO;
+    private static IUnidadeCurricularDAO   unidadeCurricularDAO;
+    private static ICursoDAO               cursoDAO;
+    private static IAvaliacaoDAO           avaliacaoDAO;
+    private static IPropinaDAO             propinaDAO;
+    private static IGestorDAO              gestorDAO;
+    private static IAnoLetivoDAO           anoLetivoDAO;
+    // v1.3 ────────────────────────────────────────────────────────────────────
+    private static IHorarioDAO             horarioDAO;
+    private static IPresencaDAO            presencaDAO;
+    private static IJustificacaoFaltaDAO   justificacaoFaltaDAO;
+    private static ITipoEstatutoDAO        tipoEstatutoDAO;
+    private static IEstatutoEstudanteDAO   estatutoEstudanteDAO;
 
     static {
         String tipo = "CSV";
@@ -76,6 +82,11 @@ public class DAOFactory {
         propinaDAO           = null;
         gestorDAO            = null;
         anoLetivoDAO         = null;
+        horarioDAO           = null;
+        presencaDAO          = null;
+        justificacaoFaltaDAO = null;
+        tipoEstatutoDAO      = null;
+        estatutoEstudanteDAO = null;
     }
 
     public static String getModo() { return tipoArmazenamento; }
@@ -134,5 +145,40 @@ public class DAOFactory {
         if (anoLetivoDAO == null)
             anoLetivoDAO = isSql() ? new AnoLetivoSqlDAO() : new AnoLetivoMemDAO();
         return anoLetivoDAO;
+    }
+
+    // ── v1.3: Horário ──────────────────────────────────────────────────────────
+    public static IHorarioDAO getHorarioDAO() {
+        if (horarioDAO == null)
+            horarioDAO = new HorarioCRUD();
+        return horarioDAO;
+    }
+
+    // ── v1.3: Presença ─────────────────────────────────────────────────────────
+    public static IPresencaDAO getPresencaDAO() {
+        if (presencaDAO == null)
+            presencaDAO = new PresencaCRUD();
+        return presencaDAO;
+    }
+
+    // ── v1.3: Justificação de Falta ────────────────────────────────────────────
+    public static IJustificacaoFaltaDAO getJustificacaoFaltaDAO() {
+        if (justificacaoFaltaDAO == null)
+            justificacaoFaltaDAO = new JustificacaoFaltaCRUD();
+        return justificacaoFaltaDAO;
+    }
+
+    // ── v1.3: Tipo de Estatuto ─────────────────────────────────────────────────
+    public static ITipoEstatutoDAO getTipoEstatutoDAO() {
+        if (tipoEstatutoDAO == null)
+            tipoEstatutoDAO = new TipoEstatutoCRUD();
+        return tipoEstatutoDAO;
+    }
+
+    // ── v1.3: Estatuto de Estudante ────────────────────────────────────────────
+    public static IEstatutoEstudanteDAO getEstatutoEstudanteDAO() {
+        if (estatutoEstudanteDAO == null)
+            estatutoEstudanteDAO = new EstatutoEstudanteCRUD();
+        return estatutoEstudanteDAO;
     }
 }

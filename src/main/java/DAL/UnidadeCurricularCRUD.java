@@ -66,12 +66,14 @@ public class UnidadeCurricularCRUD extends AbstractCsvCRUD<UnidadeCurricular> im
 
     @Override
     public boolean atualizarUC(String nomeAtual, UnidadeCurricular uc) {
-        return false;
+        UnidadeCurricular existente = procurarPorNome(nomeAtual);
+        if (existente == null) return false;
+        return atualizarUCPorId(existente.getId(), uc);
     }
 
     public boolean atualizarUC(UnidadeCurricular unidadeCurricular) {
         for (int i = 0; i < dados.size(); i++) {
-            if (dados.get(i).getNome() == unidadeCurricular.getNome()) {
+            if (dados.get(i).getNome().equalsIgnoreCase(unidadeCurricular.getNome())) {
                 unidadeCurricular.setId(dados.get(i).getId());
                 dados.set(i, unidadeCurricular);
                 guardarTodosNoFicheiro();

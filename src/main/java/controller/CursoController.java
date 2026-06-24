@@ -59,7 +59,12 @@ public class CursoController {
             boolean tentouMudarNome = !cursoOriginal.getNome().equalsIgnoreCase(cursoNovo.getNome());
             boolean tentouMudarDepartamento = cursoNovo.getDepartamento() != null && cursoNovo.getDepartamento().getSigla() != null
                     && !cursoOriginal.getDepartamento().getSigla().equalsIgnoreCase(cursoNovo.getDepartamento().getSigla());
-            boolean tentouMudarPreco = cursoNovo.getPrecoAnual() != cursoOriginal.getPrecoAnual();
+            boolean tentouMudarPreco;
+            if (cursoOriginal.getPrecoAnual() == null || cursoNovo.getPrecoAnual() == null) {
+                tentouMudarPreco = cursoOriginal.getPrecoAnual() != cursoNovo.getPrecoAnual();
+            } else {
+                tentouMudarPreco = cursoOriginal.getPrecoAnual().compareTo(cursoNovo.getPrecoAnual()) != 0;
+            }
 
             if (tentouMudarNome || tentouMudarDepartamento || tentouMudarPreco) {
                 return new Resultado<>(false, "Bloqueado: Não é possível alterar o Nome, Departamento ou Preço de um curso que já iniciou atividade letiva.");
@@ -118,12 +123,13 @@ public class CursoController {
     }
 
     public Resultado<Curso> iniciarAnoLetivo(String nome, int anoLetivo) {
-        if (anoLetivo < 1 || anoLetivo > 3) {
-            return new Resultado<>(false, "Ano letivo inválido. Os cursos têm 3 anos curriculares.");
-        }
-
         Curso curso = cursoDAO.procurarPorNome(nome);
         if (curso == null) return new Resultado<>(false, "Curso não encontrado.");
+
+        if (anoLetivo < 1 || anoLetivo > curso.getDuracao()) {
+            return new Resultado<>(false, "Ano letivo inválido. Este curso tem " + curso.getDuracao() + " anos curriculares.");
+        }
+
         if (curso.isAnoIniciado(anoLetivo)) {
             return new Resultado<>(false, "O " + anoLetivo + "º ano deste curso já se encontra iniciado.");
         }

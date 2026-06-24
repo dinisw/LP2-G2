@@ -1,5 +1,6 @@
 package DAL;
 
+import DAL.DB.DatabaseConnection;
 import org.junit.jupiter.api.BeforeAll;
 
 import java.security.Security;
@@ -11,12 +12,9 @@ import java.sql.*;
  */
 public abstract class SetupBDTest {
 
-    protected static final String URL =
-            "jdbc:sqlserver://CTESPBD.DEI.ISEP.IPP.PT" +
-            ";databaseName=2026_LP2_G2_FEIRA" +
-            ";user=2026_LP2_G2_Feira" +
-            ";password=Grupo2Ctesp" +
-            ";encrypt=false;trustServerCertificate=true";
+    // URL mantida para referência; os testes usam o pool HikariCP via getConnection()
+    protected static final String URL = "jdbc:sqlserver://CTESPBD.DEI.ISEP.IPP.PT" +
+            ";databaseName=2026_LP2_G2_FEIRA;encrypt=false";
 
     // NIFs de teste — fora do range real para não colidir com dados reais
     // NOTA: 987654322 colide com "Maria Santos" (msa, id=27) na BD — mudado para 150000001
@@ -30,8 +28,9 @@ public abstract class SetupBDTest {
         System.setProperty("jdk.tls.client.protocols", "TLSv1,TLSv1.1,TLSv1.2,TLSv1.3");
     }
 
+    /** Usa o pool HikariCP (mesmo que os DAOs) em vez de DriverManager direto. */
     protected Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(URL);
+        return DatabaseConnection.getPooledConnection();
     }
 
     /** Executa SQL de limpeza ignorando erros (para teardown) */

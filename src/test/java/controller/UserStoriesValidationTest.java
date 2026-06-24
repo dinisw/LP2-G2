@@ -113,7 +113,7 @@ public class UserStoriesValidationTest {
 
         // NOTA: Tal como no outro teste, estou a assumir que o setPrecoAnual do curso
         // ainda recebe um double nativo. Se estiver a dar erro, mude para: c.setPrecoAnual(BigDecimal.valueOf(1000.0));
-        c.setPrecoAnual(1000.0);
+        c.setPrecoAnual(BigDecimal.valueOf(1000.0));
         cursoCtrl.registarCurso(c);
 
         // Associar todas as UCs ao Curso
@@ -195,10 +195,41 @@ public class UserStoriesValidationTest {
         UnidadeCurricularController ucController = new UnidadeCurricularController();
         EstudanteController ec = new EstudanteController();
 
+        // Marcar o ano 1 do curso como iniciado (via DAL) para permitir o lançamento de notas
+        // — não usamos CursoController.iniciarAnoLetivo() porque exige um mínimo de 5 alunos,
+        // irrelevante para o que este teste valida (upsert de notas e cálculo de aprovação).
+        CursoCRUD cursoCRUD = new CursoCRUD();
+        Curso curso = cursoCRUD.procurarPorNome(NOME_CURSO);
+        curso.adicionarAnoIniciado(1);
+        cursoCRUD.atualizarCurso(NOME_CURSO, curso);
+        DAOFactory.resetarInstancias();
+
         UnidadeCurricular uc = ucController.procurarUCPorNome(NOME_UC_Y1);
         Estudante estudante = ec.procurarEstudantePorNumeroMec(mecEstudante);
 
-        // A classe Avaliacao continua a receber Double.
-        Avaliacao nota;
+        // 1ª submissão: nota = 10.0 (aprovação)
+        Avaliacao notaInicial = new Avaliacao("Frequência 1", 10.0, uc, estudante);
+        Resultado<Avaliacao> r1 = avalController.registarAvaliacao(notaInicial);
+        assertTrue(r1.sucesso, "US 14 Falhou: não foi possível lançar a nota inicial: " + r1.mensagemErro);
+
+        Resultado<String> status1 = avalController.obterStatusAprovacao(mecEstudante, NOME_UC_Y1);
+        assertTrue(status1.sucesso);
+        assertTrue(status1.dados.contains("APROVADO"), "Nota 10.0 deveria resultar em APROVADO: " + status1.dados);
+
+        // 2ª submissão: mesmo momento, nota mais baixa → deve fazer UPSERT (substituir, não duplicar)
+        Avaliacao notaCorrigida = new Avaliacao("Frequência 1", 5.0, uc, estudante);
+        Resultado<Avaliacao> r2 = avalController.registarAvaliacao(notaCorrigida);
+        assertTrue(r2.sucesso, "US 14 Falhou: não foi possível corrigir a nota (upsert): " + r2.mensagemErro);
+
+        // Confirma que continua a existir apenas 1 registo para este momento (sem duplicação)
+        long registosFrequencia1 = new AvaliacaoCRUD().listarPorEstudante(mecEstudante).stream()
+                .filter(a -> a.getUnidadeCurricular().getNome().equalsIgnoreCase(NOME_UC_Y1)
+                        && a.getMomento().equalsIgnoreCase("Frequência 1"))
+                .count();
+        assertEquals(1, registosFrequencia1, "Upsert deve substituir o registo existente, não duplicar.");
+
+        Resultado<String> status2 = avalController.obterStatusAprovacao(mecEstudante, NOME_UC_Y1);
+        assertTrue(status2.sucesso);
+        assertTrue(status2.dados.contains("REPROVADO"), "Nota 5.0 deveria resultar em REPROVADO: " + status2.dados);
     }
 }

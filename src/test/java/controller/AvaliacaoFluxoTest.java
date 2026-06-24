@@ -16,9 +16,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * Testa o fluxo de lançamento de notas via AvaliacaoController.
  * Integração real com CSV — cada teste faz limpeza no @AfterEach.
  *
- * NOTA IMPORTANTE: O método registarAvaliacao tem um bug com o limite de 3 avaliações:
- * quando já existem 3 registos e se tenta ACTUALIZAR um deles (mesmo momento),
- * a verificação bloqueia o update. Ver o teste 'actualizarAvaliacaoExistente_NaoDeveSerBloqueadoPeloLimite3'.
+ * NOTA: O método registarAvaliacao já trata corretamente a actualização de um momento
+ * existente quando o limite de 3 momentos foi atingido (condição `!momentoJaExiste`
+ * em AvaliacaoController). O teste 'actualizarAvaliacaoExistente_NaoDeveSerBloqueadoPeloLimite3'
+ * confirma esta correção e serve de teste de regressão.
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class AvaliacaoFluxoTest {
@@ -179,9 +180,7 @@ public class AvaliacaoFluxoTest {
                 "Mensagem de erro deve referir o limite de 3.");
     }
 
-    // ===== TESTE QUE DOCUMENTA O BUG ACTUAL =====
-    // Este teste FALHA com o código actual porque o update é bloqueado pelo count >= 3.
-    // Quando o bug for corrigido (ver comentário no topo da classe), este teste deve passar.
+    // ===== TESTE DE REGRESSÃO: actualizar momento existente não deve ser bloqueado pelo limite 3 =====
     @Test
     @Order(21)
     void actualizarAvaliacaoExistente_NaoDeveSerBloqueadoPeloLimite3() {
@@ -190,10 +189,8 @@ public class AvaliacaoFluxoTest {
         Avaliacao actualizacao = new Avaliacao("Frequência", 18.0, ucTeste, estudanteTeste);
         Resultado<Avaliacao> res = controller.registarAvaliacao(actualizacao);
 
-        // NOTA: Este teste FALHARÁ com o código actual (bug no count >= 3).
-        // Descomente a linha seguinte quando o bug for corrigido:
-        // assertTrue(res.sucesso, "Actualizar nota existente não deve ser bloqueado pelo limite de 3.");
-        System.out.println("[BUG CONHECIDO] Actualização bloqueada: " + res.mensagemErro);
+        assertTrue(res.sucesso,
+                "Actualizar nota existente não deve ser bloqueado pelo limite de 3. Erro: " + res.mensagemErro);
     }
 
     // ===== obterStatusAprovacao =====

@@ -14,25 +14,50 @@ public class AvaliacaoSqlDAO implements IAvaliacaoDAO {
 
     private final DatabaseConnection db;
 
+    // JOIN para evitar N sub-queries por avaliação (era 4N queries, agora 1)
+    private static final String SELECT_AVALIACAO =
+            "SELECT a.momento, a.nota, a.ucId, a.estudanteNumeroMec, " +
+            "uc.nome AS ucNome, uc.anoCurricular, uc.semestre, " +
+            "e.nome AS estNome, e.morada AS estMorada, e.nif AS estNif, " +
+            "e.dataNascimento AS estDataNasc, e.email AS estEmail, " +
+            "e.hashSenha AS estHash, e.ativo AS estAtivo, " +
+            "c.nome AS nomeCurso " +
+            "FROM Avaliacao a " +
+            "LEFT JOIN UnidadeCurricular uc ON a.ucId = uc.id " +
+            "LEFT JOIN Estudante e ON a.estudanteNumeroMec = e.numeroMec " +
+            "LEFT JOIN Curso c ON e.cursoId = c.id";
+
     public AvaliacaoSqlDAO() {
         this.db = new DatabaseConnection();
     }
 
-    private RowMapper<Avaliacao> avaliacaoMapper() {
-        IEstudanteDAO estudanteDAO = DAOFactory.getEstudanteDAO();
-        IUnidadeCurricularDAO ucDAO = DAOFactory.getUnidadeCurricularDAO();
-        return rs -> {
-            int ucId = rs.getInt("ucId");
-            int numeroMec = rs.getInt("estudanteNumeroMec");
-            UnidadeCurricular uc = ucDAO.procurarPorId(ucId);
-            Estudante estudante = estudanteDAO.lerEstudante(numeroMec);
+    private final RowMapper<Avaliacao> avaliacaoMapper = rs -> {
+        UnidadeCurricular uc = new UnidadeCurricular(
+                rs.getString("ucNome"),
+                rs.getInt("ucId"),
+                rs.getInt("anoCurricular"),
+                rs.getInt("semestre"),
+                null,
+                new ArrayList<>()
+        );
 
-            double notaRaw = rs.getDouble("nota");
-            Double nota = rs.wasNull() ? null : notaRaw;
+        Estudante estudante = new Estudante(
+                rs.getString("estNome"),
+                rs.getString("estMorada"),
+                rs.getInt("estNif"),
+                rs.getDate("estDataNasc").toLocalDate(),
+                rs.getString("estEmail"),
+                rs.getInt("estudanteNumeroMec"),
+                rs.getString("estHash"),
+                rs.getString("nomeCurso"),
+                rs.getBoolean("estAtivo")
+        );
 
-            return new Avaliacao(rs.getString("momento"), nota, uc, estudante);
-        };
-    }
+        double notaRaw = rs.getDouble("nota");
+        Double nota = rs.wasNull() ? null : notaRaw;
+
+        return new Avaliacao(rs.getString("momento"), nota, uc, estudante);
+    };
 
     @Override
     public Resultado<Avaliacao> registarAvaliacao(Avaliacao avaliacao) {
@@ -65,8 +90,8 @@ public class AvaliacaoSqlDAO implements IAvaliacaoDAO {
     @Override
     public List<Avaliacao> listarPorEstudante(int numeroMec) {
         return db.select(
-                "SELECT * FROM Avaliacao WHERE estudanteNumeroMec=?",
-                avaliacaoMapper(), numeroMec);
+                SELECT_AVALIACAO + " WHERE a.estudanteNumeroMec=?",
+                avaliacaoMapper, numeroMec);
     }
 
     @Override
@@ -74,13 +99,13 @@ public class AvaliacaoSqlDAO implements IAvaliacaoDAO {
         int ucId = resolverUcId(nomeUC);
         if (ucId <= 0) return new ArrayList<>();
         return db.select(
-                "SELECT * FROM Avaliacao WHERE ucId=?",
-                avaliacaoMapper(), ucId);
+                SELECT_AVALIACAO + " WHERE a.ucId=?",
+                avaliacaoMapper, ucId);
     }
 
     @Override
     public boolean eliminarAvaliacoesPorEstudante(int numeroMec) {
-        int rows = db.execute("DELETE FROM Avaliacao WHERE numeroMecEstudante=?", numeroMec);
+        int rows = db.execute("DELETE FROM Avaliacao WHERE estudanteNumeroMec=?", numeroMec);
         return rows > 0;
     }
 

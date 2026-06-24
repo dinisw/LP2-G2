@@ -7,6 +7,7 @@ import model.Departamento;
 import model.Resultado;
 import model.UnidadeCurricular;
 
+import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -29,7 +30,7 @@ public class CursoSqlDAO implements ICursoDAO {
                     rs.getString("depSigla")
             );
             Curso curso = new Curso(rs.getString("nome"), rs.getInt("duracao"), dep);
-            curso.setPrecoAnual(rs.getDouble("precoAnual"));
+            curso.setPrecoAnual(rs.getBigDecimal("precoAnual"));
 
             int cursoId = rs.getInt("id");
 
@@ -95,7 +96,10 @@ public class CursoSqlDAO implements ICursoDAO {
 
     @Override
     public Resultado<Curso> registarCurso(Curso curso) {
-        if (procurarPorNome(curso.getNome()) != null)
+        ArrayList<Integer> existe = db.select(
+                "SELECT COUNT(*) AS total FROM Curso WHERE nome=?",
+                rs -> rs.getInt("total"), curso.getNome());
+        if (!existe.isEmpty() && existe.get(0) > 0)
             return new Resultado<>(false, "Já existe um curso com esse nome.");
 
         int depId = resolverDepartamentoId(curso.getDepartamento());
@@ -110,7 +114,7 @@ public class CursoSqlDAO implements ICursoDAO {
                 ps.setString(1, curso.getNome());
                 ps.setInt(2, curso.getDuracao());
                 ps.setInt(3, depId);
-                ps.setDouble(4, curso.getPrecoAnual());
+                ps.setBigDecimal(4, curso.getPrecoAnual());
                 ps.executeUpdate();
                 try (ResultSet keys = ps.getGeneratedKeys()) {
                     if (keys.next()) idGerado[0] = keys.getInt(1);
@@ -176,7 +180,7 @@ public class CursoSqlDAO implements ICursoDAO {
                 ps.setString(1, cursoNovo.getNome());
                 ps.setInt(2, cursoNovo.getDuracao());
                 ps.setInt(3, depId);
-                ps.setDouble(4, cursoNovo.getPrecoAnual());
+                ps.setBigDecimal(4, cursoNovo.getPrecoAnual());
                 ps.setInt(5, cursoId);
                 int rows = ps.executeUpdate();
                 if (rows == 0) throw new java.sql.SQLException("Curso não encontrado para atualizar.");

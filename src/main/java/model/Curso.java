@@ -1,5 +1,6 @@
 package model;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,7 +10,7 @@ public class Curso {
     private Departamento departamento;
     private final List<UnidadeCurricular> unidadeCurriculars;
     private List<Integer> anosIniciados;
-    private double precoAnual;
+    private BigDecimal precoAnual;
     private boolean ativo = true;
 
     public Curso(String nome, int duracao, Departamento departamento) {
@@ -48,11 +49,11 @@ public class Curso {
         return new ArrayList<>(unidadeCurriculars);
     }
 
-    public double getPrecoAnual() {
+    public BigDecimal getPrecoAnual() {
         return precoAnual;
     }
 
-    public void setPrecoAnual(double precoAnual) {
+    public void setPrecoAnual(BigDecimal precoAnual) {
         this.precoAnual = precoAnual;
     }
 

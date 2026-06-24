@@ -4,6 +4,7 @@ import DAL.*;
 import model.*;
 import org.junit.jupiter.api.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -82,7 +83,7 @@ public class NovasFuncionalidadesTest {
         cursoDAO = DAOFactory.getCursoDAO();
         Departamento dep = DAOFactory.getDepartamentoDAO().procurarPorSigla(SIGLA_DEPT);
         Curso curso = new Curso(NOME_CURSO, 3, dep);
-        curso.setPrecoAnual(1000.0);
+        curso.setPrecoAnual(BigDecimal.valueOf(1000));
         cursoDAO.registarCurso(curso);
 
         // 6. Criar o CursoController com o MESMO cursoDAO singleton
@@ -161,7 +162,7 @@ public class NovasFuncionalidadesTest {
     // ── Utilitário ─────────────────────────────────────────────────────────────
 
     /** Copia superficial de Curso com preço e anosIniciados personalizáveis. */
-    private static Curso copiar(Curso original, double preco, List<Integer> anos) {
+    private static Curso copiar(Curso original, BigDecimal preco, List<Integer> anos) {
         Curso c = new Curso(original.getNome(), original.getDuracao(), original.getDepartamento());
         c.setPrecoAnual(preco);
         c.setAnosIniciados(new ArrayList<>(anos)); // garantir lista mutável
@@ -244,11 +245,11 @@ public class NovasFuncionalidadesTest {
         assertNotNull(original, "Curso deve existir");
         assertFalse(original.isIniciado(), "Curso não deve estar iniciado neste teste");
 
-        Resultado res = cursoCtrl.atualizarCurso(NOME_CURSO, copiar(original, 1500.0, List.of()));
+        Resultado res = cursoCtrl.atualizarCurso(NOME_CURSO, copiar(original, BigDecimal.valueOf(1500.0), List.of()));
         assertTrue(res.sucesso, "Alterar preço de curso não iniciado deve funcionar");
 
         // Repor preço original
-        cursoCtrl.atualizarCurso(NOME_CURSO, copiar(cursoDAO.procurarPorNome(NOME_CURSO), 1000.0, List.of()));
+        cursoCtrl.atualizarCurso(NOME_CURSO, copiar(cursoDAO.procurarPorNome(NOME_CURSO), BigDecimal.valueOf(1000.0), List.of()));
     }
 
     @Test
@@ -264,13 +265,13 @@ public class NovasFuncionalidadesTest {
         Curso iniciado = cursoDAO.procurarPorNome(NOME_CURSO);
         assertTrue(iniciado.isIniciado(), "Curso deve estar marcado como iniciado");
 
-        Resultado res = cursoCtrl.atualizarCurso(NOME_CURSO, copiar(iniciado, 2000.0, iniciado.getAnosIniciados()));
+        Resultado res = cursoCtrl.atualizarCurso(NOME_CURSO, copiar(iniciado, BigDecimal.valueOf(2000.0), iniciado.getAnosIniciados()));
         assertFalse(res.sucesso, "Alterar preço de curso iniciado deve ser bloqueado");
         assertTrue(res.mensagemErro.contains("Bloqueado"),
                 "Mensagem deve conter 'Bloqueado': " + res.mensagemErro);
 
         // Repor: remover anosIniciados
-        cursoDAO.atualizarCurso(NOME_CURSO, copiar(cursoDAO.procurarPorNome(NOME_CURSO), 1000.0, List.of()));
+        cursoDAO.atualizarCurso(NOME_CURSO, copiar(cursoDAO.procurarPorNome(NOME_CURSO), BigDecimal.valueOf(1000.0), List.of()));
     }
 
     @Test
@@ -291,7 +292,7 @@ public class NovasFuncionalidadesTest {
         assertFalse(res.sucesso, "Alterar nome de curso iniciado deve ser bloqueado");
 
         // Repor
-        cursoDAO.atualizarCurso(NOME_CURSO, copiar(cursoDAO.procurarPorNome(NOME_CURSO), 1000.0, List.of()));
+        cursoDAO.atualizarCurso(NOME_CURSO, copiar(cursoDAO.procurarPorNome(NOME_CURSO), BigDecimal.valueOf(1000.0), List.of()));
     }
 
     @Test
@@ -311,7 +312,7 @@ public class NovasFuncionalidadesTest {
                 "Atualização sem mudança de preço/nome deve ter sucesso mesmo iniciado");
 
         // Repor
-        cursoDAO.atualizarCurso(NOME_CURSO, copiar(cursoDAO.procurarPorNome(NOME_CURSO), 1000.0, List.of()));
+        cursoDAO.atualizarCurso(NOME_CURSO, copiar(cursoDAO.procurarPorNome(NOME_CURSO), BigDecimal.valueOf(1000.0), List.of()));
     }
 
     // ════════════════════════════════════════════════════════════════════════
