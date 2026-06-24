@@ -31,33 +31,41 @@ public class AvaliacaoSqlDAO implements IAvaliacaoDAO {
         this.db = new DatabaseConnection();
     }
 
-    private final RowMapper<Avaliacao> avaliacaoMapper = rs -> {
-        UnidadeCurricular uc = new UnidadeCurricular(
-                rs.getString("ucNome"),
-                rs.getInt("ucId"),
-                rs.getInt("anoCurricular"),
-                rs.getInt("semestre"),
-                null,
-                new ArrayList<>()
-        );
+    private RowMapper<Avaliacao> avaliacaoMapper() {
+        return rs -> {
 
-        Estudante estudante = new Estudante(
-                rs.getString("estNome"),
-                rs.getString("estMorada"),
-                rs.getInt("estNif"),
-                rs.getDate("estDataNasc").toLocalDate(),
-                rs.getString("estEmail"),
-                rs.getInt("estudanteNumeroMec"),
-                rs.getString("estHash"),
-                rs.getString("nomeCurso"),
-                rs.getBoolean("estAtivo")
-        );
+            int ucId = rs.getInt("ucId");
+            List<String> momentos = db.select("SELECT momento FROM UnidadeCurricularMomento WHERE id=?",
+                    r -> r.getString("momento"),
+                    ucId
+            );
+            UnidadeCurricular uc = new UnidadeCurricular(
+                    rs.getString("ucNome"),
+                    ucId,
+                    rs.getInt("anoCurricular"),
+                    rs.getInt("semestre"),
+                    null,
+                    momentos
+            );
 
-        double notaRaw = rs.getDouble("nota");
-        Double nota = rs.wasNull() ? null : notaRaw;
+            Estudante estudante = new Estudante(
+                    rs.getString("estNome"),
+                    rs.getString("estMorada"),
+                    rs.getInt("estNif"),
+                    rs.getDate("estDataNasc").toLocalDate(),
+                    rs.getString("estEmail"),
+                    rs.getInt("estudanteNumeroMec"),
+                    rs.getString("estHash"),
+                    rs.getString("nomeCurso"),
+                    rs.getBoolean("estAtivo")
+            );
 
-        return new Avaliacao(rs.getString("momento"), nota, uc, estudante);
-    };
+            double notaRaw = rs.getDouble("nota");
+            Double nota = rs.wasNull() ? null : notaRaw;
+
+            return new Avaliacao(rs.getString("momento"), nota, uc, estudante);
+        };
+    }
 
     @Override
     public Resultado<Avaliacao> registarAvaliacao(Avaliacao avaliacao) {
@@ -91,7 +99,7 @@ public class AvaliacaoSqlDAO implements IAvaliacaoDAO {
     public List<Avaliacao> listarPorEstudante(int numeroMec) {
         return db.select(
                 SELECT_AVALIACAO + " WHERE a.estudanteNumeroMec=?",
-                avaliacaoMapper, numeroMec);
+                avaliacaoMapper(), numeroMec);
     }
 
     @Override
@@ -100,7 +108,7 @@ public class AvaliacaoSqlDAO implements IAvaliacaoDAO {
         if (ucId <= 0) return new ArrayList<>();
         return db.select(
                 SELECT_AVALIACAO + " WHERE a.ucId=?",
-                avaliacaoMapper, ucId);
+                avaliacaoMapper(), ucId);
     }
 
     @Override

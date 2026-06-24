@@ -18,17 +18,21 @@ public class EstudanteSqlDAO implements IEstudanteDAO {
             "FROM Estudante e " +
             "LEFT JOIN Curso c ON e.cursoId = c.id";
 
-    private final RowMapper<Estudante> estudanteMapper = rs -> new Estudante(
-            rs.getString("nome"),
-            rs.getString("morada"),
-            rs.getInt("nif"),
-            rs.getDate("dataNascimento").toLocalDate(),
-            rs.getString("email"),
-            rs.getInt("numeroMec"),
-            rs.getString("hashSenha"),
-            rs.getString("nomeCurso"),
-            rs.getBoolean("ativo")
-    );
+    private final RowMapper<Estudante> estudanteMapper = rs -> {
+        Estudante e = new Estudante(
+                rs.getString("nome"),
+                rs.getString("morada"),
+                rs.getInt("nif"),
+                rs.getDate("dataNascimento").toLocalDate(),
+                rs.getString("email"),
+                rs.getInt("numeroMec"),
+                rs.getString("hashSenha"),
+                rs.getString("nomeCurso"),
+                rs.getBoolean("ativo")
+        );
+        e.setAnoLetivo(rs.getInt("anoLetivo"));
+        return e;
+    };
 
     public EstudanteSqlDAO() {
         this.db = new DatabaseConnection();
