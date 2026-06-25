@@ -150,35 +150,35 @@ public class DAOFactory {
     // ── v1.3: Horário ──────────────────────────────────────────────────────────
     public static IHorarioDAO getHorarioDAO() {
         if (horarioDAO == null)
-            horarioDAO = new HorarioCRUD();
+            horarioDAO = isSql() ? new HorarioSqlDAO() : new HorarioCRUD();
         return horarioDAO;
     }
 
     // ── v1.3: Presença ─────────────────────────────────────────────────────────
     public static IPresencaDAO getPresencaDAO() {
         if (presencaDAO == null)
-            presencaDAO = new PresencaCRUD();
+            presencaDAO = isSql() ? new PresencaSqlDAO() : new PresencaCRUD();
         return presencaDAO;
     }
 
     // ── v1.3: Justificação de Falta ────────────────────────────────────────────
     public static IJustificacaoFaltaDAO getJustificacaoFaltaDAO() {
         if (justificacaoFaltaDAO == null)
-            justificacaoFaltaDAO = new JustificacaoFaltaCRUD();
+            justificacaoFaltaDAO = isSql() ? new JustificacaoFaltaSqlDAO() : new JustificacaoFaltaCRUD();
         return justificacaoFaltaDAO;
     }
 
     // ── v1.3: Tipo de Estatuto ─────────────────────────────────────────────────
     public static ITipoEstatutoDAO getTipoEstatutoDAO() {
         if (tipoEstatutoDAO == null)
-            tipoEstatutoDAO = new TipoEstatutoCRUD();
+            tipoEstatutoDAO = isSql() ? new TipoEstatutoSqlDAO() : new TipoEstatutoCRUD();
         return tipoEstatutoDAO;
     }
 
     // ── v1.3: Estatuto de Estudante ────────────────────────────────────────────
     public static IEstatutoEstudanteDAO getEstatutoEstudanteDAO() {
         if (estatutoEstudanteDAO == null)
-            estatutoEstudanteDAO = new EstatutoEstudanteCRUD();
+            estatutoEstudanteDAO = isSql() ? new EstatutoEstudanteSqlDAO() : new EstatutoEstudanteCRUD();
         return estatutoEstudanteDAO;
     }
 }

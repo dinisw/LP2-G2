@@ -1369,8 +1369,7 @@ public class GestorView {
             }
 
             Estudante estudante = listaEstudantes.get(escolha - 1);
-            DAL.IAvaliacaoDAO avaliacaoDAO = DAL.DAOFactory.getAvaliacaoDAO();
-            estudante.setListaAvaliacoes(avaliacaoDAO.listarPorEstudante(estudante.getNumeroMec()));
+            new controller.EstudanteController().carregarAvaliacoes(estudante);
 
             System.out.println(GetGreen() + "\nDados encontrados:" + GetReset());
             System.out.println(estudante.toString());
@@ -1954,24 +1953,7 @@ public class GestorView {
             return;
         }
 
-        // ── Ordem crítica da passagem de ano ───────────────────────────────
-        // 1.º) Fechar o ano que termina e gravar o snapshot histórico ENQUANTO os
-        //      estudantes ainda estão no ano de origem. Só assim o snapshot regista
-        //      o anoCurricularInicio correto e o resultado (TRANSICAO/RETIDO/CONCLUIDO).
-        // 2.º) Só depois aplicar a transição global — UMA única vez — que atualiza
-        //      estudante.anoLetivo e gera/repõe propinas.
-        // Inverter esta ordem (transitar antes do snapshot) faz o gravarSnapshotAno
-        // ler o ano já avançado e marcar como RETIDO quem afinal transitou.
-        boolean avancouAno = alc.avancarAnoLetivo();
-        if (!avancouAno) {
-            System.out.println(GetRed() + "\nFalha ao fechar o ano letivo atual. "
-                    + "Transição abortada — nenhum estudante foi alterado." + GetReset());
-            MenuUtils.pressionarEnter(scanner);
-            return;
-        }
-
-        EstudanteController ec = new EstudanteController();
-        Resultado<List<String>> res = ec.simularTransicaoAnoLetivoGlobal();
+        Resultado<List<String>> res = alc.executarPassagemDeAno();
         model.AnoLetivo novoAno = alc.obterAnoAtual();
 
         if (res.sucesso) {
@@ -1979,7 +1961,7 @@ public class GestorView {
             for (String log : res.dados) {
                 if (log.contains("[CONCLUÍDO]") || log.contains("[AVANÇOU]")) {
                     System.out.println(GetGreen() + log + GetReset());
-                } else if (log.contains("[RETIDO]")) {
+                } else if (log.contains("[RETIDO]") || log.contains("[ERRO]")) {
                     System.out.println(GetRed() + log + GetReset());
                 } else {
                     System.out.println(GetCyanBold() + log + GetReset());

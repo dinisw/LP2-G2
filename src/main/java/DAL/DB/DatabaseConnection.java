@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import io.github.cdimascio.dotenv.Dotenv;
 
+import java.security.Security;
 import java.sql.*;
 import java.util.ArrayList;
 
@@ -37,6 +38,12 @@ public class DatabaseConnection {
     }
 
     private static void inicializarPool() {
+        // SQL Server 2016 usa TLS 1.0/1.1; Java 11+ desativa-os por defeito.
+        Security.setProperty("jdk.tls.disabledAlgorithms",
+                "SSLv3, RC4, DES, MD5withRSA, DH keySize < 1024, EC keySize < 224, 3DES_EDE_CBC, anon, NULL");
+        Security.setProperty("jdk.certpath.disabledAlgorithms",
+                "MD2, MD5, SHA1 jdkCA & usage TLSServer, RSA keySize < 1024, DSA keySize < 1024, EC keySize < 224");
+
         try {
             Dotenv dotenv = Dotenv.configure()
                     .directory("src/main/resources")
@@ -51,7 +58,7 @@ public class DatabaseConnection {
 
             HikariConfig cfg = new HikariConfig();
             cfg.setJdbcUrl("jdbc:sqlserver://" + server
-                    + ";databaseName=" + database + ";encrypt=false");
+                    + ";databaseName=" + database + ";encrypt=false;trustServerCertificate=true");
             cfg.setUsername(user);
             cfg.setPassword(password);
 

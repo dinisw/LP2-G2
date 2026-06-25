@@ -40,8 +40,7 @@ public class EstudanteView {
             try {
                 EstudanteController ec = new EstudanteController();
                 Estudante estudante = ec.procurarEstudantePorNumeroMec(estudanteLogado.getNumeroMec());
-                DAL.IAvaliacaoDAO avaliacaoDAO = DAL.DAOFactory.getAvaliacaoDAO();
-                estudante.setListaAvaliacoes(avaliacaoDAO.listarPorEstudante(estudante.getNumeroMec()));
+                ec.carregarAvaliacoes(estudante);
 
                 MenuUtils.exibirTitulo();
                 MenuUtils.exibirSubTitulo("PORTAL ESTUDANTE > " + estudante.getNome().toUpperCase(), opcoes);
@@ -104,12 +103,11 @@ public class EstudanteView {
             System.out.println(controller.obterFichaEstudanteFormatada(estudante));
 
             // Carregar avaliações e curso para mostrar UCs com notas
-            DAL.IAvaliacaoDAO avaliacaoDAO = DAL.DAOFactory.getAvaliacaoDAO();
-            estudante.setListaAvaliacoes(avaliacaoDAO.listarPorEstudante(estudante.getNumeroMec()));
+            controller.EstudanteController ecFicha = new controller.EstudanteController();
+            ecFicha.carregarAvaliacoes(estudante);
             List<Avaliacao> avaliacoes = estudante.getListaAvaliacoes();
 
-            DAL.ICursoDAO cursoDAO = DAL.DAOFactory.getCursoDAO();
-            model.Curso curso = cursoDAO.procurarPorNome(estudante.getNomeCurso());
+            model.Curso curso = DAL.DAOFactory.getCursoDAO().procurarPorNome(estudante.getNomeCurso());
 
             System.out.println("\n" + GetWhiteBold() + "--- Unidades Curriculares do Curso ---" + GetReset());
 
@@ -161,10 +159,8 @@ public class EstudanteView {
             EstudanteController controller = new EstudanteController();
             Estudante estudante = controller.procurarEstudantePorNumeroMec(estudanteAtual.getNumeroMec());
 
-            // Usar o DAOFactory (respeita o modo CSV/SQL) — antes instanciava AvaliacaoCRUD (só CSV),
-            // pelo que em modo SQL a pauta de notas vinha vazia/errada.
-            DAL.IAvaliacaoDAO avaliacaoDAO = DAL.DAOFactory.getAvaliacaoDAO();
-            estudante.setListaAvaliacoes(avaliacaoDAO.listarPorEstudante(estudante.getNumeroMec()));
+            controller.EstudanteController ecNotas = new controller.EstudanteController();
+            ecNotas.carregarAvaliacoes(estudante);
 
             List<Avaliacao> minhasNotas = estudante.getListaAvaliacoes();
 

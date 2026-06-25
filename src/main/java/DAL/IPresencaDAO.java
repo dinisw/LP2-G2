@@ -11,4 +11,5 @@ public interface IPresencaDAO {
     List<Presenca> listarPorEstudante(int numeroMec);
     List<Presenca> listarFaltasPorUC(int ucId);
     List<Presenca> listarTodas();
+    boolean eliminarPresenca(int id);
 }

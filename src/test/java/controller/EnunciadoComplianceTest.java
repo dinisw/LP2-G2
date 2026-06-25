@@ -114,6 +114,16 @@ class EnunciadoComplianceTest {
         assertTrue(res.sucesso, "Setup falhou: não foi possível registar estudante de teste.");
         mecEstudante1 = res.dados;
 
+        // Limpar horários/presenças de teste órfãos de execuções anteriores
+        // (feito DEPOIS de registar as UCs para que o HorarioCRUD as consiga mapear)
+        IHorarioDAO hDaoClean = DAOFactory.getHorarioDAO();
+        IPresencaDAO pDaoClean = DAOFactory.getPresencaDAO();
+        for (Horario h : new ArrayList<>(hDaoClean.listarPorAnoLetivo(D_ANO_LETIVO))) {
+            pDaoClean.listarPorHorario(h.getId()).forEach(p -> pDaoClean.eliminarPresenca(p.getId()));
+            hDaoClean.eliminarHorario(h.getId());
+        }
+        DAOFactory.resetarInstancias();
+
         // Reler o CSV depois de todos os registos para garantir dados frescos nos testes
         estCRUD = new EstudanteCRUD();
         cursoCRUD = new CursoCRUD();
@@ -121,6 +131,14 @@ class EnunciadoComplianceTest {
 
     @AfterAll
     static void teardown() {
+        // Limpar horários e presenças de teste (D_ANO_LETIVO = 9999)
+        IHorarioDAO hDao = DAOFactory.getHorarioDAO();
+        IPresencaDAO pDao = DAOFactory.getPresencaDAO();
+        for (Horario h : new ArrayList<>(hDao.listarPorAnoLetivo(D_ANO_LETIVO))) {
+            pDao.listarPorHorario(h.getId()).forEach(p -> pDao.eliminarPresenca(p.getId()));
+            hDao.eliminarHorario(h.getId());
+        }
+
         // Limpar propinas do estudante de teste antes de o eliminar
         new PropinaCRUD().eliminarPropinasPorEstudante(mecEstudante1);
 
@@ -744,7 +762,7 @@ class EnunciadoComplianceTest {
                 DiaSemana.TERCA, LocalTime.of(18, 0), LocalTime.of(19, 0), "Sala D2");
         assertTrue(ok.sucesso, "Horário sem sobreposição deve ser aceite.");
         // Limpar imediatamente — não necessário para testes seguintes
-        if (ok.dados != null) new HorarioCRUD().eliminarHorario(ok.dados.getId());
+        if (ok.dados != null) DAOFactory.getHorarioDAO().eliminarHorario(ok.dados.getId());
     }
 
     @Test @Order(310)
@@ -797,7 +815,7 @@ class EnunciadoComplianceTest {
         assertFalse(re.sucesso, "Estudante não deve marcar presença sem marcação prévia do docente.");
 
         // Limpar horário (não é preciso para testes seguintes)
-        new HorarioCRUD().eliminarHorario(horarioD4);
+        DAOFactory.getHorarioDAO().eliminarHorario(horarioD4);
     }
 
     @Test @Order(320)

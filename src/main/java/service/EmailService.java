@@ -89,7 +89,7 @@ public class EmailService {
 
                 String copiaPara = emailGestores.isEmpty() ? FALLBACK_EMAILS : emailGestores;
 
-                mensagem.setRecipients(Message.RecipientType.CC, InternetAddress.parse(FALLBACK_EMAILS));
+                mensagem.setRecipients(Message.RecipientType.CC, InternetAddress.parse(copiaPara));
             }
 
             mensagem.setSubject(assunto);

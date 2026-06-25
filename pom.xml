@@ -53,11 +53,11 @@
             <version>1.7.36</version>
         </dependency>
 
-        <!-- SQL Server JDBC -->
+        <!-- SQL Server JDBC - 9.x mantém compatibilidade com SQL Server 2012/2014/2016 (TLS 1.0/1.1) -->
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>mssql-jdbc</artifactId>
-            <version>12.6.1.jre11</version>
+            <version>9.4.1.jre11</version>
         </dependency>
 
         <!-- Testes -->
