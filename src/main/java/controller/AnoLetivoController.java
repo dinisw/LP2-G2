@@ -94,6 +94,12 @@ public class AnoLetivoController {
 
             if (estudantesDoCurso.isEmpty()) continue;
 
+            if (curso.getUnidadeCurriculars() == null || curso.getUnidadeCurriculars().isEmpty()) {
+                bloqueios.add("[SEM UCS] Curso '" + curso.getNome()
+                        + "' está iniciado mas não tem UCs associadas — impossível avaliar aproveitamento.");
+                continue;
+            }
+
             for (Estudante estudante : estudantesDoCurso) {
                 int anoEstudante = estudante.getAnoLetivo();
 

@@ -249,6 +249,13 @@ public class EstudanteController {
             Curso curso = cursoDAO.procurarPorNome(estudante.getNomeCurso());
             if (curso == null) continue;
 
+            if (curso.getUnidadeCurriculars() == null || curso.getUnidadeCurriculars().isEmpty()) {
+                relatorio.add("[SEM UCS] Mec: " + estudante.getNumeroMec()
+                        + " (" + estudante.getNome() + ") -> Curso '"
+                        + curso.getNome() + "' sem UCs definidas — transição ignorada.");
+                continue;
+            }
+
             estudante.setListaAvaliacoes(avaliacaoCRUD.listarPorEstudante(estudante.getNumeroMec()));
 
             int anoAnterior = estudante.getAnoLetivo();
@@ -302,10 +309,6 @@ public class EstudanteController {
             } else {
                 prefixo = "[RETIDO]";
                 motivo = "Não atingiu 60% de aprovações nas UCs do " + anoAnterior + "º ano — ficou no " + anoAnterior + "º ano.";
-                // Bug 1: ao repetir o ano por reprovação, a propina desse ano volta a ficar por pagar.
-                if (propinaController.reporPropinaParaRepeticao(estudante.getNumeroMec(), anoAnterior)) {
-                    motivo += " A propina do " + anoAnterior + "º ano foi reposta para novo pagamento.";
-                }
             }
 
             if (anoReal != anoAnterior) {
