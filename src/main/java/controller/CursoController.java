@@ -1,6 +1,7 @@
 package controller;
 
 import DAL.DAOFactory;
+import DAL.IAvaliacaoDAO;
 import DAL.ICursoDAO;
 import DAL.IDepartamentoDAO;
 import DAL.IEstudanteDAO;
@@ -58,15 +59,20 @@ public class CursoController {
             boolean tentouMudarNome = !cursoOriginal.getNome().equalsIgnoreCase(cursoNovo.getNome());
             boolean tentouMudarDepartamento = cursoNovo.getDepartamento() != null && cursoNovo.getDepartamento().getSigla() != null
                     && !cursoOriginal.getDepartamento().getSigla().equalsIgnoreCase(cursoNovo.getDepartamento().getSigla());
+            boolean tentouMudarPreco;
+            if (cursoOriginal.getPrecoAnual() == null || cursoNovo.getPrecoAnual() == null) {
+                tentouMudarPreco = cursoOriginal.getPrecoAnual() != cursoNovo.getPrecoAnual();
+            } else {
+                tentouMudarPreco = cursoOriginal.getPrecoAnual().compareTo(cursoNovo.getPrecoAnual()) != 0;
+            }
 
-            if (tentouMudarNome || tentouMudarDepartamento) {
-                return new Resultado<>(false, "Bloqueado: Não é possível alterar o Nome ou o Departamento de um curso que já iniciou atividade letiva.");
+            if (tentouMudarNome || tentouMudarDepartamento || tentouMudarPreco) {
+                return new Resultado<>(false, "Bloqueado: Não é possível alterar o Nome, Departamento ou Preço de um curso que já iniciou atividade letiva.");
             }
         }
 
         Resultado res = cursoDAO.atualizarCurso(nomeAntigo, cursoNovo);
         if (res.sucesso && !nomeAntigo.equalsIgnoreCase(cursoNovo.getNome())) {
-            // Sincronizar nome do curso nos perfis dos estudantes
             try {
                 IEstudanteDAO estudanteDAO = DAOFactory.getEstudanteDAO();
                 for (Estudante estudante : estudanteDAO.getEstudantes()) {
@@ -105,13 +111,25 @@ public class CursoController {
         return cursoDAO.eliminarCurso(nomeAntigo);
     }
 
-    public Resultado<Curso> iniciarAnoLetivo(String nome, int anoLetivo) {
-        if (anoLetivo < 1 || anoLetivo > 3) {
-            return new Resultado<>(false, "Ano letivo inválido. Os cursos têm 3 anos curriculares.");
-        }
-
+    public Resultado<Curso> ativarDesativarCurso(String nome, boolean ativar) {
         Curso curso = cursoDAO.procurarPorNome(nome);
         if (curso == null) return new Resultado<>(false, "Curso não encontrado.");
+        if (curso.isAtivo() == ativar) {
+            return new Resultado<>(false, "O curso já se encontra " + (ativar ? "ativo" : "inativo") + ".");
+        }
+        curso.setAtivo(ativar);
+        Resultado<Curso> res = cursoDAO.atualizarCurso(nome, curso);
+        return res.sucesso ? new Resultado<>(curso, true) : new Resultado<>(false, "Erro ao " + (ativar ? "ativar" : "desativar") + " o curso.");
+    }
+
+    public Resultado<Curso> iniciarAnoLetivo(String nome, int anoLetivo) {
+        Curso curso = cursoDAO.procurarPorNome(nome);
+        if (curso == null) return new Resultado<>(false, "Curso não encontrado.");
+
+        if (anoLetivo < 1 || anoLetivo > curso.getDuracao()) {
+            return new Resultado<>(false, "Ano letivo inválido. Este curso tem " + curso.getDuracao() + " anos curriculares.");
+        }
+
         if (curso.isAnoIniciado(anoLetivo)) {
             return new Resultado<>(false, "O " + anoLetivo + "º ano deste curso já se encontra iniciado.");
         }
@@ -141,7 +159,32 @@ public class CursoController {
         }
 
         curso.adicionarAnoIniciado(anoLetivo);
-        return cursoDAO.registarArranqueAno(curso.getNome(), curso);
+        Resultado<Curso> resultado = cursoDAO.registarArranqueAno(curso.getNome(), curso);
+
+        // Auto-criar registos de avaliação nulos para cada estudante × UC do ano × momento
+        if (resultado.sucesso) {
+            try {
+                IAvaliacaoDAO avaliacaoDAO = DAOFactory.getAvaliacaoDAO();
+                List<UnidadeCurricular> ucsDoAno = curso.getUnidadeCurriculars().stream()
+                        .filter(uc -> uc.getAnoCurricular() == anoLetivo)
+                        .collect(Collectors.toList());
+                for (Estudante estudante : todosEstudantes) {
+                    if (estudante.getNomeCurso() != null
+                            && estudante.getNomeCurso().equalsIgnoreCase(curso.getNome())
+                            && estudanteController.obterAnoDesbloqueado(estudante) == anoLetivo) {
+                        for (UnidadeCurricular uc : ucsDoAno) {
+                            for (String momento : uc.getMomentosAvaliacao()) {
+                                avaliacaoDAO.registarAvaliacao(new Avaliacao(momento, null, uc, estudante));
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("Aviso: erro ao auto-criar avaliações para o ano " + anoLetivo + ": " + e.getMessage());
+            }
+        }
+
+        return resultado;
     }
 
     public Resultado<Curso> associarUCAoCurso(String nomeCurso, String nomeUC) {

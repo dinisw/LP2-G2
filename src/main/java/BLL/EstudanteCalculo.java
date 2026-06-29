@@ -8,7 +8,7 @@ import java.util.List;
 
 public class EstudanteCalculo {
 
-    private  static boolean isUCAprovada (List<Avaliacao> avaliacoes, String nomeUC) {
+    public static boolean isUCAprovada (List<Avaliacao> avaliacoes, String nomeUC) {
         List<Avaliacao> avaliacoesDestaUC = avaliacoes.stream().filter(a -> a.getUnidadeCurricular().getNome().equalsIgnoreCase(nomeUC) && a.getNota() != null).toList();
 
         if (avaliacoesDestaUC.isEmpty()) {
@@ -46,7 +46,9 @@ public class EstudanteCalculo {
 
         if (totalInscritas == 0) return 1;
 
-        long aprovadasGlobais = curso.getUnidadeCurriculars().stream().filter(u -> isUCAprovada(avaliacoes, u.getNome())).count();
+        long aprovadasGlobais = curso.getUnidadeCurriculars().stream()
+                .filter(u -> u.getAnoCurricular() <= estudante.getAnoLetivo() && isUCAprovada(avaliacoes, u.getNome()))
+                .count();
 
         double aproveitamento = (double) aprovadasGlobais / totalInscritas;
         if (aproveitamento >= 0.60) {

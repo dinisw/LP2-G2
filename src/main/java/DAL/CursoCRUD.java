@@ -4,6 +4,8 @@ import model.Curso;
 import model.Departamento;
 import model.Resultado;
 import model.UnidadeCurricular;
+
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,7 +21,10 @@ public class CursoCRUD extends AbstractCsvCRUD<Curso> implements ICursoDAO {
             String nomeCurso = colunas[0];
             int duracao = Integer.parseInt(colunas[1]);
             String siglaDep = colunas[2];
-            double precoAnual = Double.parseDouble(colunas[3].replace(",", "."));
+            String precoStr = colunas[3] == null ? "" : colunas[3].trim();
+            BigDecimal precoAnual = (precoStr.isEmpty() || "null".equalsIgnoreCase(precoStr))
+                    ? null
+                    : new BigDecimal(precoStr.replace(",", "."));
 
             DepartamentoCRUD depCRUD = new DepartamentoCRUD();
             Departamento departamento = depCRUD.procurarPorSigla(siglaDep);
@@ -41,6 +46,9 @@ public class CursoCRUD extends AbstractCsvCRUD<Curso> implements ICursoDAO {
                     UnidadeCurricular uc = ucCRUD.procurarPorNome(nomeUc.trim());
                     if (uc != null) curso.adicionarUnidadeCurricular(uc);
                 }
+            }
+            if (colunas.length > 6) {
+                curso.setAtivo(!"false".equalsIgnoreCase(colunas[6].trim()));
             }
             return curso;
         } catch (Exception e) {
@@ -66,8 +74,12 @@ public class CursoCRUD extends AbstractCsvCRUD<Curso> implements ICursoDAO {
             ucsStr = String.join(",", ucs);
         }
 
-        return String.format("%s;%d;%s;%.2f;%s;%s",
-                curso.getNome(), curso.getDuracao(), siglaDep, curso.getPrecoAnual(), anosIniciadosStr, ucsStr);
+        String precoAnualStr = curso.getPrecoAnual() != null
+                ? String.format("%.2f", curso.getPrecoAnual())
+                : "";
+
+        return String.format("%s;%d;%s;%s;%s;%s;%s",
+                curso.getNome(), curso.getDuracao(), siglaDep, precoAnualStr, anosIniciadosStr, ucsStr, curso.isAtivo());
     }
 
     public Resultado<Curso> registarCurso(Curso curso) {

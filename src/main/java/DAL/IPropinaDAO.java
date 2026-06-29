@@ -9,4 +9,5 @@ public interface IPropinaDAO {
     boolean atualizarPropina(Propina propinaAtualizada);
     List<Propina> listarPropinasPorEstudante(int numeroMec);
     List<Propina> getTodasPropinas();
+    boolean eliminarPropinasPorEstudante(int numeroMec);
 }

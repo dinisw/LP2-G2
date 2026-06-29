@@ -2,9 +2,12 @@ package controller;
 
 import DAL.DAOFactory;
 import DAL.IAvaliacaoDAO;
+import DAL.ICursoDAO;
 import DAL.IDocenteDAO;
+import DAL.IEstudanteDAO;
 import DAL.IUnidadeCurricularDAO;
 import model.Avaliacao;
+import model.Curso;
 import model.Docente;
 import model.Estudante;
 import model.Resultado;
@@ -33,6 +36,17 @@ public class DocenteController {
             return new Resultado<>(false, "Acesso Negado: Não é o docente responsável por esta Unidade Curricular.");
         }
 
+        // Bloquear se o ano letivo desta UC já foi iniciado em algum curso
+        ICursoDAO cursoDAO = DAOFactory.getCursoDAO();
+        for (Curso curso : cursoDAO.getCursos()) {
+            boolean ucPertence = curso.getUnidadeCurriculars().stream()
+                    .anyMatch(u -> u.getNome().equalsIgnoreCase(uc.getNome()));
+            if (ucPertence && curso.isAnoIniciado(uc.getAnoCurricular())) {
+                return new Resultado<>(false,
+                        "Bloqueado: Não é possível alterar os momentos de avaliação após o início do ano letivo.");
+            }
+        }
+
         uc.setMomentosAvaliacao(momentos);
         boolean sucesso = ucDAO.atualizarUCPorId(idUc, uc);
 
@@ -46,9 +60,15 @@ public class DocenteController {
         if (nif <= 0) return new Resultado<>(false, "NIF inválido.");
         if (dataNascimento == null) return new Resultado<>(false, "Data de nascimento inválida.");
         if (docenteDAO.procurarPorNif(nif) != null) return new Resultado<>(false, "Já existe um docente com este NIF.");
-        if (docenteDAO.procurarPorSigla(sigla) != null) return new Resultado<>(false, "Já existe um docente com esta sigla.");
+        // Verificar duplicado com sigla já normalizada para maiúsculas
+        String siglaNormCheck = sigla.trim().toUpperCase();
+        if (docenteDAO.procurarPorSigla(siglaNormCheck) != null) return new Resultado<>(false, "Já existe um docente com esta sigla.");
 
-        Docente docente = new Docente(nome, morada, nif, dataNascimento, email, hash, sigla, new ArrayList<>(), new ArrayList<>());
+        // Email → minúsculas; sigla → MAIÚSCULAS (norma de apresentação)
+        String emailNorm = email.trim().toLowerCase();
+        String siglaNorm = sigla.trim().toUpperCase();
+
+        Docente docente = new Docente(nome, morada, nif, dataNascimento, emailNorm, hash, siglaNorm, new ArrayList<>(), new ArrayList<>());
         return docenteDAO.registarDocente(docente);
     }
 
@@ -74,10 +94,38 @@ public class DocenteController {
     }
 
     public Resultado<String> eliminarDocente(int nif) {
-        if (docenteDAO.procurarPorNif(nif) == null) return new Resultado<>(false, "Docente não encontrado.");
+        Docente docente = docenteDAO.procurarPorNif(nif);
+        if (docente == null) return new Resultado<>(false, "Docente não encontrado.");
+
+        // Verifica se o docente está atribuído a alguma UC
+        IUnidadeCurricularDAO ucDAO = DAOFactory.getUnidadeCurricularDAO();
+        boolean temUCsAtribuidas = ucDAO.getUnidadeCurriculars().stream()
+                .anyMatch(uc -> uc.getDocente() != null
+                        && uc.getDocente().getSigla().equalsIgnoreCase(docente.getSigla()));
+
+        if (temUCsAtribuidas) {
+            // Soft-delete: inativa em vez de eliminar (mantém integridade referencial)
+            docente.setAtivo(false);
+            Resultado<Docente> res = docenteDAO.atualizarDocente(docente);
+            return res.sucesso
+                    ? new Resultado<>("INATIVADO", true)
+                    : new Resultado<>(false, "Erro ao desativar o docente.");
+        }
+
+        // Hard-delete: sem UCs associadas, pode eliminar
         return docenteDAO.eliminarDocente(nif).sucesso
                 ? new Resultado<>("ELIMINADO", true)
                 : new Resultado<>(false, "Erro ao eliminar docente.");
+    }
+
+    public Resultado<Docente> ativarDesativarDocente(int nif, boolean ativar) {
+        Docente existente = docenteDAO.procurarPorNif(nif);
+        if (existente == null) return new Resultado<>(false, "Docente não encontrado.");
+        if (existente.isAtivo() == ativar) {
+            return new Resultado<>(false, "O docente já se encontra " + (ativar ? "ativo" : "inativo") + ".");
+        }
+        existente.setAtivo(ativar);
+        return docenteDAO.atualizarDocente(existente);
     }
 
     public List<Docente> listarDocentes() { return docenteDAO.getDocentes(); }
@@ -86,18 +134,51 @@ public class DocenteController {
 
     public List<Estudante> listarAlunosPorUC(String nomeUC) {
         if (nomeUC == null || nomeUC.trim().isEmpty()) return new ArrayList<>();
-        List<Avaliacao> avaliacoes = avaliacaoDAO.listarPorUnidadeCurricular(nomeUC);
-        List<Estudante> alunosUnicos = new ArrayList<>();
+
+        // Procurar a UC para saber o ano curricular
+        IUnidadeCurricularDAO ucDAO = DAOFactory.getUnidadeCurricularDAO();
+        UnidadeCurricular uc = ucDAO.procurarPorNome(nomeUC);
+        if (uc == null) return new ArrayList<>();
+        int anoCurricular = uc.getAnoCurricular();
+
+        // Encontrar os cursos que têm esta UC
+        ICursoDAO cursoDAO = DAOFactory.getCursoDAO();
+        List<String> nomesDosCursos = new ArrayList<>();
+        for (model.Curso curso : cursoDAO.getCursos()) {
+            boolean temUC = curso.getUnidadeCurriculars().stream()
+                    .anyMatch(u -> u.getNome().equalsIgnoreCase(nomeUC));
+            if (temUC) nomesDosCursos.add(curso.getNome());
+        }
+
+        // Listar estudantes ativos nesses cursos que estão no ano correto
+        IEstudanteDAO estudanteDAO = DAOFactory.getEstudanteDAO();
+        EstudanteController estCtrl = new EstudanteController();
+        List<Estudante> alunosElegiveis = new ArrayList<>();
         List<Integer> mec = new ArrayList<>();
 
-        for (Avaliacao av : avaliacoes) {
-            Estudante est = av.getEstudante();
-            if (est != null && !mec.contains(est.getNumeroMec())) {
-                alunosUnicos.add(est);
+        for (Estudante est : estudanteDAO.getEstudantes()) {
+            if (!est.isAtivo()) continue;
+            if (est.getNomeCurso() == null) continue;
+            boolean cursoCorreto = nomesDosCursos.stream()
+                    .anyMatch(c -> c.equalsIgnoreCase(est.getNomeCurso()));
+            if (!cursoCorreto) continue;
+            int anoEstudante = estCtrl.obterAnoDesbloqueado(est);
+            if (anoEstudante == anoCurricular && !mec.contains(est.getNumeroMec())) {
+                alunosElegiveis.add(est);
                 mec.add(est.getNumeroMec());
             }
         }
-        alunosUnicos.sort((a, b) -> a.getNome().compareToIgnoreCase(b.getNome()));
-        return alunosUnicos;
+
+        // Incluir também estudantes que já têm avaliações nesta UC (anos anteriores / repetentes)
+        for (Avaliacao av : avaliacaoDAO.listarPorUnidadeCurricular(nomeUC)) {
+            Estudante est = av.getEstudante();
+            if (est != null && !mec.contains(est.getNumeroMec())) {
+                alunosElegiveis.add(est);
+                mec.add(est.getNumeroMec());
+            }
+        }
+
+        alunosElegiveis.sort((a, b) -> a.getNome().compareToIgnoreCase(b.getNome()));
+        return alunosElegiveis;
     }
 }

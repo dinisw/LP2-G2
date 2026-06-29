@@ -13,23 +13,26 @@ public class EstudanteSqlDAO implements IEstudanteDAO {
 
     private final DatabaseConnection db;
 
-    // JOIN com Curso para obter o nomeCurso a partir do cursoId
     private static final String SELECT_BASE =
             "SELECT e.*, c.nome AS nomeCurso " +
             "FROM Estudante e " +
             "LEFT JOIN Curso c ON e.cursoId = c.id";
 
-    private final RowMapper<Estudante> estudanteMapper = rs -> new Estudante(
-            rs.getString("nome"),
-            rs.getString("morada"),
-            rs.getInt("nif"),
-            rs.getDate("dataNascimento").toLocalDate(),
-            rs.getString("email"),
-            rs.getInt("numeroMec"),
-            rs.getString("hashSenha"),
-            rs.getString("nomeCurso"),
-            rs.getBoolean("ativo")
-    );
+    private final RowMapper<Estudante> estudanteMapper = rs -> {
+        Estudante e = new Estudante(
+                rs.getString("nome"),
+                rs.getString("morada"),
+                rs.getInt("nif"),
+                rs.getDate("dataNascimento").toLocalDate(),
+                rs.getString("email"),
+                rs.getInt("numeroMec"),
+                rs.getString("hashSenha"),
+                rs.getString("nomeCurso"),
+                rs.getBoolean("ativo")
+        );
+        e.setAnoLetivo(rs.getInt("anoLetivo"));
+        return e;
+    };
 
     public EstudanteSqlDAO() {
         this.db = new DatabaseConnection();
@@ -37,7 +40,6 @@ public class EstudanteSqlDAO implements IEstudanteDAO {
 
     @Override
     public Resultado<Estudante> registarEstudante(Estudante estudante) {
-        // Resolve cursoId a partir do nome do curso
         String sqlCurso = "SELECT id FROM Curso WHERE nome = ?";
         ArrayList<Integer> ids = db.select(sqlCurso, rs -> rs.getInt("id"), estudante.getNomeCurso());
         Integer cursoId = ids.isEmpty() ? null : ids.get(0);
@@ -71,7 +73,6 @@ public class EstudanteSqlDAO implements IEstudanteDAO {
 
     @Override
     public Resultado<Estudante> atualizarEstudante(Estudante estudante) {
-        // Resolve cursoId a partir do nome do curso
         String sqlCurso = "SELECT id FROM Curso WHERE nome = ?";
         ArrayList<Integer> ids = db.select(sqlCurso, rs -> rs.getInt("id"), estudante.getNomeCurso());
         Integer cursoId = ids.isEmpty() ? null : ids.get(0);
@@ -121,6 +122,14 @@ public class EstudanteSqlDAO implements IEstudanteDAO {
     public Estudante procurarPorNif(int nif) {
         String sql = SELECT_BASE + " WHERE e.nif = ?";
         ArrayList<Estudante> lista = db.select(sql, estudanteMapper, nif);
+        return lista.isEmpty() ? null : lista.get(0);
+    }
+
+    @Override
+    public Estudante procurarPorEmail(String email) {
+        String sql = SELECT_BASE + " WHERE LOWER(e.email) = ?";
+        ArrayList<Estudante> lista = db.select(sql, estudanteMapper,
+                email != null ? email.toLowerCase() : "");
         return lista.isEmpty() ? null : lista.get(0);
     }
 

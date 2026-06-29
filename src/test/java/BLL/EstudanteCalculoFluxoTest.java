@@ -12,8 +12,8 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Testa a lógica de cálculo de progressão de ano e aprovação de UCs.
  * Todos os testes são unitários puros (sem acesso a CSV).
- * NOTA: Os testes do EstudanteCalculoTest existente estão quebrados porque
- *       criam UCs sem momentos de avaliação, o que faz isUCAprovada retornar sempre false.
+ * Complementa EstudanteCalculoTest com casos extra de fronteira (UCs sem momentos,
+ * notas null, momentos não definidos na UC, limite exacto de 60%, etc.).
  */
 public class EstudanteCalculoFluxoTest {
 

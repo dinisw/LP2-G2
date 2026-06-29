@@ -35,9 +35,6 @@ public class DocenteSqlDAO implements IDocenteDAO {
 
     @Override
     public Resultado<Docente> registarDocente(Docente docente) {
-        if (procurarPorNif(docente.getNif()) != null) {
-            return new Resultado<>(false, "NIF já existe.");
-        }
         String sql = "INSERT INTO Docente (nome, morada, nif, dataNascimento, email, hash, sigla, ativo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         int rows = db.execute(sql,
                 docente.getNome(),
@@ -92,6 +89,14 @@ public class DocenteSqlDAO implements IDocenteDAO {
     @Override
     public Docente procurarPorNif(int nif) {
         ArrayList<Docente> lista = db.select("SELECT * FROM Docente WHERE nif=?", docenteMapper, nif);
+        return lista.isEmpty() ? null : lista.get(0);
+    }
+
+    @Override
+    public Docente procurarPorEmail(String email) {
+        ArrayList<Docente> lista = db.select(
+                "SELECT * FROM Docente WHERE LOWER(email) = ?", docenteMapper,
+                email != null ? email.toLowerCase() : "");
         return lista.isEmpty() ? null : lista.get(0);
     }
 }

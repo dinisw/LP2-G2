@@ -11,4 +11,5 @@ public interface IDocenteDAO {
     List<Docente> getDocentes();
     Docente procurarPorSigla(String sigla);
     Docente procurarPorNif(int nif);
+    Docente procurarPorEmail(String email);
 }

@@ -34,6 +34,9 @@ public class UnidadeCurricularController {
         if (docente == null) {
             return new Resultado<>(false, "Bloqueado: Docente com a sigla '" + siglaDocente + "' não existe no sistema. Crie o docente primeiro.");
         }
+        if (!docente.isAtivo()) {
+            return new Resultado<>(false, "Bloqueado: O docente '" + docente.getNome() + "' está inativo. Ative a conta primeiro.");
+        }
 
         UnidadeCurricular novaUC = new UnidadeCurricular(nome, ano, semestre, docente);
         return ucDAO.registarUC(novaUC)
@@ -103,6 +106,9 @@ public class UnidadeCurricularController {
         Docente novoDocente = docenteDAO.procurarPorSigla(novaSiglaDocente);
         if (novoDocente == null) {
             return new Resultado<>(false, "Bloqueado: Docente com a sigla '" + novaSiglaDocente + "' não existe no sistema.");
+        }
+        if (!novoDocente.isAtivo()) {
+            return new Resultado<>(false, "Bloqueado: O docente '" + novoDocente.getNome() + "' está inativo. Ative a conta primeiro.");
         }
 
         ucExistente.setNome(novoNome);

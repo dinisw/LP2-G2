@@ -7,6 +7,10 @@ import model.Departamento;
 import model.Resultado;
 import model.UnidadeCurricular;
 
+import java.math.BigDecimal;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,38 +22,35 @@ public class CursoSqlDAO implements ICursoDAO {
         this.db = new DatabaseConnection();
     }
 
-    // ── Mapper ───────────────────────────────────────────────────────────────
 
-    private RowMapper<Curso> cursoMapper() {
+    // Mapper simples: lê apenas as colunas da query principal, sem queries aninhadas.
+    // O enriquecimento com anos e UCs é feito em enrichCurso(), após o ResultSet ser fechado.
+    private RowMapper<int[]> idMapper() {
+        return rs -> new int[]{rs.getInt("id")};
+    }
+
+    private RowMapper<Curso> basicCursoMapper(java.util.Map<Curso, Integer> idMap) {
         return rs -> {
-            // Departamento via JOIN
-            Departamento dep = new Departamento(
-                    rs.getString("depNome"),
-                    rs.getString("depSigla")
-            );
+            Departamento dep = new Departamento(rs.getString("depNome"), rs.getString("depSigla"));
             Curso curso = new Curso(rs.getString("nome"), rs.getInt("duracao"), dep);
-            curso.setPrecoAnual(rs.getDouble("precoAnual"));
-
-            int cursoId = rs.getInt("id");
-
-            // Anos iniciados via CursoAnoIniciado
-            List<Integer> anos = db.select(
-                    "SELECT ano FROM CursoAnoIniciado WHERE curso=?",
-                    r -> r.getInt("ano"), cursoId);
-            curso.setAnosIniciados(anos);
-
-            // UCs via CursoUnidadeCurricular
-            IUnidadeCurricularDAO ucDAO = DAOFactory.getUnidadeCurricularDAO();
-            List<Integer> ucIds = db.select(
-                    "SELECT UcId FROM CursoUnidadeCurricular WHERE cursoId=?",
-                    r -> r.getInt("UcId"), cursoId);
-            for (int ucId : ucIds) {
-                UnidadeCurricular uc = ucDAO.procurarPorId(ucId);
-                if (uc != null) curso.adicionarUnidadeCurricular(uc);
-            }
-
+            curso.setPrecoAnual(rs.getBigDecimal("precoAnual"));
+            idMap.put(curso, rs.getInt("id"));
             return curso;
         };
+    }
+
+    private void enrichCurso(Curso curso, int cursoId) {
+        List<Integer> anos = db.select("SELECT ano FROM CursoAnoIniciado WHERE curso=?",
+                r -> r.getInt("ano"), cursoId);
+        curso.setAnosIniciados(anos);
+
+        IUnidadeCurricularDAO ucDAO = DAOFactory.getUnidadeCurricularDAO();
+        List<Integer> ucIds = db.select("SELECT UcId FROM CursoUnidadeCurricular WHERE cursoId=?",
+                r -> r.getInt("UcId"), cursoId);
+        for (int ucId : ucIds) {
+            UnidadeCurricular uc = ucDAO.procurarPorId(ucId);
+            if (uc != null) curso.adicionarUnidadeCurricular(uc);
+        }
     }
 
     private static final String SELECT_CURSO =
@@ -58,7 +59,6 @@ public class CursoSqlDAO implements ICursoDAO {
             "FROM Curso c " +
             "LEFT JOIN Departamento d ON c.departamentoId = d.id";
 
-    // ── Helpers ──────────────────────────────────────────────────────────────
 
     private int resolverDepartamentoId(Departamento dep) {
         if (dep == null) return 0;
@@ -94,38 +94,87 @@ public class CursoSqlDAO implements ICursoDAO {
         }
     }
 
-    // ── CRUD ─────────────────────────────────────────────────────────────────
 
     @Override
     public Resultado<Curso> registarCurso(Curso curso) {
-        if (procurarPorNome(curso.getNome()) != null)
+        ArrayList<Integer> existe = db.select(
+                "SELECT COUNT(*) AS total FROM Curso WHERE nome=?",
+                rs -> rs.getInt("total"), curso.getNome());
+        if (!existe.isEmpty() && existe.get(0) > 0)
             return new Resultado<>(false, "Já existe um curso com esse nome.");
 
         int depId = resolverDepartamentoId(curso.getDepartamento());
         if (depId <= 0) return new Resultado<>(false, "Departamento não encontrado na base de dados.");
 
-        String sql = "INSERT INTO Curso (nome, duracao, departamentoId, precoAnual) VALUES (?, ?, ?, ?)";
-        int id = db.create(sql,
-                curso.getNome(), curso.getDuracao(), depId, curso.getPrecoAnual());
+        final int[] idGerado = {0};
+        boolean ok = db.runTransaction(conn -> {
+            // 1. INSERT Curso
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "INSERT INTO Curso (nome, duracao, departamentoId, precoAnual) VALUES (?, ?, ?, ?)",
+                    Statement.RETURN_GENERATED_KEYS)) {
+                ps.setString(1, curso.getNome());
+                ps.setInt(2, curso.getDuracao());
+                ps.setInt(3, depId);
+                ps.setBigDecimal(4, curso.getPrecoAnual());
+                ps.executeUpdate();
+                try (ResultSet keys = ps.getGeneratedKeys()) {
+                    if (keys.next()) idGerado[0] = keys.getInt(1);
+                }
+            }
+            if (idGerado[0] <= 0) throw new java.sql.SQLException("ID do curso não foi gerado.");
 
-        if (id > 0) {
-            guardarAnosIniciados(id, curso.getAnosIniciados());
-            guardarUCs(id, curso.getUnidadeCurriculars());
-            return new Resultado<>(curso, true);
-        }
-        return new Resultado<>(false, "Erro ao registar curso.");
+            // 2. INSERT CursoAnoIniciado
+            if (curso.getAnosIniciados() != null) {
+                for (int ano : curso.getAnosIniciados()) {
+                    try (PreparedStatement ps = conn.prepareStatement(
+                            "INSERT INTO CursoAnoIniciado (curso, ano) VALUES (?, ?)")) {
+                        ps.setInt(1, idGerado[0]);
+                        ps.setInt(2, ano);
+                        ps.executeUpdate();
+                    }
+                }
+            }
+
+            // 3. INSERT CursoUnidadeCurricular
+            if (curso.getUnidadeCurriculars() != null) {
+                for (UnidadeCurricular uc : curso.getUnidadeCurriculars()) {
+                    if (uc.getId() > 0) {
+                        try (PreparedStatement ps = conn.prepareStatement(
+                                "INSERT INTO CursoUnidadeCurricular (cursoId, UcId) VALUES (?, ?)")) {
+                            ps.setInt(1, idGerado[0]);
+                            ps.setInt(2, uc.getId());
+                            ps.executeUpdate();
+                        }
+                    }
+                }
+            }
+        });
+
+        return ok ? new Resultado<>(curso, true) : new Resultado<>(false, "Erro ao registar curso (transação revertida).");
     }
 
     @Override
     public List<Curso> getCursos() {
-        return db.select(SELECT_CURSO, cursoMapper(), (Object[]) null);
+        java.util.Map<Curso, Integer> idMap = new java.util.LinkedHashMap<>();
+        // Fase 1: carregar info básica (ResultSet fechado ao sair do select)
+        List<Curso> cursos = db.select(SELECT_CURSO, basicCursoMapper(idMap), (Object[]) null);
+        // Fase 2: enriquecer com anos e UCs (sem queries aninhadas)
+        for (Curso curso : cursos) {
+            Integer id = idMap.get(curso);
+            if (id != null) enrichCurso(curso, id);
+        }
+        return cursos;
     }
 
     @Override
     public Curso procurarPorNome(String nome) {
-        ArrayList<Curso> lista = db.select(
-                SELECT_CURSO + " WHERE c.nome=?", cursoMapper(), nome);
-        return lista.isEmpty() ? null : lista.get(0);
+        java.util.Map<Curso, Integer> idMap = new java.util.LinkedHashMap<>();
+        ArrayList<Curso> lista = db.select(SELECT_CURSO + " WHERE c.nome=?", basicCursoMapper(idMap), nome);
+        if (lista.isEmpty()) return null;
+        Curso curso = lista.get(0);
+        Integer id = idMap.get(curso);
+        if (id != null) enrichCurso(curso, id);
+        return curso;
     }
 
     @Override
@@ -136,16 +185,52 @@ public class CursoSqlDAO implements ICursoDAO {
         int depId = resolverDepartamentoId(cursoNovo.getDepartamento());
         if (depId <= 0) return new Resultado<>(false, "Departamento não encontrado na base de dados.");
 
-        String sql = "UPDATE Curso SET nome=?, duracao=?, departamentoId=?, precoAnual=? WHERE id=?";
-        int rows = db.execute(sql,
-                cursoNovo.getNome(), cursoNovo.getDuracao(), depId, cursoNovo.getPrecoAnual(), id);
+        final int cursoId = id;
+        boolean ok = db.runTransaction(conn -> {
+            // 1. UPDATE Curso
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "UPDATE Curso SET nome=?, duracao=?, departamentoId=?, precoAnual=? WHERE id=?")) {
+                ps.setString(1, cursoNovo.getNome());
+                ps.setInt(2, cursoNovo.getDuracao());
+                ps.setInt(3, depId);
+                ps.setBigDecimal(4, cursoNovo.getPrecoAnual());
+                ps.setInt(5, cursoId);
+                int rows = ps.executeUpdate();
+                if (rows == 0) throw new java.sql.SQLException("Curso não encontrado para atualizar.");
+            }
 
-        if (rows > 0) {
-            guardarAnosIniciados(id, cursoNovo.getAnosIniciados());
-            guardarUCs(id, cursoNovo.getUnidadeCurriculars());
-            return new Resultado<>(cursoNovo, true);
-        }
-        return new Resultado<>(false, "Erro ao atualizar curso.");
+            // 2. Substituir CursoAnoIniciado
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "DELETE FROM CursoAnoIniciado WHERE curso=?")) {
+                ps.setInt(1, cursoId); ps.executeUpdate();
+            }
+            if (cursoNovo.getAnosIniciados() != null) {
+                for (int ano : cursoNovo.getAnosIniciados()) {
+                    try (PreparedStatement ps = conn.prepareStatement(
+                            "INSERT INTO CursoAnoIniciado (curso, ano) VALUES (?, ?)")) {
+                        ps.setInt(1, cursoId); ps.setInt(2, ano); ps.executeUpdate();
+                    }
+                }
+            }
+
+            // 3. Substituir CursoUnidadeCurricular
+            try (PreparedStatement ps = conn.prepareStatement(
+                    "DELETE FROM CursoUnidadeCurricular WHERE cursoId=?")) {
+                ps.setInt(1, cursoId); ps.executeUpdate();
+            }
+            if (cursoNovo.getUnidadeCurriculars() != null) {
+                for (UnidadeCurricular uc : cursoNovo.getUnidadeCurriculars()) {
+                    if (uc.getId() > 0) {
+                        try (PreparedStatement ps = conn.prepareStatement(
+                                "INSERT INTO CursoUnidadeCurricular (cursoId, UcId) VALUES (?, ?)")) {
+                            ps.setInt(1, cursoId); ps.setInt(2, uc.getId()); ps.executeUpdate();
+                        }
+                    }
+                }
+            }
+        });
+
+        return ok ? new Resultado<>(cursoNovo, true) : new Resultado<>(false, "Erro ao atualizar curso (transação revertida).");
     }
 
     @Override

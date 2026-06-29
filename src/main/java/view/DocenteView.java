@@ -8,11 +8,19 @@ import controller.AvaliacaoController;
 import controller.DocenteController;
 import controller.UnidadeCurricularController;
 import model.*;
+import model.Horario;
+import model.Presenca;
 
+import controller.HorarioController;
+import controller.PresencaController;
+
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 import static common.utils.DesignUtils.*;
 
@@ -33,6 +41,8 @@ public class DocenteView {
         opcoes.add("5. Consultar Pauta de Alunos (Ordenada)");
         opcoes.add("6. Definir Momentos de Avaliação");
         opcoes.add("7. Listar Alunos da Minha UC");
+        opcoes.add("8. Marcar Presenças de Aula");
+        opcoes.add("9. Ver Faltas por UC");
         opcoes.add("0. Logout");
 
         do {
@@ -52,6 +62,8 @@ public class DocenteView {
                     case "5": consultarPautaOrdenada(docente); break;
                     case "6": definirMomentosAvaliacao(docente); break;
                     case "7": listarAlunosDaMinhaUC(docente); break;
+                    case "8": marcarPresencasAula(docente); break;
+                    case "9": verFaltasPorUC(docente); break;
                     case "0":
                         System.out.println(GetYellow() + "\nA efetuar logout..." + GetReset());
                         return;
@@ -71,7 +83,8 @@ public class DocenteView {
             System.out.println(GetBlue() + "\n--- MINHAS UNIDADES CURRICULARES ---" + GetReset());
 
             UnidadeCurricularController unidadeCurricularController = new UnidadeCurricularController();
-            List<UnidadeCurricular> minhasUcs = unidadeCurricularController.listarUCsPorDocente(docenteAtual.getSigla());
+            List<UnidadeCurricular> minhasUcs = unidadeCurricularController.listarUCsPorDocente(docenteAtual.getSigla())
+                    .stream().sorted(Comparator.comparing(UnidadeCurricular::getNome)).collect(Collectors.toList());
 
             if (minhasUcs == null || minhasUcs.isEmpty()) {
                 System.out.println(GetYellow() + "Não tem Unidades Curriculares atribuídas neste momento." + GetReset());
@@ -138,7 +151,8 @@ public class DocenteView {
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar | Dica: Nota zero é '0.0']" + GetReset());
 
             UnidadeCurricularController ucc = new UnidadeCurricularController();
-            List<UnidadeCurricular> ucsDoDocente = ucc.listarUCsPorDocente(docenteLogado.getSigla());
+            List<UnidadeCurricular> ucsDoDocente = ucc.listarUCsPorDocente(docenteLogado.getSigla())
+                    .stream().sorted(Comparator.comparing(UnidadeCurricular::getNome)).collect(Collectors.toList());
 
             if (ucsDoDocente == null || ucsDoDocente.isEmpty()) {
                 System.out.println(GetYellow() + "Não tem Unidades Curriculares atribuídas neste momento." + GetReset());
@@ -195,7 +209,8 @@ public class DocenteView {
 
             while (continuarLancando) {
                 controller.DocenteController docenteController = new controller.DocenteController();
-                List<Estudante> alunos = docenteController.listarAlunosPorUC(ucSelecionada.getNome());
+                List<Estudante> alunos = docenteController.listarAlunosPorUC(ucSelecionada.getNome())
+                        .stream().sorted(Comparator.comparing(Estudante::getNome)).collect(Collectors.toList());
 
                 if (alunos == null || alunos.isEmpty()) {
                     System.out.println(GetYellow() + "Não há estudantes inscritos nesta UC." + GetReset());
@@ -332,7 +347,8 @@ public class DocenteView {
             System.out.println(GetBlue() + "\n--- CONSULTAR PAUTA DE ALUNOS ---" + GetReset());
 
             UnidadeCurricularController ucc = new UnidadeCurricularController();
-            List<UnidadeCurricular> unidadesCurriculares = ucc.listarUCsPorDocente(docenteAtual.getSigla());
+            List<UnidadeCurricular> unidadesCurriculares = ucc.listarUCsPorDocente(docenteAtual.getSigla())
+                    .stream().sorted(Comparator.comparing(UnidadeCurricular::getNome)).collect(Collectors.toList());
 
             if(unidadesCurriculares == null || unidadesCurriculares.isEmpty()) {
                 System.out.println(GetYellow() + "Não tem Unidades Curriculares atribuídas neste momento." + GetReset());
@@ -417,11 +433,32 @@ public class DocenteView {
                 int mec = avaliacao.getEstudante().getNumeroMec();
                 String epoca = avaliacao.getMomento();
                 String notaStr = (avaliacao.getNota() == null) ? GetYellow() + "A Aguardar" + GetReset() : String.format("%.2f", avaliacao.getNota());
-                String estadoInscricao = GetGreen() + "Ativo" + GetReset();
+                boolean estudanteAtivo = avaliacao.getEstudante() != null && avaliacao.getEstudante().isAtivo();
+                String estadoInscricao = estudanteAtivo ? GetGreen() + "Ativo" + GetReset() : GetRed() + "Inativo" + GetReset();
                 System.out.printf(" %-30s | %-15d | %-15s | %-10s | %-10s\n", nomeEstudante, mec, epoca, notaStr, estadoInscricao);
             }
             System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
-            System.out.println(GetWhiteBold() + "Total de estudantes inscritos na pauta: " + avaliacoesUC.size() + GetReset());
+            // Média de cada estudante na UC (uma linha por aluno, não por momento)
+            java.util.LinkedHashMap<Integer, String> nomePorMec = new java.util.LinkedHashMap<>();
+            for (Avaliacao a : avaliacoesUC) {
+                if (a.getEstudante() != null) {
+                    nomePorMec.putIfAbsent(a.getEstudante().getNumeroMec(), a.getEstudante().getNome());
+                }
+            }
+            System.out.println("\n" + GetWhiteBold() + "Média de cada estudante:" + GetReset());
+            System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
+            for (java.util.Map.Entry<Integer, String> e : nomePorMec.entrySet()) {
+                Resultado<String> status = avaliacaoController.obterStatusAprovacao(e.getKey(), ucSelecionada.getNome());
+                String statusStr = status.dados != null ? status.dados : "";
+                String corStatus;
+                if (statusStr.contains("APROVADO"))       corStatus = GetGreen();
+                else if (statusStr.contains("REPROVADO")) corStatus = GetRed();
+                else                                      corStatus = GetYellow();
+                System.out.printf(" %-30s | %-15d | %s%n",
+                        e.getValue(), e.getKey(), corStatus + statusStr + GetReset());
+            }
+            System.out.println(GetCyanBold() + "--------------------------------------------------------------------------------" + GetReset());
+            System.out.println(GetWhiteBold() + "Total de estudantes na pauta: " + nomePorMec.size() + GetReset());
             MenuUtils.pressionarEnter(scanner);
         }
         catch (Exception e) {
@@ -490,12 +527,218 @@ public class DocenteView {
         MenuUtils.pressionarEnter(scanner);
     }
 
+    private void marcarPresencasAula(Docente docenteLogado) {
+        try {
+            System.out.println(GetBlue() + "\n--- MARCAR PRESENÇAS DE AULA ---" + GetReset());
+
+            UnidadeCurricularController ucc = new UnidadeCurricularController();
+            List<UnidadeCurricular> ucsDocente = ucc.listarUCsPorDocente(docenteLogado.getSigla())
+                    .stream().sorted(Comparator.comparing(UnidadeCurricular::getNome)).collect(Collectors.toList());
+            if (ucsDocente.isEmpty()) {
+                System.out.println(GetYellow() + "Sem UCs atribuídas." + GetReset());
+                MenuUtils.pressionarEnter(scanner); return;
+            }
+
+            System.out.println(GetWhiteBold() + "\nAs suas UCs:" + GetReset());
+            for (int i = 0; i < ucsDocente.size(); i++)
+                System.out.printf("  %d. %s%n", i+1, ucsDocente.get(i).getNome());
+
+            int ucIdx = -1;
+            while (ucIdx < 1 || ucIdx > ucsDocente.size()) {
+                try {
+                    String op = BackendUtils.lerInputString(scanner, "\nEscolha a UC (0 para cancelar): ");
+                    ucIdx = Integer.parseInt(op);
+                    if (ucIdx < 1 || ucIdx > ucsDocente.size()) {
+                        System.out.println(GetRed() + "Opção inválida." + GetReset());
+                        ucIdx = -1;
+                    }
+                } catch (NumberFormatException ex) {
+                    System.out.println(GetRed() + "Introduza um número válido." + GetReset());
+                }
+            }
+            UnidadeCurricular uc = ucsDocente.get(ucIdx - 1);
+
+            HorarioController hCtrl = new HorarioController();
+            List<Horario> horarios = hCtrl.listarHorariosPorUC(uc.getId());
+            if (horarios.isEmpty()) {
+                System.out.println(GetYellow() + "Sem horários definidos para esta UC." + GetReset());
+                MenuUtils.pressionarEnter(scanner); return;
+            }
+
+            System.out.println(GetWhiteBold() + "\nHorários disponíveis:" + GetReset());
+            System.out.println(GetCyanBold() + "  ────────────────────────────────────────────────────" + GetReset());
+            for (int i = 0; i < horarios.size(); i++) {
+                Horario h = horarios.get(i);
+                System.out.printf("  %d. %-10s  %s–%s  Sala: %s%n",
+                        i+1, h.getDiaSemana().getDescricao(), h.getHoraInicio(), h.getHoraFim(), h.getSala());
+            }
+            System.out.println(GetCyanBold() + "  ────────────────────────────────────────────────────" + GetReset());
+
+            int hIdx = -1;
+            while (hIdx < 1 || hIdx > horarios.size()) {
+                try {
+                    String op = BackendUtils.lerInputString(scanner, "Escolha o horário (0 para cancelar): ");
+                    hIdx = Integer.parseInt(op);
+                    if (hIdx < 1 || hIdx > horarios.size()) {
+                        System.out.println(GetRed() + "Opção inválida." + GetReset());
+                        hIdx = -1;
+                    }
+                } catch (NumberFormatException ex) {
+                    System.out.println(GetRed() + "Introduza um número válido." + GetReset());
+                }
+            }
+            Horario horarioEscolhido = horarios.get(hIdx - 1);
+
+            LocalDate data = null;
+            while (data == null) {
+                try {
+                    System.out.print("Data da aula (AAAA-MM-DD, Enter = hoje): ");
+                    String dataStr = scanner.nextLine().trim();
+                    data = dataStr.isEmpty() ? LocalDate.now() : LocalDate.parse(dataStr);
+                } catch (Exception ex) {
+                    System.out.println(GetRed() + "Data inválida. Use o formato AAAA-MM-DD." + GetReset());
+                }
+            }
+
+            DocenteController dc = new DocenteController();
+            List<Estudante> alunos = dc.listarAlunosPorUC(uc.getNome()).stream()
+                    .sorted(Comparator.comparing(Estudante::getNome)).collect(Collectors.toList());
+            if (alunos.isEmpty()) {
+                System.out.println(GetYellow() + "Sem alunos inscritos nesta UC." + GetReset());
+                MenuUtils.pressionarEnter(scanner); return;
+            }
+
+            System.out.println(GetWhiteBold() + "\nMarcar presença para cada aluno (s/n, 0=cancelar):" + GetReset());
+            System.out.println(GetCyanBold() + "  ────────────────────────────────────────────────────" + GetReset());
+            PresencaController pCtrl = new PresencaController();
+            int marcados = 0;
+            boolean cancelarLoop = false;
+
+            for (Estudante est : alunos) {
+                if (cancelarLoop) break;
+
+                // Pedir resposta com opção de cancelar a qualquer momento
+                String resp = "";
+                while (!resp.equalsIgnoreCase("s") && !resp.equalsIgnoreCase("n")) {
+                    System.out.print("  " + est.getNome() + " (Mec: " + est.getNumeroMec() + ") presente? (s/n, 0=cancelar): ");
+                    resp = scanner.nextLine().trim();
+                    if (resp.equals("0")) { cancelarLoop = true; break; }
+                    if (!resp.equalsIgnoreCase("s") && !resp.equalsIgnoreCase("n"))
+                        System.out.println(GetRed() + "  Responda 's', 'n' ou '0' para cancelar." + GetReset());
+                }
+                if (cancelarLoop) break;
+
+                // Tenta registar o slot do docente para este aluno
+                Resultado<Presenca> res = pCtrl.marcarPresencaDocente(horarioEscolhido.getId(), est.getNumeroMec(), data);
+                if (!res.sucesso) {
+                    // Já foi registado — perguntar se quer alterar
+                    System.out.print(GetYellow() + "  Presença já registada para este aluno. Deseja alterar? (s/n, 0=cancelar): " + GetReset());
+                    String alterar = "";
+                    while (!alterar.equalsIgnoreCase("s") && !alterar.equalsIgnoreCase("n")) {
+                        alterar = scanner.nextLine().trim();
+                        if (alterar.equals("0")) { cancelarLoop = true; break; }
+                        if (!alterar.equalsIgnoreCase("s") && !alterar.equalsIgnoreCase("n"))
+                            System.out.print(GetRed() + "  Responda 's' ou 'n': " + GetReset());
+                    }
+                    if (cancelarLoop) break;
+                    if (alterar.equalsIgnoreCase("s")) {
+                        boolean novoEstado = resp.equalsIgnoreCase("s");
+                        Resultado<Presenca> alt = pCtrl.ajustarPresencaEstudante(
+                                horarioEscolhido.getId(), est.getNumeroMec(), data, novoEstado);
+                        if (alt.sucesso) {
+                            System.out.println(GetGreen() + "  Atualizado para: " + (novoEstado ? "Presente" : "Falta") + GetReset());
+                            if (novoEstado) marcados++;
+                        } else {
+                            System.out.println(GetRed() + "  Erro: " + alt.mensagemErro + GetReset());
+                        }
+                    }
+                } else if (resp.equalsIgnoreCase("s")) {
+                    // Presente: confirma também do lado do estudante → isFalta()=false
+                    pCtrl.marcarPresencaEstudante(horarioEscolhido.getId(), est.getNumeroMec(), data);
+                    marcados++;
+                }
+                // Se "n": presencaDocente=true, presencaEstudante=false → isFalta()=true
+            }
+
+            System.out.println(GetCyanBold() + "  ────────────────────────────────────────────────────" + GetReset());
+            if (cancelarLoop) {
+                System.out.println(GetYellow() + "\nMarcação interrompida. " + marcados + " presença(s) registada(s) até ao momento." + GetReset());
+            } else {
+                System.out.println(GetGreen() + "\n" + marcados + " presente(s), " + (alunos.size() - marcados) + " falta(s) registada(s) de " + alunos.size() + " alunos." + GetReset());
+            }
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Erro: " + e.getMessage() + GetReset());
+        }
+        MenuUtils.pressionarEnter(scanner);
+    }
+
+    private void verFaltasPorUC(Docente docenteLogado) {
+        try {
+            System.out.println(GetBlue() + "\n--- FALTAS POR UC ---" + GetReset());
+            UnidadeCurricularController ucc = new UnidadeCurricularController();
+            List<UnidadeCurricular> ucs = ucc.listarUCsPorDocente(docenteLogado.getSigla());
+            if (ucs.isEmpty()) {
+                System.out.println(GetYellow() + "Sem UCs atribuídas." + GetReset());
+                MenuUtils.pressionarEnter(scanner); return;
+            }
+
+            System.out.println(GetWhiteBold() + "\nAs suas UCs:" + GetReset());
+            for (int i = 0; i < ucs.size(); i++)
+                System.out.printf("  %d. %s%n", i+1, ucs.get(i).getNome());
+
+            int idx = -1;
+            while (idx < 1 || idx > ucs.size()) {
+                try {
+                    String op = BackendUtils.lerInputString(scanner, "\nEscolha a UC (0 para cancelar): ");
+                    idx = Integer.parseInt(op);
+                    if (idx < 1 || idx > ucs.size()) {
+                        System.out.println(GetRed() + "Opção inválida." + GetReset());
+                        idx = -1;
+                    }
+                } catch (NumberFormatException ex) {
+                    System.out.println(GetRed() + "Introduza um número válido." + GetReset());
+                }
+            }
+            UnidadeCurricular uc = ucs.get(idx - 1);
+
+            PresencaController pCtrl = new PresencaController();
+            List<Presenca> faltas = pCtrl.listarFaltasPorUC(uc.getId());
+
+            System.out.println("\n" + GetCyanBold() + "────────────────────────────────────────────────────────────────" + GetReset());
+            System.out.printf(GetWhiteBold() + " %-8s | %-12s | %-7s | %-22s | %-20s%n" + GetReset(),
+                    "ID", "DATA", "MEC", "ESTUDANTE", "HORÁRIO");
+            System.out.println(GetCyanBold() + "────────────────────────────────────────────────────────────────" + GetReset());
+
+            if (faltas.isEmpty()) {
+                System.out.println(GetGreen() + " Sem faltas registadas para " + uc.getNome() + "." + GetReset());
+            } else {
+                for (Presenca f : faltas) {
+                    String nomeEst  = f.getEstudante() != null ? f.getEstudante().getNome() : "?";
+                    int mec         = f.getEstudante() != null ? f.getEstudante().getNumeroMec() : 0;
+                    String dataStr  = f.getData() != null ? f.getData().toString() : "?";
+                    String horario  = f.getHorario() != null
+                            ? f.getHorario().getDiaSemana().getDescricao() + " " + f.getHorario().getHoraInicio()
+                            : "?";
+                    System.out.printf(" %-8d | %-12s | %-7d | %-22s | %-20s%n",
+                            f.getId(), dataStr, mec, nomeEst, horario);
+                }
+            }
+            System.out.println(GetCyanBold() + "────────────────────────────────────────────────────────────────" + GetReset());
+            if (!faltas.isEmpty())
+                System.out.println(GetWhiteBold() + " Total de faltas: " + faltas.size() + GetReset());
+        } catch (Exception e) {
+            System.out.println(GetRed() + "Erro: " + e.getMessage() + GetReset());
+        }
+        MenuUtils.pressionarEnter(scanner);
+    }
+
     private void listarAlunosDaMinhaUC(Docente docenteLogado) {
         try {
             System.out.println(GetBlue() + "\n--- LISTAR ALUNOS DA MINHA UC ---" + GetReset());
 
             UnidadeCurricularController ucc = new UnidadeCurricularController();
-            List<UnidadeCurricular> ucsDoDocente = ucc.listarUCsPorDocente(docenteLogado.getSigla());
+            List<UnidadeCurricular> ucsDoDocente = ucc.listarUCsPorDocente(docenteLogado.getSigla())
+                    .stream().sorted(Comparator.comparing(UnidadeCurricular::getNome)).collect(Collectors.toList());
 
             if (ucsDoDocente == null || ucsDoDocente.isEmpty()) {
                 System.out.println(GetYellow() + "Não tem Unidades Curriculares atribuídas neste momento." + GetReset());
@@ -525,7 +768,8 @@ public class DocenteView {
 
             DocenteController docenteController = new DocenteController();
             AvaliacaoController avaliacaoController = new AvaliacaoController();
-            List<Estudante> alunos = docenteController.listarAlunosPorUC(nomeUc);
+            List<Estudante> alunos = docenteController.listarAlunosPorUC(nomeUc).stream()
+                    .sorted(Comparator.comparing(Estudante::getNome)).collect(Collectors.toList());
 
             if (alunos.isEmpty()) {
                 System.out.println(GetYellow() + "\nNão há alunos inscritos na UC '" + nomeUc + "'." + GetReset());
