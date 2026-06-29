@@ -13,8 +13,10 @@ import model.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 import static common.utils.DesignUtils.*;
 
@@ -29,11 +31,11 @@ public class EstudanteView {
         opcoes.add("2. Verificar Notas de Avaliação");
         opcoes.add("3. Consultar Propinas");
         opcoes.add("4. Pagar Propinas");
-        opcoes.add("5. Ver Meu Horário (v1.3)");
-        opcoes.add("6. Marcar Minha Presença (v1.3)");
-        opcoes.add("7. Submeter Justificação de Falta (v1.3)");
-        opcoes.add("8. Ver Minhas Justificações (v1.3)");
-        opcoes.add("9. Ver Meus Estatutos (v1.3)");
+        opcoes.add("5. Ver Meu Horário");
+        opcoes.add("6. Marcar Minha Presença");
+        opcoes.add("7. Submeter Justificação de Falta");
+        opcoes.add("8. Ver Minhas Justificações");
+        opcoes.add("9. Ver Meus Estatutos");
         opcoes.add("0. Logout");
 
         do {
@@ -384,7 +386,8 @@ public class EstudanteView {
                                 av.getUnidadeCurricular() != null &&
                                 av.getUnidadeCurricular().getNome()
                                     .equalsIgnoreCase(h.getUnidadeCurricular().getNome())))
-                    .collect(java.util.stream.Collectors.toList());
+                    .sorted(Comparator.comparing(Horario::getDiaSemana).thenComparing(Horario::getHoraInicio))
+                    .collect(Collectors.toList());
 
             if (horarios.isEmpty()) { System.out.println(GetYellow() + "Sem horários disponíveis." + GetReset()); MenuUtils.pressionarEnter(ler); return; }
 
@@ -416,7 +419,9 @@ public class EstudanteView {
 
             PresencaController pCtrl = new PresencaController();
             List<Presenca> faltas = pCtrl.listarPresencasPorEstudante(estudante.getNumeroMec()).stream()
-                    .filter(Presenca::isFalta).collect(java.util.stream.Collectors.toList());
+                    .filter(Presenca::isFalta)
+                    .sorted(Comparator.comparing(Presenca::getData).reversed())
+                    .collect(Collectors.toList());
 
             if (faltas.isEmpty()) { System.out.println(GetGreen() + "Não tem faltas por justificar." + GetReset()); MenuUtils.pressionarEnter(ler); return; }
 
@@ -451,7 +456,9 @@ public class EstudanteView {
         try {
             System.out.println(GetBlue() + "\n--- MINHAS JUSTIFICAÇÕES ---" + GetReset());
             JustificacaoFaltaController jCtrl = new JustificacaoFaltaController();
-            List<JustificacaoFalta> lista = jCtrl.listarPorEstudante(estudante.getNumeroMec());
+            List<JustificacaoFalta> lista = jCtrl.listarPorEstudante(estudante.getNumeroMec()).stream()
+                    .sorted(Comparator.comparing(JustificacaoFalta::getDataSubmissao).reversed())
+                    .collect(Collectors.toList());
             if (lista.isEmpty()) {
                 System.out.println(GetYellow() + "Não submeteu nenhuma justificação." + GetReset());
             } else {

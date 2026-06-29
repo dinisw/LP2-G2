@@ -17,8 +17,10 @@ import controller.PresencaController;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 import static common.utils.DesignUtils.*;
 
@@ -39,8 +41,8 @@ public class DocenteView {
         opcoes.add("5. Consultar Pauta de Alunos (Ordenada)");
         opcoes.add("6. Definir Momentos de Avaliação");
         opcoes.add("7. Listar Alunos da Minha UC");
-        opcoes.add("8. Marcar Presenças de Aula (v1.3)");
-        opcoes.add("9. Ver Faltas por UC (v1.3)");
+        opcoes.add("8. Marcar Presenças de Aula");
+        opcoes.add("9. Ver Faltas por UC");
         opcoes.add("0. Logout");
 
         do {
@@ -81,7 +83,8 @@ public class DocenteView {
             System.out.println(GetBlue() + "\n--- MINHAS UNIDADES CURRICULARES ---" + GetReset());
 
             UnidadeCurricularController unidadeCurricularController = new UnidadeCurricularController();
-            List<UnidadeCurricular> minhasUcs = unidadeCurricularController.listarUCsPorDocente(docenteAtual.getSigla());
+            List<UnidadeCurricular> minhasUcs = unidadeCurricularController.listarUCsPorDocente(docenteAtual.getSigla())
+                    .stream().sorted(Comparator.comparing(UnidadeCurricular::getNome)).collect(Collectors.toList());
 
             if (minhasUcs == null || minhasUcs.isEmpty()) {
                 System.out.println(GetYellow() + "Não tem Unidades Curriculares atribuídas neste momento." + GetReset());
@@ -148,7 +151,8 @@ public class DocenteView {
             System.out.println(GetYellow() + "[Digite '0' a qualquer momento para cancelar | Dica: Nota zero é '0.0']" + GetReset());
 
             UnidadeCurricularController ucc = new UnidadeCurricularController();
-            List<UnidadeCurricular> ucsDoDocente = ucc.listarUCsPorDocente(docenteLogado.getSigla());
+            List<UnidadeCurricular> ucsDoDocente = ucc.listarUCsPorDocente(docenteLogado.getSigla())
+                    .stream().sorted(Comparator.comparing(UnidadeCurricular::getNome)).collect(Collectors.toList());
 
             if (ucsDoDocente == null || ucsDoDocente.isEmpty()) {
                 System.out.println(GetYellow() + "Não tem Unidades Curriculares atribuídas neste momento." + GetReset());
@@ -205,7 +209,8 @@ public class DocenteView {
 
             while (continuarLancando) {
                 controller.DocenteController docenteController = new controller.DocenteController();
-                List<Estudante> alunos = docenteController.listarAlunosPorUC(ucSelecionada.getNome());
+                List<Estudante> alunos = docenteController.listarAlunosPorUC(ucSelecionada.getNome())
+                        .stream().sorted(Comparator.comparing(Estudante::getNome)).collect(Collectors.toList());
 
                 if (alunos == null || alunos.isEmpty()) {
                     System.out.println(GetYellow() + "Não há estudantes inscritos nesta UC." + GetReset());
@@ -342,7 +347,8 @@ public class DocenteView {
             System.out.println(GetBlue() + "\n--- CONSULTAR PAUTA DE ALUNOS ---" + GetReset());
 
             UnidadeCurricularController ucc = new UnidadeCurricularController();
-            List<UnidadeCurricular> unidadesCurriculares = ucc.listarUCsPorDocente(docenteAtual.getSigla());
+            List<UnidadeCurricular> unidadesCurriculares = ucc.listarUCsPorDocente(docenteAtual.getSigla())
+                    .stream().sorted(Comparator.comparing(UnidadeCurricular::getNome)).collect(Collectors.toList());
 
             if(unidadesCurriculares == null || unidadesCurriculares.isEmpty()) {
                 System.out.println(GetYellow() + "Não tem Unidades Curriculares atribuídas neste momento." + GetReset());
@@ -526,7 +532,8 @@ public class DocenteView {
             System.out.println(GetBlue() + "\n--- MARCAR PRESENÇAS DE AULA ---" + GetReset());
 
             UnidadeCurricularController ucc = new UnidadeCurricularController();
-            List<UnidadeCurricular> ucsDocente = ucc.listarUCsPorDocente(docenteLogado.getSigla());
+            List<UnidadeCurricular> ucsDocente = ucc.listarUCsPorDocente(docenteLogado.getSigla())
+                    .stream().sorted(Comparator.comparing(UnidadeCurricular::getNome)).collect(Collectors.toList());
             if (ucsDocente.isEmpty()) {
                 System.out.println(GetYellow() + "Sem UCs atribuídas." + GetReset());
                 MenuUtils.pressionarEnter(scanner); return;
@@ -594,32 +601,71 @@ public class DocenteView {
             }
 
             DocenteController dc = new DocenteController();
-            List<Estudante> alunos = dc.listarAlunosPorUC(uc.getNome());
+            List<Estudante> alunos = dc.listarAlunosPorUC(uc.getNome()).stream()
+                    .sorted(Comparator.comparing(Estudante::getNome)).collect(Collectors.toList());
             if (alunos.isEmpty()) {
                 System.out.println(GetYellow() + "Sem alunos inscritos nesta UC." + GetReset());
                 MenuUtils.pressionarEnter(scanner); return;
             }
 
-            System.out.println(GetWhiteBold() + "\nMarcar presença para cada aluno (s/n):" + GetReset());
+            System.out.println(GetWhiteBold() + "\nMarcar presença para cada aluno (s/n, 0=cancelar):" + GetReset());
             System.out.println(GetCyanBold() + "  ────────────────────────────────────────────────────" + GetReset());
             PresencaController pCtrl = new PresencaController();
             int marcados = 0;
+            boolean cancelarLoop = false;
+
             for (Estudante est : alunos) {
+                if (cancelarLoop) break;
+
+                // Pedir resposta com opção de cancelar a qualquer momento
                 String resp = "";
                 while (!resp.equalsIgnoreCase("s") && !resp.equalsIgnoreCase("n")) {
-                    System.out.print("  " + est.getNome() + " (Mec: " + est.getNumeroMec() + ") presente? (s/n): ");
+                    System.out.print("  " + est.getNome() + " (Mec: " + est.getNumeroMec() + ") presente? (s/n, 0=cancelar): ");
                     resp = scanner.nextLine().trim();
+                    if (resp.equals("0")) { cancelarLoop = true; break; }
                     if (!resp.equalsIgnoreCase("s") && !resp.equalsIgnoreCase("n"))
-                        System.out.println(GetRed() + "  Responda 's' ou 'n'." + GetReset());
+                        System.out.println(GetRed() + "  Responda 's', 'n' ou '0' para cancelar." + GetReset());
                 }
-                if (resp.equalsIgnoreCase("s")) {
-                    Resultado<Presenca> res = pCtrl.marcarPresencaDocente(horarioEscolhido.getId(), est.getNumeroMec(), data);
-                    if (res.sucesso) marcados++;
-                    else System.out.println(GetRed() + "  Aviso: " + res.mensagemErro + GetReset());
+                if (cancelarLoop) break;
+
+                // Tenta registar o slot do docente para este aluno
+                Resultado<Presenca> res = pCtrl.marcarPresencaDocente(horarioEscolhido.getId(), est.getNumeroMec(), data);
+                if (!res.sucesso) {
+                    // Já foi registado — perguntar se quer alterar
+                    System.out.print(GetYellow() + "  Presença já registada para este aluno. Deseja alterar? (s/n, 0=cancelar): " + GetReset());
+                    String alterar = "";
+                    while (!alterar.equalsIgnoreCase("s") && !alterar.equalsIgnoreCase("n")) {
+                        alterar = scanner.nextLine().trim();
+                        if (alterar.equals("0")) { cancelarLoop = true; break; }
+                        if (!alterar.equalsIgnoreCase("s") && !alterar.equalsIgnoreCase("n"))
+                            System.out.print(GetRed() + "  Responda 's' ou 'n': " + GetReset());
+                    }
+                    if (cancelarLoop) break;
+                    if (alterar.equalsIgnoreCase("s")) {
+                        boolean novoEstado = resp.equalsIgnoreCase("s");
+                        Resultado<Presenca> alt = pCtrl.ajustarPresencaEstudante(
+                                horarioEscolhido.getId(), est.getNumeroMec(), data, novoEstado);
+                        if (alt.sucesso) {
+                            System.out.println(GetGreen() + "  Atualizado para: " + (novoEstado ? "Presente" : "Falta") + GetReset());
+                            if (novoEstado) marcados++;
+                        } else {
+                            System.out.println(GetRed() + "  Erro: " + alt.mensagemErro + GetReset());
+                        }
+                    }
+                } else if (resp.equalsIgnoreCase("s")) {
+                    // Presente: confirma também do lado do estudante → isFalta()=false
+                    pCtrl.marcarPresencaEstudante(horarioEscolhido.getId(), est.getNumeroMec(), data);
+                    marcados++;
                 }
+                // Se "n": presencaDocente=true, presencaEstudante=false → isFalta()=true
             }
+
             System.out.println(GetCyanBold() + "  ────────────────────────────────────────────────────" + GetReset());
-            System.out.println(GetGreen() + "\n" + marcados + " de " + alunos.size() + " presenças marcadas." + GetReset());
+            if (cancelarLoop) {
+                System.out.println(GetYellow() + "\nMarcação interrompida. " + marcados + " presença(s) registada(s) até ao momento." + GetReset());
+            } else {
+                System.out.println(GetGreen() + "\n" + marcados + " presente(s), " + (alunos.size() - marcados) + " falta(s) registada(s) de " + alunos.size() + " alunos." + GetReset());
+            }
         } catch (Exception e) {
             System.out.println(GetRed() + "Erro: " + e.getMessage() + GetReset());
         }
@@ -691,7 +737,8 @@ public class DocenteView {
             System.out.println(GetBlue() + "\n--- LISTAR ALUNOS DA MINHA UC ---" + GetReset());
 
             UnidadeCurricularController ucc = new UnidadeCurricularController();
-            List<UnidadeCurricular> ucsDoDocente = ucc.listarUCsPorDocente(docenteLogado.getSigla());
+            List<UnidadeCurricular> ucsDoDocente = ucc.listarUCsPorDocente(docenteLogado.getSigla())
+                    .stream().sorted(Comparator.comparing(UnidadeCurricular::getNome)).collect(Collectors.toList());
 
             if (ucsDoDocente == null || ucsDoDocente.isEmpty()) {
                 System.out.println(GetYellow() + "Não tem Unidades Curriculares atribuídas neste momento." + GetReset());
@@ -721,7 +768,8 @@ public class DocenteView {
 
             DocenteController docenteController = new DocenteController();
             AvaliacaoController avaliacaoController = new AvaliacaoController();
-            List<Estudante> alunos = docenteController.listarAlunosPorUC(nomeUc);
+            List<Estudante> alunos = docenteController.listarAlunosPorUC(nomeUc).stream()
+                    .sorted(Comparator.comparing(Estudante::getNome)).collect(Collectors.toList());
 
             if (alunos.isEmpty()) {
                 System.out.println(GetYellow() + "\nNão há alunos inscritos na UC '" + nomeUc + "'." + GetReset());

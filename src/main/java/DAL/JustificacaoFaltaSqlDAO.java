@@ -88,4 +88,9 @@ public class JustificacaoFaltaSqlDAO implements IJustificacaoFaltaDAO {
                 rs -> { try { return mapJustificacao(rs); } catch (Exception e) { return null; } }, (Object[]) null)
                 .stream().filter(j -> j != null).collect(Collectors.toList());
     }
+
+    @Override
+    public boolean eliminarJustificacao(int id) {
+        return db.execute("DELETE FROM JustificacaoFalta WHERE id=?", id) > 0;
+    }
 }

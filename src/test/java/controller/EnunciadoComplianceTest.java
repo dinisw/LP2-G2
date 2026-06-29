@@ -902,6 +902,347 @@ class EnunciadoComplianceTest {
         if (d_horarioId5 > 0) hCRUD.eliminarHorario(d_horarioId5);
     }
 
+    // ── Constantes de anos letivos isolados por teste (evita conflito de cache) ──
+    private static final int D2_ANO_LETIVO  = 9997; // D7
+    private static final int D8_ANO_LETIVO  = 9996; // D8 – 5h/dia
+    private static final int D9_ANO_LETIVO  = 9995; // D9 – 6h/semana
+    private static final int D10_ANO_LETIVO = 9994; // D10 – perfil docente
+    private static final int D11_ANO_LETIVO = 9993; // D11 – perfil estudante
+    private static final int D12_ANO_LETIVO = 9992; // D12 – faltas por UC
+    private static final int D13_ANO_LETIVO = 9991; // D13 – rejeição
+    private static final int D14_ANO_LETIVO = 9990; // D14 – presença confirmada
+    private static final int D19_ANO_LETIVO = 9989; // D19 – listar todas
+
+    @Test @Order(330)
+    @DisplayName("D7 – Horário que termina após as 23:30 é rejeitado (v1.3)")
+    void horarios_FimApos2330_Rejeitado() {
+        HorarioController hc = new HorarioController();
+        UnidadeCurricular uc1 = ucCRUD.procurarPorNome(UC1_NOME);
+        assertNotNull(uc1);
+
+        // Bloco de exactamente 1h mas com fim às 23:31 → fora do intervalo permitido
+        Resultado<Horario> r = hc.registarHorario(uc1.getId(), D2_ANO_LETIVO,
+                DiaSemana.SEGUNDA, LocalTime.of(22, 31), LocalTime.of(23, 31), "Sala-D7");
+        assertFalse(r.sucesso, "Horário com fim após 23:30 deve ser rejeitado.");
+        assertTrue(r.mensagemErro != null && (r.mensagemErro.contains("23:30") || r.mensagemErro.contains("intervalo")),
+                "Mensagem deve indicar o limite de 23:30: " + r.mensagemErro);
+    }
+
+    @Test @Order(331)
+    @DisplayName("D8 – Docente não pode exceder 5h letivas no mesmo dia (v1.3)")
+    void horarios_MaxCincoHorasDia_Bloqueado() {
+        HorarioController hc = new HorarioController();
+        UnidadeCurricular uc1 = ucCRUD.procurarPorNome(UC1_NOME);
+        UnidadeCurricular uc2 = ucCRUD.procurarPorNome(UC2_NOME);
+        UnidadeCurricular uc3 = ucCRUD.procurarPorNome(UC3_NOME);
+        assertNotNull(uc1); assertNotNull(uc2); assertNotNull(uc3);
+
+        // 5 blocos de 1h não sobrepostos na QUINTA (isolado em D8_ANO_LETIVO) → máximo aceite
+        List<Integer> ids = new ArrayList<>();
+        Resultado<Horario> r1 = hc.registarHorario(uc1.getId(), D8_ANO_LETIVO, DiaSemana.QUINTA, LocalTime.of(18, 0), LocalTime.of(19, 0), "S-D8");
+        Resultado<Horario> r2 = hc.registarHorario(uc2.getId(), D8_ANO_LETIVO, DiaSemana.QUINTA, LocalTime.of(19, 0), LocalTime.of(20, 0), "S-D8");
+        Resultado<Horario> r3 = hc.registarHorario(uc3.getId(), D8_ANO_LETIVO, DiaSemana.QUINTA, LocalTime.of(20, 30), LocalTime.of(21, 30), "S-D8");
+        Resultado<Horario> r4 = hc.registarHorario(uc1.getId(), D8_ANO_LETIVO, DiaSemana.QUINTA, LocalTime.of(21, 30), LocalTime.of(22, 30), "S-D8");
+        Resultado<Horario> r5 = hc.registarHorario(uc2.getId(), D8_ANO_LETIVO, DiaSemana.QUINTA, LocalTime.of(22, 30), LocalTime.of(23, 30), "S-D8");
+
+        assertTrue(r1.sucesso && r2.sucesso && r3.sucesso && r4.sucesso && r5.sucesso,
+                "Os 5 blocos de 1h (máximo diário) devem ser todos aceites.");
+        for (Resultado<Horario> r : List.of(r1, r2, r3, r4, r5))
+            if (r.sucesso) ids.add(r.dados.getId());
+
+        // Com 5h/dia, qualquer adição adicional no mesmo dia deve falhar
+        Resultado<Horario> r6 = hc.registarHorario(uc3.getId(), D8_ANO_LETIVO, DiaSemana.QUINTA, LocalTime.of(18, 0), LocalTime.of(19, 0), "S-D8");
+        assertFalse(r6.sucesso, "Nenhum bloco adicional deve ser aceite após o docente atingir 5h/dia.");
+
+        IHorarioDAO hDao = DAOFactory.getHorarioDAO();
+        ids.forEach(hDao::eliminarHorario);
+    }
+
+    @Test @Order(332)
+    @DisplayName("D9 – UC não pode ultrapassar 6h semanais (v1.3)")
+    void horarios_MaxSeisHorasSemana_Bloqueado() {
+        HorarioController hc = new HorarioController();
+        UnidadeCurricular uc1 = ucCRUD.procurarPorNome(UC1_NOME);
+        assertNotNull(uc1);
+
+        // D9_ANO_LETIVO isolado: 3 × 2h em dias distintos = 6h/semana → máximo aceite
+        Resultado<Horario> rA = hc.registarHorario(uc1.getId(), D9_ANO_LETIVO, DiaSemana.SEGUNDA, LocalTime.of(20, 30), LocalTime.of(22, 30), "S-D9");
+        Resultado<Horario> rB = hc.registarHorario(uc1.getId(), D9_ANO_LETIVO, DiaSemana.TERCA,   LocalTime.of(20, 30), LocalTime.of(22, 30), "S-D9");
+        Resultado<Horario> rC = hc.registarHorario(uc1.getId(), D9_ANO_LETIVO, DiaSemana.QUARTA,  LocalTime.of(20, 30), LocalTime.of(22, 30), "S-D9");
+        assertTrue(rA.sucesso && rB.sucesso && rC.sucesso, "6h semanais para UC1 deve ser aceite (máximo).");
+
+        // 4.º bloco de 2h ultrapassa 6h semanais → deve ser bloqueado
+        Resultado<Horario> rD = hc.registarHorario(uc1.getId(), D9_ANO_LETIVO, DiaSemana.QUINTA,  LocalTime.of(20, 30), LocalTime.of(22, 30), "S-D9");
+        assertFalse(rD.sucesso, "Horário que ultrapassa 6h semanais da UC deve ser bloqueado.");
+        assertTrue(rD.mensagemErro != null && (rD.mensagemErro.contains("6h") || rD.mensagemErro.contains("máximo") || rD.mensagemErro.contains("semanal")),
+                "Mensagem deve indicar o limite semanal: " + rD.mensagemErro);
+
+        IHorarioDAO hDao = DAOFactory.getHorarioDAO();
+        if (rA.sucesso) hDao.eliminarHorario(rA.dados.getId());
+        if (rB.sucesso) hDao.eliminarHorario(rB.dados.getId());
+        if (rC.sucesso) hDao.eliminarHorario(rC.dados.getId());
+    }
+
+    @Test @Order(340)
+    @DisplayName("D10 – Horário visível no perfil do docente (v1.3)")
+    void horarios_VisivelPerfilDocente() {
+        HorarioController hc = new HorarioController();
+        UnidadeCurricular uc2 = ucCRUD.procurarPorNome(UC2_NOME);
+        assertNotNull(uc2);
+        Docente doc = docCRUD.procurarPorNif(DOC_NIF);
+        assertNotNull(doc);
+
+        Resultado<Horario> rH = hc.registarHorario(uc2.getId(), D10_ANO_LETIVO,
+                DiaSemana.SEGUNDA, LocalTime.of(20, 30), LocalTime.of(22, 30), "Sala-D10");
+        assertTrue(rH.sucesso, "Deve criar horário para D10.");
+
+        List<Horario> horarioDocente = hc.listarHorariosPorDocente(doc.getSigla(), D10_ANO_LETIVO);
+        assertTrue(horarioDocente.stream().anyMatch(h -> h.getId() == rH.dados.getId()),
+                "Horário criado deve constar no perfil do docente via listarHorariosPorDocente.");
+
+        hc.eliminarHorario(rH.dados.getId());
+    }
+
+    @Test @Order(341)
+    @DisplayName("D11 – Horário visível no perfil do estudante (v1.3)")
+    void horarios_VisivelPerfilEstudante() {
+        // Reset para garantir que os DAOs estão em estado limpo após D8/D9
+        DAOFactory.resetarInstancias();
+        HorarioController hc = new HorarioController();
+        UnidadeCurricular uc1 = ucCRUD.procurarPorNome(UC1_NOME);
+        assertNotNull(uc1);
+
+        EstudanteController ec2 = new EstudanteController();
+        Estudante estComAv = ec2.procurarEstudantePorNumeroMec(mecEstudante1);
+        assertNotNull(estComAv);
+        ec2.carregarAvaliacoes(estComAv);
+
+        Resultado<Horario> rH = hc.registarHorario(uc1.getId(), D11_ANO_LETIVO,
+                DiaSemana.SEGUNDA, LocalTime.of(20, 30), LocalTime.of(22, 30), "Sala-D11");
+        assertTrue(rH.sucesso, "Deve criar horário para D11.");
+
+        List<Horario> horarioEstudante = hc.listarHorariosPorEstudante(mecEstudante1, D11_ANO_LETIVO);
+        assertTrue(horarioEstudante.stream().anyMatch(h -> h.getId() == rH.dados.getId()),
+                "Horário da UC inscrita deve constar no perfil do estudante via listarHorariosPorEstudante.");
+
+        hc.eliminarHorario(rH.dados.getId());
+    }
+
+    @Test @Order(350)
+    @DisplayName("D12 – Docente consulta faltas dos alunos da sua UC (v1.3)")
+    void presencas_DocenteVeFaltasPorUC() {
+        HorarioController hc = new HorarioController();
+        PresencaController pc = new PresencaController();
+        UnidadeCurricular uc3 = ucCRUD.procurarPorNome(UC3_NOME);
+        assertNotNull(uc3);
+
+        Resultado<Horario> rH = hc.registarHorario(uc3.getId(), D12_ANO_LETIVO,
+                DiaSemana.SEGUNDA, LocalTime.of(20, 30), LocalTime.of(22, 30), "Sala-D12");
+        assertTrue(rH.sucesso);
+        int hId = rH.dados.getId();
+
+        // Docente marca, estudante NÃO confirma → falta automática
+        Resultado<Presenca> rd = pc.marcarPresencaDocente(hId, mecEstudante1, LocalDate.of(2026, 2, 1));
+        assertTrue(rd.sucesso && rd.dados.isFalta(), "Deve ser registada como falta.");
+
+        List<Presenca> faltas = pc.listarFaltasPorUC(uc3.getId());
+        assertTrue(faltas.stream().anyMatch(f -> f.getId() == rd.dados.getId()),
+                "Falta deve aparecer em listarFaltasPorUC para o docente.");
+
+        DAOFactory.getPresencaDAO().eliminarPresenca(rd.dados.getId());
+        hc.eliminarHorario(hId);
+    }
+
+    @Test @Order(360)
+    @DisplayName("D13 – Gestor rejeita justificação de falta (v1.3)")
+    void faltas_GestorRejeita() {
+        HorarioController hc = new HorarioController();
+        PresencaController pc = new PresencaController();
+        JustificacaoFaltaController jc = new JustificacaoFaltaController();
+        UnidadeCurricular uc1 = ucCRUD.procurarPorNome(UC1_NOME);
+        assertNotNull(uc1);
+
+        Resultado<Horario> rH = hc.registarHorario(uc1.getId(), D13_ANO_LETIVO,
+                DiaSemana.SEGUNDA, LocalTime.of(20, 30), LocalTime.of(22, 30), "Sala-D13");
+        assertTrue(rH.sucesso, "Deve criar horário para D13.");
+        int hId = rH.dados.getId();
+
+        Resultado<Presenca> rd = pc.marcarPresencaDocente(hId, mecEstudante1, LocalDate.of(2026, 2, 2));
+        assertTrue(rd.sucesso && rd.dados.isFalta());
+
+        Resultado<JustificacaoFalta> rj = jc.submeterJustificacao(
+                rd.dados.getId(), mecEstudante1, TipoJustificacao.BAIXA_MEDICA, "Gripe");
+        assertTrue(rj.sucesso, "Submissão de justificação deve ter sucesso.");
+        int justId = rj.dados.getId();
+
+        Resultado<JustificacaoFalta> rr = jc.rejeitarJustificacao(justId, "Documento insuficiente.");
+        assertTrue(rr.sucesso, "Gestor deve conseguir rejeitar a justificação.");
+        assertEquals(JustificacaoFalta.Estado.REJEITADA, rr.dados.getEstado(),
+                "Estado deve ser REJEITADA após rejeição.");
+        assertNotNull(rr.dados.getObservacaoGestor(), "Observação do gestor deve ficar registada.");
+        assertFalse(jc.listarPendentes().stream().anyMatch(j -> j.getId() == justId),
+                "Justificação rejeitada não deve constar nas pendentes.");
+
+        DAOFactory.getJustificacaoFaltaDAO().eliminarJustificacao(justId);
+        DAOFactory.getPresencaDAO().eliminarPresenca(rd.dados.getId());
+        hc.eliminarHorario(hId);
+    }
+
+    @Test @Order(361)
+    @DisplayName("D14 – Justificação de presença confirmada (não-falta) deve ser bloqueada (v1.3)")
+    void faltas_JustificacaoDePresencaConfirmada_Bloqueada() {
+        HorarioController hc = new HorarioController();
+        PresencaController pc = new PresencaController();
+        JustificacaoFaltaController jc = new JustificacaoFaltaController();
+        UnidadeCurricular uc2 = ucCRUD.procurarPorNome(UC2_NOME);
+        assertNotNull(uc2);
+
+        Resultado<Horario> rH = hc.registarHorario(uc2.getId(), D14_ANO_LETIVO,
+                DiaSemana.SEGUNDA, LocalTime.of(20, 30), LocalTime.of(22, 30), "Sala-D14");
+        assertTrue(rH.sucesso, "Deve criar horário para D14.");
+        int hId = rH.dados.getId();
+
+        LocalDate aula = LocalDate.of(2026, 2, 3);
+        pc.marcarPresencaDocente(hId, mecEstudante1, aula);
+        Resultado<Presenca> re = pc.marcarPresencaEstudante(hId, mecEstudante1, aula);
+        assertTrue(re.sucesso);
+        assertFalse(re.dados.isFalta(), "Com ambas as marcações não deve ser falta.");
+
+        Resultado<JustificacaoFalta> rj = jc.submeterJustificacao(
+                re.dados.getId(), mecEstudante1, TipoJustificacao.BAIXA_MEDICA, "Tentativa indevida");
+        assertFalse(rj.sucesso, "Não deve ser possível justificar uma presença confirmada.");
+
+        DAOFactory.getPresencaDAO().eliminarPresenca(re.dados.getId());
+        hc.eliminarHorario(hId);
+    }
+
+    @Test @Order(370)
+    @DisplayName("D15 – Estatuto com datas do ano letivo corrente está ativo (v1.3)")
+    void estatutos_DentroDoAnoAtivo() {
+        EstatutoController ec = new EstatutoController();
+        String nome = "Trabalhador TST " + RND;
+
+        Resultado<TipoEstatuto> rt = ec.registarTipoEstatuto(nome, "Trabalhador-estudante");
+        assertTrue(rt.sucesso);
+        int tipoId = rt.dados.getId();
+
+        Resultado<EstatutoEstudante> ra = ec.atribuirEstatuto(mecEstudante1, tipoId,
+                LocalDate.of(2025, 9, 1), LocalDate.of(2026, 8, 31));
+        assertTrue(ra.sucesso, "Atribuição com datas do ano letivo deve ter sucesso.");
+        assertTrue(ra.dados.isAtivo(), "Estatuto com datas 2025-09-01 a 2026-08-31 deve estar ativo.");
+        assertTrue(ec.estudantePossuiEstatuto(mecEstudante1, nome),
+                "estudantePossuiEstatuto deve retornar true para estatuto ativo.");
+
+        ec.removerEstatuto(ra.dados.getId());
+        ec.eliminarTipoEstatuto(tipoId);
+    }
+
+    @Test @Order(371)
+    @DisplayName("D16 – Estatuto com datas expiradas é reconhecido como inativo (v1.3)")
+    void estatutos_ForaDoAnoExpirado() {
+        EstatutoController ec = new EstatutoController();
+        String nome = "Expirado TST " + RND;
+
+        Resultado<TipoEstatuto> rt = ec.registarTipoEstatuto(nome, "Estatuto expirado");
+        assertTrue(rt.sucesso);
+        int tipoId = rt.dados.getId();
+
+        Resultado<EstatutoEstudante> ra = ec.atribuirEstatuto(mecEstudante1, tipoId,
+                LocalDate.of(2020, 1, 1), LocalDate.of(2020, 12, 31));
+        assertTrue(ra.sucesso, "Atribuição com datas passadas deve ser aceite.");
+        assertFalse(ra.dados.isAtivo(), "Estatuto com datas no passado (2020) deve estar inativo.");
+        assertFalse(ec.estudantePossuiEstatuto(mecEstudante1, nome),
+                "estudantePossuiEstatuto deve retornar false para estatuto expirado.");
+
+        ec.removerEstatuto(ra.dados.getId());
+        ec.eliminarTipoEstatuto(tipoId);
+    }
+
+    @Test @Order(372)
+    @DisplayName("D17 – Mesmo estatuto ativo não pode ser atribuído duas vezes ao mesmo estudante (v1.3)")
+    void estatutos_DuplicadoAtivoBloqueado() {
+        EstatutoController ec = new EstatutoController();
+        String nome = "Pai TST " + RND;
+
+        Resultado<TipoEstatuto> rt = ec.registarTipoEstatuto(nome, "Estudante-pai");
+        assertTrue(rt.sucesso);
+        int tipoId = rt.dados.getId();
+
+        Resultado<EstatutoEstudante> ra1 = ec.atribuirEstatuto(mecEstudante1, tipoId,
+                LocalDate.of(2025, 9, 1), LocalDate.of(2026, 8, 31));
+        assertTrue(ra1.sucesso, "Primeira atribuição deve ter sucesso.");
+
+        Resultado<EstatutoEstudante> ra2 = ec.atribuirEstatuto(mecEstudante1, tipoId,
+                LocalDate.of(2025, 9, 1), LocalDate.of(2026, 8, 31));
+        assertFalse(ra2.sucesso, "Segunda atribuição do mesmo estatuto ativo deve ser bloqueada.");
+        assertTrue(ra2.mensagemErro.contains("já possui") || ra2.mensagemErro.contains("activo"),
+                "Mensagem deve indicar que o estudante já possui este estatuto: " + ra2.mensagemErro);
+
+        ec.removerEstatuto(ra1.dados.getId());
+        ec.eliminarTipoEstatuto(tipoId);
+    }
+
+    @Test @Order(373)
+    @DisplayName("D18 – Tipo de estatuto em uso por estudante não pode ser eliminado (v1.3)")
+    void estatutos_TipoEmUsoNaoEliminavel() {
+        EstatutoController ec = new EstatutoController();
+        String nome = "EmUso TST " + RND;
+
+        Resultado<TipoEstatuto> rt = ec.registarTipoEstatuto(nome, "Em uso");
+        assertTrue(rt.sucesso);
+        int tipoId = rt.dados.getId();
+
+        Resultado<EstatutoEstudante> ra = ec.atribuirEstatuto(mecEstudante1, tipoId,
+                LocalDate.of(2025, 9, 1), LocalDate.of(2026, 8, 31));
+        assertTrue(ra.sucesso);
+
+        Resultado<String> re = ec.eliminarTipoEstatuto(tipoId);
+        assertFalse(re.sucesso, "Tipo de estatuto em uso não deve ser eliminável.");
+        assertTrue(re.mensagemErro.contains("uso") || re.mensagemErro.contains("estudante"),
+                "Mensagem deve indicar que o tipo está em uso: " + re.mensagemErro);
+
+        ec.removerEstatuto(ra.dados.getId());
+        assertTrue(ec.eliminarTipoEstatuto(tipoId).sucesso,
+                "Após remover todos os estatutos atribuídos, o tipo deve ser eliminável.");
+    }
+
+    @Test @Order(380)
+    @DisplayName("D19 – Gestor lista todas as justificações; valida justificação por estatuto (v1.3)")
+    void faltas_GestorListaTodasComTipoEstatuto() {
+        HorarioController hc = new HorarioController();
+        PresencaController pc = new PresencaController();
+        JustificacaoFaltaController jc = new JustificacaoFaltaController();
+        UnidadeCurricular uc3 = ucCRUD.procurarPorNome(UC3_NOME);
+        assertNotNull(uc3);
+
+        Resultado<Horario> rH = hc.registarHorario(uc3.getId(), D19_ANO_LETIVO,
+                DiaSemana.SEGUNDA, LocalTime.of(20, 30), LocalTime.of(22, 30), "Sala-D19");
+        assertTrue(rH.sucesso, "Deve criar horário para D19.");
+        int hId = rH.dados.getId();
+
+        Resultado<Presenca> rd = pc.marcarPresencaDocente(hId, mecEstudante1, LocalDate.of(2026, 2, 10));
+        assertTrue(rd.sucesso && rd.dados.isFalta());
+
+        // Justificação classificada por estatuto (ESTATUTO_ATLETA) como prevê o enunciado
+        Resultado<JustificacaoFalta> rj = jc.submeterJustificacao(
+                rd.dados.getId(), mecEstudante1, TipoJustificacao.ESTATUTO_ATLETA, "Treino seleção nacional");
+        assertTrue(rj.sucesso, "Justificação por ESTATUTO_ATLETA deve ser aceite.");
+        int justId = rj.dados.getId();
+
+        List<JustificacaoFalta> todas = jc.listarTodas();
+        assertNotNull(todas, "Lista global de justificações não deve ser null.");
+        JustificacaoFalta encontrada = todas.stream().filter(j -> j.getId() == justId).findFirst().orElse(null);
+        assertNotNull(encontrada, "Justificação submetida deve constar na listagem global.");
+        assertEquals(TipoJustificacao.ESTATUTO_ATLETA, encontrada.getTipo(),
+                "Tipo deve ser ESTATUTO_ATLETA.");
+        assertEquals(JustificacaoFalta.Estado.PENDENTE, encontrada.getEstado(),
+                "Estado inicial deve ser PENDENTE.");
+
+        DAOFactory.getJustificacaoFaltaDAO().eliminarJustificacao(justId);
+        DAOFactory.getPresencaDAO().eliminarPresenca(rd.dados.getId());
+        hc.eliminarHorario(hId);
+    }
+
     // ════════════════════════════════════════════════════════════════════════
     //  SECÇÃO E — TESTES DE REGRESSÃO (regras críticas de negócio)
     // ════════════════════════════════════════════════════════════════════════

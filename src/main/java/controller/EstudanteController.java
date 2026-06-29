@@ -326,6 +326,13 @@ public class EstudanteController {
                 }
                 // Propina paga do ano atual é reposta a zero — o aluno precisa de pagar novamente no novo ano letivo
                 propinaController.reporPropinaParaRepeticao(estudante.getNumeroMec(), anoAnterior);
+
+                // Resetar notas das UCs do ano em que ficou retido para que comecem o novo ano letivo em branco
+                curso.getUnidadeCurriculars().stream()
+                        .filter(uc -> uc.getAnoCurricular() == anoAnterior && uc.getMomentosAvaliacao() != null)
+                        .forEach(uc -> uc.getMomentosAvaliacao().forEach(momento ->
+                                avaliacaoCRUD.registarAvaliacao(new Avaliacao(momento, null, uc, estudante))
+                        ));
             }
 
             relatorio.add(prefixo + " Mec: " + estudante.getNumeroMec()

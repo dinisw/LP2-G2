@@ -10,4 +10,5 @@ public interface IJustificacaoFaltaDAO {
     List<JustificacaoFalta> listarPorEstudante(int numeroMec);
     List<JustificacaoFalta> listarPendentes();
     List<JustificacaoFalta> listarTodas();
+    boolean eliminarJustificacao(int id);
 }
