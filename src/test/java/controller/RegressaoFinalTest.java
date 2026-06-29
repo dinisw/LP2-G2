@@ -396,7 +396,10 @@ public class RegressaoFinalTest {
 
         for (String linha : relatorio.dados) {
             assertTrue(
-                    linha.startsWith("[AVANÇOU]") || linha.startsWith("[RETIDO]") || linha.startsWith("[CONCLUÍDO]"),
+                    linha.startsWith("[AVANÇOU]") || linha.startsWith("[RETIDO]") ||
+                    linha.startsWith("[CONCLUÍDO]") || linha.startsWith("[SEM UCS]") ||
+                    linha.startsWith("[NOTA EM FALTA]") || linha.startsWith("[AVISO]") ||
+                    linha.startsWith("[ERRO]"),
                     "Cada linha deve começar com prefixo válido: " + linha);
         }
     }

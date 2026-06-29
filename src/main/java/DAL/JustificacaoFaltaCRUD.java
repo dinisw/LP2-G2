@@ -107,4 +107,11 @@ public class JustificacaoFaltaCRUD extends AbstractCsvCRUD<JustificacaoFalta> im
     public List<JustificacaoFalta> listarTodas() {
         return new ArrayList<>(dados);
     }
+
+    @Override
+    public boolean eliminarJustificacao(int id) {
+        boolean removido = dados.removeIf(j -> j.getId() == id);
+        if (removido) guardarTodosNoFicheiro();
+        return removido;
+    }
 }

@@ -111,6 +111,45 @@ public class HorarioController {
                 : new Resultado<>(false, "Erro ao eliminar horário.");
     }
 
+    /** Valida sobreposições e limites sem persistir. Retorna null se válido, mensagem de erro caso contrário. */
+    public String validarSlotHorario(int ucId, int anoLetivoId, DiaSemana dia, LocalTime inicio, LocalTime fim) {
+        UnidadeCurricular uc = ucDAO.procurarPorId(ucId);
+        if (uc == null) return "UC não encontrada.";
+        Horario candidato = new Horario(uc, anoLetivoId, dia, inicio, fim, "?");
+        List<Horario> todosAnoLetivo = horarioDAO.listarPorAnoLetivo(anoLetivoId);
+
+        for (Horario h : horarioDAO.listarPorUC(ucId)) {
+            if (h.getAnoLetivoId() == anoLetivoId && h.sobrepoeCom(candidato))
+                return "Sobreposição: esta UC já tem aula neste bloco.";
+        }
+        if (uc.getDocente() != null) {
+            String sigla = uc.getDocente().getSigla();
+            for (Horario h : todosAnoLetivo) {
+                if (h.getUnidadeCurricular() != null
+                        && h.getUnidadeCurricular().getDocente() != null
+                        && h.getUnidadeCurricular().getDocente().getSigla().equalsIgnoreCase(sigla)
+                        && h.sobrepoeCom(candidato))
+                    return "Sobreposição: o docente " + sigla + " já tem aula neste bloco.";
+            }
+            int horasDocDia = todosAnoLetivo.stream()
+                    .filter(h -> h.getDiaSemana() == dia
+                            && h.getUnidadeCurricular() != null
+                            && h.getUnidadeCurricular().getDocente() != null
+                            && h.getUnidadeCurricular().getDocente().getSigla().equalsIgnoreCase(sigla))
+                    .mapToInt(Horario::getDuracaoHoras).sum();
+            int blocoH = (int) java.time.Duration.between(inicio, fim).toHours();
+            if (horasDocDia + blocoH > MAX_HORAS_DIA)
+                return "O docente " + sigla + " já atingiu o máximo de 5h letivas neste dia.";
+        }
+        int horasUCSemana = horarioDAO.listarPorUC(ucId).stream()
+                .filter(h -> h.getAnoLetivoId() == anoLetivoId)
+                .mapToInt(Horario::getDuracaoHoras).sum();
+        int blocoH = (int) java.time.Duration.between(inicio, fim).toHours();
+        if (horasUCSemana + blocoH > MAX_HORAS_UC_SEMANA)
+            return "A UC já atingiu o máximo de " + MAX_HORAS_UC_SEMANA + "h semanais.";
+        return null;
+    }
+
     public List<Horario> listarHorariosPorUC(int ucId)             { return horarioDAO.listarPorUC(ucId); }
     public List<Horario> listarHorariosPorAnoLetivo(int anoLetivoId) { return horarioDAO.listarPorAnoLetivo(anoLetivoId); }
     public List<Horario> listarTodos()                             { return horarioDAO.listarTodos(); }

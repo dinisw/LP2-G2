@@ -25,29 +25,29 @@ public class UnidadeCurricularSqlDAO implements IUnidadeCurricularDAO {
         this.db = new DatabaseConnection();
     }
 
+    // Mapper simples: lê apenas as colunas da query, sem obterMomentos() aninhado.
+    // Os momentos são carregados em separado após o ResultSet fechar.
     private RowMapper<UnidadeCurricular> ucMapper() {
         return rs -> {
             Docente docente = null;
             String docNome = rs.getString("docNome");
             if (docNome != null) {
+                java.sql.Date dataNasc = rs.getDate("docDataNasc");
                 docente = new Docente(
                         docNome, rs.getString("docMorada"),
-                        rs.getInt("docNif"), rs.getDate("docDataNasc").toLocalDate(),
+                        rs.getInt("docNif"),
+                        dataNasc != null ? dataNasc.toLocalDate() : java.time.LocalDate.of(1970, 1, 1),
                         rs.getString("docEmail"), rs.getString("docHash"),
                         rs.getString("docSigla"), new ArrayList<>(), new ArrayList<>());
                 docente.setAtivo(rs.getBoolean("docAtivo"));
             }
-
-            int ucId = rs.getInt("id");
-            List<String> momentos = obterMomentos(ucId);
-
             return new UnidadeCurricular(
                     rs.getString("nome"),
-                    ucId,
+                    rs.getInt("id"),
                     rs.getInt("anoCurricular"),
                     rs.getInt("semestre"),
                     docente,
-                    momentos
+                    new ArrayList<>()   // momentos carregados após o ResultSet fechar
             );
         };
     }
@@ -113,21 +113,31 @@ public class UnidadeCurricularSqlDAO implements IUnidadeCurricularDAO {
 
     @Override
     public List<UnidadeCurricular> getUnidadeCurriculars() {
-        return db.select(SELECT_UC, ucMapper(), (Object[]) null);
+        // Fase 1: carregar UCs sem momentos (ResultSet fechado ao sair do select)
+        List<UnidadeCurricular> lista = db.select(SELECT_UC, ucMapper(), (Object[]) null);
+        // Fase 2: carregar momentos (sem queries aninhadas)
+        for (UnidadeCurricular uc : lista) {
+            uc.setMomentosAvaliacao(obterMomentos(uc.getId()));
+        }
+        return lista;
     }
 
     @Override
     public UnidadeCurricular procurarPorNome(String nome) {
-        ArrayList<UnidadeCurricular> lista = db.select(
-                SELECT_UC + " WHERE uc.nome=?", ucMapper(), nome);
-        return lista.isEmpty() ? null : lista.get(0);
+        ArrayList<UnidadeCurricular> lista = db.select(SELECT_UC + " WHERE uc.nome=?", ucMapper(), nome);
+        if (lista.isEmpty()) return null;
+        UnidadeCurricular uc = lista.get(0);
+        uc.setMomentosAvaliacao(obterMomentos(uc.getId()));
+        return uc;
     }
 
     @Override
     public UnidadeCurricular procurarPorId(int id) {
-        ArrayList<UnidadeCurricular> lista = db.select(
-                SELECT_UC + " WHERE uc.id=?", ucMapper(), id);
-        return lista.isEmpty() ? null : lista.get(0);
+        ArrayList<UnidadeCurricular> lista = db.select(SELECT_UC + " WHERE uc.id=?", ucMapper(), id);
+        if (lista.isEmpty()) return null;
+        UnidadeCurricular uc = lista.get(0);
+        uc.setMomentosAvaliacao(obterMomentos(uc.getId()));
+        return uc;
     }
 
     @Override

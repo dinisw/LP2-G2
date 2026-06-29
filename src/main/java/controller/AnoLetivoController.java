@@ -94,6 +94,12 @@ public class AnoLetivoController {
 
             if (estudantesDoCurso.isEmpty()) continue;
 
+            if (curso.getUnidadeCurriculars() == null || curso.getUnidadeCurriculars().isEmpty()) {
+                bloqueios.add("[SEM UCS] Curso '" + curso.getNome()
+                        + "' está iniciado mas não tem UCs associadas — impossível avaliar aproveitamento.");
+                continue;
+            }
+
             for (Estudante estudante : estudantesDoCurso) {
                 int anoEstudante = estudante.getAnoLetivo();
 
@@ -262,6 +268,36 @@ public class AnoLetivoController {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    /**
+     * Ponto de entrada único para a passagem de ano letivo.
+     * Executa: verificação → snapshot → conclusão do ano → transição dos estudantes.
+     * Retorna um relatório completo com o resultado de cada estudante.
+     */
+    public Resultado<List<String>> executarPassagemDeAno() {
+        // 1. Verificar condições
+        Resultado<List<String>> condicoes = verificarCondicioesSaltoDeAno();
+        if (!condicoes.sucesso) {
+            return new Resultado<>(false, "Existem bloqueios que impedem a passagem de ano:\n"
+                    + (condicoes.dados != null ? String.join("\n", condicoes.dados) : ""));
+        }
+
+        // 2. Gravar snapshot + concluir ano atual + criar novo ano
+        boolean avancouAno = avancarAnoLetivo();
+        if (!avancouAno) {
+            return new Resultado<>(false, "Falha ao avançar o ano letivo (snapshot/registo).");
+        }
+
+        // 3. Transição curricular dos estudantes
+        EstudanteController ec = new EstudanteController();
+        Resultado<List<String>> transicao = ec.simularTransicaoAnoLetivoGlobal();
+
+        List<String> relatorioFinal = new java.util.ArrayList<>();
+        relatorioFinal.add("Ano letivo concluído com sucesso.");
+        if (transicao.dados != null) relatorioFinal.addAll(transicao.dados);
+
+        return new Resultado<>(relatorioFinal, true);
     }
 
     // ── Relatórios ─────────────────────────────────────────────

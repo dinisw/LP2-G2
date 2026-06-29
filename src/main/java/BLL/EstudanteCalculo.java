@@ -46,7 +46,9 @@ public class EstudanteCalculo {
 
         if (totalInscritas == 0) return 1;
 
-        long aprovadasGlobais = curso.getUnidadeCurriculars().stream().filter(u -> isUCAprovada(avaliacoes, u.getNome())).count();
+        long aprovadasGlobais = curso.getUnidadeCurriculars().stream()
+                .filter(u -> u.getAnoCurricular() <= estudante.getAnoLetivo() && isUCAprovada(avaliacoes, u.getNome()))
+                .count();
 
         double aproveitamento = (double) aprovadasGlobais / totalInscritas;
         if (aproveitamento >= 0.60) {

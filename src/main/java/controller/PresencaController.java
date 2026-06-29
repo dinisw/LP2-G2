@@ -65,6 +65,15 @@ public class PresencaController {
                 .findFirst().orElse(null);
     }
 
+    public Resultado<Presenca> ajustarPresencaEstudante(int horarioId, int numeroMec, LocalDate data, boolean presente) {
+        Presenca existente = encontrarPresenca(horarioId, numeroMec, data);
+        if (existente == null) return new Resultado<>(false, "Registo de presença não encontrado.");
+        if (!existente.isPresencaDocente()) return new Resultado<>(false, "O docente não marcou presença para esta aula.");
+        existente.setPresencaEstudante(presente);
+        presencaDAO.atualizarPresenca(existente);
+        return new Resultado<>(existente, true);
+    }
+
     public List<Presenca> listarFaltasPorUC(int ucId) {
         return presencaDAO.listarFaltasPorUC(ucId);
     }

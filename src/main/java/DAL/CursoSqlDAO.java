@@ -23,33 +23,34 @@ public class CursoSqlDAO implements ICursoDAO {
     }
 
 
-    private RowMapper<Curso> cursoMapper() {
+    // Mapper simples: lê apenas as colunas da query principal, sem queries aninhadas.
+    // O enriquecimento com anos e UCs é feito em enrichCurso(), após o ResultSet ser fechado.
+    private RowMapper<int[]> idMapper() {
+        return rs -> new int[]{rs.getInt("id")};
+    }
+
+    private RowMapper<Curso> basicCursoMapper(java.util.Map<Curso, Integer> idMap) {
         return rs -> {
-            Departamento dep = new Departamento(
-                    rs.getString("depNome"),
-                    rs.getString("depSigla")
-            );
+            Departamento dep = new Departamento(rs.getString("depNome"), rs.getString("depSigla"));
             Curso curso = new Curso(rs.getString("nome"), rs.getInt("duracao"), dep);
             curso.setPrecoAnual(rs.getBigDecimal("precoAnual"));
-
-            int cursoId = rs.getInt("id");
-
-            List<Integer> anos = db.select(
-                    "SELECT ano FROM CursoAnoIniciado WHERE curso=?",
-                    r -> r.getInt("ano"), cursoId);
-            curso.setAnosIniciados(anos);
-
-            IUnidadeCurricularDAO ucDAO = DAOFactory.getUnidadeCurricularDAO();
-            List<Integer> ucIds = db.select(
-                    "SELECT UcId FROM CursoUnidadeCurricular WHERE cursoId=?",
-                    r -> r.getInt("UcId"), cursoId);
-            for (int ucId : ucIds) {
-                UnidadeCurricular uc = ucDAO.procurarPorId(ucId);
-                if (uc != null) curso.adicionarUnidadeCurricular(uc);
-            }
-
+            idMap.put(curso, rs.getInt("id"));
             return curso;
         };
+    }
+
+    private void enrichCurso(Curso curso, int cursoId) {
+        List<Integer> anos = db.select("SELECT ano FROM CursoAnoIniciado WHERE curso=?",
+                r -> r.getInt("ano"), cursoId);
+        curso.setAnosIniciados(anos);
+
+        IUnidadeCurricularDAO ucDAO = DAOFactory.getUnidadeCurricularDAO();
+        List<Integer> ucIds = db.select("SELECT UcId FROM CursoUnidadeCurricular WHERE cursoId=?",
+                r -> r.getInt("UcId"), cursoId);
+        for (int ucId : ucIds) {
+            UnidadeCurricular uc = ucDAO.procurarPorId(ucId);
+            if (uc != null) curso.adicionarUnidadeCurricular(uc);
+        }
     }
 
     private static final String SELECT_CURSO =
@@ -154,14 +155,26 @@ public class CursoSqlDAO implements ICursoDAO {
 
     @Override
     public List<Curso> getCursos() {
-        return db.select(SELECT_CURSO, cursoMapper(), (Object[]) null);
+        java.util.Map<Curso, Integer> idMap = new java.util.LinkedHashMap<>();
+        // Fase 1: carregar info básica (ResultSet fechado ao sair do select)
+        List<Curso> cursos = db.select(SELECT_CURSO, basicCursoMapper(idMap), (Object[]) null);
+        // Fase 2: enriquecer com anos e UCs (sem queries aninhadas)
+        for (Curso curso : cursos) {
+            Integer id = idMap.get(curso);
+            if (id != null) enrichCurso(curso, id);
+        }
+        return cursos;
     }
 
     @Override
     public Curso procurarPorNome(String nome) {
-        ArrayList<Curso> lista = db.select(
-                SELECT_CURSO + " WHERE c.nome=?", cursoMapper(), nome);
-        return lista.isEmpty() ? null : lista.get(0);
+        java.util.Map<Curso, Integer> idMap = new java.util.LinkedHashMap<>();
+        ArrayList<Curso> lista = db.select(SELECT_CURSO + " WHERE c.nome=?", basicCursoMapper(idMap), nome);
+        if (lista.isEmpty()) return null;
+        Curso curso = lista.get(0);
+        Integer id = idMap.get(curso);
+        if (id != null) enrichCurso(curso, id);
+        return curso;
     }
 
     @Override

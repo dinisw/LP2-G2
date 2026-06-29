@@ -111,4 +111,11 @@ public class PresencaCRUD extends AbstractCsvCRUD<Presenca> implements IPresenca
     public List<Presenca> listarTodas() {
         return new ArrayList<>(dados);
     }
+
+    @Override
+    public boolean eliminarPresenca(int id) {
+        boolean removida = dados.removeIf(p -> p.getId() == id);
+        if (removida) guardarTodosNoFicheiro();
+        return removida;
+    }
 }
