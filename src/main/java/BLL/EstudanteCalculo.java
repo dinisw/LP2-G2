@@ -4,7 +4,9 @@ import model.Avaliacao;
 import model.Curso;
 import model.Estudante;
 import model.UnidadeCurricular;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class EstudanteCalculo {
 
@@ -21,18 +23,21 @@ public class EstudanteCalculo {
 
         if (totalMomentosExigidos == 0) return false;
 
-        boolean todosOsMomentosTêmNota = momentosValidos.stream()
-                .allMatch(momento -> avaliacoesDestaUC.stream()
-                        .anyMatch(a -> a.getMomento().equalsIgnoreCase(momento)));
-        if (!todosOsMomentosTêmNota) return false;
-
-        double somaNotas = 0;
-        for (Avaliacao avaliacao : avaliacoesDestaUC) {
-            if (momentosValidos.stream().anyMatch(m -> m.equalsIgnoreCase(avaliacao.getMomento()))) {
-                somaNotas += avaliacao.getNota();
+        // Para cada momento válido, guarda a nota mais alta (elimina duplicados da BD)
+        Map<String, Double> notasPorMomento = new HashMap<>();
+        for (Avaliacao a : avaliacoesDestaUC) {
+            String chave = a.getMomento().trim().toLowerCase();
+            if (momentosValidos.stream().anyMatch(m -> m.equalsIgnoreCase(a.getMomento()))) {
+                notasPorMomento.merge(chave, a.getNota(), Math::max);
             }
         }
 
+        // Todos os momentos exigidos têm de ter nota
+        boolean todosOsMomentosTêmNota = momentosValidos.stream()
+                .allMatch(m -> notasPorMomento.containsKey(m.trim().toLowerCase()));
+        if (!todosOsMomentosTêmNota) return false;
+
+        double somaNotas = notasPorMomento.values().stream().mapToDouble(Double::doubleValue).sum();
         double mediaFinal = somaNotas / totalMomentosExigidos;
         return mediaFinal >= 9.5;
     }
@@ -42,12 +47,24 @@ public class EstudanteCalculo {
 
         List<Avaliacao> avaliacoes = estudante.getListaAvaliacoes();
 
-        long totalInscritas = curso.getUnidadeCurriculars().stream().filter(uc -> uc.getAnoCurricular() <= estudante.getAnoLetivo()).count();
+        // Considera apenas UCs do curso (até ao ano atual) em que o aluno tem pelo menos um registo
+        // de avaliação — evita que UCs opcionais ou não-inscritas distorçam o cálculo
+        java.util.Set<String> ucsComRegisto = avaliacoes == null ? java.util.Collections.emptySet() :
+                avaliacoes.stream()
+                        .filter(a -> a.getUnidadeCurricular() != null)
+                        .map(a -> a.getUnidadeCurricular().getNome().toLowerCase())
+                        .collect(java.util.stream.Collectors.toSet());
 
+        List<UnidadeCurricular> ucsDoCursoAteAnoAtual = curso.getUnidadeCurriculars().stream()
+                .filter(uc -> uc.getAnoCurricular() <= estudante.getAnoLetivo()
+                        && ucsComRegisto.contains(uc.getNome().toLowerCase()))
+                .toList();
+
+        long totalInscritas = ucsDoCursoAteAnoAtual.size();
         if (totalInscritas == 0) return 1;
 
-        long aprovadasGlobais = curso.getUnidadeCurriculars().stream()
-                .filter(u -> u.getAnoCurricular() <= estudante.getAnoLetivo() && isUCAprovada(avaliacoes, u.getNome()))
+        long aprovadasGlobais = ucsDoCursoAteAnoAtual.stream()
+                .filter(u -> isUCAprovada(avaliacoes, u.getNome()))
                 .count();
 
         double aproveitamento = (double) aprovadasGlobais / totalInscritas;

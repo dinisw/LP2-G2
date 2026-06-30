@@ -258,7 +258,10 @@ public class CursoView {
             } else {
                 int count = 1;
                 for (Curso c : cursos) {
-                    System.out.printf("%d - %s | Preço: %.2f €\n", count, c.toString(), c.getPrecoAnual());
+                    String preco = c.getPrecoAnual() != null
+                            ? String.format("%.2f €", c.getPrecoAnual())
+                            : "N/D";
+                    System.out.printf("%d - %s | Preço: %s%n", count, c.toString(), preco);
                     count++;
                 }
             }
@@ -485,7 +488,10 @@ public class CursoView {
             System.out.println("\nQual ano letivo deseja iniciar para o curso " + curso.getNome() + "?");
             for (int a = 1; a <= duracaoCurso; a++) {
                 String req = (a == 1) ? "(Exige 5 alunos)" : "(Exige 1 aluno)";
-                System.out.println(a + ". " + a + "º Ano " + req);
+                String estadoAno = curso.isAnoIniciado(a)
+                        ? GetGreen() + " [JÁ INICIADO]" + GetReset()
+                        : "";
+                System.out.println(a + ". " + a + "º Ano " + req + estadoAno);
             }
 
             int anoParaIniciar = -1;

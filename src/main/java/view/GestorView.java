@@ -2918,9 +2918,50 @@ public class GestorView {
 
     private void removerEstatuto(EstatutoController eCtrl) {
         try {
-            String idStr = BackendUtils.lerInputString(scanner, "ID do estatuto a remover (0 para cancelar): ");
-            if (idStr.equals("0")) return;
-            model.Resultado<String> res = eCtrl.removerEstatuto(Integer.parseInt(idStr));
+            System.out.println(GetBlue() + "\n--- REMOVER ESTATUTO DE ESTUDANTE ---" + GetReset());
+            String mecStr = BackendUtils.lerInputString(scanner, "Nº Mecanográfico do estudante (0 para cancelar): ");
+            if (mecStr.equals("0")) return;
+            int mec = Integer.parseInt(mecStr);
+
+            List<model.EstatutoEstudante> estatutos = eCtrl.listarEstatutosPorEstudante(mec);
+            if (estatutos.isEmpty()) {
+                System.out.println(GetYellow() + "Este estudante não possui estatutos registados." + GetReset());
+                MenuUtils.pressionarEnter(scanner); return;
+            }
+
+            System.out.println(GetWhiteBold() + "\nEstatutos do estudante " + mec + ":" + GetReset());
+            System.out.println(GetCyanBold() + "  ───────────────────────────────────────────────────────────" + GetReset());
+            System.out.printf(GetWhiteBold() + "  %-5s | %-22s | %-12s | %-12s | %-8s%n" + GetReset(),
+                    "ID", "TIPO", "INÍCIO", "FIM", "ESTADO");
+            System.out.println(GetCyanBold() + "  ───────────────────────────────────────────────────────────" + GetReset());
+            for (model.EstatutoEstudante est : estatutos) {
+                String estado = est.isAtivo() ? GetGreen() + "ATIVO" + GetReset() : GetRed() + "EXPIRADO" + GetReset();
+                System.out.printf("  %-5d | %-22s | %-12s | %-12s | %s%n",
+                        est.getId(),
+                        est.getTipoEstatuto() != null ? est.getTipoEstatuto().getNome() : "?",
+                        est.getDataInicio() != null ? est.getDataInicio().toString() : "?",
+                        est.getDataFim() != null ? est.getDataFim().toString() : "—",
+                        estado);
+            }
+            System.out.println(GetCyanBold() + "  ───────────────────────────────────────────────────────────" + GetReset());
+
+            int id = -1;
+            while (id < 0) {
+                try {
+                    String idStr = BackendUtils.lerInputString(scanner, "ID do estatuto a remover (0 para cancelar): ");
+                    if (idStr.equals("0")) return;
+                    int candidato = Integer.parseInt(idStr);
+                    if (estatutos.stream().noneMatch(e -> e.getId() == candidato)) {
+                        System.out.println(GetRed() + "ID não encontrado na lista acima." + GetReset());
+                    } else {
+                        id = candidato;
+                    }
+                } catch (NumberFormatException ex) {
+                    System.out.println(GetRed() + "Introduza um número válido." + GetReset());
+                }
+            }
+
+            model.Resultado<String> res = eCtrl.removerEstatuto(id);
             System.out.println(res.sucesso ? GetGreen() + res.dados + GetReset() : GetRed() + res.mensagemErro + GetReset());
         } catch (Exception e) { System.out.println(GetRed() + "Erro: " + e.getMessage() + GetReset()); }
         MenuUtils.pressionarEnter(scanner);

@@ -36,11 +36,16 @@ public class SenhaUtils {
             // Novo formato: "randomSalt$hash"
             String[] partes = hashSalvo.split("\\$", 2);
             if (partes.length != 2) return false;
-            return calcularHash(senhaDigitada, partes[0]).equals(partes[1]);
+            // Comparação em tempo constante — evita timing attacks que inferem o hash byte a byte
+            return MessageDigest.isEqual(
+                    calcularHash(senhaDigitada, partes[0]).getBytes(StandardCharsets.UTF_8),
+                    partes[1].getBytes(StandardCharsets.UTF_8));
         }
 
         // Formato legado: hash gerado com salt fixo
-        return calcularHashLegado(senhaDigitada).equals(hashSalvo);
+        return MessageDigest.isEqual(
+                calcularHashLegado(senhaDigitada).getBytes(StandardCharsets.UTF_8),
+                hashSalvo.getBytes(StandardCharsets.UTF_8));
     }
 
     private String calcularHash(String senha, String salt) {

@@ -7,6 +7,7 @@ import io.github.cdimascio.dotenv.Dotenv;
 import java.security.Security;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Gestão de ligações à base de dados via HikariCP connection pool.
@@ -22,8 +23,8 @@ public class DatabaseConnection {
     private static volatile HikariDataSource pool;
     private static volatile boolean inicializado = false;
 
-    private static boolean erroConexao = false;
-    public static boolean houveErroConexao() { return erroConexao; }
+    private static final AtomicBoolean erroConexao = new AtomicBoolean(false);
+    public static boolean houveErroConexao() { return erroConexao.get(); }
 
     public DatabaseConnection() {
         // Double-checked locking: pool criado uma única vez
@@ -31,7 +32,11 @@ public class DatabaseConnection {
             synchronized (DatabaseConnection.class) {
                 if (!inicializado) {
                     inicializarPool();
-                    inicializado = true;
+                    // Só marca como inicializado se o pool foi criado com sucesso.
+                    // Caso contrário ficaria em estado zombie (inicializado=true, pool=null).
+                    if (pool != null) {
+                        inicializado = true;
+                    }
                 }
             }
         }
@@ -92,15 +97,15 @@ public class DatabaseConnection {
 
     private Connection openConnection() {
         if (pool == null) {
-            erroConexao = true;
+            erroConexao.set(true);
             return null;
         }
         try {
             Connection conn = pool.getConnection();
-            erroConexao = false;
+            erroConexao.set(false);
             return conn;
         } catch (Exception ex) {
-            erroConexao = true;
+            erroConexao.set(true);
             System.out.println("Erro ao obter ligação do pool: " + ex.getMessage());
             return null;
         }
@@ -199,7 +204,9 @@ public class DatabaseConnection {
                 work.execute(conn);
                 conn.commit();
                 return true;
-            } catch (SQLException e) {
+            } catch (Exception e) {
+                // Captura qualquer exceção (incluindo NullPointerException, etc.)
+                // para garantir rollback mesmo em erros não-SQL
                 conn.rollback();
                 System.out.println("Erro na transação (rollback efectuado): " + e.getMessage());
                 return false;

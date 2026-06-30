@@ -1,8 +1,12 @@
 1260001;Estudante Um;Rua do Vitor;299299299;1994-09-04;1260001@issmf.ipp.pt;/cV1ONqArhHEMbFZWlNFJg==$Zo8Ia5EtzBxMq7IyDfGQiEFEUG1FwWwGTjjykwhRFfc=;Eletrônica e Computadores;true;1
 1260002;Estudante Dois;Rua das Carvalhas;123412341;2006-06-15;1260002@issmf.ipp.pt;WwS0sd+9FsK696WI4OFeyw==$A/VVUXpQf+KJEFicmUtU2tTppdrBfrNv+ehutFdP4EY=;Eletrônica e Computadores;true;1
 1260003;Estudante Tres;Rua 1, Porto;111111111;2000-03-15;1260003@issmf.ipp.pt;dGVzdFNhbHQ=$XZDaDZzHUwRgwLoFPQu1M3SZvNXUFzsmtMtqv68PGjE=;Engenharia Informática;true;2
-1260004;Estudante Quatro;Rua 2, Porto;222222222;2001-06-20;1260004@issmf.ipp.pt;RCZC2lArGMC1hChHDEcMZg==$4C87Zt2hQxssjqVG+8437S+pcJTWCkrGYRSve8ucKHU=;Engenharia Informática;true;2
-1260005;Estudante Cinco;Rua 3, Porto;333333333;2000-11-10;1260005@issmf.ipp.pt;JMEqG741R09SL64XDI4RiA==$LBQ/cP8Igxn3zP1l6dLXBJHdtqPfxbosnfN5zExLF24=;Engenharia Informática;true;2
-1260006;Estudante Seis;Rua 4, Porto;344444444;2001-01-05;1260006@issmf.ipp.pt;l1vQ5AyRkUhyO0UTDsHoLw==$f2sOHKm668HANqG4sgZbH2DfIgnhHcy+c3zuomB9wnc=;Engenharia Informática;true;2
+1260004;Estudante Quatro;Rua 2, Porto;222222222;2001-06-20;1260004@issmf.ipp.pt;RCZC2lArGMC1hChHDEcMZg==$4C87Zt2hQxssjqVG+8437S+pcJTWCkrGYRSve8ucKHU=;Engenharia Informática;true;3
+1260005;Estudante Cinco;Rua 3, Porto;333333333;2000-11-10;1260005@issmf.ipp.pt;JMEqG741R09SL64XDI4RiA==$LBQ/cP8Igxn3zP1l6dLXBJHdtqPfxbosnfN5zExLF24=;Engenharia Informática;true;3
+1260006;Estudante Seis;Rua 4, Porto;344444444;2001-01-05;1260006@issmf.ipp.pt;l1vQ5AyRkUhyO0UTDsHoLw==$f2sOHKm668HANqG4sgZbH2DfIgnhHcy+c3zuomB9wnc=;Engenharia Informática;true;3
 1260007;Estudante Sete;Rua 5, Porto;555555555;2000-09-25;1260007@issmf.ipp.pt;lmjVmpk/J8O8RhghibOWeg==$uVkFRPuowZhfLMDe5oWXAFBDtQv0Ozvip3lgeKKVfi8=;Engenharia Informática;true;1
-1260008;Estudante Oito;Rua 6, Porto;666666666;2001-07-14;1260008@issmf.ipp.pt;dqRc/QxUrOFwWSEFRiOQ0Q==$mPUzVkiHpQ0jjXyORm6psH6s+N+ayKpCPjTCOvpU0lc=;Engenharia Informática;true;2
+1260008;Estudante Oito;Rua 6, Porto;666666666;2001-07-14;1260008@issmf.ipp.pt;dqRc/QxUrOFwWSEFRiOQ0Q==$mPUzVkiHpQ0jjXyORm6psH6s+N+ayKpCPjTCOvpU0lc=;Engenharia Informática;true;3
+1037928;Sem Propina;Rua E;777935927;2001-01-01;777935927@issmf.ipp.pt;7UYGUetahHoZYPec3NQfpw==$ma4mUp3xNCnJy02XS8/Yr0olimib26W0e9HM3pQIcI4=;Curso TST 46928;true;1
+1260010;Aluno Preco;Rua F;355046928;2002-06-01;1260010@issmf.ipp.pt;lfvZSo2DoW2l6856+ouTFQ==$ZqWOn5I3qvLZ16JErDhkLHKxPWF6Ray1KuJ1B0QdRX4=;Curso Preço 46928;true;1
+1061469;Sem Propina;Rua E;777959468;2001-01-01;777959468@issmf.ipp.pt;vyimedfPM2qEF+ZqIZlTCQ==$lxD2FDGjDZWfxiav++nGW2zSNjC27xAQnhyrFsmchjI=;Curso TST 70469;true;1
+1260012;Aluno Preco;Rua F;355070469;2002-06-01;1260012@issmf.ipp.pt;0UUn7+Xx31QbZVlj4v3dGA==$Bp+J9pZw2UNN0/YzcT11sWwzMD0HtmGmxv/xkuyHgS0=;Curso Preço 70469;true;1
